@@ -1,8 +1,8 @@
 /*
  * Load .dat files
  *
- * Author: Tobias Weber
- * Date: April 2012
+ * @author: Tobias Weber
+ * @date: April 2012
  */
 
 #include "loadtxt.h"
