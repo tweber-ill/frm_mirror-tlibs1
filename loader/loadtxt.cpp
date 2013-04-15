@@ -22,14 +22,14 @@ static bool CleanString(std::string& strLine)
 {
 	bool bModified = 0;
 
-	if(strLine.find("nan")!=std::string::npos)
+	while(strLine.find("nan")!=std::string::npos)
 	{
-		find_and_replace(strLine, "nan", " 0 ");
+		find_and_replace(strLine, "nan", "0");
 		bModified = 1;
 	}
-	if(strLine.find("inf")!=std::string::npos)
+	while(strLine.find("inf")!=std::string::npos)
 	{
-		find_and_replace(strLine, "inf", " 0 ");
+		find_and_replace(strLine, "inf", "0");
 		bModified = 1;
 	}
 
