@@ -18,6 +18,24 @@
 #include <boost/algorithm/minmax_element.hpp>
 #include <limits>
 
+static bool CleanString(std::string& strLine)
+{
+	bool bModified = 0;
+
+	if(strLine.find("nan")!=std::string::npos)
+	{
+		find_and_replace(strLine, "nan", " 0 ");
+		bModified = 1;
+	}
+	if(strLine.find("inf")!=std::string::npos)
+	{
+		find_and_replace(strLine, "inf", " 0 ");
+		bModified = 1;
+	}
+
+	return bModified;
+}
+
 static void get_limits_from_str(const std::string& str, double &dMin, double &dMax, bool &bLog)
 {
         std::istringstream istr(str);
@@ -201,6 +219,10 @@ bool LoadTxt::Load(const char* pcFile)
 
 			continue;
 		}
+
+		if(CleanString(strLine))
+			std::cerr << "Warning: Replaced \"inf\"/\"nan\" with \"0\" in line "
+				<< uiLine << std::endl;
 
 		vecLine.clear();
 		get_tokens<double>(strLine, " \t", vecLine);
