@@ -89,9 +89,15 @@ class LoadTxt
 		unsigned int GetColCnt() const { return m_vecColumns.size(); }
 
 		const double* GetColumn(unsigned int uiCol) const
-		{ return m_vecColumns[uiCol]; }
+		{
+			if(uiCol < m_vecColumns.size())
+				return m_vecColumns[uiCol];
+			return 0;
+		}
 		double* GetColumn(unsigned int uiCol)
-		{ return m_vecColumns[uiCol]; }
+		{
+			return const_cast<double*>(const_cast<const LoadTxt*>(this)->GetColumn(uiCol));
+		}
 
 		const t_mapComm& GetCommMap() const { return m_mapComm; }
 		void GetMinMax(double& dMin, double& dMax) const;
