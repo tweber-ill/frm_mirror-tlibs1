@@ -46,6 +46,14 @@
 #include <sstream>
 #include <string>
 
+enum TxtType
+{
+	MCSTAS_DATA = 0,
+	NICOS_DATA,
+
+	UNKNOWN_DATA
+};
+
 class LoadTxt
 {
 	public:
@@ -58,6 +66,7 @@ class LoadTxt
 		unsigned int m_uiColLen;
 
 		t_mapComm m_mapComm;
+		std::vector<std::string> m_vecAuxStrings, m_vecComments;
 
 		// trim and collect McStas comments
 		void StrTrim(std::string& str);
@@ -113,6 +122,9 @@ class LoadTxt
 		}
 
 		const std::string& GetFileName() const { return m_strFileName; }
+		const TxtType GetFileType() const;
+
+		const std::vector<std::string>& GetAuxStrings() const { return m_vecAuxStrings; }
 
 		friend std::ostream& operator<<(std::ostream& ostr, LoadTxt& txt);
 };
@@ -128,7 +140,7 @@ class McData
 		bool m_bOk;
 
 	public:
-		McData(const LoadTxt& data) : m_data(data) {}
+		McData(const LoadTxt& data) : m_data(data), m_bOk(0) {}
 		virtual ~McData() {}
 
 		bool IsOk() const { return m_bOk; }

@@ -66,9 +66,32 @@ LoadTxt::LoadTxt(const char* pcFile, bool bOnlyHeader, bool bVerbose)
 
 LoadTxt::~LoadTxt() { Unload(); }
 
+const TxtType LoadTxt::GetFileType() const
+{
+	for(const std::string& strComm : m_vecComments)
+	{
+		if(strComm.find("NICOS data file") != std::string::npos)
+			return NICOS_DATA;
+	}
+
+	return MCSTAS_DATA;
+}
+
 void LoadTxt::StrTrim(std::string& str)
 {
-	if(str.size()==0) return;
+	if(str.length()==0) return;
+
+	bool bIsTripleComment = false;
+	const char* pcTripleComment = "###";
+	std::size_t iFirstTripleComment = str.find(pcTripleComment);
+	if(iFirstTripleComment!=std::string::npos)
+	{
+		std::string strTripleComment = str.substr(iFirstTripleComment+3, std::string::npos);
+		trim(strTripleComment);
+
+		bIsTripleComment = true;
+		m_vecComments.push_back(strTripleComment);
+	}
 
 	const char* pcComment = "#";
 	std::size_t iFirstComment = str.find(pcComment);
@@ -109,6 +132,15 @@ void LoadTxt::StrTrim(std::string& str)
 
 			if(strKey!="" && strVal!="")
 				m_mapComm[strKey].push_back(strVal);
+		}
+		else
+		{
+			if(!bIsTripleComment)
+			{
+				// Strings not fitting anywhere
+				trim(strComm);
+				m_vecAuxStrings.push_back(strComm);
+			}
 		}
 
 		// second: remove the comment from the string
