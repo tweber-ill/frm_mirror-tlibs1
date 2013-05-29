@@ -108,7 +108,7 @@ mieze_reduction_det(const units::quantity<units::unit<units::length_dimension, S
 	using namespace units;
 	using namespace co;
 
-	const quantity<unit<mass_dimension, Sys>, Y> mn = codata::m_n;
+	const quantity<unit<mass_dimension, Sys>, Y> mn = co::m_n;
 	quantity<unit<velocity_dimension, Sys> > v0 = lam2p(lam)/mn;
 
 	const units::quantity<units::unit<units::frequency_dimension, Sys>, Y> fM = mieze_tau_fm(tau, Ls, lam);
