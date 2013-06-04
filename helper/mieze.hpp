@@ -152,4 +152,14 @@ mieze_reduction_det(const units::quantity<units::unit<units::length_dimension, S
 	return dreduction;
 }
 
+
+template<typename T=double>
+T get_mieze_freq(const T* px, unsigned int iLen, T dNumOsc=2.)
+{
+	if(iLen==0)
+		return -1.;
+	double dTLen = (px[iLen-1]-px[0])/double(iLen-1)*double(iLen);
+	return dNumOsc * 2.*M_PI/dTLen;
+}
+
 #endif
