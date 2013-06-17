@@ -99,6 +99,8 @@ template<class Sys, class Y>
 double
 mieze_reduction_det(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lx,
 						const units::quantity<units::unit<units::length_dimension, Sys>, Y>& ly,
+						const units::quantity<units::unit<units::length_dimension, Sys>, Y>& xpos,
+						const units::quantity<units::unit<units::length_dimension, Sys>, Y>& ypos,
 						const units::quantity<units::unit<units::length_dimension, Sys>, Y>& Ls,
 						const units::quantity<units::unit<units::time_dimension, Sys>, Y>& tau,
 						const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam,
@@ -130,7 +132,10 @@ mieze_reduction_det(const units::quantity<units::unit<units::length_dimension, S
 	{
 		for(dy=-ly/2., iY=0; dy<ly/2. && iY<iYPixels; dy+=ly_inc, ++iY)
 		{
-			quantity<unit<length_dimension, Sys>, Y> path_diff = sqrt(dx*dx + dy*dy + Ls*Ls) - Ls;
+			quantity<unit<length_dimension, Sys>, Y> dx_new = dx-xpos;
+			quantity<unit<length_dimension, Sys>, Y> dy_new = dy-ypos;
+
+			quantity<unit<length_dimension, Sys>, Y> path_diff = sqrt(dx_new*dx_new + dy_new*dy_new + Ls*Ls) - Ls;
 
 			// additional time needed for the neutron
 			quantity<unit<time_dimension, Sys>, Y> dt = path_diff / v0;
