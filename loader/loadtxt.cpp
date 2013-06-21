@@ -1108,7 +1108,9 @@ bool Data2D::ExtractColOrRow(int iCol, int iRow, const char* pcOutFile, const Da
 
 //------------------------------------------------------------------------------
 
-Data3D::Data3D(const LoadTxt& data) : McData(data), m_iNumBlocks(3)
+Data3D::Data3D(const LoadTxt& data)
+		: McData(data), m_iNumBlocks(3),
+		  m_iXDim(0), m_iYDim(0), m_iTDim(0)
 {
 	if(IsOwnDataFile())
 		m_iNumBlocks = 1;
