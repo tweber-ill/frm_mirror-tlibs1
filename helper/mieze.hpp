@@ -104,6 +104,7 @@ mieze_reduction_det(const units::quantity<units::unit<units::length_dimension, S
 						const units::quantity<units::unit<units::length_dimension, Sys>, Y>& Ls,
 						const units::quantity<units::unit<units::time_dimension, Sys>, Y>& tau,
 						const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam,
+						const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& central_phase,
 						unsigned int iXPixels=128, unsigned int iYPixels=128,
 						ublas::matrix<double>* pPhaseMatrix=0)
 {
@@ -141,13 +142,17 @@ mieze_reduction_det(const units::quantity<units::unit<units::length_dimension, S
 			quantity<unit<time_dimension, Sys>, Y> dt = path_diff / v0;
 
 			// additional phase
-			double phase = -omegaM * dt;
+			double phase = -omegaM * dt + central_phase/units::si::radians;
 			phase = fmod(phase, 2.*M_PI);
 
 			int_red += cos(phase/2.)*lx_inc*ly_inc;
 
 			if(pPhaseMatrix)
-				(*pPhaseMatrix)(iX, iY) = phase + 2.*M_PI;
+			{
+				phase += 2.*M_PI;
+				phase = fmod(phase, 2.*M_PI);
+				(*pPhaseMatrix)(iX, iY) = phase;
+			}
 		}
 	}
 
