@@ -172,4 +172,61 @@ T get_mieze_freq(const T* px, unsigned int iLen, T dNumOsc=2.)
 	return dNumOsc * 2.*M_PI/dTLen;
 }
 
+
+//------------------------------------------------------------------------------
+
+template<class Sys, class Y>
+units::quantity<units::unit<units::length_dimension, Sys>, Y>
+mieze_condition_L2(const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& f1,
+					const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& f2,
+					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& L1)
+{
+        return L1 / (f2/f1 - 1.);
+}
+
+template<class Sys, class Y>
+units::quantity<units::unit<units::length_dimension, Sys>, Y>
+mieze_condition_L1(const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& f1,
+					const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& f2,
+					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& L2)
+{
+        return L2 * (f2/f1 - 1.);
+}
+
+template<class Sys, class Y>
+units::quantity<units::unit<units::frequency_dimension, Sys>, Y>
+mieze_condition_f2(const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& f1,
+					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& L1,
+					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& L2)
+{
+        return (L1/L2 + 1.)*f1;
+}
+
+template<class Sys, class Y>
+units::quantity<units::unit<units::frequency_dimension, Sys>, Y>
+mieze_condition_f1(const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& f2,
+				const units::quantity<units::unit<units::length_dimension, Sys>, Y>& L1,
+				const units::quantity<units::unit<units::length_dimension, Sys>, Y>& L2)
+{
+        return f2 / (L1/L2 + 1.);
+}
+
+
+
+template<class Sys, class Y>
+units::quantity<units::unit<units::length_dimension, Sys>, Y>
+mieze_condition_inel_Ls(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& Ls0,
+					const units::quantity<units::unit<units::energy_dimension, Sys>, Y>& dE,
+					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam)
+{
+	using namespace units;
+
+	quantity<unit<velocity_dimension, Sys> > v0 = lam2p(lam)/co::m_n;
+
+	quantity<unit<velocity_dimension, Sys> > dv = sqrt(v0*v0 + 2.*dE/co::m_n) - v0;
+	quantity<unit<velocity_dimension, Sys> > v1 = v0 + dv;
+	return Ls0 * (v1*v1*v1/(v0*v0*v0));
+}
+
+
 #endif
