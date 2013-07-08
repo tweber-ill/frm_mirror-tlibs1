@@ -229,4 +229,34 @@ mieze_condition_inel_Ls(const units::quantity<units::unit<units::length_dimensio
 }
 
 
+//------------------------------------------------------------------------------
+
+template<class Sys, class Y>
+units::quantity<units::unit<units::frequency_dimension, Sys>, Y>
+mieze_det_misaligned_df1(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& L1,
+					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& L2,
+					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& dL,
+					const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& f1,
+					const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& f2)
+{
+	units::quantity<units::unit<units::frequency_dimension, Sys>, Y> df;
+	df = (f2-f1) - (L1*f2)/(L1+L2+dL);
+	return df;
+}
+
+template<class Sys, class Y>
+units::quantity<units::unit<units::frequency_dimension, Sys>, Y>
+mieze_det_misaligned_df2(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& L1,
+					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& L2,
+					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& dL,
+					const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& f1,
+					const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& f2)
+{
+	units::quantity<units::unit<units::frequency_dimension, Sys>, Y> df;
+	df = (L1 / (L2+dL) + 1.) * f1 - f2;
+	return df;
+}
+
+//------------------------------------------------------------------------------
+
 #endif
