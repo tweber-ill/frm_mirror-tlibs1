@@ -7,6 +7,8 @@
 #ifndef __MIEZE_FORMULAS__
 #define __MIEZE_FORMULAS__
 
+#include "neutrons.hpp"
+
 #include <cmath>
 
 #include <boost/units/unit.hpp>
@@ -28,22 +30,6 @@ namespace co = boost::units::si::constants::codata;
 
 #include <boost/numeric/ublas/matrix.hpp>
 namespace ublas = boost::numeric::ublas;
-
-
-
-template<class Sys, class Y>
-units::quantity<units::unit<units::momentum_dimension, Sys>, Y>
-lam2p(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam)
-{
-	return co::h / lam;
-}
-
-template<class Sys, class Y>
-units::quantity<units::unit<units::length_dimension, Sys>, Y>
-p2lam(const units::quantity<units::unit<units::momentum_dimension, Sys>, Y>& p)
-{
-        return co::h / p;
-}
 
 
 //------------------------------------------------------------------------------
