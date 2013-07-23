@@ -15,6 +15,12 @@
 	#include <fftw3.h>
 #endif
 
+#ifdef USE_CUDA
+	#undef USE_FFTW
+	#include <cuda.h>
+	#include <cuda_runtime.h>
+	#include <cufft.h>
+#endif
 
 //------------------------------------------------------------------------------
 // fft using fftw
@@ -65,8 +71,8 @@ bool Fourier::fft(const double* pRealIn, const double *pImagIn,
 
 	for(unsigned int i=0; i<m_iSize; ++i)
 	{
-		pIn[i][0] = pRealIn[i];
-		pIn[i][1] = pImagIn[i];
+		pIn[i][0] = pRealIn ? pRealIn[i] : 0.;
+		pIn[i][1] = pImagIn ? pImagIn[i] : 0.;
 
 		pOut[i][0] = 0.;
 		pOut[i][1] = 0.;
@@ -76,8 +82,8 @@ bool Fourier::fft(const double* pRealIn, const double *pImagIn,
 
 	for(unsigned int i=0; i<m_iSize; ++i)
 	{
-		pRealOut[i] = pOut[i][0];
-		pImagOut[i] = pOut[i][1];
+		if(pRealOut) pRealOut[i] = pOut[i][0];
+		if(pImagOut) pImagOut[i] = pOut[i][1];
 	}
 
 	return true;
@@ -93,8 +99,8 @@ bool Fourier::ifft(const double* pRealIn, const double *pImagIn,
 
 	for(unsigned int i=0; i<m_iSize; ++i)
 	{
-		pIn[i][0] = pRealIn[i];
-		pIn[i][1] = pImagIn[i];
+		pIn[i][0] = pRealIn ? pRealIn[i] : 0.;
+		pIn[i][1] = pImagIn ? pImagIn[i] : 0.;
 
 		pOut[i][0] = 0.;
 		pOut[i][1] = 0.;
@@ -104,14 +110,106 @@ bool Fourier::ifft(const double* pRealIn, const double *pImagIn,
 
 	for(unsigned int i=0; i<m_iSize; ++i)
 	{
-		pRealOut[i] = pOut[i][0];
-		pImagOut[i] = pOut[i][1];
+		if(pRealOut) pRealOut[i] = pOut[i][0];
+		if(pImagOut) pImagOut[i] = pOut[i][1];
 	}
 
 	return true;
 }
 
-#else	// !USE_FFTW
+#else
+#ifdef USE_CUDA
+
+
+Fourier::Fourier(unsigned int iSize) : m_iSize(iSize)
+{
+	cudaError_t errIn = cudaMalloc((void**)&m_pIn, m_iSize*sizeof(cufftComplex));
+	cudaError_t errOut = cudaMalloc((void**)&m_pOut, m_iSize*sizeof(cufftComplex));
+
+	if(errIn==cudaErrorMemoryAllocation || errOut==cudaErrorMemoryAllocation)
+	{
+		std::cerr << "Error: Cuda could not allocate memory." << std::endl;
+		return;
+	}
+
+	m_pTmp = malloc(m_iSize*sizeof(cufftComplex));
+
+	m_pPlan = malloc(sizeof(cufftHandle));
+	m_pPlan_inv = malloc(sizeof(cufftHandle));
+
+	cufftPlan1d((cufftHandle*)m_pPlan, m_iSize, CUFFT_C2C, 1);
+	cufftPlan1d((cufftHandle*)m_pPlan_inv, m_iSize, CUFFT_C2C, 1);
+
+	if(!*(cufftHandle*)m_pPlan || !*(cufftHandle*)m_pPlan_inv)
+		std::cerr << "Fourier: Could not create plan." << std::endl;
+}
+
+Fourier::~Fourier()
+{
+	cufftDestroy(*(cufftHandle*)m_pPlan);
+	cufftDestroy(*(cufftHandle*)m_pPlan_inv);
+
+	free(m_pTmp);
+
+	free(m_pPlan);
+	free(m_pPlan_inv);
+
+	cudaFree(m_pIn);
+	cudaFree(m_pOut);
+}
+
+bool Fourier::fft(const double* pRealIn, const double *pImagIn,
+					double *pRealOut, double *pImagOut)
+{
+	cufftHandle* pPlan = (cufftHandle*)m_pPlan;
+	cufftComplex* pTmp = (cufftComplex*)m_pTmp;
+
+	for(unsigned int i=0; i<m_iSize; ++i)
+	{
+		pTmp[i].x = pRealIn ? pRealIn[i] : 0.;
+		pTmp[i].y = pImagIn ? pImagIn[i] : 0.;
+	}
+
+	cudaMemcpy(m_pIn, pTmp, m_iSize*sizeof(cufftComplex), cudaMemcpyHostToDevice);
+	cufftExecC2C(*pPlan, (cufftComplex*)m_pIn, (cufftComplex*)m_pOut, CUFFT_FORWARD);
+	cudaMemcpy(pTmp, m_pOut, m_iSize*sizeof(cufftComplex), cudaMemcpyDeviceToHost);
+
+	for(unsigned int i=0; i<m_iSize; ++i)
+	{
+		if(pRealOut) pRealOut[i] = pTmp[i].x;
+		if(pImagOut) pImagOut[i] = pTmp[i].y;
+	}
+
+	return true;
+}
+
+bool Fourier::ifft(const double* pRealIn, const double *pImagIn,
+					double *pRealOut, double *pImagOut)
+{
+	cufftHandle* pPlan = (cufftHandle*)m_pPlan;
+	cufftComplex* pTmp = (cufftComplex*)m_pTmp;
+
+	for(unsigned int i=0; i<m_iSize; ++i)
+	{
+		pTmp[i].x = pRealIn ? pRealIn[i] : 0.;
+		pTmp[i].y = pImagIn ? pImagIn[i] : 0.;
+	}
+
+	cudaMemcpy(m_pIn, pTmp, m_iSize*sizeof(cufftComplex), cudaMemcpyHostToDevice);
+	cufftExecC2C(*pPlan, (cufftComplex*)m_pIn, (cufftComplex*)m_pOut, CUFFT_INVERSE);
+	cudaMemcpy(pTmp, m_pOut, m_iSize*sizeof(cufftComplex), cudaMemcpyDeviceToHost);
+
+	for(unsigned int i=0; i<m_iSize; ++i)
+	{
+		if(pRealOut) pRealOut[i] = pTmp[i].x;
+		if(pImagOut) pImagOut[i] = pTmp[i].y;
+	}
+
+	return true;
+}
+
+
+#else
 
 Fourier::Fourier(unsigned int iSize) : m_iSize(iSize)
 {}
@@ -137,7 +235,9 @@ bool Fourier::ifft(const double *pRealIn, const double *pImagIn,
 	return true;	
 }
 
+#endif	// USE_CUDE
 #endif	// USE_FFTW
+
 
 bool Fourier::shift_sin(double dNumOsc, const double* pDatIn,
 				double *pDataOut, double dPhase)

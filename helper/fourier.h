@@ -10,6 +10,7 @@
 
 #include <complex>
 #define USE_FFTW
+//#define USE_CUDA
 
 
 //------------------------------------------------------------------------------
@@ -109,6 +110,7 @@ class Fourier
 	protected:
 		unsigned int m_iSize;
 		void *m_pIn, *m_pOut;
+		void *m_pTmp;
 		void *m_pPlan, *m_pPlan_inv;
 
 	public:
