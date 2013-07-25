@@ -235,7 +235,7 @@ bool Fourier::ifft(const double *pRealIn, const double *pImagIn,
 	return true;	
 }
 
-#endif	// USE_CUDE
+#endif	// USE_CUDA
 #endif	// USE_FFTW
 
 
