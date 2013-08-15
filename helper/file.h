@@ -7,26 +7,31 @@
 #ifndef __MIEZE_FILE_HELPER__
 #define __MIEZE_FILE_HELPER__
 
-#include<iostream>
+#include <iostream>
+#include <string>
 
-inline unsigned int get_file_size(std::istream& istr)
+extern unsigned int get_file_size(std::istream& istr);
+extern unsigned int get_file_pos(std::istream& istr);
+
+extern bool dir_exists(const char* pcDir);
+
+
+class TmpFile
 {
-        std::streampos iPos = istr.tellg();
+protected:
+	std::string m_strFile;
+	std::string m_strPrefix;
+	int m_iHandle;
 
-        istr.seekg(0, std::ios_base::end);
-        std::streampos iSize = istr.tellg();
+public:
+	TmpFile();
+	virtual ~TmpFile();
 
-        istr.seekg(iPos, std::ios_base::beg);
+	bool open();
+	void close();
+	const std::string& GetFileName() const;
 
-        return (unsigned int)iSize;
-}
-
-inline unsigned int get_file_pos(std::istream& istr)
-{
-        std::streampos iPos = istr.tellg();
-
-        if(iPos < 0) return 0;
-        return (unsigned int) iPos;
-}
+	void SetPrefix(const char* pcStr);
+};
 
 #endif
