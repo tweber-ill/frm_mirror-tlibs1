@@ -9,6 +9,7 @@
 #define __FOURIER__
 
 #include <complex>
+#include "math.h"
 #define USE_FFTW
 //#define USE_CUDA
 

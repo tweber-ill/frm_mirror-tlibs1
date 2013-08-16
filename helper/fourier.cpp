@@ -6,9 +6,9 @@
  */
 
 #include "fourier.h"
-#include "../helper/misc.h"
+#include "misc.h"
+#include "math.h"
 #include <iostream>
-#include <math.h>
 #include <string.h>
 
 #ifdef USE_FFTW

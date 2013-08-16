@@ -32,6 +32,8 @@ public:
 	const std::string& GetFileName() const;
 
 	void SetPrefix(const char* pcStr);
+
+	static int mkstemp(std::string& strFile);
 };
 
 #endif

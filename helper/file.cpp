@@ -5,7 +5,11 @@
  */
 
 #include "file.h"
+#include "rand.h"
+#include "string.h"
+
 #include <unistd.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <QtCore/QDir>
 
@@ -45,27 +49,46 @@ TmpFile::~TmpFile()
 	close();
 }
 
+// cygwin does not seem to have a ::mkstemp...
+int TmpFile::mkstemp(std::string& strFile)
+{
+	static const std::string strChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_";
+	static const unsigned int iLenChars = strChars.length();
+
+	std::string strRnd;
+	strRnd.reserve(6);
+	for(unsigned int iRnd=0; iRnd<6; ++iRnd)
+		strRnd.push_back(strChars[simple_rand(iLenChars)]);
+
+	if(!find_and_replace(strFile, "XXXXXX", strRnd))
+		return -1;
+
+	int iFile = ::open(strFile.c_str(), O_RDWR | O_CREAT | O_EXCL, 0600);
+
+	/*std::cout << "random temp file: " << strFile
+			<< ", file: " << iFile
+			<< std::endl;*/
+	return iFile;
+}
+
 bool TmpFile::open()
 {
-	char pcTmpFile[256];
-	const char pcMemDir[] = "/dev/shm";
+	const std::string strMemDir = "/dev/shm";
 
-	if(dir_exists(pcMemDir))
-		strcpy(pcTmpFile, pcMemDir);
+	if(dir_exists(strMemDir.c_str()))
+		m_strFile =  strMemDir;
 	else
-		strcpy(pcTmpFile, QDir::tempPath().toStdString().c_str());
+		m_strFile = QDir::tempPath().toStdString();
 
+	if(m_strFile[m_strFile.length()-1] != '/')
+		m_strFile += "/";
+	m_strFile += m_strPrefix;
+	m_strFile += "_tmp.XXXXXX";
 
-	if(pcTmpFile[strlen(pcTmpFile)-1] != '/')
-		strcat(pcTmpFile, "/");
-	strcat(pcTmpFile, m_strPrefix.c_str());
-	strcat(pcTmpFile, "_tmp.XXXXXX");
-
-	m_iHandle = mkstemp(pcTmpFile);
+	m_iHandle = mkstemp(m_strFile);
 	if(m_iHandle == -1)
 		return false;
 
-	m_strFile = pcTmpFile;
 	//std::cout << "temp file: " << m_strFile << std::endl;
 	return true;
 }
