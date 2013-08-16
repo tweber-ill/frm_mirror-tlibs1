@@ -9,11 +9,12 @@
 #include "../helper/file.h"
 #include "../helper/string.h"
 #include "../helper/misc.h"
+#include "../helper/math.h"
 
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <math.h>
+#include <cmath>
 #include <algorithm>
 #include <boost/algorithm/minmax_element.hpp>
 #include <limits>
