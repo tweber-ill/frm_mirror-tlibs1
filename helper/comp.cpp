@@ -163,6 +163,7 @@ bool decomp_file_to_file(const char* pcFileIn, const char* pcFileOut, Compressor
 //--------------------------------------------------------------------------------
 
 
+// TODO: find better way: this is too slow
 static inline bool __comp_mem_to_mem(void* pvIn, unsigned int iLenIn, void*& pvOut, unsigned int& iLenOut, Compressor comp, bool bDecomp=0)
 {
 	char *pcIn = (char*)pvIn;
@@ -176,7 +177,7 @@ static inline bool __comp_mem_to_mem(void* pvIn, unsigned int iLenIn, void*& pvO
 	if(bDecomp)
 		bOk = decomp_stream_to_stream(istr, arrOut, comp);
 	else
-		bOk =comp_stream_to_stream(istr, arrOut, comp);
+		bOk = comp_stream_to_stream(istr, arrOut, comp);
 
 
 	iLenOut = lstOut.size();
@@ -209,4 +210,29 @@ bool comp_mem_to_mem(void* pvIn, unsigned int iLenIn, void*& pvOut, unsigned int
 bool decomp_mem_to_mem(void* pvIn, unsigned int iLenIn, void*& pvOut, unsigned int& iLenOut, Compressor comp)
 {
 	return __comp_mem_to_mem(pvIn, iLenIn, pvOut, iLenOut, comp, 1);
+}
+
+//--------------------------------------------------------------------------------
+
+static inline bool __comp_mem_to_stream(void* pvIn, unsigned int iLenIn, std::ostream& ostr, Compressor comp, bool bDecomp=0)
+{
+	ios::stream<ios::basic_array_source<char> > istr((char*)pvIn, iLenIn);
+
+	bool bOk=0;
+	if(bDecomp)
+		bOk = decomp_stream_to_stream(istr, ostr, comp);
+	else
+		bOk = comp_stream_to_stream(istr, ostr, comp);
+
+	return bOk;
+}
+
+bool comp_mem_to_stream(void* pvIn, unsigned int iLenIn, std::ostream& ostr, Compressor comp)
+{
+	return __comp_mem_to_stream(pvIn, iLenIn, ostr, comp, 0);
+}
+
+bool decomp_mem_to_stream(void* pvIn, unsigned int iLenIn, std::ostream& ostr, Compressor comp)
+{
+	return __comp_mem_to_stream(pvIn, iLenIn, ostr, comp, 1);
 }
