@@ -100,6 +100,7 @@ class LoadTxt
 		}
 
 		const t_mapComm& GetCommMap() const { return m_mapComm; }
+		t_mapComm& GetCommMap() { return m_mapComm; }
 		void GetMinMax(double& dMin, double& dMax) const;
 
 		void for_each(void (*)(double*));
