@@ -212,7 +212,9 @@ bool decomp_mem_to_mem(void* pvIn, unsigned int iLenIn, void*& pvOut, unsigned i
 	return __comp_mem_to_mem(pvIn, iLenIn, pvOut, iLenOut, comp, 1);
 }
 
+
 //--------------------------------------------------------------------------------
+
 
 static inline bool __comp_mem_to_stream(void* pvIn, unsigned int iLenIn, std::ostream& ostr, Compressor comp, bool bDecomp=0)
 {
