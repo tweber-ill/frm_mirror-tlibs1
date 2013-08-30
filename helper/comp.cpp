@@ -90,11 +90,11 @@ bool comp_stream_to_stream(std::istream& istr, std::ostream& ostr, Compressor co
 	ios::filtering_streambuf<ios::input> input;
 
 	if(comp == COMP_GZ)
-		input.push(ios::gzip_compressor());
+		input.push(ios::gzip_compressor(/*ios::gzip_params(9)*/));
 	else if(comp == COMP_BZ2)
 		input.push(ios::bzip2_compressor());
 	else if(comp == COMP_Z)
-		input.push(ios::zlib_compressor());
+		input.push(ios::zlib_compressor(/*ios::zlib_params(9)*/));
 	else
 	{
 		std::cerr << "Error: Unknown compression selected." << std::endl;
@@ -237,4 +237,32 @@ bool comp_mem_to_stream(const void* pvIn, unsigned int iLenIn, std::ostream& ost
 bool decomp_mem_to_stream(const void* pvIn, unsigned int iLenIn, std::ostream& ostr, Compressor comp)
 {
 	return __comp_mem_to_stream(pvIn, iLenIn, ostr, comp, 1);
+}
+
+//--------------------------------------------------------------------------------
+
+static inline bool __comp_mem_to_mem_fix(const void* pvIn, unsigned int iLenIn, void* pvOut, unsigned int iLenOut, Compressor comp, bool bDecomp=0)
+{
+	char *pcIn = (char*)pvIn;
+	char *pcOut = (char*)pvOut;
+	ios::stream<ios::basic_array_source<char> > istr(pcIn, iLenIn);
+	ios::stream<ios::basic_array_sink<char> > ostr(pcOut, iLenOut);
+
+	bool bOk = 0;
+	if(bDecomp)
+		bOk = decomp_stream_to_stream(istr, ostr, comp);
+	else
+		bOk = comp_stream_to_stream(istr, ostr, comp);
+
+	return bOk;
+}
+
+bool decomp_mem_to_mem_fix(const void* pvIn, unsigned int iLenIn, void* pvOut, unsigned int iLenOut, Compressor comp)
+{
+	return __comp_mem_to_mem_fix(pvIn, iLenIn, pvOut, iLenOut, comp, 1);
+}
+
+bool comp_mem_to_mem_fix(const void* pvIn, unsigned int iLenIn, void* pvOut, unsigned int iLenOut, Compressor comp)
+{
+	return __comp_mem_to_mem_fix(pvIn, iLenIn, pvOut, iLenOut, comp, 0);
 }
