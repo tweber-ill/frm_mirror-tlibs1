@@ -164,7 +164,7 @@ bool decomp_file_to_file(const char* pcFileIn, const char* pcFileOut, Compressor
 
 
 // TODO: find better way: this is too slow
-static inline bool __comp_mem_to_mem(void* pvIn, unsigned int iLenIn, void*& pvOut, unsigned int& iLenOut, Compressor comp, bool bDecomp=0)
+static inline bool __comp_mem_to_mem(const void* pvIn, unsigned int iLenIn, void*& pvOut, unsigned int& iLenOut, Compressor comp, bool bDecomp=0)
 {
 	char *pcIn = (char*)pvIn;
 	ios::stream<ios::basic_array_source<char> > istr(pcIn, iLenIn);
@@ -202,12 +202,12 @@ static inline bool __comp_mem_to_mem(void* pvIn, unsigned int iLenIn, void*& pvO
  *	ofstr.close();
  *	delete[] pvTst;
  */
-bool comp_mem_to_mem(void* pvIn, unsigned int iLenIn, void*& pvOut, unsigned int& iLenOut, Compressor comp)
+bool comp_mem_to_mem(const void* pvIn, unsigned int iLenIn, void*& pvOut, unsigned int& iLenOut, Compressor comp)
 {
 	return __comp_mem_to_mem(pvIn, iLenIn, pvOut, iLenOut, comp, 0);
 }
 
-bool decomp_mem_to_mem(void* pvIn, unsigned int iLenIn, void*& pvOut, unsigned int& iLenOut, Compressor comp)
+bool decomp_mem_to_mem(const void* pvIn, unsigned int iLenIn, void*& pvOut, unsigned int& iLenOut, Compressor comp)
 {
 	return __comp_mem_to_mem(pvIn, iLenIn, pvOut, iLenOut, comp, 1);
 }
@@ -216,7 +216,7 @@ bool decomp_mem_to_mem(void* pvIn, unsigned int iLenIn, void*& pvOut, unsigned i
 //--------------------------------------------------------------------------------
 
 
-static inline bool __comp_mem_to_stream(void* pvIn, unsigned int iLenIn, std::ostream& ostr, Compressor comp, bool bDecomp=0)
+static inline bool __comp_mem_to_stream(const void* pvIn, unsigned int iLenIn, std::ostream& ostr, Compressor comp, bool bDecomp=0)
 {
 	ios::stream<ios::basic_array_source<char> > istr((char*)pvIn, iLenIn);
 
@@ -229,12 +229,12 @@ static inline bool __comp_mem_to_stream(void* pvIn, unsigned int iLenIn, std::os
 	return bOk;
 }
 
-bool comp_mem_to_stream(void* pvIn, unsigned int iLenIn, std::ostream& ostr, Compressor comp)
+bool comp_mem_to_stream(const void* pvIn, unsigned int iLenIn, std::ostream& ostr, Compressor comp)
 {
 	return __comp_mem_to_stream(pvIn, iLenIn, ostr, comp, 0);
 }
 
-bool decomp_mem_to_stream(void* pvIn, unsigned int iLenIn, std::ostream& ostr, Compressor comp)
+bool decomp_mem_to_stream(const void* pvIn, unsigned int iLenIn, std::ostream& ostr, Compressor comp)
 {
 	return __comp_mem_to_stream(pvIn, iLenIn, ostr, comp, 1);
 }
