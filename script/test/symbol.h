@@ -31,41 +31,19 @@ struct SymbolDouble : public Symbol
 	double dVal;
 
 	virtual SymbolType GetType() const { return SYMBOL_DOUBLE; }
-	virtual Symbol* ToType(SymbolType stype) const
-	{
-		Symbol *pNewSym = 0;
-
-		if(stype == SYMBOL_DOUBLE)
-		{
-			pNewSym = new SymbolDouble();
-			*pNewSym = *this;
-		}
-
-		return pNewSym;
-	}
-
-	virtual std::string print() const
-	{
-		std::ostringstream ostr;
-		ostr << dVal;
-		return ostr.str();
-	}
-
-	virtual Symbol* clone() const
-	{
-		SymbolDouble *pSym = new SymbolDouble;
-		*pSym = *this;
-		return pSym;
-	}
+	virtual Symbol* ToType(SymbolType stype) const;
+	virtual std::string print() const;
+	virtual Symbol* clone() const;
 };
 
+/*
 static std::ostream& operator<<(std::ostream& ostr, const Symbol& sym)
 {
 	std::string str = sym.print();
 	ostr << str;
 	return ostr;
 }
-
+*/
 
 class SymbolTable
 {
@@ -77,36 +55,11 @@ public:
 	SymbolTable();
 	virtual ~SymbolTable();
 	
-	void print() const
-	{
-		for(auto val : m_syms)
-			std::cout << val.first << " = " << (*val.second) << std::endl;
-	}
+	void print() const;
 	
-	Symbol* GetSymbol(const std::string& strKey)
-	{
-		auto sym = m_syms.find(strKey);
-		if(sym == m_syms.end())
-			return 0;
-		return sym->second;
-	}
-	
-	void InsertSymbol(const std::string& strKey, Symbol *pSym)
-	{
-		m_syms[strKey] = pSym;
-	}
-	
-	bool IsPtrInMap(const Symbol* pSym) const
-	{
-		for(auto entry : m_syms)
-		{
-			const Symbol *pSymInMap = entry.second;
-			if(pSymInMap == pSym)
-				return 1;
-		}
-		
-		return 0;
-	}
+	Symbol* GetSymbol(const std::string& strKey);
+	void InsertSymbol(const std::string& strKey, Symbol *pSym);
+	bool IsPtrInMap(const Symbol* pSym) const;
 };
 
 #endif
