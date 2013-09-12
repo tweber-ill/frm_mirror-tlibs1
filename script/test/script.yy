@@ -30,6 +30,7 @@
 
 
 %token<pNode> TOK_DOUBLE
+%token<pNode> TOK_INT
 %token<pNode> TOK_IDENT
 %type<pNode> prog
 %type<pNode> stmts
@@ -76,6 +77,7 @@ expr:	'(' expr ')'		{ $$ = $2; }
 	| '-' expr %prec UMINUS	{ $$ = new NodeUnaryOp($2, NODE_UMINUS); }
 	| '+' expr %prec UPLUS	{ $$ = $2; }
 	| TOK_DOUBLE			{ $$ = $1; }
+	| TOK_INT				{ $$ = $1; }
 	| ident					{ $$ = $1; }
 	| ident '(' args ')'	{ $$ = new NodeCall($1, $3);  }
 	;

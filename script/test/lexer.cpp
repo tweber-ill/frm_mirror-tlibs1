@@ -79,7 +79,7 @@ void Lexer::FixTokens()
 		
 		if(tok.type==LEX_TOKEN_DOUBLE)
 		{
-			if(tok.strVal[tok.strVal.length()-1]=='e')		// 12.3e
+			if(tok.strVal[tok.strVal.length()-1]=='e' || tok.strVal[tok.strVal.length()-1]=='E')		// 12.3e
 			{
 				if(m_vecToks[i+1].type==LEX_TOKEN_CHAROP) 						// 12.3e-4
 				{
@@ -93,9 +93,20 @@ void Lexer::FixTokens()
 					m_vecToks.erase(m_vecToks.begin()+i+1);
 				}
 			}
-			
+
+			// value is actually an int
+			if(strFullDouble.find_first_of(".eE") == std::string::npos)
+				tok.type = LEX_TOKEN_INT;
+
 			std::istringstream istr(strFullDouble);
-			istr >> tok.dVal;
+
+			if(tok.type == LEX_TOKEN_DOUBLE)
+				istr >> tok.dVal;
+			else if(tok.type == LEX_TOKEN_INT)
+				istr >> tok.iVal;
+
+			//std::cout << "val " << tok.type << ": " << strFullDouble << std::endl;
+
 			tok.strVal = "";
 		}
 	}

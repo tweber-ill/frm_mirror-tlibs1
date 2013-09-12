@@ -5,14 +5,6 @@
 
 #include "symbol.h"
 
-SymbolTable::SymbolTable()
-{
-}
-
-SymbolTable::~SymbolTable()
-{
-}
-
 
 Symbol* SymbolDouble::ToType(SymbolType stype) const
 {
@@ -20,8 +12,15 @@ Symbol* SymbolDouble::ToType(SymbolType stype) const
 
 	if(stype == SYMBOL_DOUBLE)
 	{
-		pNewSym = new SymbolDouble();
-		*pNewSym = *this;
+		pNewSym = this->clone();
+	}
+	else if(stype == SYMBOL_INT)
+	{
+		SymbolInt *pNewSymI = new SymbolInt();
+		pNewSymI->strName = this->strName;
+		pNewSymI->iVal = int(this->dVal);
+
+		pNewSym = pNewSymI;
 	}
 
 	return pNewSym;
@@ -43,6 +42,50 @@ Symbol* SymbolDouble::clone() const
 
 
 
+Symbol* SymbolInt::ToType(SymbolType stype) const
+{
+	Symbol *pNewSym = 0;
+
+	if(stype == SYMBOL_INT)
+	{
+		pNewSym = this->clone();
+	}
+	else if(stype == SYMBOL_DOUBLE)
+	{
+		SymbolDouble *pNewSymD = new SymbolDouble();
+		pNewSymD->strName = this->strName;
+		pNewSymD->dVal = double(this->iVal);
+
+		pNewSym = pNewSymD;
+	}
+
+	return pNewSym;
+}
+
+std::string SymbolInt::print() const
+{
+	std::ostringstream ostr;
+	ostr << iVal;
+	return ostr.str();
+}
+
+Symbol* SymbolInt::clone() const
+{
+	SymbolInt *pSym = new SymbolInt;
+	*pSym = *this;
+	return pSym;
+}
+
+
+//--------------------------------------------------------------------------------
+
+SymbolTable::SymbolTable()
+{
+}
+
+SymbolTable::~SymbolTable()
+{
+}
 
 
 void SymbolTable::print() const
@@ -52,7 +95,15 @@ void SymbolTable::print() const
 		Symbol *pSym = val.second;
 		std::string strSym;
 		if(pSym)
-			strSym = pSym->print();
+		{
+			std::string strType;
+			if(pSym->GetType() == SYMBOL_DOUBLE)
+				strType = "double";
+			else if(pSym->GetType() == SYMBOL_INT)
+				strType = "int";
+
+			strSym = pSym->print() + " (" + strType + ")";
+		}
 		else
 			strSym = "<null>";
 

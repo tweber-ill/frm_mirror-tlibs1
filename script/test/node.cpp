@@ -10,6 +10,11 @@ template<typename T> T minus_op(T a, T b) { return a-b; }
 template<typename T> T mult_op(T a, T b) { return a*b; }
 template<typename T> T div_op(T a, T b) { return a/b; }
 
+static int pow_int(int a, int b)
+{
+	return int(pow(a,b));
+}
+
 std::map<NodeType, double (*)(double,double)> g_mapBinOps_d = 
 {
 	std::pair<NodeType, double (*)(double,double)>(NODE_PLUS, plus_op),
@@ -19,22 +24,61 @@ std::map<NodeType, double (*)(double,double)> g_mapBinOps_d =
 	std::pair<NodeType, double (*)(double,double)>(NODE_POW, pow)
 };
 
+std::map<NodeType, int (*)(int,int)> g_mapBinOps_i =
+{
+	std::pair<NodeType, int (*)(int,int)>(NODE_PLUS, plus_op),
+	std::pair<NodeType, int (*)(int,int)>(NODE_MINUS, minus_op),
+	std::pair<NodeType, int (*)(int,int)>(NODE_MULT, mult_op),
+	std::pair<NodeType, int (*)(int,int)>(NODE_DIV, div_op),
+	std::pair<NodeType, int (*)(int,int)>(NODE_POW, pow_int)
+};
+
 Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 {
 	if(!pSymLeft || !pSymRight) return 0;
-	if(pSymLeft->GetType() != pSymRight->GetType())
-		; 	//TODO
 
-	if(pSymLeft->GetType() == SYMBOL_DOUBLE)
+	const Symbol *pLeft = pSymLeft;
+	const Symbol *pRight = pSymRight;
+	bool bCleanLeft = 0;
+	bool bCleanRight = 0;
+
+	if(pSymLeft->GetType() != pSymRight->GetType())
+	{
+		if(pLeft->GetType()==SYMBOL_INT && pRight->GetType()==SYMBOL_DOUBLE)
+		{
+			pLeft = pLeft->ToType(SYMBOL_DOUBLE);
+			bool bCleanLeft = 1;
+		}
+
+		if(pLeft->GetType()==SYMBOL_DOUBLE && pRight->GetType()==SYMBOL_INT)
+		{
+			pRight = pRight->ToType(SYMBOL_DOUBLE);
+			bool bCleanRight = 1;
+		}
+	}
+
+	if(pLeft->GetType() == SYMBOL_DOUBLE)
 	{
 		SymbolDouble *pResult = new SymbolDouble();
 		pResult->strName = "<op_result>";
-		pResult->dVal = g_mapBinOps_d[op](((SymbolDouble*)pSymLeft)->dVal, 
-						((SymbolDouble*)pSymRight)->dVal);
+		pResult->dVal = g_mapBinOps_d[op](((SymbolDouble*)pLeft)->dVal,
+						((SymbolDouble*)pRight)->dVal);
+
+		return pResult;
+	}
+	else if(pLeft->GetType() == SYMBOL_INT)
+	{
+		SymbolInt *pResult = new SymbolInt();
+		pResult->strName = "<op_result>";
+		pResult->iVal = g_mapBinOps_i[op](((SymbolInt*)pLeft)->iVal,
+						((SymbolInt*)pRight)->iVal);
 
 		return pResult;
 	}
 	
+	if(bCleanLeft) delete pLeft;
+	if(bCleanRight) delete pRight;
+
 	return 0;
 }
 
@@ -89,6 +133,14 @@ Symbol* NodeDouble::eval(SymbolTable *pSym) const
 	return pSymbol;
 }
 
+Symbol* NodeInt::eval(SymbolTable *pSym) const
+{
+	SymbolInt *pSymbol = new SymbolInt;
+	pSymbol->iVal = m_iVal;
+	pSymbol->strName = "<const>";
+	return pSymbol;
+}
+
 Symbol* NodeUnaryOp::eval(SymbolTable *pSym) const
 {
 	switch(m_type)
@@ -101,6 +153,8 @@ Symbol* NodeUnaryOp::eval(SymbolTable *pSym) const
 
 			if(pSymbol->GetType() == SYMBOL_DOUBLE)
 				((SymbolDouble*)pSymbol)->dVal = -((SymbolDouble*)pSymbol)->dVal;
+			else if(pSymbol->GetType() == SYMBOL_DOUBLE)
+				((SymbolInt*)pSymbol)->iVal = -((SymbolInt*)pSymbol)->iVal;
 
 			return pSymbol;
 		}

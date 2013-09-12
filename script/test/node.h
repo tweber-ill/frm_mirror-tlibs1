@@ -32,6 +32,7 @@ enum NodeType
 	NODE_STMTS,
 
 	NODE_DOUBLE,
+	NODE_INT,
 	NODE_IDENT,
 
 	NODE_ARGS
@@ -93,6 +94,17 @@ struct NodeDouble : public Node
 		: Node(NODE_DOUBLE), m_dVal(dVal)
 	{}
 	
+	virtual Symbol* eval(SymbolTable *pSym) const;
+};
+
+struct NodeInt : public Node
+{
+	double m_iVal;
+
+	NodeInt(int iVal)
+		: Node(NODE_INT), m_iVal(iVal)
+	{}
+
 	virtual Symbol* eval(SymbolTable *pSym) const;
 };
 

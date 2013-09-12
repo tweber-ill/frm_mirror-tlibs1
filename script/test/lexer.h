@@ -16,6 +16,7 @@ enum TokenType
 	LEX_TOKEN_END,
 	
 	LEX_TOKEN_DOUBLE,
+	LEX_TOKEN_INT,
 	LEX_TOKEN_STRING,
 	LEX_TOKEN_IDENT,
 	LEX_TOKEN_CHAROP,
@@ -26,6 +27,7 @@ struct Token
 	TokenType type;
 	
 	char cOp;
+	int iVal;
 	double dVal;
 	std::string strVal;
 	

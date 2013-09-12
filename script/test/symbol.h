@@ -13,7 +13,8 @@
 
 enum SymbolType
 {
-	SYMBOL_DOUBLE
+	SYMBOL_DOUBLE,
+	SYMBOL_INT
 };
 
 struct Symbol
@@ -36,14 +37,16 @@ struct SymbolDouble : public Symbol
 	virtual Symbol* clone() const;
 };
 
-/*
-static std::ostream& operator<<(std::ostream& ostr, const Symbol& sym)
+struct SymbolInt : public Symbol
 {
-	std::string str = sym.print();
-	ostr << str;
-	return ostr;
-}
-*/
+	int iVal;
+
+	virtual SymbolType GetType() const { return SYMBOL_INT; }
+	virtual Symbol* ToType(SymbolType stype) const;
+	virtual std::string print() const;
+	virtual Symbol* clone() const;
+};
+
 
 class SymbolTable
 {
