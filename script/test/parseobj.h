@@ -15,6 +15,7 @@ struct ParseObj
 	Lexer* pLexer;
 	SymbolTable* pSym;
 	Node* pRoot;
+	std::vector<NodeFunction*> vecFuncs;
 };
 
 #endif

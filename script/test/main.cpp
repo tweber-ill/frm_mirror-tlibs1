@@ -36,6 +36,7 @@ int main(int argc, char** argv)
 	pcInput[iFileLen] = 0;
 
 
+
 	ParseObj par;
 	par.pLexer = new Lexer(pcInput);
 	par.pSym = new SymbolTable();
@@ -43,9 +44,8 @@ int main(int argc, char** argv)
 	yydebug = 0;
 	yyparse(&par);
 
-	par.pRoot->eval(par.pSym);
-
-	par.pSym->print();
+	par.pRoot->eval(par.pSym, par.vecFuncs);
+	//par.pSym->print();
 
 
 	delete[] pcInput;

@@ -63,6 +63,8 @@ public:
 	
 	unsigned int GetNumTokens() const { return m_vecToks.size(); }
 	const Token& GetToken(unsigned int i) const { return m_vecToks[i]; }
+
+	static std::string RemoveComments(const std::string& strInput);
 };
 
 #endif

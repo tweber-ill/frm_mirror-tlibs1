@@ -29,8 +29,31 @@ Lexer::Lexer(const std::string& strInput) : Lexer()
 Lexer::~Lexer()
 {}
 
-void Lexer::load(const std::string& strInput)
+std::string Lexer::RemoveComments(const std::string& strInput)
 {
+	std::string strRet;
+	std::istringstream istr(strInput);
+
+	while(!istr.eof())
+	{
+		std::string strLine;
+		std::getline(istr, strLine);
+		std::size_t iPos = strLine.find('#');
+
+		strLine = strLine.substr(0, iPos);
+
+		strRet += strLine;
+		strRet += "\n";
+	}
+
+	//std::cout << strRet << std::endl;
+	return strRet;
+}
+
+void Lexer::load(const std::string& _strInput)
+{
+	std::string strInput = RemoveComments(_strInput);
+
 	typedef boost::char_separator<char> t_sep;
 	typedef boost::tokenizer<t_sep> t_tok;
 	

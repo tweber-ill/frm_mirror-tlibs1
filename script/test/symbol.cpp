@@ -4,6 +4,7 @@
  */
 
 #include "symbol.h"
+#include <set>
 
 
 Symbol* SymbolDouble::ToType(SymbolType stype) const
@@ -85,6 +86,19 @@ SymbolTable::SymbolTable()
 
 SymbolTable::~SymbolTable()
 {
+	std::set<Symbol*> m_setDeleted;
+
+	for(t_syms::iterator iter=m_syms.begin(); iter!=m_syms.end(); ++iter)
+	{
+		Symbol *pSym = iter->second;
+		if(pSym && m_setDeleted.find(pSym)!=m_setDeleted.end())
+		{
+			m_setDeleted.insert(pSym);
+
+			delete pSym;
+			iter->second = 0;
+		}
+	}
 }
 
 

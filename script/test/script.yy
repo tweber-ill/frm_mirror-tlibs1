@@ -33,10 +33,13 @@
 %token<pNode> TOK_INT
 %token<pNode> TOK_IDENT
 %type<pNode> prog
+%type<pNode> funcs
+%type<pNode> func
 %type<pNode> stmts
 %type<pNode> stmt
 %type<pNode> expr
 %type<pNode> args
+%type<pNode> idents
 %type<pNode> ident
 
 
@@ -49,11 +52,23 @@
 
 %%
 
-prog:	stmts			{ $$ = $1; ((ParseObj*)pParseObj)->pRoot = (Node*)$1; }
+prog:	funcs			{ $$ = $1; ((ParseObj*)pParseObj)->pRoot = (Node*)$1; }
+	;
+	
+
+
+funcs: func funcs		{ $$ = new NodeBinaryOp($1, $2, NODE_FUNCS); }
+	| /* eps */			{ $$ = 0; }
 	;
 
-	
+func: ident '(' idents ')' '{' stmts '}'		{ $$ = new NodeFunction($1, $3, $6); }
+	; 
+
+
+
+
 stmts:	stmt stmts		{ $$ = new NodeBinaryOp($1, $2, NODE_STMTS); }
+	| '{' stmts '}'		{ $$ = new NodeUnaryOp($2, NODE_STMTS); }
 	| /*eps*/			{ $$ = 0; } 
 	;
 	
@@ -61,10 +76,18 @@ stmt:	expr ';'		{ $$ = $1; }
 	;
 	
 
+
+
 args:	expr ',' args		{ $$ = new NodeBinaryOp($1, $3, NODE_ARGS); }
 	|   expr				{ $$ = $1; }
 	| 	/*eps*/				{ $$ = 0; }
 	;
+
+idents:	ident ',' idents	{ $$ = new NodeBinaryOp($1, $3, NODE_IDENTS); }
+	|   ident				{ $$ = $1; }
+	| 	/*eps*/				{ $$ = 0; }
+	;
+
 
 
 expr:	'(' expr ')'		{ $$ = $2; }

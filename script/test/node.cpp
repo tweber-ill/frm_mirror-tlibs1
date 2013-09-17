@@ -95,12 +95,12 @@ void safe_delete(Symbol *pSym, const SymbolTable* pSymTab)
 //--------------------------------------------------------------------------------
 
 
-Symbol* NodeIdent::eval(SymbolTable *pSym) const
+Symbol* NodeIdent::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const
 {
 	return pSym->GetSymbol(m_strIdent);
 }
 
-Symbol* NodeCall::eval(SymbolTable *pSym) const
+Symbol* NodeCall::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const
 {
 	if(m_pIdent->m_type != NODE_IDENT)
 		return 0;
@@ -116,16 +116,33 @@ Symbol* NodeCall::eval(SymbolTable *pSym) const
 
 	std::string strFkt = pIdent->m_strIdent;
 	//std::cout << "call to " << strFkt << " with " << vecArgs.size() << " arguments." << std::endl;
+
+
+	NodeFunction *pFkt = 0;
+	for(NodeFunction *pFktIter : vecFuncs)
+	{
+		if(pFktIter && pFktIter->GetName()==strFkt)
+			pFkt = pFktIter;
+	}
+	if(!pFkt)
+	{
+		std::cerr << "Error: Trying to call unknown function \" << strFkt << \"."
+					<< std::endl;
+		return 0;
+	}
+
+
 	for(Node* pNode : vecArgs)
 	{
-		Symbol *pSymbol = pNode->eval(pSym);
+		Symbol *pSymbol = pNode->eval(pSym, vecFuncs);
 		//std::cout << "argument: " << pSymbol->print() << std::endl;
 	}
 
-	return 0;
+
+	return pFkt->eval(pSym, vecFuncs);
 }
 
-Symbol* NodeDouble::eval(SymbolTable *pSym) const
+Symbol* NodeDouble::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const
 {
 	SymbolDouble *pSymbol = new SymbolDouble;
 	pSymbol->dVal = m_dVal;
@@ -133,7 +150,7 @@ Symbol* NodeDouble::eval(SymbolTable *pSym) const
 	return pSymbol;
 }
 
-Symbol* NodeInt::eval(SymbolTable *pSym) const
+Symbol* NodeInt::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const
 {
 	SymbolInt *pSymbol = new SymbolInt;
 	pSymbol->iVal = m_iVal;
@@ -141,13 +158,13 @@ Symbol* NodeInt::eval(SymbolTable *pSym) const
 	return pSymbol;
 }
 
-Symbol* NodeUnaryOp::eval(SymbolTable *pSym) const
+Symbol* NodeUnaryOp::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const
 {
 	switch(m_type)
 	{
 		case NODE_UMINUS:
 		{
-			Symbol *pSymbolEval = m_pChild->eval(pSym);
+			Symbol *pSymbolEval = m_pChild->eval(pSym, vecFuncs);
 			Symbol *pSymbol = pSymbolEval->clone();
 			safe_delete(pSymbolEval, pSym);
 
@@ -158,36 +175,70 @@ Symbol* NodeUnaryOp::eval(SymbolTable *pSym) const
 
 			return pSymbol;
 		}
+
+		case NODE_STMTS:
+		{
+			if(m_pChild)
+			{
+				Symbol *pSymbol = m_pChild->eval(pSym, vecFuncs);
+				safe_delete(pSymbol, pSym);
+			}
+			return 0;
+		}
 	}
 }
 
-Symbol* NodeBinaryOp::eval(SymbolTable *pSym) const
+Symbol* NodeBinaryOp::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const
 {
 	switch(m_type)
 	{
+		case NODE_FUNCS:
+		{
+			std::vector<Node*> vecFuncs0;
+			vecFuncs0 = this->flatten(NODE_FUNCS);
+			for(Node *pNodeFunc : vecFuncs0)
+				vecFuncs.push_back((NodeFunction*)pNodeFunc);
+
+			for(NodeFunction* pFkt : vecFuncs)
+			{
+				if(pFkt->GetName() == "main")
+					return pFkt->eval(pSym, vecFuncs);
+			}
+
+			std::cerr << "Error: No main function defined." << std::endl;
+			return 0;
+		}
+
 		case NODE_STMTS:
 		case NODE_ARGS:
+		{
 			if(m_pLeft)
 			{
-				Symbol *pSymbol = m_pLeft->eval(pSym);
+				//std::cout << "left: " << m_pLeft->m_type << std::endl;
+				Symbol *pSymbol = m_pLeft->eval(pSym, vecFuncs);
 				safe_delete(pSymbol, pSym);
 			}
 			if(m_pRight)
 			{
-				Symbol *pSymbol = m_pRight->eval(pSym);
+				//std::cout << "right: " << m_pRight->m_type << std::endl;
+				Symbol *pSymbol = m_pRight->eval(pSym, vecFuncs);
 				safe_delete(pSymbol, pSym);
 			}
 			return 0;
+		}
+
 		case NODE_ASSIGN:
-			Symbol *pSymbol = m_pRight->eval(pSym);
+		{
+			Symbol *pSymbol = m_pRight->eval(pSym, vecFuncs);
 			const std::string& strIdent = ((NodeIdent*)m_pLeft)->m_strIdent;
 
 			pSym->InsertSymbol(strIdent, pSymbol);
 			return pSymbol;
+		}
 	};
 
-	Symbol *pSymbolLeft = m_pLeft->eval(pSym);
-	Symbol *pSymbolRight = m_pRight->eval(pSym);
+	Symbol *pSymbolLeft = m_pLeft->eval(pSym, vecFuncs);
+	Symbol *pSymbolRight = m_pRight->eval(pSym, vecFuncs);
 	Symbol *pSymbol = Op(pSymbolLeft, pSymbolRight, m_type);
 	safe_delete(pSymbolLeft, pSym);
 	safe_delete(pSymbolRight, pSym);
@@ -195,7 +246,56 @@ Symbol* NodeBinaryOp::eval(SymbolTable *pSym) const
 	return pSymbol;
 }
 
-std::vector<Node*> NodeBinaryOp::flatten(NodeType ntype)
+
+Symbol* NodeFunction::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const
+{
+	std::string strName = GetName();
+	//std::cout << "in fkt " << strName << std::endl;
+
+	std::vector<Node*> vecArgs;
+	if(m_pArgs && (m_pArgs->m_type==NODE_IDENTS || m_pArgs->m_type==NODE_IDENT))
+	{
+		NodeBinaryOp* pArgs = (NodeBinaryOp*) m_pArgs;
+		vecArgs = pArgs->flatten(NODE_IDENTS);
+	}
+
+
+	SymbolTable *pLocalSym = new SymbolTable;
+	for(Node* pNode : vecArgs)
+	{
+		NodeIdent* pIdent = (NodeIdent*)pNode;
+		//std::cout << "arg: " << pIdent->m_strIdent << std::endl;
+
+		Symbol *pSymbol = pSym->GetSymbol(pIdent->m_strIdent);
+		if(!pSymbol)
+		{
+			std::cerr << "Error: Symbol \"" << pIdent->m_strIdent << "\" not found."
+						<< std::endl;
+		}
+
+		pLocalSym->InsertSymbol(pIdent->m_strIdent, pSymbol->clone());
+	}
+
+
+	Symbol *pRet = 0;
+	if(m_pStmts)
+	{
+		pRet = m_pStmts->eval(pLocalSym, vecFuncs);
+		if(!pRet)
+			pRet = pLocalSym->GetSymbol("_ret_");
+	}
+
+	std::cout << "Local symbols for \"" << strName << "\":\n";
+	pLocalSym->print();
+
+	delete pLocalSym;
+	return pRet;
+}
+
+
+
+
+std::vector<Node*> NodeBinaryOp::flatten(NodeType ntype) const
 {
 	//std::cout << m_type << ", " << ntype << std::endl;
 
@@ -234,8 +334,18 @@ std::vector<Node*> NodeBinaryOp::flatten(NodeType ntype)
 	}
 	else
 	{
-		vecNodes.push_back(this);
+		vecNodes.push_back(const_cast<NodeBinaryOp*>(this));
 	}
 
 	return vecNodes;
+}
+
+
+std::string NodeFunction::GetName() const
+{
+	if(!m_pIdent || m_pIdent->m_type != NODE_IDENT)
+		return "<null>";
+
+	NodeIdent *pIdent = (NodeIdent*)m_pIdent;
+	return pIdent->m_strIdent;
 }

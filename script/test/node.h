@@ -33,9 +33,14 @@ enum NodeType
 
 	NODE_DOUBLE,
 	NODE_INT,
+
+	NODE_IDENTS,
 	NODE_IDENT,
 
-	NODE_ARGS
+	NODE_ARGS,
+
+	NODE_FUNCS,
+	NODE_FUNC
 };
 
 
@@ -44,13 +49,15 @@ extern Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op);
 extern void safe_delete(Symbol *pSym, const SymbolTable* pSymTab);
 
 
+struct NodeFunction;
+
 struct Node
 {
 	NodeType m_type;
 
 	Node(NodeType ntype) : m_type(ntype) {}
 	virtual ~Node() {}
-	virtual Symbol* eval(SymbolTable *pSym) const = 0;
+	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const = 0;
 };
 
 struct NodeIdent : public Node
@@ -61,7 +68,7 @@ struct NodeIdent : public Node
 		: Node(NODE_IDENT), m_strIdent(strIdent)
 	{}
 
-	virtual Symbol* eval(SymbolTable *pSym) const;
+	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
 };
 
 struct NodeCall : public Node
@@ -83,7 +90,7 @@ struct NodeCall : public Node
 		if(m_pArgs) delete m_pArgs;
 	}
 	
-	virtual Symbol* eval(SymbolTable *pSym) const;
+	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
 };
 
 struct NodeDouble : public Node
@@ -94,7 +101,7 @@ struct NodeDouble : public Node
 		: Node(NODE_DOUBLE), m_dVal(dVal)
 	{}
 	
-	virtual Symbol* eval(SymbolTable *pSym) const;
+	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
 };
 
 struct NodeInt : public Node
@@ -105,7 +112,7 @@ struct NodeInt : public Node
 		: Node(NODE_INT), m_iVal(iVal)
 	{}
 
-	virtual Symbol* eval(SymbolTable *pSym) const;
+	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
 };
 
 struct NodeUnaryOp : public Node
@@ -125,7 +132,7 @@ struct NodeUnaryOp : public Node
 		if(m_pChild) delete m_pChild;
 	}
 
-	virtual Symbol* eval(SymbolTable *pSym) const;
+	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
 };
 
 struct NodeBinaryOp : public Node
@@ -146,9 +153,33 @@ struct NodeBinaryOp : public Node
 		if(m_pRight) delete m_pRight;
 	}
 
-	virtual Symbol* eval(SymbolTable *pSym) const;
+	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
 
-	std::vector<Node*> flatten(NodeType ntype=NODE_ARGS);
+	std::vector<Node*> flatten(NodeType ntype=NODE_ARGS) const;
+};
+
+struct NodeFunction : public Node
+{
+	Node *m_pIdent, *m_pArgs, *m_pStmts;
+
+	NodeFunction(Node* pLeft, Node* pMiddle, Node* pRight)
+		: Node(NODE_FUNC), m_pIdent(pLeft), m_pArgs(pMiddle), m_pStmts(pRight)
+	{}
+
+	NodeFunction(void* pLeft, void *pMiddle, void* pRight)
+		: NodeFunction((Node*)pLeft, (Node*)pMiddle, (Node*)pRight)
+	{}
+
+	virtual ~NodeFunction()
+	{
+		if(m_pIdent) delete m_pIdent;
+		if(m_pArgs) delete m_pArgs;
+		if(m_pStmts) delete m_pStmts;
+	}
+
+	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
+
+	std::string GetName() const;
 };
 
 #endif
