@@ -51,7 +51,10 @@ enum NodeType
 	NODE_LOG_LESS,
 	NODE_LOG_GREATER,
 	NODE_LOG_LEQ,
-	NODE_LOG_GEQ
+	NODE_LOG_GEQ,
+
+	NODE_IF,
+	NODE_WHILE
 };
 
 
@@ -101,6 +104,52 @@ struct NodeCall : public Node
 		if(m_pArgs) delete m_pArgs;
 	}
 	
+	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
+};
+
+struct NodeIf : public Node
+{
+	Node *m_pExpr;
+	Node *m_pIf;
+	Node *m_pElse;
+
+	NodeIf(Node* pExpr, Node* pIf, Node* pElse=0)
+		: Node(NODE_IF), m_pExpr(pExpr), m_pIf(pIf), m_pElse(pElse)
+	{}
+
+	NodeIf(void* pExpr, void* pIf, void* pElse=0)
+		: NodeIf((Node*)pExpr, (Node*)pIf, (Node*)pElse)
+	{}
+
+	virtual ~NodeIf()
+	{
+		if(m_pExpr) delete m_pExpr;
+		if(m_pIf) delete m_pIf;
+		if(m_pElse) delete m_pElse;
+	}
+
+	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
+};
+
+struct NodeWhile : public Node
+{
+	Node *m_pExpr;
+	Node *m_pStmt;
+
+	NodeWhile(Node* pExpr, Node* pStmt)
+		: Node(NODE_WHILE), m_pExpr(pExpr), m_pStmt(pStmt)
+	{}
+
+	NodeWhile(void* pExpr, void* pStmt)
+		: NodeWhile((Node*)pExpr, (Node*)pStmt)
+	{}
+
+	virtual ~NodeWhile()
+	{
+		if(m_pExpr) delete m_pExpr;
+		if(m_pStmt) delete m_pStmt;
+	}
+
 	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
 };
 

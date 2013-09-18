@@ -395,6 +395,45 @@ Symbol* NodeFunction::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFun
 }
 
 
+Symbol* NodeIf::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const
+{
+	Symbol *pSymExpr = 0;
+	Symbol *pSymRet = 0;
+	if(m_pExpr)
+		pSymExpr = m_pExpr->eval(pSym, vecFuncs);
+
+	if(pSymExpr && pSymExpr->IsNotZero())
+		pSymRet = (m_pIf ? m_pIf->eval(pSym, vecFuncs) : 0);
+	else
+		pSymRet = (m_pElse ? m_pElse->eval(pSym, vecFuncs) : 0);
+
+	safe_delete(pSymExpr, pSym);
+	return pSymRet;
+}
+
+
+Symbol* NodeWhile::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const
+{
+	if(!m_pExpr) return 0;
+	if(!m_pStmt) return 0;
+
+	Symbol *pSymRet = 0;
+
+	while(1)
+	{
+		safe_delete(pSymRet, pSym);
+
+		Symbol *pSymExpr = m_pExpr->eval(pSym, vecFuncs);
+
+		if(pSymExpr && pSymExpr->IsNotZero())
+			pSymRet = m_pStmt->eval(pSym, vecFuncs);
+
+		safe_delete(pSymExpr, pSym);
+	}
+	return pSymRet;
+}
+
+//--------------------------------------------------------------------------------
 
 
 std::vector<Node*> NodeBinaryOp::flatten(NodeType ntype) const

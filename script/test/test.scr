@@ -12,7 +12,13 @@ main()
 	c = a+b + 0.2;
 	d = not(not((1 and 0) or 1));
 
-	str = "Teststring\t123";
+	if (d neq 1)
+		str = "Teststring \t 1";
+	else
+	{
+		str = "Teststring \t 2";
+		str2 = "abcdef";
+	}
 
 	tst = test(a,2);
 }

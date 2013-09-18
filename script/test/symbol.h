@@ -26,6 +26,8 @@ struct Symbol
 	virtual Symbol* ToType(SymbolType stype) const = 0;
 	virtual std::string print() const = 0;
 	virtual Symbol* clone() const = 0;
+
+	virtual bool IsNotZero() const = 0;
 };
 
 struct SymbolDouble : public Symbol
@@ -36,6 +38,8 @@ struct SymbolDouble : public Symbol
 	virtual Symbol* ToType(SymbolType stype) const;
 	virtual std::string print() const;
 	virtual Symbol* clone() const;
+
+	virtual bool IsNotZero() const { return dVal != 0.; }
 };
 
 struct SymbolInt : public Symbol
@@ -46,6 +50,8 @@ struct SymbolInt : public Symbol
 	virtual Symbol* ToType(SymbolType stype) const;
 	virtual std::string print() const;
 	virtual Symbol* clone() const;
+
+	virtual bool IsNotZero() const { return iVal != 0.; }
 };
 
 struct SymbolString : public Symbol
@@ -56,6 +62,8 @@ struct SymbolString : public Symbol
 	virtual Symbol* ToType(SymbolType stype) const;
 	virtual std::string print() const;
 	virtual Symbol* clone() const;
+
+	virtual bool IsNotZero() const { return 0; }
 };
 
 

@@ -91,21 +91,23 @@ funcs: func funcs		{ $$ = new NodeBinaryOp($1, $2, NODE_FUNCS); }
 	| /* eps */			{ $$ = 0; }
 	;
 
-func: ident '(' idents ')' '{' stmts '}'		{ $$ = new NodeFunction($1, $3, $6); }
+func: ident '(' idents ')' stmt 		{ $$ = new NodeFunction($1, $3, $5); }
 	; 
 
 
 
 
 stmts:	stmt stmts		{ $$ = new NodeBinaryOp($1, $2, NODE_STMTS); }
-	| '{' stmts '}'		{ $$ = new NodeUnaryOp($2, NODE_STMTS); }
 	| /*eps*/			{ $$ = 0; } 
 	;
 	
 stmt:	expr ';'		{ $$ = $1; }
-	;
+	| 	'{' stmts '}'	{ $$ = $2; }
 	
-
+	|	TOK_IF '(' expr ')' stmt 					{ $$ = new NodeIf($3, $5); }
+	|	TOK_IF '(' expr ')' stmt TOK_ELSE stmt 		{ $$ = new NodeIf($3, $5, $7); }
+	|	TOK_WHILE '(' expr ')' stmt					{ $$ = new NodeWhile($3, $5); }
+	;
 
 
 args:	expr ',' args		{ $$ = new NodeBinaryOp($1, $3, NODE_ARGS); }
