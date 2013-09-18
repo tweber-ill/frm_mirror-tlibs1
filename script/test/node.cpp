@@ -212,14 +212,21 @@ Symbol* NodeCall::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) 
 	}
 
 
+	std::vector<Symbol*> vecArgSyms;
 	for(Node* pNode : vecArgs)
 	{
 		Symbol *pSymbol = pNode->eval(pSym, vecFuncs);
 		//std::cout << "argument: " << pSymbol->print() << std::endl;
+
+		vecArgSyms.push_back(pSymbol);
 	}
 
+	pFkt->SetArgSyms(&vecArgSyms);
+	Symbol* pFktRet = pFkt->eval(pSym, vecFuncs);
 
-	return pFkt->eval(pSym, vecFuncs);
+	for(Symbol *pArgSym : vecArgSyms)
+		safe_delete(pArgSym, pSym);
+	return pFktRet;
 }
 
 Symbol* NodeDouble::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const
@@ -362,18 +369,30 @@ Symbol* NodeFunction::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFun
 	}
 
 
-	SymbolTable *pLocalSym = new SymbolTable;
-	for(Node* pNode : vecArgs)
+	if(vecArgs.size() != m_pVecArgSyms->size())
 	{
+		std::cerr << "Error: Function \"" << strName << "\"" << " takes "
+				 << vecArgs.size() << " arguments, but "
+				 << m_pVecArgSyms->size() << " given."
+				 << std::endl;
+	}
+
+	SymbolTable *pLocalSym = new SymbolTable;
+
+	for(unsigned int iArg=0; iArg<vecArgs.size(); ++iArg)
+	{
+		Node* pNode = vecArgs[iArg];
+		Symbol *pSymbol = (*m_pVecArgSyms)[iArg];
+
 		NodeIdent* pIdent = (NodeIdent*)pNode;
 		//std::cout << "arg: " << pIdent->m_strIdent << std::endl;
 
-		Symbol *pSymbol = pSym->GetSymbol(pIdent->m_strIdent);
+		/*Symbol *pSymbol = pSym->GetSymbol(pIdent->m_strIdent);
 		if(!pSymbol)
 		{
 			std::cerr << "Error: Symbol \"" << pIdent->m_strIdent << "\" not found."
 						<< std::endl;
-		}
+		}*/
 
 		pLocalSym->InsertSymbol(pIdent->m_strIdent, pSymbol->clone());
 	}

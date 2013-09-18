@@ -232,6 +232,7 @@ struct NodeBinaryOp : public Node
 struct NodeFunction : public Node
 {
 	Node *m_pIdent, *m_pArgs, *m_pStmts;
+	const std::vector<Symbol*>* m_pVecArgSyms;
 
 	NodeFunction(Node* pLeft, Node* pMiddle, Node* pRight)
 		: Node(NODE_FUNC), m_pIdent(pLeft), m_pArgs(pMiddle), m_pStmts(pRight)
@@ -251,6 +252,9 @@ struct NodeFunction : public Node
 	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
 
 	std::string GetName() const;
+
+	void SetArgSyms(const std::vector<Symbol*>* pvecArgSyms)
+	{ this-> m_pVecArgSyms = pvecArgSyms; }
 };
 
 #endif
