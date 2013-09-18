@@ -448,6 +448,8 @@ Symbol* NodeWhile::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs)
 
 		if(pSymExpr && pSymExpr->IsNotZero())
 			pSymRet = m_pStmt->eval(pSym, vecFuncs);
+		else
+			break;
 
 		safe_delete(pSymExpr, pSym);
 	}

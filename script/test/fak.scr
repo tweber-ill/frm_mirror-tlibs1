@@ -8,5 +8,12 @@ fak(a)
 
 main()
 {
-	result = fak(5);
+	a = 5;
+
+#	a = 0;
+#	while(a less 10)
+#	{
+		result = fak(a);
+#		a = a + 1;
+#	}
 }
