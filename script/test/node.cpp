@@ -10,6 +10,15 @@ template<typename T> T minus_op(T a, T b) { return a-b; }
 template<typename T> T mult_op(T a, T b) { return a*b; }
 template<typename T> T div_op(T a, T b) { return a/b; }
 
+template<typename T> bool log_or_op(T a, T b) { return a||b; }
+template<typename T> bool log_and_op(T a, T b) { return a&&b; }
+template<typename T> bool log_eq_op(T a, T b) { return a==b; }
+template<typename T> bool log_neq_op(T a, T b) { return a!=b; }
+template<typename T> bool log_leq_op(T a, T b) { return a<=b; }
+template<typename T> bool log_geq_op(T a, T b) { return a>=b; }
+template<typename T> bool log_less_op(T a, T b) { return a<b; }
+template<typename T> bool log_greater_op(T a, T b) { return a>b; }
+
 static int pow_int(int a, int b)
 {
 	return int(pow(a,b));
@@ -21,7 +30,7 @@ std::map<NodeType, double (*)(double,double)> g_mapBinOps_d =
 	std::pair<NodeType, double (*)(double,double)>(NODE_MINUS, minus_op),
 	std::pair<NodeType, double (*)(double,double)>(NODE_MULT, mult_op),
 	std::pair<NodeType, double (*)(double,double)>(NODE_DIV, div_op),
-	std::pair<NodeType, double (*)(double,double)>(NODE_POW, pow)
+	std::pair<NodeType, double (*)(double,double)>(NODE_POW, pow),
 };
 
 std::map<NodeType, int (*)(int,int)> g_mapBinOps_i =
@@ -32,6 +41,51 @@ std::map<NodeType, int (*)(int,int)> g_mapBinOps_i =
 	std::pair<NodeType, int (*)(int,int)>(NODE_DIV, div_op),
 	std::pair<NodeType, int (*)(int,int)>(NODE_POW, pow_int)
 };
+
+
+std::map<NodeType, bool (*)(double,double)> g_mapBinLogOps_d =
+{
+	std::pair<NodeType, bool (*)(double,double)>(NODE_LOG_OR, log_or_op),
+	std::pair<NodeType, bool (*)(double,double)>(NODE_LOG_AND, log_and_op),
+	std::pair<NodeType, bool (*)(double,double)>(NODE_LOG_EQ, log_eq_op),
+	std::pair<NodeType, bool (*)(double,double)>(NODE_LOG_NEQ, log_neq_op),
+	std::pair<NodeType, bool (*)(double,double)>(NODE_LOG_LEQ, log_leq_op),
+	std::pair<NodeType, bool (*)(double,double)>(NODE_LOG_GEQ, log_geq_op),
+	std::pair<NodeType, bool (*)(double,double)>(NODE_LOG_LESS, log_less_op),
+	std::pair<NodeType, bool (*)(double,double)>(NODE_LOG_GREATER, log_greater_op)
+};
+
+std::map<NodeType, bool (*)(int,int)> g_mapBinLogOps_i =
+{
+	std::pair<NodeType, bool (*)(int,int)>(NODE_LOG_OR, log_or_op),
+	std::pair<NodeType, bool (*)(int,int)>(NODE_LOG_AND, log_and_op),
+	std::pair<NodeType, bool (*)(int,int)>(NODE_LOG_EQ, log_eq_op),
+	std::pair<NodeType, bool (*)(int,int)>(NODE_LOG_NEQ, log_neq_op),
+	std::pair<NodeType, bool (*)(int,int)>(NODE_LOG_LEQ, log_leq_op),
+	std::pair<NodeType, bool (*)(int,int)>(NODE_LOG_GEQ, log_geq_op),
+	std::pair<NodeType, bool (*)(int,int)>(NODE_LOG_LESS, log_less_op),
+	std::pair<NodeType, bool (*)(int,int)>(NODE_LOG_GREATER, log_greater_op)
+};
+
+
+static inline bool IsLogicalOp(NodeType op)
+{
+	switch(op)
+	{
+		case NODE_LOG_AND:
+		case NODE_LOG_OR:
+		case NODE_LOG_NOT:
+		case NODE_LOG_EQ:
+		case NODE_LOG_NEQ:
+		case NODE_LOG_LESS:
+		case NODE_LOG_GREATER:
+		case NODE_LOG_LEQ:
+		case NODE_LOG_GEQ:
+			return 1;
+	}
+
+	return 0;
+}
 
 Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 {
@@ -59,21 +113,47 @@ Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 
 	if(pLeft->GetType() == SYMBOL_DOUBLE)
 	{
-		SymbolDouble *pResult = new SymbolDouble();
-		pResult->strName = "<op_result>";
-		pResult->dVal = g_mapBinOps_d[op](((SymbolDouble*)pLeft)->dVal,
-						((SymbolDouble*)pRight)->dVal);
+		Symbol *pRes = 0;
+		if(IsLogicalOp(op))
+		{
+			SymbolInt *pResult = new SymbolInt();
+			pResult->strName = "<op_logical_result>";
+			pResult->iVal = g_mapBinLogOps_d[op](((SymbolDouble*)pLeft)->dVal,
+												((SymbolDouble*)pRight)->dVal);
+			pRes = pResult;
+		}
+		else
+		{
+			SymbolDouble *pResult = new SymbolDouble();
+			pResult->strName = "<op_result>";
+			pResult->dVal = g_mapBinOps_d[op](((SymbolDouble*)pLeft)->dVal,
+											((SymbolDouble*)pRight)->dVal);
+			pRes = pResult;
+		}
 
-		return pResult;
+		return pRes;
 	}
 	else if(pLeft->GetType() == SYMBOL_INT)
 	{
-		SymbolInt *pResult = new SymbolInt();
-		pResult->strName = "<op_result>";
-		pResult->iVal = g_mapBinOps_i[op](((SymbolInt*)pLeft)->iVal,
-						((SymbolInt*)pRight)->iVal);
+		Symbol *pRes = 0;
+		if(IsLogicalOp(op))
+		{
+			SymbolInt *pResult = new SymbolInt();
+			pResult->strName = "<op_logical_result>";
+			pResult->iVal = g_mapBinLogOps_i[op](((SymbolInt*)pLeft)->iVal,
+												((SymbolInt*)pRight)->iVal);
+			pRes = pResult;
+		}
+		else
+		{
+			SymbolInt *pResult = new SymbolInt();
+			pResult->strName = "<op_result>";
+			pResult->iVal = g_mapBinOps_i[op](((SymbolInt*)pLeft)->iVal,
+											((SymbolInt*)pRight)->iVal);
+			pRes = pResult;
+		}
 
-		return pResult;
+		return pRes;
 	}
 	
 	if(bCleanLeft) delete pLeft;

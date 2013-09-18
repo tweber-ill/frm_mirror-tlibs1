@@ -33,6 +33,26 @@
 %token<pNode> TOK_INT
 %token<pNode> TOK_STRING
 %token<pNode> TOK_IDENT
+
+%token<pNode> TOK_IF
+%token<pNode> TOK_ELSE
+%token<pNode> TOK_FOR
+%token<pNode> TOK_WHILE
+%token<pNode> TOK_RETURN
+%token<pNode> TOK_BREAK
+%token<pNode> TOK_CONTINUE
+
+%token<pNode> TOK_LOG_AND
+%token<pNode> TOK_LOG_OR
+%token<pNode> TOK_LOG_NOT
+%token<pNode> TOK_LOG_EQ
+%token<pNode> TOK_LOG_NEQ
+%token<pNode> TOK_LOG_LESS
+%token<pNode> TOK_LOG_GREATER
+%token<pNode> TOK_LOG_LEQ
+%token<pNode> TOK_LOG_GEQ
+
+
 %type<pNode> prog
 %type<pNode> funcs
 %type<pNode> func
@@ -45,9 +65,18 @@
 
 
 %right '='
+%left TOK_LOG_OR
+%left TOK_LOG_AND
+%left TOK_LOG_EQ
+%left TOK_LOG_NEQ
+%left TOK_LOG_LESS
+%left TOK_LOG_LEQ
+%left TOK_LOG_GREATER
+%left TOK_LOG_GEQ
 %left '+' '-'
 %left '*' '/'
-%left UMINUS UPLUS
+%right TOK_LOG_NOT
+%right UMINUS UPLUS
 %right '^'
 
 
@@ -93,6 +122,7 @@ idents:	ident ',' idents	{ $$ = new NodeBinaryOp($1, $3, NODE_IDENTS); }
 
 expr:	'(' expr ')'		{ $$ = $2; }
 	| ident '=' expr		{ $$ = new NodeBinaryOp($1, $3, NODE_ASSIGN); }
+
 	| expr '+' expr			{ $$ = new NodeBinaryOp($1, $3, NODE_PLUS); }
 	| expr '-' expr			{ $$ = new NodeBinaryOp($1, $3, NODE_MINUS); }
 	| expr '*' expr			{ $$ = new NodeBinaryOp($1, $3, NODE_MULT); }
@@ -100,6 +130,17 @@ expr:	'(' expr ')'		{ $$ = $2; }
 	| expr '^' expr			{ $$ = new NodeBinaryOp($1, $3, NODE_POW); }
 	| '-' expr %prec UMINUS	{ $$ = new NodeUnaryOp($2, NODE_UMINUS); }
 	| '+' expr %prec UPLUS	{ $$ = $2; }
+	
+	| expr TOK_LOG_AND expr		{ $$ = new NodeBinaryOp($1, $3, NODE_LOG_AND); }
+	| expr TOK_LOG_OR expr 		{ $$ = new NodeBinaryOp($1, $3, NODE_LOG_OR); }
+	| expr TOK_LOG_EQ expr 		{ $$ = new NodeBinaryOp($1, $3, NODE_LOG_EQ); }
+	| expr TOK_LOG_NEQ expr		{ $$ = new NodeBinaryOp($1, $3, NODE_LOG_NEQ); }
+	| expr TOK_LOG_LESS expr 	{ $$ = new NodeBinaryOp($1, $3, NODE_LOG_LESS); }
+	| expr TOK_LOG_GREATER expr	{ $$ = new NodeBinaryOp($1, $3, NODE_LOG_GREATER); }
+	| expr TOK_LOG_LEQ expr 	{ $$ = new NodeBinaryOp($1, $3, NODE_LOG_LEQ); }
+	| expr TOK_LOG_GEQ expr		{ $$ = new NodeBinaryOp($1, $3, NODE_LOG_GEQ); }
+	| TOK_LOG_NOT expr			{ $$ = new NodeUnaryOp($2, NODE_LOG_NOT); }		
+		
 	| TOK_DOUBLE			{ $$ = $1; }
 	| TOK_INT				{ $$ = $1; }
 	| TOK_STRING			{ $$ = $1; }

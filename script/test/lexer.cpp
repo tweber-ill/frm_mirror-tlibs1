@@ -90,8 +90,8 @@ std::vector<std::string> Lexer::GetStringTable(const std::string& strInput)
 			str += c;
 	}
 
-	for(const std::string& str : vecStr)
-		std::cout << "String: " << str << std::endl;
+	//for(const std::string& str : vecStr)
+	//	std::cout << "String: " << str << std::endl;
 	return vecStr;
 }
 
@@ -151,6 +151,37 @@ void Lexer::load(const std::string& _strInput)
 		{
 			tok.type = LEX_TOKEN_IDENT;
 			tok.strVal = str;
+
+			if(str == "if")
+				tok.type = LEX_TOKEN_IF;
+			else if(str == "else")
+				tok.type = LEX_TOKEN_ELSE;
+			else if(str == "for")
+				tok.type = LEX_TOKEN_FOR;
+			else if(str == "while")
+				tok.type = LEX_TOKEN_WHILE;
+			else if(str == "return")
+				tok.type = LEX_TOKEN_RETURN;
+			else if(str == "break")
+				tok.type = LEX_TOKEN_RETURN;
+			else if(str == "continue")
+				tok.type = LEX_TOKEN_RETURN;
+			else if(str == "and")
+				tok.type = LEX_TOKEN_LOG_AND;
+			else if(str == "or")
+				tok.type = LEX_TOKEN_LOG_OR;
+			else if(str == "eq")
+				tok.type = LEX_TOKEN_LOG_EQ;
+			else if(str == "neq")
+				tok.type = LEX_TOKEN_LOG_NEQ;
+			else if(str == "less")
+				tok.type = LEX_TOKEN_LOG_LESS;
+			else if(str == "greater")
+				tok.type = LEX_TOKEN_LOG_GREATER;
+			else if(str == "leq")
+				tok.type = LEX_TOKEN_LOG_LEQ;
+			else if(str == "geq")
+				tok.type = LEX_TOKEN_LOG_GEQ;
 		}
 		else if(isdigit(str[0]))
 		{
