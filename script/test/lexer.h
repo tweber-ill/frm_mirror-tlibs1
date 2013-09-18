@@ -65,6 +65,8 @@ public:
 	const Token& GetToken(unsigned int i) const { return m_vecToks[i]; }
 
 	static std::string RemoveComments(const std::string& strInput);
+	static std::vector<std::string> GetStringTable(const std::string& strInput);
+	static void ReplaceExcapes(std::string& str);
 };
 
 #endif

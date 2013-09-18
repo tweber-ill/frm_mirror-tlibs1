@@ -14,7 +14,8 @@
 enum SymbolType
 {
 	SYMBOL_DOUBLE,
-	SYMBOL_INT
+	SYMBOL_INT,
+	SYMBOL_STRING
 };
 
 struct Symbol
@@ -42,6 +43,16 @@ struct SymbolInt : public Symbol
 	int iVal;
 
 	virtual SymbolType GetType() const { return SYMBOL_INT; }
+	virtual Symbol* ToType(SymbolType stype) const;
+	virtual std::string print() const;
+	virtual Symbol* clone() const;
+};
+
+struct SymbolString : public Symbol
+{
+	std::string strVal;
+
+	virtual SymbolType GetType() const { return SYMBOL_STRING; }
 	virtual Symbol* ToType(SymbolType stype) const;
 	virtual std::string print() const;
 	virtual Symbol* clone() const;

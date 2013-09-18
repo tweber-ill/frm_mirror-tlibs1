@@ -32,6 +32,12 @@ extern "C" int yylex(void* _pObj)
 		yylval.pNode = pNode;
 		return TOK_INT;
 	}
+	else if(tok.type == LEX_TOKEN_STRING)
+	{
+		Node *pNode = new NodeString(tok.strVal);
+		yylval.pNode = pNode;
+		return TOK_STRING;
+	}
 	else if(tok.type == LEX_TOKEN_CHAROP)
 		return tok.cOp;
 	else if(tok.type == LEX_TOKEN_IDENT)

@@ -10,7 +10,7 @@
 #include <ctype.h>
 
 
-Lexer::Lexer() : m_strWhitespace(" \t\n\r"), m_strSep("=+-*/^{}();,"),
+Lexer::Lexer() : m_strWhitespace(" \t\n\r"), m_strSep("=+-*/^{}();,\""),
 				m_iLexPos(0), m_iNumToks(0)
 {
 	m_tokEnd.type = LEX_TOKEN_END;
@@ -50,9 +50,55 @@ std::string Lexer::RemoveComments(const std::string& strInput)
 	return strRet;
 }
 
+static void find_and_replace(std::string& str1, const std::string& str_old,
+                                                const std::string& str_new)
+{
+	std::size_t pos = str1.find(str_old);
+	if(pos==std::string::npos)
+			return;
+	str1.replace(pos, str_old.length(), str_new);
+}
+
+void Lexer::ReplaceExcapes(std::string& str)
+{
+	find_and_replace(str, "\\n", "\n");
+	find_and_replace(str, "\\t", "\t");
+}
+
+std::vector<std::string> Lexer::GetStringTable(const std::string& strInput)
+{
+	std::vector<std::string> vecStr;
+
+	bool bInString = 0;
+	std::string str;
+	for(char c : strInput)
+	{
+		if(c == '\"')
+		{
+			bInString = !bInString;
+			if(bInString)
+				str = "";
+			else
+			{
+				ReplaceExcapes(str);
+				vecStr.push_back(str);
+			}
+			continue;
+		}
+
+		if(bInString)
+			str += c;
+	}
+
+	for(const std::string& str : vecStr)
+		std::cout << "String: " << str << std::endl;
+	return vecStr;
+}
+
 void Lexer::load(const std::string& _strInput)
 {
 	std::string strInput = RemoveComments(_strInput);
+	std::vector<std::string> vecStr = GetStringTable(strInput);
 
 	typedef boost::char_separator<char> t_sep;
 	typedef boost::tokenizer<t_sep> t_tok;
@@ -60,12 +106,42 @@ void Lexer::load(const std::string& _strInput)
 	t_sep sep(m_strWhitespace.c_str(), m_strSep.c_str());
 	t_tok tok(strInput, sep);
 
+	bool bInString = 0;
+	unsigned int iStringIdx = 0;
 	for(const std::string& str : tok)
 	{
-		//std::cout << str << std::endl;
 		if(str.length() == 0) continue;
-		
+
+		if(str=="\"")
+		{
+			bInString = !bInString;
+
+			if(!bInString)
+			{
+				Token tokStr;
+				tokStr.type = LEX_TOKEN_STRING;
+				if(iStringIdx >= vecStr.size())
+				{
+					std::cerr << "Error: String index exceeds string table size."
+								<< std::endl;
+					continue;
+				}
+				tokStr.strVal = vecStr[iStringIdx];
+				m_vecToks.push_back(tokStr);
+
+				++iStringIdx;
+			}
+			continue;
+		}
+
+		if(bInString)
+			continue;
+
+		//std::cout << "token: " << str << std::endl;
+
+
 		Token tok;
+
 		if(str.length()==1 && m_strSep.find(str)!=std::string::npos)
 		{
 			tok.type = LEX_TOKEN_CHAROP;
@@ -86,11 +162,12 @@ void Lexer::load(const std::string& _strInput)
 			std::cerr << "Unknown token: " << str << std::endl;
 			continue;
 		}
-		
+
 		m_vecToks.push_back(tok);
 	}
 	
 	FixTokens();
+	//print();
 }
 
 void Lexer::FixTokens()

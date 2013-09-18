@@ -10,5 +10,8 @@ main()
 	a = -(2.5+4.5)*2; 
 	b = (75+25)^2;
 	c = a+b + 0.2;
+
+	str = "Teststring\t123";
+
 	tst = test(a,2);
 }

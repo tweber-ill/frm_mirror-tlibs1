@@ -31,6 +31,7 @@
 
 %token<pNode> TOK_DOUBLE
 %token<pNode> TOK_INT
+%token<pNode> TOK_STRING
 %token<pNode> TOK_IDENT
 %type<pNode> prog
 %type<pNode> funcs
@@ -101,6 +102,7 @@ expr:	'(' expr ')'		{ $$ = $2; }
 	| '+' expr %prec UPLUS	{ $$ = $2; }
 	| TOK_DOUBLE			{ $$ = $1; }
 	| TOK_INT				{ $$ = $1; }
+	| TOK_STRING			{ $$ = $1; }
 	| ident					{ $$ = $1; }
 	| ident '(' args ')'	{ $$ = new NodeCall($1, $3);  }
 	;

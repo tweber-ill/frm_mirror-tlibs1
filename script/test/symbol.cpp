@@ -23,6 +23,17 @@ Symbol* SymbolDouble::ToType(SymbolType stype) const
 
 		pNewSym = pNewSymI;
 	}
+	else if(stype == SYMBOL_STRING)
+	{
+		std::ostringstream ostr;
+		ostr << this->dVal;
+
+		SymbolString *pNewSymS = new SymbolString();
+		pNewSymS->strName = this->strName;
+		pNewSymS->strVal = ostr.str();
+
+		pNewSym = pNewSymS;
+	}
 
 	return pNewSym;
 }
@@ -59,6 +70,17 @@ Symbol* SymbolInt::ToType(SymbolType stype) const
 
 		pNewSym = pNewSymD;
 	}
+	else if(stype == SYMBOL_STRING)
+	{
+		std::ostringstream ostr;
+		ostr << this->iVal;
+
+		SymbolString *pNewSymS = new SymbolString();
+		pNewSymS->strName = this->strName;
+		pNewSymS->strVal = ostr.str();
+
+		pNewSym = pNewSymS;
+	}
 
 	return pNewSym;
 }
@@ -73,6 +95,55 @@ std::string SymbolInt::print() const
 Symbol* SymbolInt::clone() const
 {
 	SymbolInt *pSym = new SymbolInt;
+	*pSym = *this;
+	return pSym;
+}
+
+
+
+
+Symbol* SymbolString::ToType(SymbolType stype) const
+{
+	Symbol *pNewSym = 0;
+
+	if(stype == SYMBOL_STRING)
+	{
+		pNewSym = this->clone();
+	}
+	else if(stype == SYMBOL_INT)
+	{
+		std::istringstream istr(strVal);
+
+		SymbolInt *pNewSymI = new SymbolInt();
+		pNewSymI->strName = this->strName;
+		istr >> pNewSymI->iVal;
+
+		pNewSym = pNewSymI;
+	}
+	else if(stype == SYMBOL_DOUBLE)
+	{
+		std::istringstream istr(strVal);
+
+		SymbolDouble *pNewSymD = new SymbolDouble();
+		pNewSymD->strName = this->strName;
+		istr >> pNewSymD->dVal;
+
+		pNewSym = pNewSymD;
+	}
+
+	return pNewSym;
+}
+
+std::string SymbolString::print() const
+{
+	std::ostringstream ostr;
+	ostr << strVal;
+	return ostr.str();
+}
+
+Symbol* SymbolString::clone() const
+{
+	SymbolString *pSym = new SymbolString;
 	*pSym = *this;
 	return pSym;
 }
@@ -115,6 +186,10 @@ void SymbolTable::print() const
 				strType = "double";
 			else if(pSym->GetType() == SYMBOL_INT)
 				strType = "int";
+			else if(pSym->GetType() == SYMBOL_STRING)
+				strType = "string";
+			else
+				strType = "<unknown>";
 
 			strSym = pSym->print() + " (" + strType + ")";
 		}

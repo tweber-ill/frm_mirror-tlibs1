@@ -158,6 +158,14 @@ Symbol* NodeInt::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) c
 	return pSymbol;
 }
 
+Symbol* NodeString::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const
+{
+	SymbolString *pSymbol = new SymbolString;
+	pSymbol->strVal = m_strVal;
+	pSymbol->strName = "<const>";
+	return pSymbol;
+}
+
 Symbol* NodeUnaryOp::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const
 {
 	switch(m_type)

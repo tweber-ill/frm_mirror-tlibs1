@@ -33,6 +33,7 @@ enum NodeType
 
 	NODE_DOUBLE,
 	NODE_INT,
+	NODE_STRING,
 
 	NODE_IDENTS,
 	NODE_IDENT,
@@ -110,6 +111,17 @@ struct NodeInt : public Node
 
 	NodeInt(int iVal)
 		: Node(NODE_INT), m_iVal(iVal)
+	{}
+
+	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
+};
+
+struct NodeString : public Node
+{
+	std::string m_strVal;
+
+	NodeString(std::string strVal)
+		: Node(NODE_STRING), m_strVal(strVal)
 	{}
 
 	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
