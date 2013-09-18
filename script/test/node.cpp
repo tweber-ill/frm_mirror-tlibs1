@@ -369,32 +369,34 @@ Symbol* NodeFunction::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFun
 	}
 
 
-	if(vecArgs.size() != m_pVecArgSyms->size())
-	{
-		std::cerr << "Error: Function \"" << strName << "\"" << " takes "
-				 << vecArgs.size() << " arguments, but "
-				 << m_pVecArgSyms->size() << " given."
-				 << std::endl;
-	}
-
 	SymbolTable *pLocalSym = new SymbolTable;
-
-	for(unsigned int iArg=0; iArg<vecArgs.size(); ++iArg)
+	if(m_pVecArgSyms)
 	{
-		Node* pNode = vecArgs[iArg];
-		Symbol *pSymbol = (*m_pVecArgSyms)[iArg];
-
-		NodeIdent* pIdent = (NodeIdent*)pNode;
-		//std::cout << "arg: " << pIdent->m_strIdent << std::endl;
-
-		/*Symbol *pSymbol = pSym->GetSymbol(pIdent->m_strIdent);
-		if(!pSymbol)
+		if(vecArgs.size() != m_pVecArgSyms->size())
 		{
-			std::cerr << "Error: Symbol \"" << pIdent->m_strIdent << "\" not found."
-						<< std::endl;
-		}*/
+			std::cerr << "Error: Function \"" << strName << "\"" << " takes "
+					 << vecArgs.size() << " arguments, but "
+					 << m_pVecArgSyms->size() << " given."
+					 << std::endl;
+		}
 
-		pLocalSym->InsertSymbol(pIdent->m_strIdent, pSymbol->clone());
+		for(unsigned int iArg=0; iArg<vecArgs.size(); ++iArg)
+		{
+			Node* pNode = vecArgs[iArg];
+			Symbol *pSymbol = (*m_pVecArgSyms)[iArg];
+
+			NodeIdent* pIdent = (NodeIdent*)pNode;
+			//std::cout << "arg: " << pIdent->m_strIdent << std::endl;
+
+			/*Symbol *pSymbol = pSym->GetSymbol(pIdent->m_strIdent);
+			if(!pSymbol)
+			{
+				std::cerr << "Error: Symbol \"" << pIdent->m_strIdent << "\" not found."
+							<< std::endl;
+			}*/
+
+			pLocalSym->InsertSymbol(pIdent->m_strIdent, pSymbol->clone());
+		}
 	}
 
 

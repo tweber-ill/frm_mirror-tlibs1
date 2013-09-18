@@ -235,7 +235,8 @@ struct NodeFunction : public Node
 	const std::vector<Symbol*>* m_pVecArgSyms;
 
 	NodeFunction(Node* pLeft, Node* pMiddle, Node* pRight)
-		: Node(NODE_FUNC), m_pIdent(pLeft), m_pArgs(pMiddle), m_pStmts(pRight)
+		: Node(NODE_FUNC), m_pIdent(pLeft), m_pArgs(pMiddle), m_pStmts(pRight),
+		  m_pVecArgSyms(0)
 	{}
 
 	NodeFunction(void* pLeft, void *pMiddle, void* pRight)

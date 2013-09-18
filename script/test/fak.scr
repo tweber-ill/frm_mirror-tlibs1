@@ -1,6 +1,6 @@
 fak(a)
 {
-	if((a eq 0) or (a eq 1))
+	if(a eq 0 or a eq 1)
 		_ret_ = 1;
 	else
 		_ret_ = a*fak(a-1);
