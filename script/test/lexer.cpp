@@ -170,6 +170,8 @@ void Lexer::load(const std::string& _strInput)
 				tok.type = LEX_TOKEN_LOG_AND;
 			else if(str == "or")
 				tok.type = LEX_TOKEN_LOG_OR;
+			else if(str == "not")
+				tok.type = LEX_TOKEN_LOG_NOT;
 			else if(str == "eq")
 				tok.type = LEX_TOKEN_LOG_EQ;
 			else if(str == "neq")

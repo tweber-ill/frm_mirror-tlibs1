@@ -10,7 +10,7 @@ main()
 	a = -2.+4.*2; 
 	b = (75+25)^2;
 	c = a+b + 0.2;
-	d = (1 and 0) or 1;
+	d = not(not((1 and 0) or 1));
 
 	str = "Teststring\t123";
 

@@ -258,10 +258,24 @@ Symbol* NodeUnaryOp::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFunc
 
 			if(pSymbol->GetType() == SYMBOL_DOUBLE)
 				((SymbolDouble*)pSymbol)->dVal = -((SymbolDouble*)pSymbol)->dVal;
-			else if(pSymbol->GetType() == SYMBOL_DOUBLE)
+			else if(pSymbol->GetType() == SYMBOL_INT)
 				((SymbolInt*)pSymbol)->iVal = -((SymbolInt*)pSymbol)->iVal;
 
 			return pSymbol;
+		}
+
+		case NODE_LOG_NOT:
+		{
+			Symbol *pSymbolEval = m_pChild->eval(pSym, vecFuncs);
+			SymbolInt *pSymbolInt = new SymbolInt();
+
+			if(pSymbolEval->GetType() == SYMBOL_DOUBLE)
+				pSymbolInt->iVal = !((SymbolDouble*)pSymbolEval)->dVal;
+			else if(pSymbolEval->GetType() == SYMBOL_INT)
+				pSymbolInt->iVal = !((SymbolInt*)pSymbolEval)->iVal;
+
+			safe_delete(pSymbolEval, pSym);
+			return pSymbolInt;
 		}
 
 		case NODE_STMTS:
