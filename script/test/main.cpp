@@ -16,7 +16,8 @@ int main(int argc, char** argv)
 {
 	if(argc<=1)
 	{
-		std::cout << "Usage: " << argv[0] << " <file>" << std::endl;
+		std::cout << "This is the Hermelin script interpreter." << std::endl;
+		std::cout << "\tUsage: " << argv[0] << " <script file>" << std::endl;
 		return -1;
 	}
 
@@ -38,20 +39,21 @@ int main(int argc, char** argv)
 
 
 	ParseObj par;
+	ParseInfo info;
 	par.pLexer = new Lexer(pcInput);
-	par.pSym = new SymbolTable();
+	info.pGlobalSyms = new SymbolTable();
 
 	yydebug = 0;
 	yyparse(&par);
 
-	par.pRoot->eval(par.pSym, par.vecFuncs);
-	//par.pSym->print();
+	par.pRoot->eval(info);
+	//info.pGlobalSyms->print();
 
 
 	delete[] pcInput;
 
 	delete par.pLexer;
-	delete par.pSym;
+	delete info.pGlobalSyms;
 	delete par.pRoot;
 
 	return 0;

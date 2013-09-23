@@ -1,5 +1,5 @@
 /*
- * Simple Script
+ * Symbol Table
  * @author tweber
  */
 
@@ -18,19 +18,16 @@ Symbol* SymbolDouble::ToType(SymbolType stype) const
 	else if(stype == SYMBOL_INT)
 	{
 		SymbolInt *pNewSymI = new SymbolInt();
-		pNewSymI->strName = this->strName;
-		pNewSymI->iVal = int(this->dVal);
+		pNewSymI->m_strName = this->m_strName;
+		pNewSymI->m_iVal = int(this->m_dVal);
 
 		pNewSym = pNewSymI;
 	}
 	else if(stype == SYMBOL_STRING)
 	{
-		std::ostringstream ostr;
-		ostr << this->dVal;
-
 		SymbolString *pNewSymS = new SymbolString();
-		pNewSymS->strName = this->strName;
-		pNewSymS->strVal = ostr.str();
+		pNewSymS->m_strName = this->m_strName;
+		pNewSymS->m_strVal = print();
 
 		pNewSym = pNewSymS;
 	}
@@ -41,7 +38,7 @@ Symbol* SymbolDouble::ToType(SymbolType stype) const
 std::string SymbolDouble::print() const
 {
 	std::ostringstream ostr;
-	ostr << dVal;
+	ostr << m_dVal;
 	return ostr.str();
 }
 
@@ -51,6 +48,14 @@ Symbol* SymbolDouble::clone() const
 	*pSym = *this;
 	return pSym;
 }
+
+void SymbolDouble::assign(Symbol *pSym)
+{
+	SymbolDouble *pOther = (SymbolDouble*)pSym->ToType(GetType());
+	this->m_dVal = pOther->m_dVal;
+}
+
+
 
 
 
@@ -65,19 +70,16 @@ Symbol* SymbolInt::ToType(SymbolType stype) const
 	else if(stype == SYMBOL_DOUBLE)
 	{
 		SymbolDouble *pNewSymD = new SymbolDouble();
-		pNewSymD->strName = this->strName;
-		pNewSymD->dVal = double(this->iVal);
+		pNewSymD->m_strName = this->m_strName;
+		pNewSymD->m_dVal = double(this->m_iVal);
 
 		pNewSym = pNewSymD;
 	}
 	else if(stype == SYMBOL_STRING)
 	{
-		std::ostringstream ostr;
-		ostr << this->iVal;
-
 		SymbolString *pNewSymS = new SymbolString();
-		pNewSymS->strName = this->strName;
-		pNewSymS->strVal = ostr.str();
+		pNewSymS->m_strName = this->m_strName;
+		pNewSymS->m_strVal = print();
 
 		pNewSym = pNewSymS;
 	}
@@ -88,7 +90,7 @@ Symbol* SymbolInt::ToType(SymbolType stype) const
 std::string SymbolInt::print() const
 {
 	std::ostringstream ostr;
-	ostr << iVal;
+	ostr << m_iVal;
 	return ostr.str();
 }
 
@@ -98,6 +100,13 @@ Symbol* SymbolInt::clone() const
 	*pSym = *this;
 	return pSym;
 }
+
+void SymbolInt::assign(Symbol *pSym)
+{
+	SymbolInt *pOther = (SymbolInt*)pSym->ToType(GetType());
+	this->m_iVal = pOther->m_iVal;
+}
+
 
 
 
@@ -112,21 +121,21 @@ Symbol* SymbolString::ToType(SymbolType stype) const
 	}
 	else if(stype == SYMBOL_INT)
 	{
-		std::istringstream istr(strVal);
+		std::istringstream istr(m_strVal);
 
 		SymbolInt *pNewSymI = new SymbolInt();
-		pNewSymI->strName = this->strName;
-		istr >> pNewSymI->iVal;
+		pNewSymI->m_strName = this->m_strName;
+		istr >> pNewSymI->m_iVal;
 
 		pNewSym = pNewSymI;
 	}
 	else if(stype == SYMBOL_DOUBLE)
 	{
-		std::istringstream istr(strVal);
+		std::istringstream istr(m_strVal);
 
 		SymbolDouble *pNewSymD = new SymbolDouble();
-		pNewSymD->strName = this->strName;
-		istr >> pNewSymD->dVal;
+		pNewSymD->m_strName = this->m_strName;
+		istr >> pNewSymD->m_dVal;
 
 		pNewSym = pNewSymD;
 	}
@@ -137,7 +146,7 @@ Symbol* SymbolString::ToType(SymbolType stype) const
 std::string SymbolString::print() const
 {
 	std::ostringstream ostr;
-	ostr << strVal;
+	ostr << m_strVal;
 	return ostr.str();
 }
 
@@ -147,6 +156,84 @@ Symbol* SymbolString::clone() const
 	*pSym = *this;
 	return pSym;
 }
+
+void SymbolString::assign(Symbol *pSym)
+{
+	SymbolString *pOther = (SymbolString*)pSym->ToType(GetType());
+	this->m_strVal = pOther->m_strVal;
+}
+
+
+
+
+SymbolArray::~SymbolArray()
+{
+	for(Symbol *pSym : m_arr)
+		delete pSym;
+	
+	m_arr.clear();
+}
+
+Symbol* SymbolArray::ToType(SymbolType stype) const
+{
+	Symbol *pNewSym = 0;
+	
+	if(stype == SYMBOL_ARRAY)
+	{
+		pNewSym = this->clone();
+	}
+	if(stype == SYMBOL_STRING)
+	{
+		SymbolString *pNewSymS = new SymbolString();
+		pNewSymS->m_strName = this->m_strName;
+		pNewSymS->m_strVal = print();
+
+		pNewSym = pNewSymS;
+	}
+	else
+		std::cerr << "Error: Cannot convert array to other type."
+					<< std::endl;
+
+	return pNewSym;
+}
+
+std::string SymbolArray::print() const
+{
+	std::ostringstream ostr;
+
+	ostr << "[";
+	for(unsigned int i=0; i<m_arr.size(); ++i)
+	{
+		const Symbol* pSym = m_arr[i];
+		ostr << pSym->print();
+		
+		if(i<m_arr.size()-1)
+			ostr << ", ";
+	}
+	ostr << "]";
+	
+	return ostr.str();
+}
+
+Symbol* SymbolArray::clone() const
+{
+	SymbolArray *pSym = new SymbolArray;
+	//*pSym = *this;
+	
+	pSym->m_arr.reserve(m_arr.size());
+	for(Symbol *pArrSym : m_arr)
+		pSym->m_arr.push_back(pArrSym->clone());
+	
+	return pSym;
+}
+
+void SymbolArray::assign(Symbol *pSym)
+{
+	SymbolArray *pOther = (SymbolArray*)pSym->ToType(GetType());
+	this->m_arr = pOther->m_arr;
+}
+
+
 
 
 //--------------------------------------------------------------------------------

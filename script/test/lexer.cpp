@@ -10,7 +10,7 @@
 #include <ctype.h>
 
 
-Lexer::Lexer() : m_strWhitespace(" \t\n\r"), m_strSep("=+-*/^{}();,\""),
+Lexer::Lexer() : m_strWhitespace(" \t\n\r"), m_strSep("=+-*/^{}[]();,\""),
 				m_iLexPos(0), m_iNumToks(0)
 {
 	m_tokEnd.type = LEX_TOKEN_END;
@@ -50,19 +50,22 @@ std::string Lexer::RemoveComments(const std::string& strInput)
 	return strRet;
 }
 
-static void find_and_replace(std::string& str1, const std::string& str_old,
+static void find_all_and_replace(std::string& str1, const std::string& str_old,
                                                 const std::string& str_new)
 {
-	std::size_t pos = str1.find(str_old);
-	if(pos==std::string::npos)
-			return;
-	str1.replace(pos, str_old.length(), str_new);
+	while(1)
+	{
+		std::size_t pos = str1.find(str_old);
+		if(pos==std::string::npos)
+				break;
+		str1.replace(pos, str_old.length(), str_new);
+	}
 }
 
 void Lexer::ReplaceExcapes(std::string& str)
 {
-	find_and_replace(str, "\\n", "\n");
-	find_and_replace(str, "\\t", "\t");
+	find_all_and_replace(str, "\\n", "\n");
+	find_all_and_replace(str, "\\t", "\t");
 }
 
 std::vector<std::string> Lexer::GetStringTable(const std::string& strInput)

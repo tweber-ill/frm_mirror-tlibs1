@@ -1,5 +1,5 @@
 /*
- * Simple Script
+ * Script interpreter
  * @author tweber
  */
 
@@ -11,7 +11,21 @@
 #include <iostream>
 #include <vector>
 #include <map>
+
 #include "symbol.h"
+
+
+struct NodeFunction;
+struct ParseInfo
+{
+	SymbolTable* pGlobalSyms;
+	std::vector<NodeFunction*> vecFuncs;
+	
+	bool bWantReturn = 0;
+	
+	ParseInfo() : bWantReturn(0)
+	{}
+};
 
 
 enum NodeType
@@ -34,6 +48,9 @@ enum NodeType
 	NODE_DOUBLE,
 	NODE_INT,
 	NODE_STRING,
+	
+	NODE_ARRAY,
+	NODE_ARRAY_ACCESS,
 
 	NODE_IDENTS,
 	NODE_IDENT,
@@ -54,7 +71,12 @@ enum NodeType
 	NODE_LOG_GEQ,
 
 	NODE_IF,
-	NODE_WHILE
+	NODE_WHILE,
+	
+	NODE_RETURN,
+	
+	
+	NODE_INVALID
 };
 
 
@@ -71,7 +93,27 @@ struct Node
 
 	Node(NodeType ntype) : m_type(ntype) {}
 	virtual ~Node() {}
-	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const = 0;
+	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const = 0;
+};
+
+struct NodeReturn : public Node
+{
+	Node *m_pExpr;
+	
+	NodeReturn(Node *pExpr=0)
+		: Node(NODE_RETURN), m_pExpr(pExpr)
+	{}
+	
+	NodeReturn(void *pExpr)
+		: NodeReturn((Node*)pExpr)
+	{}
+	
+	virtual ~NodeReturn()
+	{
+		if(m_pExpr) delete m_pExpr;
+	}
+	
+	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 };
 
 struct NodeIdent : public Node
@@ -82,7 +124,7 @@ struct NodeIdent : public Node
 		: Node(NODE_IDENT), m_strIdent(strIdent)
 	{}
 
-	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
+	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 };
 
 struct NodeCall : public Node
@@ -90,9 +132,7 @@ struct NodeCall : public Node
 	Node *m_pIdent;
 	Node *m_pArgs;
 
-	NodeCall(Node* pIdent, Node* pArgs)
-		: Node(NODE_CALL), m_pIdent(pIdent), m_pArgs(pArgs)
-	{}
+	NodeCall(Node* pIdent, Node* pArgs);
 
 	NodeCall(void* pIdent, void* pArgs)
 		: NodeCall((Node*)pIdent, (Node*)pArgs)
@@ -104,7 +144,11 @@ struct NodeCall : public Node
 		if(m_pArgs) delete m_pArgs;
 	}
 	
-	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
+	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+
+	
+protected:
+	std::vector<Node*> m_vecArgs;
 };
 
 struct NodeIf : public Node
@@ -128,7 +172,7 @@ struct NodeIf : public Node
 		if(m_pElse) delete m_pElse;
 	}
 
-	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
+	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 };
 
 struct NodeWhile : public Node
@@ -150,40 +194,96 @@ struct NodeWhile : public Node
 		if(m_pStmt) delete m_pStmt;
 	}
 
-	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
+	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 };
 
 struct NodeDouble : public Node
 {
 	double m_dVal;
 	
-	NodeDouble(double dVal)
-		: Node(NODE_DOUBLE), m_dVal(dVal)
-	{}
+	NodeDouble(double dVal);
+	virtual ~NodeDouble()
+	{
+		if(m_pSymbol) delete m_pSymbol;
+	}
 	
-	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
+	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+	
+protected:
+	SymbolDouble *m_pSymbol;
 };
 
 struct NodeInt : public Node
 {
 	double m_iVal;
+	
+	NodeInt(int iVal);
+	virtual ~NodeInt()
+	{
+		if(m_pSymbol) delete m_pSymbol;
+	}
+	
+	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 
-	NodeInt(int iVal)
-		: Node(NODE_INT), m_iVal(iVal)
-	{}
-
-	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
+protected:
+	SymbolInt *m_pSymbol;
 };
 
 struct NodeString : public Node
 {
 	std::string m_strVal;
 
-	NodeString(std::string strVal)
-		: Node(NODE_STRING), m_strVal(strVal)
-	{}
+	NodeString(std::string strVal);
+	virtual ~NodeString()
+	{
+		if(m_pSymbol) delete m_pSymbol;
+	}
 
-	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
+	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+
+protected:
+	SymbolString *m_pSymbol;
+};
+
+struct NodeArray : public Node
+{
+	Node *m_pArr;
+	
+	NodeArray(NodeArray* pArr);
+	NodeArray(void *pArr)
+		: NodeArray((NodeArray*)pArr)
+	{}
+	
+	virtual ~NodeArray()
+	{
+		if(m_pArr) delete m_pArr;
+	}
+	
+	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+
+protected:
+};
+
+struct NodeArrayAccess : public Node
+{
+	Node *m_pIdent;
+	Node *m_pExpr;
+	
+	NodeArrayAccess(Node* pIdent, Node* pExpr)
+		: Node(NODE_ARRAY_ACCESS), m_pIdent(pIdent), m_pExpr(pExpr)
+	{}
+	
+	NodeArrayAccess(void* pIdent, void* pExpr)
+		: NodeArrayAccess((Node*)pIdent, (Node*)pExpr)
+	{}
+	
+	virtual ~NodeArrayAccess()
+	{
+		if(m_pIdent) delete m_pIdent;
+		if(m_pExpr) delete m_pExpr;
+	}
+	
+	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 };
 
 struct NodeUnaryOp : public Node
@@ -203,7 +303,7 @@ struct NodeUnaryOp : public Node
 		if(m_pChild) delete m_pChild;
 	}
 
-	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
+	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 };
 
 struct NodeBinaryOp : public Node
@@ -224,7 +324,7 @@ struct NodeBinaryOp : public Node
 		if(m_pRight) delete m_pRight;
 	}
 
-	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
+	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 
 	std::vector<Node*> flatten(NodeType ntype=NODE_ARGS) const;
 };
@@ -234,10 +334,7 @@ struct NodeFunction : public Node
 	Node *m_pIdent, *m_pArgs, *m_pStmts;
 	const std::vector<Symbol*>* m_pVecArgSyms;
 
-	NodeFunction(Node* pLeft, Node* pMiddle, Node* pRight)
-		: Node(NODE_FUNC), m_pIdent(pLeft), m_pArgs(pMiddle), m_pStmts(pRight),
-		  m_pVecArgSyms(0)
-	{}
+	NodeFunction(Node* pLeft, Node* pMiddle, Node* pRight);
 
 	NodeFunction(void* pLeft, void *pMiddle, void* pRight)
 		: NodeFunction((Node*)pLeft, (Node*)pMiddle, (Node*)pRight)
@@ -250,12 +347,16 @@ struct NodeFunction : public Node
 		if(m_pStmts) delete m_pStmts;
 	}
 
-	virtual Symbol* eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const;
+	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 
 	std::string GetName() const;
 
 	void SetArgSyms(const std::vector<Symbol*>* pvecArgSyms)
 	{ this-> m_pVecArgSyms = pvecArgSyms; }
+	
+	
+protected:
+	std::vector<Node*> m_vecArgs;
 };
 
 #endif

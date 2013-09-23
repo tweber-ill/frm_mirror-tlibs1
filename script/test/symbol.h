@@ -1,5 +1,5 @@
 /*
- * Simple Script
+ * Symbol Table
  * @author tweber
  */
 
@@ -8,6 +8,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 #include <iostream>
 #include <sstream>
 
@@ -15,56 +16,91 @@ enum SymbolType
 {
 	SYMBOL_DOUBLE,
 	SYMBOL_INT,
-	SYMBOL_STRING
+	SYMBOL_STRING,
+	
+	SYMBOL_ARRAY
 };
 
 struct Symbol
 {
-	std::string strName;
-
+	std::string m_strName;
+	
 	virtual SymbolType GetType() const = 0;
 	virtual Symbol* ToType(SymbolType stype) const = 0;
 	virtual std::string print() const = 0;
 	virtual Symbol* clone() const = 0;
+	virtual void assign(Symbol *pSym) = 0;
 
 	virtual bool IsNotZero() const = 0;
 };
 
 struct SymbolDouble : public Symbol
 {
-	double dVal;
+	double m_dVal;
+	
+	SymbolDouble() {}
+	SymbolDouble(double dVal) : m_dVal(dVal) {}
 
 	virtual SymbolType GetType() const { return SYMBOL_DOUBLE; }
 	virtual Symbol* ToType(SymbolType stype) const;
 	virtual std::string print() const;
 	virtual Symbol* clone() const;
+	virtual void assign(Symbol *pSym);
 
-	virtual bool IsNotZero() const { return dVal != 0.; }
+	virtual bool IsNotZero() const { return m_dVal != 0.; }
 };
 
 struct SymbolInt : public Symbol
 {
-	int iVal;
+	int m_iVal;
+	
+	SymbolInt() {}
+	SymbolInt(int iVal) : m_iVal(iVal) {}
 
 	virtual SymbolType GetType() const { return SYMBOL_INT; }
 	virtual Symbol* ToType(SymbolType stype) const;
 	virtual std::string print() const;
 	virtual Symbol* clone() const;
+	virtual void assign(Symbol *pSym);
 
-	virtual bool IsNotZero() const { return iVal != 0.; }
+	virtual bool IsNotZero() const { return m_iVal != 0.; }
 };
 
 struct SymbolString : public Symbol
 {
-	std::string strVal;
+	std::string m_strVal;
+	
+	SymbolString() {}
+	SymbolString(const char* pcStr) : m_strVal(pcStr) {}
 
 	virtual SymbolType GetType() const { return SYMBOL_STRING; }
 	virtual Symbol* ToType(SymbolType stype) const;
 	virtual std::string print() const;
 	virtual Symbol* clone() const;
+	virtual void assign(Symbol *pSym);
 
 	virtual bool IsNotZero() const { return 0; }
 };
+
+
+
+
+struct SymbolArray : public Symbol
+{
+	std::vector<Symbol*> m_arr;
+	
+	virtual ~SymbolArray();
+	
+	virtual SymbolType GetType() const { return SYMBOL_ARRAY; }
+	virtual Symbol* ToType(SymbolType stype) const;
+	virtual std::string print() const;
+	virtual Symbol* clone() const;
+	virtual void assign(Symbol *pSym);
+	
+	virtual bool IsNotZero() const { return 0; }
+};
+
+
 
 
 class SymbolTable

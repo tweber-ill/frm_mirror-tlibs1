@@ -1,9 +1,10 @@
 /*
- * Simple Script
+ * Script interpreter
  * @author tweber
  */
 
 #include "node.h"
+#include "calls.h"
 
 template<typename T> T plus_op(T a, T b) { return a+b; }
 template<typename T> T minus_op(T a, T b) { return a-b; }
@@ -42,6 +43,11 @@ std::map<NodeType, int (*)(int,int)> g_mapBinOps_i =
 	std::pair<NodeType, int (*)(int,int)>(NODE_POW, pow_int)
 };
 
+std::map<NodeType, std::string (*)(std::string, std::string)> g_mapBinOps_s =
+{
+	std::pair<NodeType, std::string (*)(std::string,std::string)>(NODE_PLUS, plus_op),
+};
+
 
 std::map<NodeType, bool (*)(double,double)> g_mapBinLogOps_d =
 {
@@ -65,6 +71,12 @@ std::map<NodeType, bool (*)(int,int)> g_mapBinLogOps_i =
 	std::pair<NodeType, bool (*)(int,int)>(NODE_LOG_GEQ, log_geq_op),
 	std::pair<NodeType, bool (*)(int,int)>(NODE_LOG_LESS, log_less_op),
 	std::pair<NodeType, bool (*)(int,int)>(NODE_LOG_GREATER, log_greater_op)
+};
+
+std::map<NodeType, bool (*)(std::string,std::string)> g_mapBinLogOps_s =
+{
+	std::pair<NodeType, bool (*)(std::string,std::string)>(NODE_LOG_EQ, log_eq_op),
+	std::pair<NodeType, bool (*)(std::string,std::string)>(NODE_LOG_NEQ, log_neq_op),
 };
 
 
@@ -101,13 +113,24 @@ Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 		if(pLeft->GetType()==SYMBOL_INT && pRight->GetType()==SYMBOL_DOUBLE)
 		{
 			pLeft = pLeft->ToType(SYMBOL_DOUBLE);
-			bool bCleanLeft = 1;
+			bCleanLeft = 1;
 		}
 
 		if(pLeft->GetType()==SYMBOL_DOUBLE && pRight->GetType()==SYMBOL_INT)
 		{
 			pRight = pRight->ToType(SYMBOL_DOUBLE);
-			bool bCleanRight = 1;
+			bCleanRight = 1;
+		}
+		
+		if(pLeft->GetType()==SYMBOL_STRING)
+		{
+			pRight = pRight->ToType(SYMBOL_STRING);
+			bCleanRight = 1;
+		}
+		else if(pRight->GetType()==SYMBOL_STRING)
+		{
+			pLeft = pLeft->ToType(SYMBOL_STRING);
+			bCleanLeft = 1;
 		}
 	}
 
@@ -117,17 +140,35 @@ Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 		if(IsLogicalOp(op))
 		{
 			SymbolInt *pResult = new SymbolInt();
-			pResult->strName = "<op_logical_result>";
-			pResult->iVal = g_mapBinLogOps_d[op](((SymbolDouble*)pLeft)->dVal,
-												((SymbolDouble*)pRight)->dVal);
+			pResult->m_strName = "<op_logical_result>";
+			
+			if(g_mapBinLogOps_d.find(op) != g_mapBinLogOps_d.end())
+			{
+				pResult->m_iVal = g_mapBinLogOps_d[op](((SymbolDouble*)pLeft)->m_dVal,
+													((SymbolDouble*)pRight)->m_dVal);
+			}
+			else
+			{
+				std::cerr << "Error: Operator \"" << op << "\" not defined for double type."
+						 << std::endl;
+				pResult->m_iVal = 0;		 
+			}
 			pRes = pResult;
 		}
 		else
 		{
 			SymbolDouble *pResult = new SymbolDouble();
-			pResult->strName = "<op_result>";
-			pResult->dVal = g_mapBinOps_d[op](((SymbolDouble*)pLeft)->dVal,
-											((SymbolDouble*)pRight)->dVal);
+			pResult->m_strName = "<op_result>";
+			if(g_mapBinOps_d.find(op) != g_mapBinOps_d.end())
+			{
+				pResult->m_dVal = g_mapBinOps_d[op](((SymbolDouble*)pLeft)->m_dVal,
+												((SymbolDouble*)pRight)->m_dVal);
+			}
+			else
+			{
+				std::cerr << "Error: Operator \"" << op << "\" not defined for double type."
+						 << std::endl;
+			}
 			pRes = pResult;
 		}
 
@@ -139,17 +180,71 @@ Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 		if(IsLogicalOp(op))
 		{
 			SymbolInt *pResult = new SymbolInt();
-			pResult->strName = "<op_logical_result>";
-			pResult->iVal = g_mapBinLogOps_i[op](((SymbolInt*)pLeft)->iVal,
-												((SymbolInt*)pRight)->iVal);
+			pResult->m_strName = "<op_logical_result>";
+			if(g_mapBinLogOps_i.find(op) != g_mapBinLogOps_i.end())
+			{
+				pResult->m_iVal = g_mapBinLogOps_i[op](((SymbolInt*)pLeft)->m_iVal,
+													((SymbolInt*)pRight)->m_iVal);
+			}
+			else
+			{
+				std::cerr << "Error: Operator \"" << op << "\" not defined for int type."
+						 << std::endl;
+			}
 			pRes = pResult;
 		}
 		else
 		{
 			SymbolInt *pResult = new SymbolInt();
-			pResult->strName = "<op_result>";
-			pResult->iVal = g_mapBinOps_i[op](((SymbolInt*)pLeft)->iVal,
-											((SymbolInt*)pRight)->iVal);
+			pResult->m_strName = "<op_result>";
+			if(g_mapBinOps_i.find(op) != g_mapBinOps_i.end())
+			{
+				pResult->m_iVal = g_mapBinOps_i[op](((SymbolInt*)pLeft)->m_iVal,
+												((SymbolInt*)pRight)->m_iVal);
+			}
+			else
+			{
+				std::cerr << "Error: Operator \"" << op << "\" not defined for int type."
+						 << std::endl;
+			}
+			pRes = pResult;
+		}
+
+		return pRes;
+	}
+	else if(pLeft->GetType() == SYMBOL_STRING)
+	{
+		Symbol *pRes = 0;
+		if(IsLogicalOp(op))
+		{
+			SymbolInt *pResult = new SymbolInt();
+			pResult->m_strName = "<op_logical_result>";
+			if(g_mapBinLogOps_s.find(op) != g_mapBinLogOps_s.end())
+			{
+				pResult->m_iVal = g_mapBinLogOps_s[op](((SymbolString*)pLeft)->m_strVal,
+													((SymbolString*)pRight)->m_strVal);
+			}
+			else
+			{
+				std::cerr << "Error: Operator \"" << op << "\" not defined for string type."
+						 << std::endl;
+			}
+			pRes = pResult;
+		}
+		else
+		{
+			SymbolString *pResult = new SymbolString();
+			pResult->m_strName = "<op_result>";
+			if(g_mapBinOps_s.find(op) != g_mapBinOps_s.end())
+			{
+				pResult->m_strVal = g_mapBinOps_s[op](((SymbolString*)pLeft)->m_strVal,
+												((SymbolString*)pRight)->m_strVal);
+			}
+			else
+			{
+				std::cerr << "Error: Operator \"" << op << "\" not defined for string type."
+						 << std::endl;
+			}
 			pRes = pResult;
 		}
 
@@ -166,6 +261,11 @@ void safe_delete(Symbol *pSym, const SymbolTable* pSymTab)
 {
 	if(!pSym) return;
 	
+	// don't delete constants
+	if(pSym->m_strName == "<const>")
+		return;
+	
+	// don't delete symbols in table
 	bool bIsInTable = pSymTab->IsPtrInMap(pSym);
 	if(!bIsInTable)
 		delete pSym;
@@ -174,112 +274,273 @@ void safe_delete(Symbol *pSym, const SymbolTable* pSymTab)
 
 //--------------------------------------------------------------------------------
 
-
-Symbol* NodeIdent::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const
+NodeDouble::NodeDouble(double dVal)
+	: Node(NODE_DOUBLE), m_dVal(dVal)
 {
+	m_pSymbol = new SymbolDouble;
+	m_pSymbol->m_dVal = m_dVal;
+	m_pSymbol->m_strName = "<const>";
+}
+
+NodeInt::NodeInt(int iVal)
+	: Node(NODE_INT), m_iVal(iVal)
+{
+	m_pSymbol = new SymbolInt;
+	m_pSymbol->m_iVal = m_iVal;
+	m_pSymbol->m_strName = "<const>";
+}
+
+NodeString::NodeString(std::string strVal)
+	: Node(NODE_STRING), m_strVal(strVal)
+{
+	m_pSymbol = new SymbolString;
+	m_pSymbol->m_strVal = m_strVal;
+	m_pSymbol->m_strName = "<const>";
+}
+
+NodeArray::NodeArray(NodeArray* pArr)
+	: Node(NODE_ARRAY), m_pArr(pArr)
+{
+	// don't evaluate here because these are not
+	// necessarily constant and need to evaluate
+	// sub-expression
+}
+
+
+NodeCall::NodeCall(Node* _pIdent, Node* _pArgs)
+	: Node(NODE_CALL), m_pIdent(_pIdent), m_pArgs(_pArgs)
+{
+	NodeBinaryOp* pArgs = (NodeBinaryOp*) m_pArgs;
+	
+	if(pArgs)
+		m_vecArgs = pArgs->flatten(NODE_ARGS);
+}
+
+
+NodeFunction::NodeFunction(Node* pLeft, Node* pMiddle, Node* pRight)
+	: Node(NODE_FUNC), m_pIdent(pLeft), m_pArgs(pMiddle), m_pStmts(pRight),
+		m_pVecArgSyms(0)
+{
+	if(m_pArgs && (m_pArgs->m_type==NODE_IDENTS || m_pArgs->m_type==NODE_IDENT))
+	{
+		NodeBinaryOp* pArgs = (NodeBinaryOp*) m_pArgs;
+		m_vecArgs = pArgs->flatten(NODE_IDENTS);
+	}
+}
+
+
+//--------------------------------------------------------------------------------
+
+Symbol* NodeReturn::eval(ParseInfo &info, SymbolTable *pSym) const
+{
+	if(info.bWantReturn) return 0;
+	
+	Symbol *pRet = 0; 
+	
+	if(m_pExpr)
+		pRet = m_pExpr->eval(info, pSym)->clone();
+	pSym->InsertSymbol("<ret>", pRet ? pRet : 0);
+
+	info.bWantReturn = 1;
+	return pRet;
+}
+
+Symbol* NodeIdent::eval(ParseInfo &info, SymbolTable *pSym) const
+{
+	if(info.bWantReturn) return 0;
+	
 	return pSym->GetSymbol(m_strIdent);
 }
 
-Symbol* NodeCall::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const
+Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 {
+	if(info.bWantReturn) return 0;
+	
+	std::vector<NodeFunction*>& vecFuncs = info.vecFuncs;
+	
 	if(m_pIdent->m_type != NODE_IDENT)
 		return 0;
 	//if(m_pArgs->m_type != NODE_ARGS)
 	//	return 0;
 
 	NodeIdent* pIdent = (NodeIdent*) m_pIdent;
-	NodeBinaryOp* pArgs = (NodeBinaryOp*) m_pArgs;
-
-	std::vector<Node*> vecArgs;
-	if(pArgs)
-		vecArgs = pArgs->flatten(NODE_ARGS);
-
 	std::string strFkt = pIdent->m_strIdent;
-	//std::cout << "call to " << strFkt << " with " << vecArgs.size() << " arguments." << std::endl;
+	//std::cout << "call to " << strFkt << " with " << m_vecArgs.size() << " arguments." << std::endl;
 
 
+	bool bCallUserFkt = 0;
+	// user-defined function
 	NodeFunction *pFkt = 0;
 	for(NodeFunction *pFktIter : vecFuncs)
 	{
 		if(pFktIter && pFktIter->GetName()==strFkt)
 			pFkt = pFktIter;
 	}
-	if(!pFkt)
+	
+	if(pFkt)
+		bCallUserFkt = 1;
+	
+	/*if(!bCallUserFkt)
 	{
 		std::cerr << "Error: Trying to call unknown function \" << strFkt << \"."
 					<< std::endl;
 		return 0;
-	}
+	}*/
 
 
 	std::vector<Symbol*> vecArgSyms;
-	for(Node* pNode : vecArgs)
+	for(Node* pNode : m_vecArgs)
 	{
-		Symbol *pSymbol = pNode->eval(pSym, vecFuncs);
+		Symbol *pSymbol = pNode->eval(info, pSym);
 		//std::cout << "argument: " << pSymbol->print() << std::endl;
 
 		vecArgSyms.push_back(pSymbol);
 	}
 
-	pFkt->SetArgSyms(&vecArgSyms);
-	Symbol* pFktRet = pFkt->eval(pSym, vecFuncs);
+	Symbol* pFktRet = 0;
+	if(bCallUserFkt)	// call user-defined function
+	{
+		pFkt->SetArgSyms(&vecArgSyms);
+		pFktRet = pFkt->eval(info, pSym);
+		if(info.bWantReturn)
+		{
+			//std::cout << "returned" << std::endl;
+			info.bWantReturn = 0;
+		}
+	}
+	else				// call system function
+	{
+		pFktRet = ext_call(strFkt, vecArgSyms);
+	}
 
 	for(Symbol *pArgSym : vecArgSyms)
 		safe_delete(pArgSym, pSym);
 	return pFktRet;
 }
 
-Symbol* NodeDouble::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const
+Symbol* NodeDouble::eval(ParseInfo &info, SymbolTable *pSym) const
 {
-	SymbolDouble *pSymbol = new SymbolDouble;
-	pSymbol->dVal = m_dVal;
-	pSymbol->strName = "<const>";
-	return pSymbol;
+	if(info.bWantReturn) return 0;
+	return m_pSymbol;
 }
 
-Symbol* NodeInt::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const
+Symbol* NodeInt::eval(ParseInfo &info, SymbolTable *pSym) const
 {
-	SymbolInt *pSymbol = new SymbolInt;
-	pSymbol->iVal = m_iVal;
-	pSymbol->strName = "<const>";
-	return pSymbol;
+	if(info.bWantReturn) return 0;
+	return m_pSymbol;
 }
 
-Symbol* NodeString::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const
+Symbol* NodeString::eval(ParseInfo &info, SymbolTable *pSym) const
 {
-	SymbolString *pSymbol = new SymbolString;
-	pSymbol->strVal = m_strVal;
-	pSymbol->strName = "<const>";
-	return pSymbol;
+	if(info.bWantReturn) return 0;
+	return m_pSymbol;
 }
 
-Symbol* NodeUnaryOp::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const
+
+Symbol* NodeArray::eval(ParseInfo &info, SymbolTable *pSym) const
 {
+	if(info.bWantReturn) return 0;
+	
+	NodeBinaryOp *pArr = (NodeBinaryOp*)m_pArr;
+	std::vector<Node*> vecNodes = pArr->flatten(NODE_ARGS);
+	
+	SymbolArray *pSymArr = new SymbolArray;
+	pSymArr->m_arr.reserve(vecNodes.size());
+	
+	for(Node* pNode : vecNodes)
+	{
+		if(!pNode) continue;
+		
+		Symbol *pSymbol = pNode->eval(info, pSym);
+		pSymArr->m_arr.push_back(pSymbol);
+	}
+	
+	return pSymArr;
+}
+
+Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
+{
+	if(!m_pIdent || m_pIdent->m_type != NODE_IDENT)
+	{
+		std::cerr << "Error: Tried to access non-array." << std::endl;
+		return 0;
+	}
+	
+	std::string strIdent = ((NodeIdent*)m_pIdent)->m_strIdent;
+	Symbol *pSymbol = pSym->GetSymbol(strIdent);
+	
+	if(!pSymbol)
+	{
+		std::cerr << "Error: Symbol \"" << strIdent 
+				<< "\" not found." << std::endl;
+		return 0;
+	}
+	
+	if(pSymbol->GetType() != SYMBOL_ARRAY)
+	{
+		std::cerr << "Error: Symbol \"" << strIdent
+				<< "\" is no array." << std::endl;
+		return 0;
+	}
+	
+	
+	SymbolArray* pSymArr = (SymbolArray*)pSymbol;
+	
+	
+	
+	Symbol *pSymExpr = m_pExpr->eval(info, pSym);
+	if(pSymExpr==0 || pSymExpr->GetType()!=SYMBOL_INT)
+	{
+		std::cerr << "Error: Array index has to be of integer type." 
+					<< std::endl;
+		return 0;
+	}
+	
+	int iIdx = ((SymbolInt*)pSymExpr)->m_iVal;
+	
+	if(iIdx<0 || iIdx>=pSymArr->m_arr.size())
+	{
+		std::cerr << "Error: Array index (" << iIdx 
+					<< ") out of bounds (array size: "
+					<< pSymArr->m_arr.size() << ")." << std::endl;
+		return 0;
+	}
+
+	safe_delete(pSymExpr, pSym);
+	return pSymArr->m_arr[iIdx];
+}
+
+Symbol* NodeUnaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
+{
+	if(info.bWantReturn) return 0;
+	
+	std::vector<NodeFunction*>& vecFuncs = info.vecFuncs;
+	
 	switch(m_type)
 	{
 		case NODE_UMINUS:
 		{
-			Symbol *pSymbolEval = m_pChild->eval(pSym, vecFuncs);
+			Symbol *pSymbolEval = m_pChild->eval(info, pSym);
 			Symbol *pSymbol = pSymbolEval->clone();
 			safe_delete(pSymbolEval, pSym);
 
 			if(pSymbol->GetType() == SYMBOL_DOUBLE)
-				((SymbolDouble*)pSymbol)->dVal = -((SymbolDouble*)pSymbol)->dVal;
+				((SymbolDouble*)pSymbol)->m_dVal = -((SymbolDouble*)pSymbol)->m_dVal;
 			else if(pSymbol->GetType() == SYMBOL_INT)
-				((SymbolInt*)pSymbol)->iVal = -((SymbolInt*)pSymbol)->iVal;
+				((SymbolInt*)pSymbol)->m_iVal = -((SymbolInt*)pSymbol)->m_iVal;
 
 			return pSymbol;
 		}
 
 		case NODE_LOG_NOT:
 		{
-			Symbol *pSymbolEval = m_pChild->eval(pSym, vecFuncs);
+			Symbol *pSymbolEval = m_pChild->eval(info, pSym);
 			SymbolInt *pSymbolInt = new SymbolInt();
 
 			if(pSymbolEval->GetType() == SYMBOL_DOUBLE)
-				pSymbolInt->iVal = !((SymbolDouble*)pSymbolEval)->dVal;
+				pSymbolInt->m_iVal = !((SymbolDouble*)pSymbolEval)->m_dVal;
 			else if(pSymbolEval->GetType() == SYMBOL_INT)
-				pSymbolInt->iVal = !((SymbolInt*)pSymbolEval)->iVal;
+				pSymbolInt->m_iVal = !((SymbolInt*)pSymbolEval)->m_iVal;
 
 			safe_delete(pSymbolEval, pSym);
 			return pSymbolInt;
@@ -289,7 +550,7 @@ Symbol* NodeUnaryOp::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFunc
 		{
 			if(m_pChild)
 			{
-				Symbol *pSymbol = m_pChild->eval(pSym, vecFuncs);
+				Symbol *pSymbol = m_pChild->eval(info, pSym);
 				safe_delete(pSymbol, pSym);
 			}
 			return 0;
@@ -297,8 +558,12 @@ Symbol* NodeUnaryOp::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFunc
 	}
 }
 
-Symbol* NodeBinaryOp::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const
+Symbol* NodeBinaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 {
+	if(info.bWantReturn) return 0;
+	
+	std::vector<NodeFunction*>& vecFuncs = info.vecFuncs;
+	
 	switch(m_type)
 	{
 		case NODE_FUNCS:
@@ -311,7 +576,7 @@ Symbol* NodeBinaryOp::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFun
 			for(NodeFunction* pFkt : vecFuncs)
 			{
 				if(pFkt->GetName() == "main")
-					return pFkt->eval(pSym, vecFuncs);
+					return pFkt->eval(info, pSym);
 			}
 
 			std::cerr << "Error: No main function defined." << std::endl;
@@ -324,13 +589,13 @@ Symbol* NodeBinaryOp::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFun
 			if(m_pLeft)
 			{
 				//std::cout << "left: " << m_pLeft->m_type << std::endl;
-				Symbol *pSymbol = m_pLeft->eval(pSym, vecFuncs);
+				Symbol *pSymbol = m_pLeft->eval(info, pSym);
 				safe_delete(pSymbol, pSym);
 			}
 			if(m_pRight)
 			{
 				//std::cout << "right: " << m_pRight->m_type << std::endl;
-				Symbol *pSymbol = m_pRight->eval(pSym, vecFuncs);
+				Symbol *pSymbol = m_pRight->eval(info, pSym);
 				safe_delete(pSymbol, pSym);
 			}
 			return 0;
@@ -338,16 +603,27 @@ Symbol* NodeBinaryOp::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFun
 
 		case NODE_ASSIGN:
 		{
-			Symbol *pSymbol = m_pRight->eval(pSym, vecFuncs);
-			const std::string& strIdent = ((NodeIdent*)m_pLeft)->m_strIdent;
+			Symbol *pSymbolOrg = m_pRight->eval(info, pSym);
+			Symbol *pSymbol = pSymbolOrg->clone();
+			safe_delete(pSymbolOrg, pSym);
+			
+			if(m_pLeft->m_type == NODE_IDENT)		// single variable
+			{
+				const std::string& strIdent = ((NodeIdent*)m_pLeft)->m_strIdent;
+				pSym->InsertSymbol(strIdent, pSymbol);
+			}
+			else									// array
+			{
+				Symbol *pSymLeft = m_pLeft->eval(info, pSym);
+				pSymLeft->assign(pSymbol);
+			}
 
-			pSym->InsertSymbol(strIdent, pSymbol);
 			return pSymbol;
 		}
 	};
 
-	Symbol *pSymbolLeft = m_pLeft->eval(pSym, vecFuncs);
-	Symbol *pSymbolRight = m_pRight->eval(pSym, vecFuncs);
+	Symbol *pSymbolLeft = m_pLeft->eval(info, pSym);
+	Symbol *pSymbolRight = m_pRight->eval(info, pSym);
 	Symbol *pSymbol = Op(pSymbolLeft, pSymbolRight, m_type);
 	safe_delete(pSymbolLeft, pSym);
 	safe_delete(pSymbolRight, pSym);
@@ -356,33 +632,29 @@ Symbol* NodeBinaryOp::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFun
 }
 
 
-Symbol* NodeFunction::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const
+Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable *pSym) const
 {
+	if(info.bWantReturn) return 0;
+	
+	std::vector<NodeFunction*>& vecFuncs = info.vecFuncs;
 	std::string strName = GetName();
 	//std::cout << "in fkt " << strName << std::endl;
-
-	std::vector<Node*> vecArgs;
-	if(m_pArgs && (m_pArgs->m_type==NODE_IDENTS || m_pArgs->m_type==NODE_IDENT))
-	{
-		NodeBinaryOp* pArgs = (NodeBinaryOp*) m_pArgs;
-		vecArgs = pArgs->flatten(NODE_IDENTS);
-	}
 
 
 	SymbolTable *pLocalSym = new SymbolTable;
 	if(m_pVecArgSyms)
 	{
-		if(vecArgs.size() != m_pVecArgSyms->size())
+		if(m_vecArgs.size() != m_pVecArgSyms->size())
 		{
 			std::cerr << "Error: Function \"" << strName << "\"" << " takes "
-					 << vecArgs.size() << " arguments, but "
+					 << m_vecArgs.size() << " arguments, but "
 					 << m_pVecArgSyms->size() << " given."
 					 << std::endl;
 		}
 
-		for(unsigned int iArg=0; iArg<vecArgs.size(); ++iArg)
+		for(unsigned int iArg=0; iArg<m_vecArgs.size(); ++iArg)
 		{
-			Node* pNode = vecArgs[iArg];
+			Node* pNode = m_vecArgs[iArg];
 			Symbol *pSymbol = (*m_pVecArgSyms)[iArg];
 
 			NodeIdent* pIdent = (NodeIdent*)pNode;
@@ -403,38 +675,46 @@ Symbol* NodeFunction::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFun
 	Symbol *pRet = 0;
 	if(m_pStmts)
 	{
-		pRet = m_pStmts->eval(pLocalSym, vecFuncs);
+		pRet = m_pStmts->eval(info, pLocalSym);
 		if(!pRet)
-			pRet = pLocalSym->GetSymbol("_ret_");
+			pRet = pLocalSym->GetSymbol("<ret>");
 	}
 
-	std::cout << "Local symbols for \"" << strName << "\":\n";
-	pLocalSym->print();
+	//std::cout << "Local symbols for \"" << strName << "\":\n";
+	//pLocalSym->print();
 
 	delete pLocalSym;
 	return pRet;
 }
 
 
-Symbol* NodeIf::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const
+Symbol* NodeIf::eval(ParseInfo &info, SymbolTable *pSym) const
 {
+	if(info.bWantReturn) return 0;
+	
+	std::vector<NodeFunction*>& vecFuncs = info.vecFuncs;
+	
 	Symbol *pSymExpr = 0;
 	Symbol *pSymRet = 0;
 	if(m_pExpr)
-		pSymExpr = m_pExpr->eval(pSym, vecFuncs);
+		pSymExpr = m_pExpr->eval(info, pSym);
 
 	if(pSymExpr && pSymExpr->IsNotZero())
-		pSymRet = (m_pIf ? m_pIf->eval(pSym, vecFuncs) : 0);
+		pSymRet = (m_pIf ? m_pIf->eval(info, pSym) : 0);
 	else
-		pSymRet = (m_pElse ? m_pElse->eval(pSym, vecFuncs) : 0);
+		pSymRet = (m_pElse ? m_pElse->eval(info, pSym) : 0);
 
 	safe_delete(pSymExpr, pSym);
 	return pSymRet;
 }
 
 
-Symbol* NodeWhile::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs) const
+Symbol* NodeWhile::eval(ParseInfo &info, SymbolTable *pSym) const
 {
+	if(info.bWantReturn) return 0;
+	
+	std::vector<NodeFunction*>& vecFuncs = info.vecFuncs;
+	
 	if(!m_pExpr) return 0;
 	if(!m_pStmt) return 0;
 
@@ -444,10 +724,10 @@ Symbol* NodeWhile::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs)
 	{
 		safe_delete(pSymRet, pSym);
 
-		Symbol *pSymExpr = m_pExpr->eval(pSym, vecFuncs);
+		Symbol *pSymExpr = m_pExpr->eval(info, pSym);
 
 		if(pSymExpr && pSymExpr->IsNotZero())
-			pSymRet = m_pStmt->eval(pSym, vecFuncs);
+			pSymRet = m_pStmt->eval(info, pSym);
 		else
 			break;
 
@@ -459,20 +739,21 @@ Symbol* NodeWhile::eval(SymbolTable *pSym, std::vector<NodeFunction*>& vecFuncs)
 //--------------------------------------------------------------------------------
 
 
+// TODO: Fix: Gets called for non casted NodeBinaryOps which are of other type!
 std::vector<Node*> NodeBinaryOp::flatten(NodeType ntype) const
 {
 	//std::cout << m_type << ", " << ntype << std::endl;
 
 	std::vector<Node*> vecNodes;
 
-	NodeBinaryOp *pLeft = (NodeBinaryOp*) m_pLeft;
-	NodeBinaryOp *pRight = (NodeBinaryOp*) m_pRight;
-
-	if(m_type == ntype)
+	if(m_type==ntype)
 	{
+		NodeBinaryOp *pLeft = (NodeBinaryOp*) m_pLeft;
+		NodeBinaryOp *pRight = (NodeBinaryOp*) m_pRight;
+		
 		if(m_pLeft)
 		{
-			if(m_pLeft->m_type == ntype)
+			if(m_pLeft->m_type==ntype)
 			{
 				std::vector<Node*> vecLeft = pLeft->flatten(ntype);
 				vecNodes.insert(vecNodes.begin(), vecLeft.begin(), vecLeft.end());
@@ -485,7 +766,7 @@ std::vector<Node*> NodeBinaryOp::flatten(NodeType ntype) const
 
 		if(m_pRight)
 		{
-			if(m_pRight->m_type == ntype)
+			if(m_pRight->m_type==ntype)
 			{
 				std::vector<Node*> vecRight = pRight->flatten(ntype);
 				vecNodes.insert(vecNodes.end(), vecRight.begin(), vecRight.end());

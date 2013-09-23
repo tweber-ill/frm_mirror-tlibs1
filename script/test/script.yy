@@ -1,5 +1,5 @@
 /*
- * Simple Script
+ * Simple Script grammar
  * @author tweber
  */
 
@@ -107,6 +107,8 @@ stmt:	expr ';'		{ $$ = $1; }
 	|	TOK_IF '(' expr ')' stmt 					{ $$ = new NodeIf($3, $5); }
 	|	TOK_IF '(' expr ')' stmt TOK_ELSE stmt 		{ $$ = new NodeIf($3, $5, $7); }
 	|	TOK_WHILE '(' expr ')' stmt					{ $$ = new NodeWhile($3, $5); }
+	|	TOK_RETURN expr ';'							{ $$ = new NodeReturn($2); }
+	|	TOK_RETURN ';'								{ $$ = new NodeReturn(); }
 	;
 
 
@@ -116,14 +118,14 @@ args:	expr ',' args		{ $$ = new NodeBinaryOp($1, $3, NODE_ARGS); }
 	;
 
 idents:	ident ',' idents	{ $$ = new NodeBinaryOp($1, $3, NODE_IDENTS); }
-	|   ident				{ $$ = $1; }
+	|   ident				{ $$ = $1; } 
 	| 	/*eps*/				{ $$ = 0; }
 	;
 
 
 
 expr:	'(' expr ')'		{ $$ = $2; }
-	| ident '=' expr		{ $$ = new NodeBinaryOp($1, $3, NODE_ASSIGN); }
+	| expr '=' expr		{ $$ = new NodeBinaryOp($1, $3, NODE_ASSIGN); }
 
 	| expr '+' expr			{ $$ = new NodeBinaryOp($1, $3, NODE_PLUS); }
 	| expr '-' expr			{ $$ = new NodeBinaryOp($1, $3, NODE_MINUS); }
@@ -148,6 +150,9 @@ expr:	'(' expr ')'		{ $$ = $2; }
 	| TOK_STRING			{ $$ = $1; }
 	| ident					{ $$ = $1; }
 	| ident '(' args ')'	{ $$ = new NodeCall($1, $3);  }
+	
+	| '[' args ']'				{ $$ = new NodeArray($2); }
+	| ident '[' expr ']'		{ $$ = new NodeArrayAccess($1, $3); }
 	;
 
 	
