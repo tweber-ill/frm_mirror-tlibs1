@@ -42,6 +42,12 @@ static Compressor comp_from_magic(const unsigned char* pcMagic, unsigned int iLe
 		return COMP_BZ2;
 
 
+	if(iLen<6)
+		return COMP_INVALID;
+
+	if(pcMagic[0]==0xfd && pcMagic[1]=='7' && pcMagic[2]=='z' && pcMagic[3]=='X' && pcMagic[4]=='Z' && pcMagic[5]==0x00)
+		return COMP_XZ;
+
 	return COMP_INVALID;
 }
 
@@ -69,6 +75,11 @@ bool decomp_stream_to_stream(std::istream& istr, std::ostream& ostr, Compressor 
 		input.push(ios::bzip2_decompressor());
 	else if(comp == COMP_Z)
 		input.push(ios::zlib_decompressor());
+	else if(comp == COMP_XZ)
+	{
+		std::cerr << "Error: XZ decompression not yet supported." << std::endl;
+		return false;
+	}
 	else
 	{
 		std::cerr << "Error: Unknown decompression selected." << std::endl;
@@ -95,6 +106,11 @@ bool comp_stream_to_stream(std::istream& istr, std::ostream& ostr, Compressor co
 		input.push(ios::bzip2_compressor());
 	else if(comp == COMP_Z)
 		input.push(ios::zlib_compressor(/*ios::zlib_params(9)*/));
+	else if(comp == COMP_XZ)
+	{
+		std::cerr << "Error: XZ compression not yet supported." << std::endl;
+		return false;
+	}
 	else
 	{
 		std::cerr << "Error: Unknown compression selected." << std::endl;

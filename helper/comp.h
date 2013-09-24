@@ -14,6 +14,7 @@ enum Compressor
 	COMP_GZ,
 	COMP_BZ2,
 	COMP_Z,
+	COMP_XZ,
 
 	COMP_AUTO,
 	COMP_INVALID
