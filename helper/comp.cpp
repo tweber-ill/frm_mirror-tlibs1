@@ -27,26 +27,23 @@ static Compressor comp_from_magic(const unsigned char* pcMagic, unsigned int iLe
 {
 	if(iLen<2)
 		return COMP_INVALID;
-
 	if(pcMagic[0]==0x1f && pcMagic[1]==0x8b)
 		return COMP_GZ;
-
 	if(pcMagic[0]==0x78 && (pcMagic[1]==0xda || pcMagic[1]==0x9c || pcMagic[1]==0x01))
 		return COMP_Z;
 
 
 	if(iLen<3)
 		return COMP_INVALID;
-
 	if(pcMagic[0]=='B' && pcMagic[1]=='Z' && pcMagic[2]=='h')
 		return COMP_BZ2;
 
 
 	if(iLen<6)
 		return COMP_INVALID;
-
 	if(pcMagic[0]==0xfd && pcMagic[1]=='7' && pcMagic[2]=='z' && pcMagic[3]=='X' && pcMagic[4]=='Z' && pcMagic[5]==0x00)
 		return COMP_XZ;
+
 
 	return COMP_INVALID;
 }
@@ -59,11 +56,11 @@ bool decomp_stream_to_stream(std::istream& istr, std::ostream& ostr, Compressor 
 {
 	if(comp == COMP_AUTO)
 	{
-		unsigned char pcMagic[3] = {0,0,0};
-		istr.read((char*)pcMagic, 3);
+		unsigned char pcMagic[] = {0,0,0,0,0,0};
+		istr.read((char*)pcMagic, 6);
 		istr.seekg(0,std::ios::beg);
 
-		comp = comp_from_magic(pcMagic, 3);
+		comp = comp_from_magic(pcMagic, 6);
 	}
 
 
