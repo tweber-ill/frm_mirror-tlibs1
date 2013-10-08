@@ -15,7 +15,7 @@ main()
 	{
 		b = b*2;
 		
-		print(b);
+		print((cur_iter(b)+1) + "/" + vec_size(a) + " -- " + b);
 	}
 
 	print(x);

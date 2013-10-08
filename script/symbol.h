@@ -24,6 +24,7 @@ enum SymbolType
 struct Symbol
 {
 	std::string m_strName;
+	std::string m_strIdent;		// last seen identifier
 	
 	virtual SymbolType GetType() const = 0;
 	virtual Symbol* ToType(SymbolType stype) const = 0;
@@ -117,6 +118,7 @@ public:
 	
 	Symbol* GetSymbol(const std::string& strKey);
 	void InsertSymbol(const std::string& strKey, Symbol *pSym);
+	void RemoveSymbol(const std::string& strKey);
 	bool IsPtrInMap(const Symbol* pSym) const;
 };
 

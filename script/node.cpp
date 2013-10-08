@@ -349,7 +349,10 @@ Symbol* NodeIdent::eval(ParseInfo &info, SymbolTable *pSym) const
 {
 	if(info.bWantReturn) return 0;
 	
-	return pSym->GetSymbol(m_strIdent);
+	Symbol *pSymbol = pSym->GetSymbol(m_strIdent);
+	pSymbol->m_strIdent = m_strIdent;
+
+	return pSymbol;
 }
 
 Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
@@ -410,7 +413,7 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 	}
 	else				// call system function
 	{
-		pFktRet = ext_call(strFkt, vecArgSyms);
+		pFktRet = ext_call(strFkt, vecArgSyms, pSym);
 	}
 
 	for(Symbol *pArgSym : vecArgSyms)
@@ -755,21 +758,32 @@ Symbol* NodeRangedFor::eval(ParseInfo &info, SymbolTable *pSym) const
 	Symbol *_pArr = m_pExpr->eval(info, pSym);
 	if(_pArr->GetType() != SYMBOL_ARRAY)
 	{
-		std::cerr << "Error: Range-based for loop needs arrays." << std::endl;
+		std::cerr << "Error: Range-based for loop needs array." << std::endl;
 		safe_delete(_pArr, pSym);
 		return 0;
 	}
 
 	SymbolArray *pArr = (SymbolArray*)_pArr;
 
+
+	const std::string& strIdent = ((NodeIdent*)m_pIdent)->m_strIdent;
+
+	SymbolInt *pSymIter = new SymbolInt(0);
+	std::string strIter = "<cur_iter_" + strIdent + ">";
+	pSym->InsertSymbol(strIter, pSymIter);
+
 	for(Symbol *pSymInArr : pArr->m_arr)
 	{
-		const std::string& strIdent = ((NodeIdent*)m_pIdent)->m_strIdent;
 		pSym->InsertSymbol(strIdent, pSymInArr);
 
 		Symbol *pBodyRet = m_pStmt->eval(info, pSym);
 		safe_delete(pBodyRet, pSym);
+
+		++pSymIter->m_iVal;
 	}
+
+	pSym->RemoveSymbol(strIter);
+	delete pSymIter;
 
 	return 0;
 }

@@ -9,13 +9,15 @@
 #include <map>
 
 
-static Symbol* fkt_version(const std::vector<Symbol*>& vecSyms)
+static Symbol* fkt_version(const std::vector<Symbol*>& vecSyms,
+						   SymbolTable* pSymTab)
 {
 	return new SymbolString("Hermelin Interpreter, Version 0.1");
 }
 
 
-static Symbol* fkt_print(const std::vector<Symbol*>& vecSyms)
+static Symbol* fkt_print(const std::vector<Symbol*>& vecSyms,
+						SymbolTable* pSymTab)
 {
 	std::ostream& ostr = std::cout;
 	
@@ -27,7 +29,8 @@ static Symbol* fkt_print(const std::vector<Symbol*>& vecSyms)
 	return 0;
 }
 
-static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms)
+static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
+						SymbolTable* pSymTab)
 {
 	if(vecSyms.size()<1)
 	{
@@ -72,7 +75,8 @@ static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms)
 	return pSymRet;
 }
 
-static Symbol* fkt_array_size(const std::vector<Symbol*>& vecSyms)
+static Symbol* fkt_array_size(const std::vector<Symbol*>& vecSyms,
+							SymbolTable* pSymTab)
 {
 	if(vecSyms.size()<1)
 	{
@@ -94,8 +98,34 @@ static Symbol* fkt_array_size(const std::vector<Symbol*>& vecSyms)
 	return pSymRet;
 }
 
+static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
+							SymbolTable* pSymTab)
+{
+	if(vecSyms.size() != 1)
+	{
+		std::cerr << "Error: cur_iter takes exactly one argument." << std::endl;
+		return 0;
+	}
 
-typedef std::map<std::string, Symbol*(*)(const std::vector<Symbol*>&)> t_mapFkts;
+	const std::string& strIdent = vecSyms[0]->m_strIdent;
+	std::string strIter = "<cur_iter_" + strIdent + ">";
+
+	Symbol* pSymIter = pSymTab->GetSymbol(strIter);
+	if(!pSymIter || pSymIter->GetType()!=SYMBOL_INT)
+	{
+		std::cerr << "Error: cur_iter could not determine iteration index."
+					<< std::endl;
+		return 0;
+	}
+
+	return pSymIter;
+}
+
+
+
+
+
+typedef std::map<std::string, Symbol*(*)(const std::vector<Symbol*>&, SymbolTable*)> t_mapFkts;
 static t_mapFkts g_mapFkts =
 {
 	t_mapFkts::value_type("ver", fkt_version),
@@ -103,9 +133,13 @@ static t_mapFkts g_mapFkts =
 	
 	t_mapFkts::value_type("vec", fkt_array),
 	t_mapFkts::value_type("vec_size", fkt_array_size),
+
+	t_mapFkts::value_type("cur_iter", fkt_cur_iter)
 };
 
-extern Symbol* ext_call(const std::string& strFkt, const std::vector<Symbol*>& vecSyms)
+extern Symbol* ext_call(const std::string& strFkt,
+						const std::vector<Symbol*>& vecSyms,
+						SymbolTable* pSymTab)
 {
 	t_mapFkts::iterator iter = g_mapFkts.find(strFkt);
 	if(iter == g_mapFkts.end())
@@ -116,5 +150,5 @@ extern Symbol* ext_call(const std::string& strFkt, const std::vector<Symbol*>& v
 		return 0;
 	}
 	
-	return (*iter).second(vecSyms);
+	return (*iter).second(vecSyms, pSymTab);
 }

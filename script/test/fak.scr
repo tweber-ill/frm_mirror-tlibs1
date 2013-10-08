@@ -80,5 +80,7 @@ main()
 	print("Beispielprogramm Fibonacci 2");
 	print("============================\n");
 
-	print("Ergebnis (Fibonacci 2): " + fib2(vec(30)));
+	#print("Ergebnis (Fibonacci 2): " + fib2(vec(30)));
+	for(a : fib2(vec(30)))
+		print("Ergebnis (Fibonacci 2): fib(" + cur_iter(a) + ") = " + a);
 }

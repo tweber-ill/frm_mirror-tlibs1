@@ -300,6 +300,11 @@ void SymbolTable::InsertSymbol(const std::string& strKey, Symbol *pSym)
 	m_syms[strKey] = pSym;
 }
 
+void SymbolTable::RemoveSymbol(const std::string& strKey)
+{
+	m_syms.erase(strKey);
+}
+
 bool SymbolTable::IsPtrInMap(const Symbol* pSym) const
 {
 	for(auto entry : m_syms)

@@ -8,6 +8,8 @@
 #include <vector>
 #include "symbol.h"
 
-extern Symbol* ext_call(const std::string& strFkt, const std::vector<Symbol*>& vecSyms);
+extern Symbol* ext_call(const std::string& strFkt,
+						const std::vector<Symbol*>& vecSyms,
+						SymbolTable* pSymTab);
 
 #endif
