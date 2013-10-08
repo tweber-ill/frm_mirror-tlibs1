@@ -10,7 +10,7 @@
 #include <ctype.h>
 
 
-Lexer::Lexer() : m_strWhitespace(" \t\n\r"), m_strSep("=+-*/^{}[]();,\""),
+Lexer::Lexer() : m_strWhitespace(" \t\n\r"), m_strSep("=+-*/^{}[]();,\":"),
 				m_iLexPos(0), m_iNumToks(0)
 {
 	m_tokEnd.type = LEX_TOKEN_END;

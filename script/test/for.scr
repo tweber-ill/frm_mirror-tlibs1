@@ -1,0 +1,22 @@
+main()
+{
+	a = [1, 2, 3];
+
+	for(b : a)
+	{
+		print("b = " + b);
+	}
+
+
+	x = 12;
+	a = [111, x, 5];
+
+	for(b : a)
+	{
+		b = b*2;
+		
+		print(b);
+	}
+
+	print(x);
+}

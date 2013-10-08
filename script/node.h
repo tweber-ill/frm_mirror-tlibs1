@@ -72,6 +72,7 @@ enum NodeType
 
 	NODE_IF,
 	NODE_WHILE,
+	NODE_RANGED_FOR,
 	
 	NODE_RETURN,
 	
@@ -196,6 +197,32 @@ struct NodeWhile : public Node
 
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 };
+
+struct NodeRangedFor : public Node
+{
+	Node *m_pIdent;
+	Node *m_pExpr;
+	Node *m_pStmt;
+
+	NodeRangedFor(Node* pIdent, Node* pExpr, Node* pStmt)
+		: Node(NODE_RANGED_FOR),
+		  m_pIdent(pIdent), m_pExpr(pExpr), m_pStmt(pStmt)
+	{}
+
+	NodeRangedFor(void* pIdent, void* pExpr, void* pStmt)
+		: NodeRangedFor((Node*)pIdent, (Node*)pExpr, (Node*)pStmt)
+	{}
+
+	virtual ~NodeRangedFor()
+	{
+		if(m_pIdent) delete m_pIdent;
+		if(m_pExpr) delete m_pExpr;
+		if(m_pStmt) delete m_pStmt;
+	}
+
+	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+};
+
 
 struct NodeDouble : public Node
 {

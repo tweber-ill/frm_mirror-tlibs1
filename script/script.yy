@@ -107,6 +107,7 @@ stmt:	expr ';'		{ $$ = $1; }
 	|	TOK_IF '(' expr ')' stmt 					{ $$ = new NodeIf($3, $5); }
 	|	TOK_IF '(' expr ')' stmt TOK_ELSE stmt 		{ $$ = new NodeIf($3, $5, $7); }
 	|	TOK_WHILE '(' expr ')' stmt					{ $$ = new NodeWhile($3, $5); }
+	|	TOK_FOR '(' ident ':' expr ')' stmt			{ $$ = new NodeRangedFor($3, $5, $7); }
 	|	TOK_RETURN expr ';'							{ $$ = new NodeReturn($2); }
 	|	TOK_RETURN ';'								{ $$ = new NodeReturn(); }
 	;

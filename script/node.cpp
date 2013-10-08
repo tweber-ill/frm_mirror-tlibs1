@@ -705,7 +705,9 @@ Symbol* NodeIf::eval(ParseInfo &info, SymbolTable *pSym) const
 		pSymRet = (m_pElse ? m_pElse->eval(info, pSym) : 0);
 
 	safe_delete(pSymExpr, pSym);
-	return pSymRet;
+	safe_delete(pSymRet, pSym);
+
+	return 0;
 }
 
 
@@ -718,12 +720,9 @@ Symbol* NodeWhile::eval(ParseInfo &info, SymbolTable *pSym) const
 	if(!m_pExpr) return 0;
 	if(!m_pStmt) return 0;
 
-	Symbol *pSymRet = 0;
-
 	while(1)
 	{
-		safe_delete(pSymRet, pSym);
-
+		Symbol *pSymRet = 0;
 		Symbol *pSymExpr = m_pExpr->eval(info, pSym);
 
 		if(pSymExpr && pSymExpr->IsNotZero())
@@ -731,9 +730,48 @@ Symbol* NodeWhile::eval(ParseInfo &info, SymbolTable *pSym) const
 		else
 			break;
 
+		safe_delete(pSymRet, pSym);
 		safe_delete(pSymExpr, pSym);
 	}
-	return pSymRet;
+
+	return 0;
+}
+
+Symbol* NodeRangedFor::eval(ParseInfo &info, SymbolTable *pSym) const
+{
+	if(info.bWantReturn) return 0;
+
+	std::vector<NodeFunction*>& vecFuncs = info.vecFuncs;
+	if(!m_pIdent || !m_pExpr || !m_pStmt) return 0;
+
+	if(m_pIdent->m_type != NODE_IDENT)
+	{
+		std::cerr << "Error: Range-based for loop needs identifier."
+					<< std::endl;
+		return 0;
+	}
+
+	Symbol *pSymRet = 0;
+	Symbol *_pArr = m_pExpr->eval(info, pSym);
+	if(_pArr->GetType() != SYMBOL_ARRAY)
+	{
+		std::cerr << "Error: Range-based for loop needs arrays." << std::endl;
+		safe_delete(_pArr, pSym);
+		return 0;
+	}
+
+	SymbolArray *pArr = (SymbolArray*)_pArr;
+
+	for(Symbol *pSymInArr : pArr->m_arr)
+	{
+		const std::string& strIdent = ((NodeIdent*)m_pIdent)->m_strIdent;
+		pSym->InsertSymbol(strIdent, pSymInArr);
+
+		Symbol *pBodyRet = m_pStmt->eval(info, pSym);
+		safe_delete(pBodyRet, pSym);
+	}
+
+	return 0;
 }
 
 //--------------------------------------------------------------------------------
