@@ -153,7 +153,7 @@ expr:	'(' expr ')'		{ $$ = $2; }
 	| ident '(' args ')'	{ $$ = new NodeCall($1, $3);  }
 	
 	| '[' args ']'				{ $$ = new NodeArray($2); }
-	| ident '[' expr ']'		{ $$ = new NodeArrayAccess($1, $3); }
+	| ident '[' args ']'		{ $$ = new NodeArrayAccess($1, $3); }
 	;
 
 	

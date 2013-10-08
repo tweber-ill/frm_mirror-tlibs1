@@ -1,0 +1,16 @@
+main()
+{
+	a = [12.3, 1, "Test", [1,2,3], "abc"];
+	print("Type of " + a + ": " + typeof(a));
+
+	for(item : a)
+	{
+		print("\tType of " + item + ": " + typeof(item));
+
+		if(typeof(item) eq "vector")
+			for(item2 : item) print(item2);
+	}
+
+	a[3,0] = a[3,1]*2;
+	print(a[3]);
+}

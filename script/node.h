@@ -296,10 +296,7 @@ struct NodeArrayAccess : public Node
 	Node *m_pIdent;
 	Node *m_pExpr;
 	
-	NodeArrayAccess(Node* pIdent, Node* pExpr)
-		: Node(NODE_ARRAY_ACCESS), m_pIdent(pIdent), m_pExpr(pExpr)
-	{}
-	
+	NodeArrayAccess(Node* pIdent, Node* pExpr);
 	NodeArrayAccess(void* pIdent, void* pExpr)
 		: NodeArrayAccess((Node*)pIdent, (Node*)pExpr)
 	{}
@@ -311,6 +308,9 @@ struct NodeArrayAccess : public Node
 	}
 	
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+
+protected:
+	std::vector<Node*> m_vecIndices;
 };
 
 struct NodeUnaryOp : public Node

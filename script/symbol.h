@@ -27,7 +27,9 @@ struct Symbol
 	std::string m_strIdent;		// last seen identifier
 	
 	virtual SymbolType GetType() const = 0;
+	virtual std::string GetTypeName() const = 0;
 	virtual Symbol* ToType(SymbolType stype) const = 0;
+
 	virtual std::string print() const = 0;
 	virtual Symbol* clone() const = 0;
 	virtual void assign(Symbol *pSym) = 0;
@@ -43,7 +45,9 @@ struct SymbolDouble : public Symbol
 	SymbolDouble(double dVal) : m_dVal(dVal) {}
 
 	virtual SymbolType GetType() const { return SYMBOL_DOUBLE; }
+	virtual std::string GetTypeName() const { return "double"; }
 	virtual Symbol* ToType(SymbolType stype) const;
+
 	virtual std::string print() const;
 	virtual Symbol* clone() const;
 	virtual void assign(Symbol *pSym);
@@ -59,7 +63,9 @@ struct SymbolInt : public Symbol
 	SymbolInt(int iVal) : m_iVal(iVal) {}
 
 	virtual SymbolType GetType() const { return SYMBOL_INT; }
+	virtual std::string GetTypeName() const { return "int"; }
 	virtual Symbol* ToType(SymbolType stype) const;
+
 	virtual std::string print() const;
 	virtual Symbol* clone() const;
 	virtual void assign(Symbol *pSym);
@@ -75,7 +81,9 @@ struct SymbolString : public Symbol
 	SymbolString(const char* pcStr) : m_strVal(pcStr) {}
 
 	virtual SymbolType GetType() const { return SYMBOL_STRING; }
+	virtual std::string GetTypeName() const { return "string"; }
 	virtual Symbol* ToType(SymbolType stype) const;
+
 	virtual std::string print() const;
 	virtual Symbol* clone() const;
 	virtual void assign(Symbol *pSym);
@@ -93,7 +101,9 @@ struct SymbolArray : public Symbol
 	virtual ~SymbolArray();
 	
 	virtual SymbolType GetType() const { return SYMBOL_ARRAY; }
+	virtual std::string GetTypeName() const { return "vector"; }
 	virtual Symbol* ToType(SymbolType stype) const;
+
 	virtual std::string print() const;
 	virtual Symbol* clone() const;
 	virtual void assign(Symbol *pSym);

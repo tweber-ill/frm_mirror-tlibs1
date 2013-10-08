@@ -121,6 +121,26 @@ static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
 	return pSymIter;
 }
 
+static Symbol* fkt_typeof(const std::vector<Symbol*>& vecSyms,
+							SymbolTable* pSymTab)
+{
+	if(vecSyms.size()!=1)
+	{
+		std::cerr << "Error: typeof takes exactly one argument." << std::endl;
+		return 0;
+	}
+
+	Symbol *pSymbol = vecSyms[0];
+	if(!pSymbol)
+	{
+		std::cerr << "Error: Invalid argument for typename." << std::endl;
+		return 0;
+	}
+
+	SymbolString *pType = new SymbolString(pSymbol->GetTypeName().c_str());
+	return pType;
+}
+
 
 
 
@@ -128,6 +148,8 @@ static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
 typedef std::map<std::string, Symbol*(*)(const std::vector<Symbol*>&, SymbolTable*)> t_mapFkts;
 static t_mapFkts g_mapFkts =
 {
+	t_mapFkts::value_type("typeof", fkt_typeof),
+
 	t_mapFkts::value_type("ver", fkt_version),
 	t_mapFkts::value_type("print", fkt_print),
 	

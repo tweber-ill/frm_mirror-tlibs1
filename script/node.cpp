@@ -306,6 +306,14 @@ NodeArray::NodeArray(NodeArray* pArr)
 	// sub-expression
 }
 
+NodeArrayAccess::NodeArrayAccess(Node* pIdent, Node* pExpr)
+	: Node(NODE_ARRAY_ACCESS), m_pIdent(pIdent), m_pExpr(pExpr)
+{
+	NodeBinaryOp* pIndices = (NodeBinaryOp*) m_pExpr;
+	if(pIndices)
+		m_vecIndices = pIndices->flatten(NODE_ARGS);
+}
+
 
 NodeCall::NodeCall(Node* _pIdent, Node* _pArgs)
 	: Node(NODE_CALL), m_pIdent(_pIdent), m_pArgs(_pArgs)
@@ -487,30 +495,38 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 	}
 	
 	
-	SymbolArray* pSymArr = (SymbolArray*)pSymbol;
-	
-	
-	
-	Symbol *pSymExpr = m_pExpr->eval(info, pSym);
-	if(pSymExpr==0 || pSymExpr->GetType()!=SYMBOL_INT)
-	{
-		std::cerr << "Error: Array index has to be of integer type." 
-					<< std::endl;
-		return 0;
-	}
-	
-	int iIdx = ((SymbolInt*)pSymExpr)->m_iVal;
-	
-	if(iIdx<0 || iIdx>=pSymArr->m_arr.size())
-	{
-		std::cerr << "Error: Array index (" << iIdx 
-					<< ") out of bounds (array size: "
-					<< pSymArr->m_arr.size() << ")." << std::endl;
-		return 0;
-	}
 
-	safe_delete(pSymExpr, pSym);
-	return pSymArr->m_arr[iIdx];
+	for(Node *pIndices : m_vecIndices)
+	{
+		Symbol *pSymExpr = pIndices->eval(info, pSym);
+		if(pSymExpr==0 || pSymExpr->GetType()!=SYMBOL_INT)
+		{
+			std::cerr << "Error: Array index has to be of integer type."
+						<< std::endl;
+			return 0;
+		}
+
+		int iIdx = ((SymbolInt*)pSymExpr)->m_iVal;
+		safe_delete(pSymExpr, pSym);
+
+		if(iIdx<0 || iIdx>=((SymbolArray*)pSymbol)->m_arr.size())
+		{
+			std::cerr << "Error: Array index (" << iIdx
+						<< ") out of bounds (array size: "
+						<< ((SymbolArray*)pSymbol)->m_arr.size() << ")." << std::endl;
+			return 0;
+		}
+	
+		if(pSymbol->GetType() != SYMBOL_ARRAY)
+		{
+			std::cerr << "Error: Cannot take index of non-array." << std::endl;
+			return 0;
+		}
+
+		pSymbol = ((SymbolArray*)pSymbol)->m_arr[iIdx];
+	}
+	
+	return pSymbol;
 }
 
 Symbol* NodeUnaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
