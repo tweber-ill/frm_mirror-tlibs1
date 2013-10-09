@@ -10,13 +10,15 @@
 
 
 static Symbol* fkt_version(const std::vector<Symbol*>& vecSyms,
-						   SymbolTable* pSymTab)
+							ParseInfo& info,
+							SymbolTable* pSymTab)
 {
 	return new SymbolString("Hermelin Interpreter, Version 0.1");
 }
 
 
 static Symbol* fkt_print(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info,
 						SymbolTable* pSymTab)
 {
 	std::ostream& ostr = std::cout;
@@ -30,6 +32,7 @@ static Symbol* fkt_print(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info,
 						SymbolTable* pSymTab)
 {
 	if(vecSyms.size()<1)
@@ -76,6 +79,7 @@ static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_array_size(const std::vector<Symbol*>& vecSyms,
+							ParseInfo& info,
 							SymbolTable* pSymTab)
 {
 	if(vecSyms.size()<1)
@@ -99,6 +103,7 @@ static Symbol* fkt_array_size(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
+							ParseInfo& info,
 							SymbolTable* pSymTab)
 {
 	if(vecSyms.size() != 1)
@@ -122,6 +127,7 @@ static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_typeof(const std::vector<Symbol*>& vecSyms,
+							ParseInfo& info,
 							SymbolTable* pSymTab)
 {
 	if(vecSyms.size()!=1)
@@ -142,10 +148,99 @@ static Symbol* fkt_typeof(const std::vector<Symbol*>& vecSyms,
 }
 
 
+static void thread_proc(NodeFunction* pThreadFunc, ParseInfo* pinfo, std::vector<Symbol*>* pvecSyms)
+{
+	pThreadFunc->SetArgSyms(pvecSyms);
+	Symbol* pRet = pThreadFunc->eval(*pinfo, 0);
+
+	if(pRet) delete pRet;
+	if(pvecSyms) delete pvecSyms;
+}
+
+// BUG: calling the same function from different threads overwrites
+//		the arguments (since the function object pFunc only exists once!)
+static Symbol* fkt_thread(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info,
+						SymbolTable* pSymTab)
+{
+	if(vecSyms.size()<1)
+	{
+		std::cerr << "Error: Need thread proc identifier." << std::endl;
+		return 0;
+	}
+
+	Symbol* _pSymIdent = vecSyms[0];
+	if(_pSymIdent->GetType() != SYMBOL_STRING)
+	{
+		std::cerr << "Error: Thread proc identifier needs to be a string." << std::endl;
+		return 0;
+	}
+
+	SymbolString *pSymIdent = (SymbolString*)_pSymIdent;
+	const std::string& strIdent = pSymIdent->m_strVal;
+
+
+	NodeFunction* pFunc = info.GetFunction(strIdent);
+	// TODO: clone pFunc and use clone
+	if(pFunc == 0)
+	{
+		std::cerr << "Error: Thread proc \"" << strIdent << "\" not defined." << std::endl;
+		return 0;
+	}
 
 
 
-typedef std::map<std::string, Symbol*(*)(const std::vector<Symbol*>&, SymbolTable*)> t_mapFkts;
+	std::vector<Symbol*>* vecThreadSyms = new std::vector<Symbol*>(vecSyms.size()-1);
+	std::copy(vecSyms.begin()+1, vecSyms.end(), vecThreadSyms->begin());
+
+	std::thread* pThread = new std::thread(::thread_proc, pFunc, &info, vecThreadSyms);
+	unsigned int iHandle = info.handles.AddHandle(new HandleThread(pThread));
+
+	return new SymbolInt(iHandle);
+}
+
+static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info,
+						SymbolTable* pSymTab)
+{
+	if(vecSyms.size()<1)
+	{
+		std::cerr << "Error: join needs at least one argument." << std::endl;
+		return 0;
+	}
+
+	for(Symbol* pSym : vecSyms)
+	{
+		if(pSym == 0) continue;
+
+		if(pSym->GetType() != SYMBOL_INT)
+		{
+			std::cerr << "Error: join needs thread handles." << std::endl;
+			continue;
+		}
+
+		int iHandle = ((SymbolInt*)pSym)->m_iVal;
+		Handle *pHandle = info.handles.GetHandle(iHandle);
+
+		if(pHandle==0 || pHandle->GetType()!=HANDLE_THREAD)
+		{
+			std::cerr << "Error: Handle (" << iHandle << ") does not exist"
+					 << " or is not a thread handle." << std::endl;
+			continue;
+		}
+
+		HandleThread *pThreadHandle = (HandleThread*)pHandle;
+		std::thread *pThread = pThreadHandle->GetInternalHandle();
+
+		pThread->join();
+	}
+	return 0;
+}
+
+
+
+
+typedef std::map<std::string, Symbol*(*)(const std::vector<Symbol*>&, ParseInfo&, SymbolTable*)> t_mapFkts;
 static t_mapFkts g_mapFkts =
 {
 	t_mapFkts::value_type("typeof", fkt_typeof),
@@ -156,11 +251,15 @@ static t_mapFkts g_mapFkts =
 	t_mapFkts::value_type("vec", fkt_array),
 	t_mapFkts::value_type("vec_size", fkt_array_size),
 
-	t_mapFkts::value_type("cur_iter", fkt_cur_iter)
+	t_mapFkts::value_type("cur_iter", fkt_cur_iter),
+
+	t_mapFkts::value_type("thread", fkt_thread),
+	t_mapFkts::value_type("join", fkt_thread_join)
 };
 
 extern Symbol* ext_call(const std::string& strFkt,
 						const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info,
 						SymbolTable* pSymTab)
 {
 	t_mapFkts::iterator iter = g_mapFkts.find(strFkt);
@@ -172,5 +271,5 @@ extern Symbol* ext_call(const std::string& strFkt,
 		return 0;
 	}
 	
-	return (*iter).second(vecSyms, pSymTab);
+	return (*iter).second(vecSyms, info, pSymTab);
 }

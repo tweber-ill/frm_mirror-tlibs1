@@ -272,6 +272,19 @@ void safe_delete(Symbol *pSym, const SymbolTable* pSymTab)
 }
 
 
+
+NodeFunction* ParseInfo::GetFunction(const std::string& strName)
+{
+	for(NodeFunction* pFunc : vecFuncs)
+	{
+		if(pFunc && pFunc->GetName()==strName)
+			return pFunc;
+	}
+
+	return 0;
+}
+
+
 //--------------------------------------------------------------------------------
 
 NodeDouble::NodeDouble(double dVal)
@@ -421,7 +434,7 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 	}
 	else				// call system function
 	{
-		pFktRet = ext_call(strFkt, vecArgSyms, pSym);
+		pFktRet = ext_call(strFkt, vecArgSyms, info, pSym);
 	}
 
 	for(Symbol *pArgSym : vecArgSyms)

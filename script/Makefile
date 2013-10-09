@@ -1,8 +1,8 @@
 OPT_FLAGS = -O2 -march=native
-FLAGS = -std=c++11 ${OPT_FLAGS}
+FLAGS = -std=c++11 -fopenmp ${OPT_FLAGS}
 
-hermelin: script.o lexer.o main.o yylexer.o symbol.o node.o calls.o
-	gcc ${FLAGS} -lstdc++ -lm -o hermelin script.o lexer.o main.o yylexer.o symbol.o node.o calls.o
+hermelin: script.o lexer.o main.o yylexer.o symbol.o node.o calls.o handles.o
+	gcc ${FLAGS} -lstdc++ -lm -o hermelin script.o lexer.o main.o yylexer.o symbol.o node.o calls.o handles.o
 
 script.o: script.yy
 	bison --defines=tokens.h script.yy
@@ -25,6 +25,9 @@ symbol.o: symbol.cpp symbol.h
 
 calls.o: calls.cpp calls.h
 	gcc ${FLAGS} -c -o calls.o calls.cpp
+
+handles.o: handles.cpp handles.h
+	gcc ${FLAGS} -c -o handles.o handles.cpp
 
 clean:
 	rm -f *.o

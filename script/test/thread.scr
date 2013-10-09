@@ -1,0 +1,18 @@
+thread_func_1(a)
+{
+	print("In thread 1: " + a);
+}
+
+thread_func_2(a)
+{
+        print("In thread 2: " + a);
+}
+
+main()
+{
+	th1 = thread("thread_func_1", 123);
+	th2 = thread("thread_func_2", 234);
+
+	print("In main thread");
+	join(th1, th2);
+}

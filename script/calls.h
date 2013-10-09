@@ -7,9 +7,11 @@
 
 #include <vector>
 #include "symbol.h"
+#include "node.h"
 
 extern Symbol* ext_call(const std::string& strFkt,
 						const std::vector<Symbol*>& vecSyms,
+						ParseInfo &info,
 						SymbolTable* pSymTab);
 
 #endif

@@ -1,0 +1,12 @@
+tst()
+{
+	return 1;
+
+	a = 5;
+	return a;
+}
+
+main()
+{
+	print(tst());
+}

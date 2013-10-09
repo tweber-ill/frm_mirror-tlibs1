@@ -13,6 +13,7 @@
 #include <map>
 
 #include "symbol.h"
+#include "handles.h"
 
 
 struct NodeFunction;
@@ -20,11 +21,15 @@ struct ParseInfo
 {
 	SymbolTable* pGlobalSyms;
 	std::vector<NodeFunction*> vecFuncs;
+	HandleManager handles;
 	
 	bool bWantReturn = 0;
 	
 	ParseInfo() : bWantReturn(0)
 	{}
+
+
+	NodeFunction* GetFunction(const std::string& strName);
 };
 
 
