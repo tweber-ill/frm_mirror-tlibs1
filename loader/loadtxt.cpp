@@ -111,7 +111,7 @@ void LoadTxt::StrTrim(std::string& str)
 			trim(strVal);
 
 			// if key is "Param" then the value itself is a "Key = Value" pair!
-			if(strKey=="Param" || strKey=="param")
+			if(is_equal(strKey, "param", false))
 			{
 				std::size_t iParamSep = strVal.find("=");
 				if(iParamSep != std::string::npos && iParamSep < strVal.length())
@@ -124,7 +124,7 @@ void LoadTxt::StrTrim(std::string& str)
 
 					//std::cout << "Param Key=\"" << strParamKey << "\", Value=\"" << strParamVal << "\"." << std::endl;
 
-					strKey = std::string("Param_") + strParamKey;
+					strKey = std::string("param_") + strParamKey;
 					strVal = strParamVal;
 				}
 			}
