@@ -1,6 +1,14 @@
 thread_func(a)
 {
-	print("In " + a);
+	i = 0;
+	while(i less 25)
+	{
+		begin_critical();
+			print("In " + a +  ": " + i);
+		end_critical();
+
+		i = i+1;
+	}
 }
 
 main()

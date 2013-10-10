@@ -199,6 +199,23 @@ static Symbol* fkt_thread(const std::vector<Symbol*>& vecSyms,
 	return new SymbolInt(iHandle);
 }
 
+static Symbol* fkt_begin_critical(const std::vector<Symbol*>& vecSyms,
+								ParseInfo& info,
+								SymbolTable* pSymTab)
+{
+	info.mutexGlobal.lock();
+	return 0;
+}
+
+static Symbol* fkt_end_critical(const std::vector<Symbol*>& vecSyms,
+								ParseInfo& info,
+								SymbolTable* pSymTab)
+{
+	info.mutexGlobal.unlock();
+	return 0;
+}
+
+
 static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info,
 						SymbolTable* pSymTab)
@@ -254,7 +271,9 @@ static t_mapFkts g_mapFkts =
 	t_mapFkts::value_type("cur_iter", fkt_cur_iter),
 
 	t_mapFkts::value_type("thread", fkt_thread),
-	t_mapFkts::value_type("join", fkt_thread_join)
+	t_mapFkts::value_type("join", fkt_thread_join),
+	t_mapFkts::value_type("begin_critical", fkt_begin_critical),
+	t_mapFkts::value_type("end_critical", fkt_end_critical)
 };
 
 extern Symbol* ext_call(const std::string& strFkt,

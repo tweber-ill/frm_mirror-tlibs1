@@ -11,6 +11,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <mutex>
 
 #include "symbol.h"
 #include "handles.h"
@@ -22,6 +23,7 @@ struct ParseInfo
 	SymbolTable* pGlobalSyms;
 	std::vector<NodeFunction*> vecFuncs;
 	HandleManager handles;
+	std::mutex mutexGlobal;
 	
 	bool bWantReturn = 0;
 	
