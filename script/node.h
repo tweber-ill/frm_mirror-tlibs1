@@ -92,7 +92,7 @@ extern void safe_delete(Symbol *pSym, const SymbolTable* pSymTab);
 
 
 struct NodeFunction;
-
+struct Node;
 struct Node
 {
 	NodeType m_type;
@@ -100,6 +100,8 @@ struct Node
 	Node(NodeType ntype) : m_type(ntype) {}
 	virtual ~Node() {}
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const = 0;
+
+	virtual Node* clone() const = 0;
 };
 
 struct NodeReturn : public Node
@@ -120,6 +122,7 @@ struct NodeReturn : public Node
 	}
 	
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Node* clone() const;
 };
 
 struct NodeIdent : public Node
@@ -131,6 +134,7 @@ struct NodeIdent : public Node
 	{}
 
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Node* clone() const;
 };
 
 struct NodeCall : public Node
@@ -151,6 +155,7 @@ struct NodeCall : public Node
 	}
 	
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Node* clone() const;
 
 	
 protected:
@@ -179,6 +184,7 @@ struct NodeIf : public Node
 	}
 
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Node* clone() const;
 };
 
 struct NodeWhile : public Node
@@ -201,6 +207,7 @@ struct NodeWhile : public Node
 	}
 
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Node* clone() const;
 };
 
 struct NodeRangedFor : public Node
@@ -226,6 +233,7 @@ struct NodeRangedFor : public Node
 	}
 
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Node* clone() const;
 };
 
 
@@ -240,6 +248,7 @@ struct NodeDouble : public Node
 	}
 	
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Node* clone() const;
 	
 protected:
 	SymbolDouble *m_pSymbol;
@@ -256,6 +265,7 @@ struct NodeInt : public Node
 	}
 	
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Node* clone() const;
 
 protected:
 	SymbolInt *m_pSymbol;
@@ -272,6 +282,7 @@ struct NodeString : public Node
 	}
 
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Node* clone() const;
 
 protected:
 	SymbolString *m_pSymbol;
@@ -292,6 +303,7 @@ struct NodeArray : public Node
 	}
 	
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Node* clone() const;
 
 protected:
 };
@@ -313,6 +325,7 @@ struct NodeArrayAccess : public Node
 	}
 	
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Node* clone() const;
 
 protected:
 	std::vector<Node*> m_vecIndices;
@@ -336,6 +349,7 @@ struct NodeUnaryOp : public Node
 	}
 
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Node* clone() const;
 };
 
 struct NodeBinaryOp : public Node
@@ -357,6 +371,7 @@ struct NodeBinaryOp : public Node
 	}
 
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Node* clone() const;
 
 	std::vector<Node*> flatten(NodeType ntype=NODE_ARGS) const;
 };
@@ -380,6 +395,7 @@ struct NodeFunction : public Node
 	}
 
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Node* clone() const;
 
 	std::string GetName() const;
 

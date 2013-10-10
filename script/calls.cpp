@@ -155,10 +155,9 @@ static void thread_proc(NodeFunction* pThreadFunc, ParseInfo* pinfo, std::vector
 
 	if(pRet) delete pRet;
 	if(pvecSyms) delete pvecSyms;
+	if(pThreadFunc) delete pThreadFunc;
 }
 
-// BUG: calling the same function from different threads overwrites
-//		the arguments (since the function object pFunc only exists once!)
 static Symbol* fkt_thread(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info,
 						SymbolTable* pSymTab)
@@ -181,19 +180,20 @@ static Symbol* fkt_thread(const std::vector<Symbol*>& vecSyms,
 
 
 	NodeFunction* pFunc = info.GetFunction(strIdent);
-	// TODO: clone pFunc and use clone
 	if(pFunc == 0)
 	{
 		std::cerr << "Error: Thread proc \"" << strIdent << "\" not defined." << std::endl;
 		return 0;
 	}
 
+	NodeFunction* pFunc_clone = (NodeFunction*)pFunc->clone();
+
 
 
 	std::vector<Symbol*>* vecThreadSyms = new std::vector<Symbol*>(vecSyms.size()-1);
 	std::copy(vecSyms.begin()+1, vecSyms.end(), vecThreadSyms->begin());
 
-	std::thread* pThread = new std::thread(::thread_proc, pFunc, &info, vecThreadSyms);
+	std::thread* pThread = new std::thread(::thread_proc, pFunc_clone, &info, vecThreadSyms);
 	unsigned int iHandle = info.handles.AddHandle(new HandleThread(pThread));
 
 	return new SymbolInt(iHandle);
