@@ -18,4 +18,5 @@ main()
 
 	print("In main thread");
 	join(th1, th2);
+	print("In main thread -- end");
 }
