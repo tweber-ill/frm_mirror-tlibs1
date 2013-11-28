@@ -10,6 +10,8 @@ template<typename T> T plus_op(T a, T b) { return a+b; }
 template<typename T> T minus_op(T a, T b) { return a-b; }
 template<typename T> T mult_op(T a, T b) { return a*b; }
 template<typename T> T div_op(T a, T b) { return a/b; }
+template<typename T> T mod_op(T a, T b) { return a%b; }
+template<> double mod_op(double a, double b) { return ::fmod(a,b); }
 
 template<typename T> bool log_or_op(T a, T b) { return a||b; }
 template<typename T> bool log_and_op(T a, T b) { return a&&b; }
@@ -31,6 +33,7 @@ std::map<NodeType, double (*)(double,double)> g_mapBinOps_d =
 	std::pair<NodeType, double (*)(double,double)>(NODE_MINUS, minus_op),
 	std::pair<NodeType, double (*)(double,double)>(NODE_MULT, mult_op),
 	std::pair<NodeType, double (*)(double,double)>(NODE_DIV, div_op),
+	std::pair<NodeType, double (*)(double,double)>(NODE_MOD, mod_op),
 	std::pair<NodeType, double (*)(double,double)>(NODE_POW, pow),
 };
 
@@ -40,6 +43,7 @@ std::map<NodeType, int (*)(int,int)> g_mapBinOps_i =
 	std::pair<NodeType, int (*)(int,int)>(NODE_MINUS, minus_op),
 	std::pair<NodeType, int (*)(int,int)>(NODE_MULT, mult_op),
 	std::pair<NodeType, int (*)(int,int)>(NODE_DIV, div_op),
+	std::pair<NodeType, int (*)(int,int)>(NODE_MOD, mod_op),
 	std::pair<NodeType, int (*)(int,int)>(NODE_POW, pow_int)
 };
 

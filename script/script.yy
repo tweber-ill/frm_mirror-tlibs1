@@ -74,7 +74,7 @@
 %left TOK_LOG_GREATER
 %left TOK_LOG_GEQ
 %left '+' '-'
-%left '*' '/'
+%left '*' '/' '%'
 %right TOK_LOG_NOT
 %right UMINUS UPLUS
 %right '^'
@@ -132,6 +132,7 @@ expr:	'(' expr ')'		{ $$ = $2; }
 	| expr '-' expr			{ $$ = new NodeBinaryOp($1, $3, NODE_MINUS); }
 	| expr '*' expr			{ $$ = new NodeBinaryOp($1, $3, NODE_MULT); }
 	| expr '/' expr			{ $$ = new NodeBinaryOp($1, $3, NODE_DIV); }
+	| expr '%' expr			{ $$ = new NodeBinaryOp($1, $3, NODE_MOD); }
 	| expr '^' expr			{ $$ = new NodeBinaryOp($1, $3, NODE_POW); }
 	| '-' expr %prec UMINUS	{ $$ = new NodeUnaryOp($2, NODE_UMINUS); }
 	| '+' expr %prec UPLUS	{ $$ = $2; }

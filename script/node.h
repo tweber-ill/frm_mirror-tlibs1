@@ -6,7 +6,7 @@
 #ifndef __MIEZE_NODE__
 #define __MIEZE_NODE__
 
-#include <math.h>
+#include <cmath>
 #include <string>
 #include <iostream>
 #include <vector>
@@ -42,6 +42,7 @@ enum NodeType
 	NODE_PLUS,
 	NODE_MINUS,
 	NODE_DIV,
+	NODE_MOD,
 	NODE_MULT,
 	NODE_POW,
 
