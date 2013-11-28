@@ -43,6 +43,12 @@ Symbol* NodeIdent::eval(ParseInfo &info, SymbolTable *pSym) const
 	if(info.bWantReturn) return 0;
 
 	Symbol *pSymbol = pSym->GetSymbol(m_strIdent);
+	if(!pSymbol)
+	{
+		std::cerr << "Error: Symbol \"" << m_strIdent << "\" not in symbol table." << std::endl;
+		return 0;
+	}
+
 	pSymbol->m_strIdent = m_strIdent;
 
 	return pSymbol;

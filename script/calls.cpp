@@ -7,6 +7,7 @@
 #include <sstream>
 #include <iostream>
 #include <map>
+#include <cstdio>
 
 
 static Symbol* fkt_version(const std::vector<Symbol*>& vecSyms,
@@ -30,6 +31,56 @@ static Symbol* fkt_print(const std::vector<Symbol*>& vecSyms,
 	ostr << std::endl;
 	return 0;
 }
+
+static Symbol* fkt_exec(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info,
+						SymbolTable* pSymTab)
+{
+	std::string strExec;
+	
+	for(Symbol *pSym : vecSyms)
+		if(pSym)
+		{
+			strExec += pSym->print();
+			strExec += " ";
+		}
+	
+	bool bOk = 0;
+	FILE *pPipe = popen(strExec.c_str(), "w");
+	if(pPipe)
+	{
+		bOk = 1;
+		if(pclose(pPipe) == -1)
+			bOk = 0;
+	}
+		
+	return new SymbolInt(bOk);
+}
+
+static Symbol* fkt_typeof(const std::vector<Symbol*>& vecSyms,
+							ParseInfo& info,
+							SymbolTable* pSymTab)
+{
+	if(vecSyms.size()!=1)
+	{
+		std::cerr << "Error: typeof takes exactly one argument." << std::endl;
+		return 0;
+	}
+
+	Symbol *pSymbol = vecSyms[0];
+	if(!pSymbol)
+	{
+		std::cerr << "Error: Invalid argument for typename." << std::endl;
+		return 0;
+	}
+
+	SymbolString *pType = new SymbolString(pSymbol->GetTypeName().c_str());
+	return pType;
+}
+
+
+// --------------------------------------------------------------------------------
+// array
 
 static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info,
@@ -126,27 +177,14 @@ static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
 	return pSymIter;
 }
 
-static Symbol* fkt_typeof(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info,
-							SymbolTable* pSymTab)
-{
-	if(vecSyms.size()!=1)
-	{
-		std::cerr << "Error: typeof takes exactly one argument." << std::endl;
-		return 0;
-	}
 
-	Symbol *pSymbol = vecSyms[0];
-	if(!pSymbol)
-	{
-		std::cerr << "Error: Invalid argument for typename." << std::endl;
-		return 0;
-	}
+// --------------------------------------------------------------------------------
 
-	SymbolString *pType = new SymbolString(pSymbol->GetTypeName().c_str());
-	return pType;
-}
 
+
+
+// --------------------------------------------------------------------------------
+// thread
 
 static void thread_proc(NodeFunction* pThreadFunc, ParseInfo* pinfo, std::vector<Symbol*>* pvecSyms)
 {
@@ -254,6 +292,8 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 	return 0;
 }
 
+// --------------------------------------------------------------------------------
+
 
 
 
@@ -261,13 +301,12 @@ typedef std::map<std::string, Symbol*(*)(const std::vector<Symbol*>&, ParseInfo&
 static t_mapFkts g_mapFkts =
 {
 	t_mapFkts::value_type("typeof", fkt_typeof),
-
 	t_mapFkts::value_type("ver", fkt_version),
 	t_mapFkts::value_type("print", fkt_print),
+	t_mapFkts::value_type("exec", fkt_exec),
 	
 	t_mapFkts::value_type("vec", fkt_array),
 	t_mapFkts::value_type("vec_size", fkt_array_size),
-
 	t_mapFkts::value_type("cur_iter", fkt_cur_iter),
 
 	t_mapFkts::value_type("thread", fkt_thread),
