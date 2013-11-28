@@ -8,6 +8,7 @@
 #include <iostream>
 #include <map>
 #include <cstdio>
+#include <cmath>
 
 
 static Symbol* fkt_version(const std::vector<Symbol*>& vecSyms,
@@ -307,6 +308,89 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 
 
 
+// --------------------------------------------------------------------------------
+// math
+
+template<double (*FKT)(double)>
+static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info,
+						SymbolTable* pSymTab)
+{
+	if(vecSyms.size() != 1)
+	{
+		std::cerr << "Error: fkt_math_1arg takes exactly one argument." << std::endl;
+		return 0;
+	}
+	
+	SymbolDouble* pSym = (SymbolDouble*)vecSyms[0]->ToType(SYMBOL_DOUBLE);
+	double dResult = FKT(pSym->m_dVal);
+	
+	// recycle this SymbolDouble
+	pSym->m_dVal = dResult;
+	return pSym;
+}
+
+template<double (*FKT)(double, double)>
+static Symbol* fkt_math_2args(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info,
+						SymbolTable* pSymTab)
+{
+	if(vecSyms.size() != 2)
+	{
+		std::cerr << "Error: fkt_math_2args takes exactly two arguments." << std::endl;
+		return 0;
+	}
+	
+	SymbolDouble* pSym1 = (SymbolDouble*)vecSyms[0]->ToType(SYMBOL_DOUBLE);
+	SymbolDouble* pSym2 = (SymbolDouble*)vecSyms[1]->ToType(SYMBOL_DOUBLE);
+	double dResult = FKT(pSym1->m_dVal, pSym2->m_dVal);
+	delete pSym2;
+	
+	// recycle this SymbolDouble
+	pSym1->m_dVal = dResult;
+	return pSym1;
+}
+
+
+template<typename T> T myabs(T t)
+{
+	if(t < T(0))
+		return -t;
+	return t;
+}
+
+template<> double myabs(double t) { return ::fabs(t); }
+
+
+static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info,
+						SymbolTable* pSymTab)
+{
+	if(vecSyms.size() != 1)
+	{
+		std::cerr << "Error: abs takes exactly one argument." << std::endl;
+		return 0;
+	}
+	
+	if(vecSyms[0]->GetType() == SYMBOL_INT)
+	{
+		SymbolInt* pSymInt = (SymbolInt*)vecSyms[0];
+		return new SymbolInt(myabs(pSymInt->m_iVal));
+	}
+	else if(vecSyms[0]->GetType() == SYMBOL_DOUBLE)
+	{
+		SymbolDouble* pSymD = (SymbolDouble*)vecSyms[0];
+		return new SymbolDouble(myabs(pSymD->m_dVal));
+	}
+	
+
+	std::cerr << "Error: abs received unsupported symbol type." << std::endl;
+	return 0;
+}
+
+// --------------------------------------------------------------------------------
+
+
 
 typedef std::map<std::string, Symbol*(*)(const std::vector<Symbol*>&, ParseInfo&, SymbolTable*)> t_mapFkts;
 static t_mapFkts g_mapFkts =
@@ -324,7 +408,57 @@ static t_mapFkts g_mapFkts =
 	t_mapFkts::value_type("thread_hwcount", fkt_thread_hwcount),
 	t_mapFkts::value_type("join", fkt_thread_join),
 	t_mapFkts::value_type("begin_critical", fkt_begin_critical),
-	t_mapFkts::value_type("end_critical", fkt_end_critical)
+	t_mapFkts::value_type("end_critical", fkt_end_critical),
+	
+	
+	t_mapFkts::value_type("sqrt", fkt_math_1arg< ::sqrt >),
+	t_mapFkts::value_type("cbrt", fkt_math_1arg< ::cbrt >),
+	t_mapFkts::value_type("exp", fkt_math_1arg< ::exp >),
+	t_mapFkts::value_type("exp2", fkt_math_1arg< ::exp2 >),
+	t_mapFkts::value_type("expm1", fkt_math_1arg< ::expm1 >),
+	t_mapFkts::value_type("log", fkt_math_1arg< ::log >),
+	t_mapFkts::value_type("log1p", fkt_math_1arg< ::log1p >),
+	t_mapFkts::value_type("log10", fkt_math_1arg< ::log10 >),
+	t_mapFkts::value_type("log2", fkt_math_1arg< ::log2 >),
+	t_mapFkts::value_type("logb", fkt_math_1arg< ::logb >),
+	t_mapFkts::value_type("pow", fkt_math_2args< ::pow >),
+		
+	t_mapFkts::value_type("sin", fkt_math_1arg< ::sin >),
+	t_mapFkts::value_type("cos", fkt_math_1arg< ::cos >),
+	t_mapFkts::value_type("tan", fkt_math_1arg< ::tan >),
+	t_mapFkts::value_type("asin", fkt_math_1arg< ::asin >),
+	t_mapFkts::value_type("acos", fkt_math_1arg< ::acos >),
+	t_mapFkts::value_type("atan", fkt_math_1arg< ::atan >),
+	t_mapFkts::value_type("atan2", fkt_math_2args< ::atan2 >),
+	t_mapFkts::value_type("hypot", fkt_math_2args< ::hypot >),
+	
+	t_mapFkts::value_type("sinh", fkt_math_1arg< ::sinh >),
+	t_mapFkts::value_type("cosh", fkt_math_1arg< ::cosh >),
+	t_mapFkts::value_type("tanh", fkt_math_1arg< ::tanh >),	
+	t_mapFkts::value_type("asinh", fkt_math_1arg< ::asinh >),
+	t_mapFkts::value_type("acosh", fkt_math_1arg< ::acosh >),
+	t_mapFkts::value_type("atanh", fkt_math_1arg< ::atanh >),		
+	
+	t_mapFkts::value_type("erf", fkt_math_1arg< ::erf >),
+	t_mapFkts::value_type("erfc", fkt_math_1arg< ::erfc >),
+	t_mapFkts::value_type("tgamma", fkt_math_1arg< ::tgamma >),
+	t_mapFkts::value_type("lgamma", fkt_math_1arg< ::lgamma >),
+	
+	t_mapFkts::value_type("round", fkt_math_1arg< ::round >),
+	t_mapFkts::value_type("trunc", fkt_math_1arg< ::trunc >),
+	t_mapFkts::value_type("rint", fkt_math_1arg< ::rint >),
+	t_mapFkts::value_type("nearbyint", fkt_math_1arg< ::nearbyint >),
+	t_mapFkts::value_type("fmod", fkt_math_2args< ::fmod >),
+	t_mapFkts::value_type("nextafter", fkt_math_2args< ::nextafter >),
+	//t_mapFkts::value_type("nexttoward", fkt_math_2args< ::nexttoward >),
+	t_mapFkts::value_type("ceil", fkt_math_1arg< ::ceil >),
+	t_mapFkts::value_type("floor", fkt_math_1arg< ::floor >),
+	t_mapFkts::value_type("abs", fkt_math_abs),
+	// TODO also for arrays:
+	//t_mapFkts::value_type("max", fkt_math_max),
+	//t_mapFkts::value_type("min", fkt_math_min),
+	t_mapFkts::value_type("fdim", fkt_math_2args< ::fdim >),
+	t_mapFkts::value_type("remainder", fkt_math_2args< ::remainder >),
 };
 
 extern Symbol* ext_call(const std::string& strFkt,

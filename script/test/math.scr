@@ -1,0 +1,7 @@
+main()
+{
+	print(sin(3.1415/2.));
+	print(asin(sin(3.1415/2.)));
+	print(atan2(1.,2.));
+	print(abs(-2) + ", " + abs(2.5) + ", " + abs(-2.3-1));
+}
