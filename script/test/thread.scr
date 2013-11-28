@@ -13,6 +13,8 @@ thread_func(a)
 
 main()
 {
+	print("Hardware supports " + thread_hwcount() + " threads.\n");
+
 	th1 = thread("thread_func", "thread 1");
 	th2 = thread("thread_func", "thread 2");
 

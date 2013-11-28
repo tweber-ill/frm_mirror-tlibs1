@@ -237,6 +237,17 @@ static Symbol* fkt_thread(const std::vector<Symbol*>& vecSyms,
 	return new SymbolInt(iHandle);
 }
 
+static Symbol* fkt_thread_hwcount(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info,
+						SymbolTable* pSymTab)
+{
+	unsigned int iNumThreads = std::thread::hardware_concurrency();
+	if(iNumThreads == 0)
+		iNumThreads = 1;
+	
+	return new SymbolInt(iNumThreads);
+}	
+
 static Symbol* fkt_begin_critical(const std::vector<Symbol*>& vecSyms,
 								ParseInfo& info,
 								SymbolTable* pSymTab)
@@ -310,6 +321,7 @@ static t_mapFkts g_mapFkts =
 	t_mapFkts::value_type("cur_iter", fkt_cur_iter),
 
 	t_mapFkts::value_type("thread", fkt_thread),
+	t_mapFkts::value_type("thread_hwcount", fkt_thread_hwcount),
 	t_mapFkts::value_type("join", fkt_thread_join),
 	t_mapFkts::value_type("begin_critical", fkt_begin_critical),
 	t_mapFkts::value_type("end_critical", fkt_end_critical)
