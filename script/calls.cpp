@@ -3,13 +3,16 @@
  * @author tweber
  */
 
+#ifdef __CYGWIN__
+	#undef __STRICT_ANSI__
+#endif
+
 #include "calls.h"
 #include <sstream>
 #include <iostream>
 #include <map>
 #include <cstdio>
 #include <cmath>
-
 
 static Symbol* fkt_version(const std::vector<Symbol*>& vecSyms,
 							ParseInfo& info,
@@ -47,11 +50,11 @@ static Symbol* fkt_exec(const std::vector<Symbol*>& vecSyms,
 		}
 	
 	bool bOk = 0;
-	FILE *pPipe = popen(strExec.c_str(), "w");
+	FILE *pPipe = ::popen(strExec.c_str(), "w");
 	if(pPipe)
 	{
 		bOk = 1;
-		if(pclose(pPipe) == -1)
+		if(::pclose(pPipe) == -1)
 			bOk = 0;
 	}
 		
@@ -310,6 +313,92 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 
 // --------------------------------------------------------------------------------
 // math
+enum MathFkts
+{
+	MATH_MAX,
+	MATH_MIN
+};
+
+template<MathFkts fkt, typename T>
+const T& math_fkt(const T& t1, const T& t2)
+{
+	if(fkt == MATH_MAX)
+		return std::max<T>(t1, t2);
+	else if(fkt == MATH_MIN)
+		return std::min<T>(t1, t2);
+
+	static const T tErr = T(0);
+	std::cerr << "Error: Invalid function selected in math_fkt." << std::endl;
+	return tErr;
+}
+
+template<MathFkts fkt>
+static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info,
+						SymbolTable* pSymTab)
+{
+	if(vecSyms.size() < 1)
+	{
+		std::cerr << "Error: fkt_math_for_every needs at least one argument" << std::endl;
+		return 0;
+	}
+
+	double dRes;
+	int iRes;
+
+	bool bHadInt = 0, 
+		bHadDouble = 0;
+
+	for(Symbol* pSym : vecSyms)
+	{
+		Symbol *pThisSym = pSym;
+		bool bCleanSym = 0;
+		if(pSym->GetType() == SYMBOL_ARRAY)
+		{
+			pThisSym = fkt_math_for_every<fkt>(
+					((SymbolArray*)pSym)->m_arr, 
+					info, pSymTab);
+
+			bCleanSym = 1;
+		}
+
+		if(pThisSym->GetType() == SYMBOL_INT)
+		{
+			if(!bHadInt)
+				iRes = ((SymbolInt*)pThisSym)->m_iVal;
+			else
+				iRes = math_fkt<fkt, int>(iRes, ((SymbolInt*)pThisSym)->m_iVal);
+
+			bHadInt = 1;
+		}
+		else if(pThisSym->GetType() == SYMBOL_DOUBLE)
+		{
+			if(!bHadDouble)
+				dRes = ((SymbolDouble*)pThisSym)->m_dVal;
+			else
+				dRes = math_fkt<fkt, double>(dRes, ((SymbolDouble*)pThisSym)->m_dVal);
+
+			bHadDouble = 1;
+		}
+
+		if(bCleanSym)
+			delete pThisSym;
+	}
+
+	if(bHadInt && !bHadDouble)
+		return new SymbolInt(iRes);
+	else if(bHadInt && bHadDouble)
+	{
+		dRes = math_fkt<fkt, double>(dRes, double(iRes));
+		return new SymbolDouble(dRes);
+	}
+	else if(!bHadInt && bHadDouble)
+		return new SymbolDouble(dRes);
+
+	std::cerr << "Error: No valid arguments given for fkt_math_for_every." << std::endl;
+	return 0;
+}
+
 
 template<double (*FKT)(double)>
 static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
@@ -454,9 +543,8 @@ static t_mapFkts g_mapFkts =
 	t_mapFkts::value_type("ceil", fkt_math_1arg< ::ceil >),
 	t_mapFkts::value_type("floor", fkt_math_1arg< ::floor >),
 	t_mapFkts::value_type("abs", fkt_math_abs),
-	// TODO also for arrays:
-	//t_mapFkts::value_type("max", fkt_math_max),
-	//t_mapFkts::value_type("min", fkt_math_min),
+	t_mapFkts::value_type("max", fkt_math_for_every<MATH_MAX>),
+	t_mapFkts::value_type("min", fkt_math_for_every<MATH_MIN>),
 	t_mapFkts::value_type("fdim", fkt_math_2args< ::fdim >),
 	t_mapFkts::value_type("remainder", fkt_math_2args< ::remainder >),
 };

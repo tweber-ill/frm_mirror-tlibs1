@@ -2,7 +2,7 @@ OPT_FLAGS = -O2 -march=native
 FLAGS = -std=c++11 -fopenmp ${OPT_FLAGS}
 
 hermelin: script.o lexer.o main.o yylexer.o symbol.o node.o node_eval.o calls.o handles.o
-	gcc ${FLAGS} -lstdc++ -lm -o hermelin script.o lexer.o main.o yylexer.o symbol.o node.o node_eval.o calls.o handles.o
+	gcc ${FLAGS} -o hermelin script.o lexer.o main.o yylexer.o symbol.o node.o node_eval.o calls.o handles.o -lstdc++ -lm
 
 script.o: script.yy
 	bison --defines=tokens.h script.yy
