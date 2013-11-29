@@ -1,0 +1,13 @@
+tst1()
+{
+	print(pi);
+	pi = 123;
+	print(pi);
+	a = 5;
+}
+
+main()
+{
+	tst1();
+	print("Im main(): " + pi);
+}

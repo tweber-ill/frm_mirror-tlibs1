@@ -45,10 +45,18 @@ Symbol* NodeIdent::eval(ParseInfo &info, SymbolTable *pSym) const
 
 	// local symbol
 	Symbol *pSymbol = pSym->GetSymbol(m_strIdent);
-
 	// global symbol
+	Symbol *pSymbolGlob = info.pGlobalSyms->GetSymbol(m_strIdent);
+
+	if(pSymbol && pSymbolGlob)
+	{
+		std::cerr << "Warning: Symbol \"" << m_strIdent 
+				<< "\" exists in local and global scope, using local one." << std::endl;
+	}
+	
+	// if no local symbol is available, use global symbol instead
 	if(!pSymbol)
-		pSymbol = info.pGlobalSyms->GetSymbol(m_strIdent);
+		pSymbol = pSymbolGlob;
 
 	if(!pSymbol)
 	{
@@ -326,7 +334,25 @@ Symbol* NodeBinaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 			if(m_pLeft->m_type == NODE_IDENT)		// single variable
 			{
 				const std::string& strIdent = ((NodeIdent*)m_pLeft)->m_strIdent;
-				pSym->InsertSymbol(strIdent, pSymbol);
+				
+				Symbol* pSymLoc = pSym->GetSymbol(strIdent);
+				Symbol* pSymGlob = info.pGlobalSyms->GetSymbol(strIdent);
+				
+				if(pSymLoc && pSymGlob)
+				{
+					std::cerr << "Warning: Symbol \"" << strIdent 
+							  << "\" exists in local and global scope, using local one." << std::endl;
+				}
+
+				if(pSymGlob && !pSymLoc)
+				{
+					std::cerr << "Warning: Overwriting global symbol \"" << strIdent << "\"." << std::endl;
+					info.pGlobalSyms->InsertSymbol(strIdent, pSymbol);
+				}
+				else
+				{
+					pSym->InsertSymbol(strIdent, pSymbol);
+				}
 			}
 			else									// array
 			{
