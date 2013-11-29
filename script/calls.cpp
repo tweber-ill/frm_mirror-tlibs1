@@ -411,14 +411,35 @@ static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 	
-	SymbolDouble* pSym = (SymbolDouble*)vecSyms[0]->ToType(SYMBOL_DOUBLE);
-	double dResult = FKT(pSym->m_dVal);
+	if(vecSyms[0]->GetType() == SYMBOL_ARRAY)
+	{
+		SymbolArray* pArrRet = new SymbolArray();
+		
+		SymbolArray* pSymArr = (SymbolArray*)vecSyms[0];
+		for(Symbol* pArrElem : pSymArr->m_arr)
+		{
+			std::vector<Symbol*> vecDummy;
+			vecDummy.push_back(pArrElem);
+			
+			pArrRet->m_arr.push_back(fkt_math_1arg<FKT>(vecDummy, info, pSymTab));
+		}
+		
+		return pArrRet;
+	}
+	else
+	{
+		SymbolDouble* pSym = (SymbolDouble*)vecSyms[0]->ToType(SYMBOL_DOUBLE);
+		double dResult = FKT(pSym->m_dVal);
+		
+		// recycle this SymbolDouble
+		pSym->m_dVal = dResult;
+		return pSym;		
+	}
 	
-	// recycle this SymbolDouble
-	pSym->m_dVal = dResult;
-	return pSym;
+	return 0;
 }
 
+// TODO: for arrays
 template<double (*FKT)(double, double)>
 static Symbol* fkt_math_2args(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info,
@@ -451,6 +472,7 @@ template<typename T> T myabs(T t)
 template<> double myabs(double t) { return ::fabs(t); }
 
 
+// TODO: integrate with fkt_math_1arg
 static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info,
 						SymbolTable* pSymTab)
@@ -461,7 +483,22 @@ static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 	
-	if(vecSyms[0]->GetType() == SYMBOL_INT)
+	if(vecSyms[0]->GetType() == SYMBOL_ARRAY)
+	{
+		SymbolArray* pArrRet = new SymbolArray();
+		
+		SymbolArray* pSymArr = (SymbolArray*)vecSyms[0];
+		for(Symbol* pArrElem : pSymArr->m_arr)
+		{
+			std::vector<Symbol*> vecDummy;
+			vecDummy.push_back(pArrElem);
+			
+			pArrRet->m_arr.push_back(fkt_math_abs(vecDummy, info, pSymTab));
+		}
+		
+		return pArrRet;
+	}
+	else if(vecSyms[0]->GetType() == SYMBOL_INT)
 	{
 		SymbolInt* pSymInt = (SymbolInt*)vecSyms[0];
 		return new SymbolInt(myabs(pSymInt->m_iVal));
