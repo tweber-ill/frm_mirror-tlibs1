@@ -10,8 +10,9 @@
 #include <ctype.h>
 
 
-Lexer::Lexer() : m_strWhitespace(" \t\n\r"), m_strSep("=+-*/\%^{}[]();,\":"),
-				m_iLexPos(0), m_iNumToks(0)
+Lexer::Lexer() : m_bOk(1), 
+		m_strWhitespace(" \t\n\r"), m_strSep("=+-*/\%^{}[]();,\":"),
+		m_iLexPos(0), m_iNumToks(0)
 {
 	m_tokEnd.type = LEX_TOKEN_END;
 }
@@ -125,8 +126,10 @@ void Lexer::load(const std::string& _strInput)
 				tokStr.type = LEX_TOKEN_STRING;
 				if(iStringIdx >= vecStr.size())
 				{
+					m_bOk = 0;
 					std::cerr << "Error: String index exceeds string table size."
 								<< std::endl;
+
 					continue;
 				}
 				tokStr.strVal = vecStr[iStringIdx];
@@ -195,6 +198,7 @@ void Lexer::load(const std::string& _strInput)
 		}
 		else
 		{
+			m_bOk = 0;
 			std::cerr << "Unknown token: " << str << std::endl;
 			continue;
 		}

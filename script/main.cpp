@@ -41,16 +41,30 @@ int main(int argc, char** argv)
 	ParseObj par;
 	ParseInfo info;
 	par.pLexer = new Lexer(pcInput);
+	delete[] pcInput;
+	pcInput = 0;
+
+	if(!par.pLexer->IsOk())
+	{
+		std::cerr << "Error: Lexer returned with errors." << std::endl;
+		return 0;
+	}
+
+
 	info.pGlobalSyms = new SymbolTable();
 
 	yydebug = 0;
-	yyparse(&par);
+	int iParseRet = yyparse(&par);
+
+	if(iParseRet != 0)
+	{
+		std::cerr << "Error: Parser returned with error code " << iParseRet << "." << std::endl;
+		return -3;
+	}
 
 	par.pRoot->eval(info);
 	//info.pGlobalSyms->print();
 
-
-	delete[] pcInput;
 
 	delete par.pLexer;
 	delete info.pGlobalSyms;

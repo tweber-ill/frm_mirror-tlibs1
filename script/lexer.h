@@ -61,31 +61,34 @@ struct Token
 class Lexer
 {
 protected:
+	bool m_bOk;
 	std::string m_strWhitespace, m_strSep;
-	
+
 	unsigned int m_iNumToks;
 	unsigned int m_iLexPos;
 	std::vector<Token> m_vecToks;
 	Token m_tokEnd;
-	
+
 	void FixTokens();
-	
+
 public:
 	Lexer();
 	Lexer(const std::istream& istr);
 	Lexer(const std::string& str);
 	virtual ~Lexer();
-	
+
 	void load(const std::string& strInput);
 	void print();
 	const Token& lex();
-	
+
 	unsigned int GetNumTokens() const { return m_vecToks.size(); }
 	const Token& GetToken(unsigned int i) const { return m_vecToks[i]; }
 
 	static std::string RemoveComments(const std::string& strInput);
 	static std::vector<std::string> GetStringTable(const std::string& strInput);
 	static void ReplaceExcapes(std::string& str);
+
+	bool IsOk() const { return m_bOk; }
 };
 
 #endif
