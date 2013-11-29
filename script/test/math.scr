@@ -1,7 +1,7 @@
 main()
 {
-	print("sin: " + sin([3.1415, 3.1415/2., [1,2,3]]));
-	print("asin: " + asin(sin(3.1415/2.)));
+	print("sin: " + sin([pi, pi/2., [1,2,3]]));
+	print("asin: " + asin(sin(pi/2)));
 	print("atan: " + atan2(1.,2.));
 	print("abs: " + abs([-2,2,3,-4,[-5,10]]) + ", " + abs(2.5) + ", " + abs(-2.3-1));
 	print("mod: " + 5.1%2 + ", " + fmod(5.1,2));
