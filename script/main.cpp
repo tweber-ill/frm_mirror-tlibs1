@@ -9,7 +9,7 @@
 
 
 extern int yydebug;
-int yyparse(void* pLexer);
+int yyparse(void*);
 
 
 int main(int argc, char** argv)
@@ -47,7 +47,7 @@ int main(int argc, char** argv)
 	if(!par.pLexer->IsOk())
 	{
 		std::cerr << "Error: Lexer returned with errors." << std::endl;
-		return 0;
+		return -3;
 	}
 
 
@@ -59,7 +59,7 @@ int main(int argc, char** argv)
 	if(iParseRet != 0)
 	{
 		std::cerr << "Error: Parser returned with error code " << iParseRet << "." << std::endl;
-		return -3;
+		return -4;
 	}
 
 	par.pRoot->eval(info);
