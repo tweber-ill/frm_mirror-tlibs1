@@ -8,6 +8,7 @@
 #include <cmath>
 #include "parseobj.h"
 
+const char* g_pcVersion = "Hermelin script interpreter, version 0.2";
 
 extern int yydebug;
 int yyparse(void*);
@@ -22,7 +23,7 @@ int main(int argc, char** argv)
 {
 	if(argc<=1)
 	{
-		std::cout << "This is the Hermelin script interpreter." << std::endl;
+		std::cout << "This is the " << g_pcVersion << "." << std::endl;
 		std::cout << "\tUsage: " << argv[0] << " <script file>" << std::endl;
 		return -1;
 	}

@@ -221,9 +221,11 @@ Symbol* SymbolArray::clone() const
 	//*pSym = *this;
 	
 	pSym->m_arr.reserve(m_arr.size());
+
 	for(Symbol *pArrSym : m_arr)
 		pSym->m_arr.push_back(pArrSym->clone());
-	
+
+	pSym->UpdateIndices();
 	return pSym;
 }
 
@@ -233,6 +235,17 @@ void SymbolArray::assign(Symbol *pSym)
 	this->m_arr = pOther->m_arr;
 }
 
+void SymbolArray::UpdateIndex(unsigned int iIdx)
+{
+	m_arr[iIdx]->m_pArr = this;
+	m_arr[iIdx]->m_iArrIdx = iIdx;
+}
+
+void SymbolArray::UpdateIndices()
+{
+	for(unsigned int iIdx=0; iIdx<m_arr.size(); ++iIdx)
+		UpdateIndex(iIdx);
+}
 
 
 

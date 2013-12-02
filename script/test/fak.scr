@@ -25,16 +25,17 @@ fib(a)
 }
 
 # Fibonacci 2 (array)
-fib2(a)
+fib2(N)
 {
+	a = vec();
+
 	a[0] = 1;
 	a[1] = 1;
 
 	i = 2;
-	while(i less vec_size(a))
+	while(i less N)
 	{
-		a[i] = a[i-1] + a[i-2];
-
+		a[i] = a[i-2] + a[i-1];
 		i = i+1;
 	}
 
@@ -80,7 +81,6 @@ main()
 	print("Beispielprogramm Fibonacci 2");
 	print("============================\n");
 
-	#print("Ergebnis (Fibonacci 2): " + fib2(vec(30)));
-	for(a : fib2(vec(30)))
+	for(a : fib2(30))
 		print("Ergebnis (Fibonacci 2): fib(" + cur_iter(a) + ") = " + a);
 }

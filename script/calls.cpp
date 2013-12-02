@@ -14,11 +14,13 @@
 #include <cstdio>
 #include <cmath>
 
+
 static Symbol* fkt_version(const std::vector<Symbol*>& vecSyms,
 							ParseInfo& info,
 							SymbolTable* pSymTab)
 {
-	return new SymbolString("Hermelin Interpreter, Version 0.1");
+	extern const char* g_pcVersion;
+	return new SymbolString(g_pcVersion);
 }
 
 
@@ -92,8 +94,7 @@ static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size()<1)
 	{
-		std::cerr << "Error: vec(num, val=0) needs at least one argument." << std::endl;
-		return 0;
+		return new SymbolArray();
 	}
 	
 	Symbol *pSymSize = vecSyms[0];
@@ -117,19 +118,20 @@ static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
 	else
 	{
 		pSymVal = new SymbolDouble(0.);
-		pSymVal->m_strName = "<const>";
 		bOwnVal = 1;
 	}
-	
-	
+
+
 	SymbolArray* pSymRet = new SymbolArray;
 	pSymRet->m_arr.reserve(iVal);
 	for(int i=0; i<iVal; ++i)
 		pSymRet->m_arr.push_back(pSymVal->clone());
-	
+
+	pSymRet->UpdateIndices();
+
 	if(bOwnVal)
 		delete pSymVal;
-	
+
 	return pSymRet;
 }
 
@@ -168,13 +170,21 @@ static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
 	}
 
 	const std::string& strIdent = vecSyms[0]->m_strIdent;
+	if(strIdent == "")
+	{
+		std::cerr << "Error: No identifier given for cur_iter." << std::endl;
+		return 0;
+	}
+
+
 	std::string strIter = "<cur_iter_" + strIdent + ">";
 
 	Symbol* pSymIter = pSymTab->GetSymbol(strIter);
+	//pSymTab->print();
 	if(!pSymIter || pSymIter->GetType()!=SYMBOL_INT)
 	{
-		std::cerr << "Error: cur_iter could not determine iteration index."
-					<< std::endl;
+		std::cerr << "Error: cur_iter could not determine iteration index \""
+					<< strIter << "\"." << std::endl;
 		return 0;
 	}
 
@@ -424,6 +434,7 @@ static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 			pArrRet->m_arr.push_back(fkt_math_1arg<FKT>(vecDummy, info, pSymTab));
 		}
 		
+		pArrRet->UpdateIndices();
 		return pArrRet;
 	}
 	else
@@ -433,7 +444,7 @@ static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 		
 		// recycle this SymbolDouble
 		pSym->m_dVal = dResult;
-		return pSym;		
+		return pSym;
 	}
 	
 	return 0;
@@ -496,6 +507,7 @@ static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
 			pArrRet->m_arr.push_back(fkt_math_abs(vecDummy, info, pSymTab));
 		}
 		
+		pArrRet->UpdateIndices();
 		return pArrRet;
 	}
 	else if(vecSyms[0]->GetType() == SYMBOL_INT)

@@ -21,10 +21,16 @@ enum SymbolType
 	SYMBOL_ARRAY
 };
 
+struct SymbolArray;
 struct Symbol
 {
 	std::string m_strName;
 	std::string m_strIdent;		// last seen identifier
+
+	unsigned int m_iArrIdx;		// if symbol is contained in an array
+	SymbolArray *m_pArr;
+
+	Symbol() : m_iArrIdx(0), m_pArr(0) {}
 	
 	virtual SymbolType GetType() const = 0;
 	virtual std::string GetTypeName() const = 0;
@@ -41,7 +47,7 @@ struct SymbolDouble : public Symbol
 {
 	double m_dVal;
 	
-	SymbolDouble() {}
+	SymbolDouble() : Symbol() {}
 	SymbolDouble(double dVal) : m_dVal(dVal) {}
 
 	virtual SymbolType GetType() const { return SYMBOL_DOUBLE; }
@@ -59,7 +65,7 @@ struct SymbolInt : public Symbol
 {
 	int m_iVal;
 	
-	SymbolInt() {}
+	SymbolInt() : Symbol() {}
 	SymbolInt(int iVal) : m_iVal(iVal) {}
 
 	virtual SymbolType GetType() const { return SYMBOL_INT; }
@@ -77,7 +83,7 @@ struct SymbolString : public Symbol
 {
 	std::string m_strVal;
 	
-	SymbolString() {}
+	SymbolString() : Symbol() {}
 	SymbolString(const char* pcStr) : m_strVal(pcStr) {}
 
 	virtual SymbolType GetType() const { return SYMBOL_STRING; }
@@ -98,6 +104,7 @@ struct SymbolArray : public Symbol
 {
 	std::vector<Symbol*> m_arr;
 	
+	SymbolArray() : Symbol() {}
 	virtual ~SymbolArray();
 	
 	virtual SymbolType GetType() const { return SYMBOL_ARRAY; }
@@ -109,6 +116,9 @@ struct SymbolArray : public Symbol
 	virtual void assign(Symbol *pSym);
 	
 	virtual bool IsNotZero() const { return 0; }
+
+	void UpdateIndex(unsigned int);
+	void UpdateIndices();
 };
 
 

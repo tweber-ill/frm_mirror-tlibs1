@@ -17,6 +17,10 @@ void safe_delete(Symbol *pSym, const SymbolTable* pSymTab, const SymbolTable* pS
 	if(pSym->m_strName == "<const>")
 		return;
 
+	// don't delete array members
+	if(pSym->m_pArr)
+		return;
+
 	// don't delete symbols in table
 	bool bIsInTable = pSymTab->IsPtrInMap(pSym);
 	bool bIsInGlobTable = pSymTabGlob->IsPtrInMap(pSym);
@@ -53,7 +57,7 @@ Symbol* NodeIdent::eval(ParseInfo &info, SymbolTable *pSym) const
 		std::cerr << "Warning: Symbol \"" << m_strIdent 
 				<< "\" exists in local and global scope, using local one." << std::endl;
 	}
-	
+
 	// if no local symbol is available, use global symbol instead
 	if(!pSymbol)
 		pSymbol = pSymbolGlob;
@@ -64,7 +68,8 @@ Symbol* NodeIdent::eval(ParseInfo &info, SymbolTable *pSym) const
 		return 0;
 	}
 
-	pSymbol->m_strIdent = m_strIdent;
+	if(pSymbol->m_strIdent.size()==0)
+		pSymbol->m_strIdent = m_strIdent;
 	return pSymbol;
 }
 
@@ -169,6 +174,7 @@ Symbol* NodeArray::eval(ParseInfo &info, SymbolTable *pSym) const
 
 		Symbol *pSymbol = pNode->eval(info, pSym);
 		pSymArr->m_arr.push_back(pSymbol);
+		pSymArr->UpdateIndices();
 	}
 
 	return pSymArr;
@@ -213,22 +219,34 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 
 		int iIdx = ((SymbolInt*)pSymExpr)->m_iVal;
 		safe_delete(pSymExpr, pSym, info.pGlobalSyms);
+		SymbolArray *pArr = (SymbolArray*)pSymbol;
 
-		if(iIdx<0 || iIdx>=((SymbolArray*)pSymbol)->m_arr.size())
+                if(pArr->GetType() != SYMBOL_ARRAY)
+                {
+                        std::cerr << "Error: Cannot take index of non-array." << std::endl;
+                        return 0;
+                }
+
+		if(iIdx<0 || iIdx>=pArr->m_arr.size())
 		{
-			std::cerr << "Error: Array index (" << iIdx
+/*			std::cerr << "Warning: Array index (" << iIdx
 						<< ") out of bounds (array size: "
-						<< ((SymbolArray*)pSymbol)->m_arr.size() << ")." << std::endl;
-			return 0;
+						<< pArr->m_arr.size() << ")." 
+						<< " Resizing."<< std::endl;
+*/
+
+			unsigned int iOldSize = pArr->m_arr.size();
+			for(unsigned int iRem=0; iRem<iIdx+1-iOldSize; ++iRem)
+			{
+				SymbolDouble *pNewSym = new SymbolDouble(0.);
+				pNewSym->m_strName = "<const>";
+				pArr->m_arr.push_back(pNewSym);
+				//std::cout << "Inserting: " << iRem << std::endl;
+			}
 		}
 
-		if(pSymbol->GetType() != SYMBOL_ARRAY)
-		{
-			std::cerr << "Error: Cannot take index of non-array." << std::endl;
-			return 0;
-		}
-
-		pSymbol = ((SymbolArray*)pSymbol)->m_arr[iIdx];
+		pSymbol = pArr->m_arr[iIdx];
+		pArr->UpdateIndex(iIdx);
 	}
 
 	return pSymbol;
@@ -328,16 +346,22 @@ Symbol* NodeBinaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 		case NODE_ASSIGN:
 		{
 			Symbol *pSymbolOrg = m_pRight->eval(info, pSym);
+			if(!pSymbolOrg)
+			{
+				std::cerr << "Error: Invalid rhs expression." << std::endl;
+				return 0;
+			}
+
 			Symbol *pSymbol = pSymbolOrg->clone();
 			safe_delete(pSymbolOrg, pSym, info.pGlobalSyms);
 
 			if(m_pLeft->m_type == NODE_IDENT)		// single variable
 			{
 				const std::string& strIdent = ((NodeIdent*)m_pLeft)->m_strIdent;
-				
+
 				Symbol* pSymLoc = pSym->GetSymbol(strIdent);
 				Symbol* pSymGlob = info.pGlobalSyms->GetSymbol(strIdent);
-				
+
 				if(pSymLoc && pSymGlob)
 				{
 					std::cerr << "Warning: Symbol \"" << strIdent 
@@ -353,11 +377,64 @@ Symbol* NodeBinaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 				{
 					pSym->InsertSymbol(strIdent, pSymbol);
 				}
+
+				return pSymbol;
 			}
 			else									// array
 			{
 				Symbol *pSymLeft = m_pLeft->eval(info, pSym);
-				pSymLeft->assign(pSymbol);
+
+				if(pSymLeft->GetType() == pSymbol->GetType())
+				{
+					pSymLeft->assign(pSymbol);
+				}
+				else
+				{
+					int iArrIdx = pSymLeft->m_iArrIdx;
+					SymbolArray* pArr = pSymLeft->m_pArr;
+
+					//std::cout << "Array: " << (void*) pArr << ", Index: " << iArrIdx << std::endl;
+
+					if(!pArr)
+					{
+						std::cerr << "Error: Trying to access array member with no associated array." 
+							<< std::endl;
+						return 0;
+					}
+
+                                        if(pArr->m_arr.size() <= iArrIdx)
+                                        {
+/*                                                std::cerr << "Warning: Array index (" << iArrIdx
+                                                                << ") out of bounds (array size: "
+                                                                << pArr->m_arr.size() << ")." 
+                                                                << " Resizing."<< std::endl;
+*/
+
+                                                unsigned int iOldSize = pArr->m_arr.size();
+                                                for(unsigned int iRem=0; iRem<iArrIdx+1-iOldSize; ++iRem)
+                                                {
+                                                        SymbolDouble *pNewSym = new SymbolDouble(0.);
+                                                        pNewSym->m_strName = "<const>";
+                                                        pArr->m_arr.push_back(pNewSym);
+                                                }
+                                        }
+
+
+					Symbol* pSymOld = pArr->m_arr[iArrIdx];
+					if((void*)pSymOld != (void*)pSymLeft)
+					{
+						std::cerr << "Error: Array member mismatch." << std::endl;
+						return 0;
+					}
+
+
+					pArr->m_arr[iArrIdx] = pSymbol;
+					pSymbol->m_pArr = pArr;
+					pSymbol->m_iArrIdx = iArrIdx;
+
+					pSymOld->m_pArr = 0;
+					safe_delete(pSymOld, pSym, info.pGlobalSyms);
+				}
 			}
 
 			return pSymbol;
