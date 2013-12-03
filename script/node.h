@@ -358,9 +358,10 @@ struct NodeUnaryOp : public Node
 struct NodeBinaryOp : public Node
 {
 	Node *m_pLeft, *m_pRight;
+	bool m_bGlobal;
 
 	NodeBinaryOp(Node* pLeft, Node* pRight, NodeType ntype)
-		: Node(ntype), m_pLeft(pLeft), m_pRight(pRight)
+		: Node(ntype), m_pLeft(pLeft), m_pRight(pRight), m_bGlobal(0)
 	{}
 
 	NodeBinaryOp(void* pLeft, void* pRight, NodeType ntype)

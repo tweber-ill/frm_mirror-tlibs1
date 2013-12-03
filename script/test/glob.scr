@@ -3,11 +3,14 @@ tst1()
 	print(pi);
 	pi = 123;
 	print(pi);
-	a = 5;
+	global a = 7;
 }
 
 main()
 {
+	global a = 5;
+
 	tst1();
 	print("Im main(): " + pi);
+	print(a);
 }

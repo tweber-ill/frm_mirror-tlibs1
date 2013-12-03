@@ -190,6 +190,8 @@ void Lexer::load(const std::string& _strInput)
 				tok.type = LEX_TOKEN_LOG_LEQ;
 			else if(str == "geq")
 				tok.type = LEX_TOKEN_LOG_GEQ;
+			else if(str == "global")
+				tok.type = LEX_TOKEN_GLOBAL;
 		}
 		else if(isdigit(str[0]))
 		{

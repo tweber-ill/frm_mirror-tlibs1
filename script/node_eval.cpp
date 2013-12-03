@@ -359,8 +359,10 @@ Symbol* NodeBinaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 			{
 				const std::string& strIdent = ((NodeIdent*)m_pLeft)->m_strIdent;
 
-				Symbol* pSymLoc = pSym->GetSymbol(strIdent);
 				Symbol* pSymGlob = info.pGlobalSyms->GetSymbol(strIdent);
+				Symbol* pSymLoc = 0;
+				if(!m_bGlobal)
+					pSymLoc = pSym->GetSymbol(strIdent);
 
 				if(pSymLoc && pSymGlob)
 				{
@@ -368,14 +370,17 @@ Symbol* NodeBinaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 							  << "\" exists in local and global scope, using local one." << std::endl;
 				}
 
-				if(pSymGlob && !pSymLoc)
+				if(pSymGlob && !pSymLoc && !m_bGlobal)
 				{
 					std::cerr << "Warning: Overwriting global symbol \"" << strIdent << "\"." << std::endl;
 					info.pGlobalSyms->InsertSymbol(strIdent, pSymbol);
 				}
 				else
 				{
-					pSym->InsertSymbol(strIdent, pSymbol);
+					if(m_bGlobal)
+						info.pGlobalSyms->InsertSymbol(strIdent, pSymbol);
+					else
+						pSym->InsertSymbol(strIdent, pSymbol);
 				}
 
 				return pSymbol;

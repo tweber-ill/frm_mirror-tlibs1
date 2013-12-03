@@ -39,6 +39,8 @@ enum TokenType
 	LEX_TOKEN_LOG_GREATER,
 	LEX_TOKEN_LOG_LEQ,
 	LEX_TOKEN_LOG_GEQ,
+
+	LEX_TOKEN_GLOBAL
 };
 
 struct Token

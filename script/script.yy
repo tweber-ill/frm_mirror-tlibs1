@@ -41,6 +41,7 @@
 %token<pNode> TOK_RETURN
 %token<pNode> TOK_BREAK
 %token<pNode> TOK_CONTINUE
+%token<pNode> TOK_GLOBAL
 
 %token<pNode> TOK_LOG_AND
 %token<pNode> TOK_LOG_OR
@@ -126,7 +127,9 @@ idents:	ident ',' idents	{ $$ = new NodeBinaryOp($1, $3, NODE_IDENTS); }
 
 
 expr:	'(' expr ')'		{ $$ = $2; }
-	| expr '=' expr		{ $$ = new NodeBinaryOp($1, $3, NODE_ASSIGN); }
+	| TOK_GLOBAL expr '=' expr	{ $$ = new NodeBinaryOp($2, $4, NODE_ASSIGN); 
+						((NodeBinaryOp*)$$)->m_bGlobal = 1; }
+	| expr '=' expr			{ $$ = new NodeBinaryOp($1, $3, NODE_ASSIGN); }
 
 	| expr '+' expr			{ $$ = new NodeBinaryOp($1, $3, NODE_PLUS); }
 	| expr '-' expr			{ $$ = new NodeBinaryOp($1, $3, NODE_MINUS); }

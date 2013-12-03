@@ -3,10 +3,7 @@
  * @author tweber
  */
 
-#ifdef __CYGWIN__
-	#undef __STRICT_ANSI__
-#endif
-
+#include "flags.h"
 #include "calls.h"
 #include <sstream>
 #include <iostream>

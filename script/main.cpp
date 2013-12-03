@@ -2,7 +2,8 @@
  * Simple Script
  * @author tweber
  */
- 
+
+#include "flags.h" 
 #include <iostream>
 #include <fstream>
 #include <cmath>
