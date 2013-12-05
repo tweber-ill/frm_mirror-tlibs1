@@ -77,5 +77,5 @@ extern "C" int yylex(void* _pObj)
 
 extern "C" void yyerror(const char* pc)
 {
-	std::cerr << "Error: " << pc << std::endl;
+	std::cerr << "Error: " << pc << "." << std::endl;
 }

@@ -28,6 +28,11 @@ main()
 	tst[4] = tst[0]*2 + tst[1]*5;
 	print(tst);
 
+	arr = tst[2];
+	arr[0] = "xxx";
+	tst[2,0] = 7;
+	print(arr + "\n" + tst);
+
 
 #	arr0 = [[1,2,3],[4.,5,6]];
 #	print(arr0);

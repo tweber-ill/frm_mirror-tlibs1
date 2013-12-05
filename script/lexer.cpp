@@ -201,7 +201,7 @@ void Lexer::load(const std::string& _strInput)
 		else
 		{
 			m_bOk = 0;
-			std::cerr << "Unknown token: " << str << std::endl;
+			std::cerr << "Error: Unknown token: \"" << str << "\"." << std::endl;
 			continue;
 		}
 
