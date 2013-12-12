@@ -1,17 +1,22 @@
 thread_func(vec)
 {
-	print("In thread " + iTh);
-	iTh = iTh + 1;
-
-	print("Array: " + vec);
+	begin_critical();
+		print("Thread " + iTh + " got: " + vec);
+		iTh = iTh + 1;
+	end_critical();
 }
 
 main()
 {
 	global iTh = 1;
-	print("Hardware supports " + thread_hwcount() + " threads.\n");
+	hwcnt = thread_hwcount();
 
-	vec = [1,2,3,4,5,6,7,8,9,10];
-	threads = nthread(2, "thread_func", vec);
+	print("Hardware supports " + hwcnt + " threads.\n");
+
+	vec = [1,2,3,4,5,6,7,8,9,[10,5]];
+	threads = nthread(hwcnt, "thread_func", vec);
+
+
 	join(threads);
+	print("\n" + vec_size(threads) + " threads used.");
 }
