@@ -290,6 +290,11 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 	{
 		if(pSym == 0) continue;
 
+		if(pSym->GetType() == SYMBOL_ARRAY)
+		{
+			return fkt_thread_join(((SymbolArray*)pSym)->m_arr, info, pSymTab);
+		}
+
 		if(pSym->GetType() != SYMBOL_INT)
 		{
 			std::cerr << "Error: join needs thread handles." << std::endl;
@@ -314,7 +319,140 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 	return 0;
 }
 
+
 // --------------------------------------------------------------------------------
+// nthread
+
+// nthread(iNumThreads, strFunc, vecArgs, ...)
+static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info,
+						SymbolTable* pSymTab)
+{
+	if(vecSyms.size()<3)
+	{
+		std::cerr << "Error: nthread needs at least 3 arguments: N, func, arg." << std::endl;
+		return 0;
+	}
+
+	Symbol* _pSymN = vecSyms[0];
+	if(_pSymN->GetType() != SYMBOL_INT)
+	{
+		std::cerr << "Error: Number of threads has to be integer." << std::endl;
+		return 0;
+	}
+
+	SymbolInt *pSymN = (SymbolInt*)_pSymN;
+	int iNumThreads = pSymN->m_iVal;
+
+
+
+	Symbol* _pSymIdent = vecSyms[1];
+	if(_pSymIdent->GetType() != SYMBOL_STRING)
+	{
+		std::cerr << "Error: Thread proc identifier needs to be a string." << std::endl;
+		return 0;
+	}
+
+	SymbolString *pSymIdent = (SymbolString*)_pSymIdent;
+	const std::string& strIdent = pSymIdent->m_strVal;
+
+
+
+	Symbol* _pSymArr = vecSyms[2];
+	if(_pSymArr->GetType() != SYMBOL_ARRAY)
+	{
+		std::cerr << "Error: Thread arg has to be an array." << std::endl;
+		return 0;
+	}
+
+	SymbolArray *pSymArr = (SymbolArray*)_pSymArr;
+	const std::vector<Symbol*>& vecArr = pSymArr->m_arr;
+
+
+
+	NodeFunction* pFunc = info.GetFunction(strIdent);
+	if(pFunc == 0)
+	{
+		std::cerr << "Error: Thread proc \"" << strIdent << "\" not defined." << std::endl;
+		return 0;
+	}
+
+
+
+
+
+	if(iNumThreads > vecArr.size())
+	{
+		iNumThreads = vecArr.size();
+		std::cerr << "Warning: More threads requested in nthread than necessary, "
+						  << "reducing to array size (" << iNumThreads << ")."
+						  << std::endl;
+	}
+
+
+	std::vector<SymbolArray*> vecSymArrays;
+	vecSymArrays.resize(iNumThreads);
+
+	int iCurTh = 0;
+	for(Symbol* pThisSym : vecArr)
+	{
+		if(!vecSymArrays[iCurTh])
+			vecSymArrays[iCurTh] = new SymbolArray();
+
+		vecSymArrays[iCurTh]->m_arr.push_back(pThisSym->clone());
+
+		++iCurTh;
+		if(iCurTh == iNumThreads)
+			iCurTh = 0;
+	}
+
+
+
+	std::vector<std::thread*> vecThreads;
+	vecThreads.reserve(iNumThreads);
+
+	for(iCurTh=0; iCurTh<iNumThreads; ++iCurTh)
+	{
+		std::vector<Symbol*>* vecThreadSyms = new std::vector<Symbol*>;
+		vecThreadSyms->reserve(vecSyms.size()-3+1);
+
+		vecThreadSyms->push_back(vecSymArrays[iCurTh]);
+
+		for(unsigned int iSym=3; iSym<vecSyms.size(); ++iSym)
+			vecThreadSyms->push_back(vecSyms[iSym]/*->clone()*/);
+
+		NodeFunction* pFunc_clone = (NodeFunction*)pFunc->clone();
+		std::thread *pth = new std::thread(::thread_proc, pFunc_clone, &info, vecThreadSyms);
+		vecThreads.push_back(pth);
+	}
+
+	/*
+	// automatically join
+	for(iCurTh=0; iCurTh<iNumThreads; ++iCurTh)
+	{
+		vecThreads[iCurTh]->join();
+		delete vecThreads[iCurTh];
+		vecThreads[iCurTh] = 0;
+	}*/
+
+
+	SymbolArray* pArrThreads = new SymbolArray();
+
+	for(iCurTh=0; iCurTh<iNumThreads; ++iCurTh)
+	{
+		std::thread* pCurThread = vecThreads[iCurTh];
+		unsigned int iHandle = info.handles.AddHandle(new HandleThread(pCurThread));
+		SymbolInt *pSymThreadHandle = new SymbolInt(iHandle);
+
+		pArrThreads->m_arr.push_back(pSymThreadHandle);
+	}
+
+	return pArrThreads;
+}
+
+// --------------------------------------------------------------------------------
+
+
 
 
 
@@ -540,6 +678,7 @@ static t_mapFkts g_mapFkts =
 	t_mapFkts::value_type("cur_iter", fkt_cur_iter),
 
 	t_mapFkts::value_type("thread", fkt_thread),
+	t_mapFkts::value_type("nthread", fkt_nthread),
 	t_mapFkts::value_type("thread_hwcount", fkt_thread_hwcount),
 	t_mapFkts::value_type("join", fkt_thread_join),
 	t_mapFkts::value_type("begin_critical", fkt_begin_critical),
