@@ -84,8 +84,7 @@ mieze_tau_lam(const units::quantity<units::unit<units::time_dimension, Sys>, Y>&
 //------------------------------------------------------------------------------
 // MIEZE contrast reduction due to detector geometry
 template<class Sys, class Y>
-double
-mieze_reduction_det(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lx,
+Y mieze_reduction_det(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lx,
 						const units::quantity<units::unit<units::length_dimension, Sys>, Y>& ly,
 						const units::quantity<units::unit<units::length_dimension, Sys>, Y>& xpos,
 						const units::quantity<units::unit<units::length_dimension, Sys>, Y>& ypos,
@@ -130,7 +129,7 @@ mieze_reduction_det(const units::quantity<units::unit<units::length_dimension, S
 			quantity<unit<time_dimension, Sys>, Y> dt = path_diff / v0;
 
 			// additional phase
-			double phase = -omegaM * dt + central_phase/units::si::radians;
+			Y phase = -omegaM * dt + central_phase/units::si::radians;
 			phase = fmod(phase, 2.*M_PI);
 
 			int_red += cos(phase/2.)*lx_inc*ly_inc;
@@ -170,13 +169,13 @@ T get_mieze_freq(const T* px, unsigned int iLen, T dNumOsc=2.)
 
 // numerical approximation to the R_sample integral of formula (9) in [Brandl 11]
 template<class Sys, class Y>
-double mieze_reduction_sample_cuboid(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_x,
-                                        const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_y,
-                                        const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_z,
-                                        const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& fM,
-                                        const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam,
-                                        const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& twotheta,
-                                        const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& theta_s)
+Y mieze_reduction_sample_cuboid(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_x,
+					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_y,
+					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_z,
+					const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& fM,
+					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam,
+					const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& twotheta,
+					const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& theta_s)
 {
 	using namespace units;
 	using namespace co;
@@ -184,20 +183,17 @@ double mieze_reduction_sample_cuboid(const units::quantity<units::unit<units::le
 	const quantity<unit<frequency_dimension, Sys>, Y> omegaM = 2.*M_PI*fM;
 	quantity<unit<velocity_dimension, Sys> > v = lam2p(lam)/co::m_n;
 
-	double ki[3];
+	ublas::vector<Y> ki(3);
 	ki[0] = 0.;
 	ki[1] = 0.;
 	ki[2] = 1.;
 
-	double kf[3];
+	ublas::vector<Y> kf(3);
 	kf[0] = sin(twotheta);
 	kf[1] = 0.;
 	kf[2] = cos(twotheta);
 
-	double q_dir[3];
-	q_dir[0] = ki[0] - kf[0];
-	q_dir[1] = ki[1] - kf[1];
-	q_dir[2] = ki[2] - kf[2];
+	ublas::vector<Y> q_dir = ki-kf;
 
 	quantity<unit<length_dimension, Sys>, Y> dX = len_x / 100.;
 	quantity<unit<length_dimension, Sys>, Y> dY = len_y / 100.;
@@ -208,8 +204,8 @@ double mieze_reduction_sample_cuboid(const units::quantity<units::unit<units::le
 	quantity<unit<volume_dimension, Sys>, Y> integral = 0.*si::meter*si::meter*si::meter;
 	quantity<unit<volume_dimension, Sys>, Y> vol = 0.*si::meter*si::meter*si::meter;
 
-	const double stheta_s = sin(theta_s);
-	const double ctheta_s = cos(theta_s);
+	const Y stheta_s = sin(theta_s);
+	const Y ctheta_s = cos(theta_s);
 
 	for(x=-len_x/2.; x<len_x/2.; x+=dX)
 		for(y=-len_y/2.; y<len_y/2.; y+=dY)
@@ -222,7 +218,7 @@ double mieze_reduction_sample_cuboid(const units::quantity<units::unit<units::le
 				pos[2] = -stheta_s*x + ctheta_s*z;
 
 				quantity<unit<length_dimension, Sys>, Y> path_diff = q_dir[0]*pos[0] + q_dir[1]*pos[1] + q_dir[2]*pos[2];
-				double phase = omegaM * path_diff / v;
+				Y phase = omegaM * path_diff / v;
 
 				quantity<unit<volume_dimension, Sys>, Y> func_det = dX*dY*dZ;
 
@@ -230,10 +226,90 @@ double mieze_reduction_sample_cuboid(const units::quantity<units::unit<units::le
 				integral += func_det * cos(phase);
 			}
 
-	//return integral / vol;
-	return integral / (len_x*len_y*len_z);
+	//std::cout << "\ndiff_vol: " << (vol - (len_x*len_y*len_z)) << std::endl;
+	//std::cout << "dxdydz = " << dX*dY*dZ << std::endl;
+
+	vol = len_x*len_y*len_z;
+	return integral / vol;
 }
 
+// with extinction
+template<class Sys, class Y>
+Y mieze_reduction_sample_cuboid_extinction(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_x,
+			const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_y,
+			const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_z,
+			const units::quantity<units::unit<units::derived_dimension<units::length_base_dimension, -1>::type, Sys>, Y>& mu,
+			const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& fM,
+			const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam,
+			const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& twotheta,
+			const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& theta_s)
+{
+	const Y SUBDIVS = 100.;
+
+	using namespace units;
+	using namespace co;
+
+	typedef quantity<unit<length_dimension, Sys>, Y> length;
+	typedef quantity<unit<volume_dimension, Sys>, Y> volume;
+	typedef const quantity<unit<frequency_dimension, Sys>, Y> frequency;
+	typedef quantity<unit<velocity_dimension, Sys> > velocity;
+
+	frequency omegaM = 2.*M_PI*fM;
+	velocity v = lam2p(lam)/co::m_n;
+
+	ublas::vector<Y> ki(3);
+	ki[0] = 0.;
+	ki[1] = 0.;
+	ki[2] = 1.;
+
+	ublas::vector<Y> kf(3);
+	kf[0] = sin(twotheta);
+	kf[1] = 0.;
+	kf[2] = cos(twotheta);
+
+	ublas::vector<Y> q_dir = ki-kf;
+
+	length dX = len_x / SUBDIVS;
+	length dY = len_y / SUBDIVS;
+	length dZ = len_z / SUBDIVS;
+
+	length x, y, z;
+
+	volume integral = 0.*si::meter*si::meter*si::meter;
+	volume vol = 0.*si::meter*si::meter*si::meter;
+
+	const Y stheta_s = sin(theta_s);
+	const Y ctheta_s = cos(theta_s);
+
+	for(x=-len_x/2.; x<len_x/2.; x+=dX)
+		for(y=-len_y/2.; y<len_y/2.; y+=dY)
+			for(z=-len_z/2.; z<len_z/2.; z+=dZ)
+			{
+				length pos[3];
+				// rotate sample
+				pos[0] = ctheta_s*x + stheta_s*z;
+				pos[1] = y;
+				pos[2] = -stheta_s*x + ctheta_s*z;
+
+				length path_diff = q_dir[0]*pos[0] + q_dir[1]*pos[1] + q_dir[2]*pos[2];
+				Y phase = omegaM * path_diff / v;
+
+
+				// TODO
+				length dist = units::abs(path_diff);
+				Y extinction_factor = exp(-mu * dist);
+				//std::cout << "extinction: " << extinction_factor << std::endl;
+
+
+				volume func_det = dX*dY*dZ;
+				func_det *= extinction_factor;
+
+				vol += func_det;
+				integral += func_det * cos(phase);
+			}
+
+	return integral / vol;
+}
 
 //------------------------------------------------------------------------------
 
