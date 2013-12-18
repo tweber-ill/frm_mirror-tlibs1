@@ -111,8 +111,11 @@ class Fourier
 	protected:
 		unsigned int m_iSize;
 		void *m_pIn, *m_pOut;
-		void *m_pTmp;
 		void *m_pPlan, *m_pPlan_inv;
+#ifdef USE_CUDA
+		void *m_pTmp;
+#endif
+
 
 	public:
 		Fourier(unsigned int iSize);

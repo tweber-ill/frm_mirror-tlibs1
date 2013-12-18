@@ -149,6 +149,32 @@ Y mieze_reduction_det(const units::quantity<units::unit<units::length_dimension,
 	return dreduction;
 }
 
+// reduction factor due to detector thickness
+template<class Sys, class Y>
+Y mieze_reduction_det_d(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& d,
+						const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& fM,
+						const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam)
+{
+	using namespace units;
+	using namespace co;
+
+	const quantity<unit<mass_dimension, Sys>, Y> mn = co::m_n;
+	quantity<unit<velocity_dimension, Sys> > v0 = ::lam2p(lam)/mn;
+
+	const quantity<unit<frequency_dimension, Sys>, Y> omegaM = 2.*M_PI*fM;
+
+	quantity<unit<length_dimension, Sys>, Y> int_red = 0.*si::meter;
+	int_red = std::sin(-0.5*omegaM/v0 * d)/(-0.5*omegaM/v0);
+
+	Y dreduction = int_red / d;
+	dreduction = fabs(dreduction);
+
+	return dreduction;
+}
+
+//------------------------------------------------------------------------------
+
+
 
 template<typename T=double>
 T get_mieze_freq(const T* px, unsigned int iLen, T dNumOsc=2.)
@@ -158,9 +184,6 @@ T get_mieze_freq(const T* px, unsigned int iLen, T dNumOsc=2.)
 	double dTLen = (px[iLen-1]-px[0])/double(iLen-1)*double(iLen);
 	return dNumOsc * 2.*M_PI/dTLen;
 }
-
-//------------------------------------------------------------------------------
-
 
 
 
