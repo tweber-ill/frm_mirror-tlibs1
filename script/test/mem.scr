@@ -1,0 +1,12 @@
+# finding memory leaks in interpreter...
+
+main()
+{
+	i = 0;
+	while(1)
+	{
+		a = linspace(0,1,100);
+		print(i);
+		i = i+1;
+	}
+}

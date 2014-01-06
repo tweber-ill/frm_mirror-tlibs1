@@ -1,7 +1,7 @@
 thread_func(vec)
 {
 	begin_critical();
-		print("Thread " + iTh + " got: " + vec);
+		print("Thread " + iTh + " got: " + str(vec));
 		iTh = iTh + 1;
 	end_critical();
 }

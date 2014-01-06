@@ -16,22 +16,53 @@
 #include "symbol.h"
 #include "handles.h"
 
-
+struct Node;
 struct NodeFunction;
+struct NodeCall;
+
 struct ParseInfo
 {
-	SymbolTable* pGlobalSyms;
-	std::vector<NodeFunction*> vecFuncs;
-	HandleManager handles;
-	std::mutex mutexGlobal;
-	
-	bool bWantReturn = 0;
-	
-	ParseInfo() : bWantReturn(0)
-	{}
+	// external imported modules
+	typedef std::map<std::string, Node*> t_mods;
+	t_mods *pmapModules;
 
+	// function to execute, e.g. "main"
+	std::string strExecFkt;
+	const std::vector<Symbol*>* pvecExecArg;
+	std::string strInitScrFile;
+
+	// all functions from all modules
+	std::vector<NodeFunction*> vecFuncs;
+
+	// global symbol table
+	SymbolTable *pGlobalSyms;
+
+	HandleManager *phandles;
+	// mutex for script
+	std::mutex *pmutexGlobal;
+	// mutex for interpreter
+	std::mutex *pmutexInterpreter;
+	
+	// currently active function
+	const NodeFunction *pCurFunction;
+	const NodeCall *pCurCaller;
+	bool bWantReturn = 0;
+
+	const Node* pCurLoop;
+	bool bWantBreak;
+	bool bWantContinue;
+
+	bool bDestroyParseInfo;
+	
+	ParseInfo();
+	virtual ~ParseInfo();
 
 	NodeFunction* GetFunction(const std::string& strName);
+
+	bool IsExecDisabled() const
+	{
+		return bWantReturn || bWantBreak || bWantContinue;
+	}
 };
 
 
@@ -83,6 +114,8 @@ enum NodeType
 	NODE_RANGED_FOR,
 	
 	NODE_RETURN,
+	NODE_CONTINUE,
+	NODE_BREAK,
 	
 	
 	NODE_INVALID
@@ -94,17 +127,21 @@ extern Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op);
 extern void safe_delete(Symbol *pSym, const SymbolTable* pSymTab);
 
 
-struct NodeFunction;
-struct Node;
 struct Node
 {
 	NodeType m_type;
+	unsigned int m_iLine;
 
-	Node(NodeType ntype) : m_type(ntype) {}
+	Node(NodeType ntype) : m_type(ntype), m_iLine(0) {}
 	virtual ~Node() {}
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const = 0;
 
 	virtual Node* clone() const = 0;
+
+	// create a string containing the line number for error output
+	std::string linenr(const std::string& strErr, const ParseInfo &info) const;
+
+	static Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op);
 };
 
 struct NodeReturn : public Node
@@ -124,6 +161,32 @@ struct NodeReturn : public Node
 		if(m_pExpr) delete m_pExpr;
 	}
 	
+	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Node* clone() const;
+};
+
+struct NodeBreak : public Node
+{
+	NodeBreak()
+		: Node(NODE_BREAK)
+	{}
+
+	virtual ~NodeBreak()
+	{}
+
+	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Node* clone() const;
+};
+
+struct NodeContinue : public Node
+{
+	NodeContinue()
+		: Node(NODE_CONTINUE)
+	{}
+
+	virtual ~NodeContinue()
+	{}
+
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 	virtual Node* clone() const;
 };
@@ -371,10 +434,13 @@ struct NodeBinaryOp : public Node
 	virtual ~NodeBinaryOp()
 	{
 		if(m_pLeft) delete m_pLeft;
-		if(m_pRight) delete m_pRight;
+		if(m_pRight && ((void*)m_pRight)!=((void*)m_pLeft)) delete m_pRight;
 	}
 
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Symbol* eval_assign(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Symbol* eval_funcinit(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Symbol* eval_sequential(ParseInfo &info, SymbolTable *pSym=0) const;
 	virtual Node* clone() const;
 
 	std::vector<Node*> flatten(NodeType ntype=NODE_ARGS) const;
@@ -383,7 +449,12 @@ struct NodeBinaryOp : public Node
 struct NodeFunction : public Node
 {
 	Node *m_pIdent, *m_pArgs, *m_pStmts;
+
+	// symbols for the arguments the function takes
 	const std::vector<Symbol*>* m_pVecArgSyms;
+
+	// script file this function resides in
+	std::string m_strScrFile;
 
 	NodeFunction(Node* pLeft, Node* pMiddle, Node* pRight);
 
@@ -403,11 +474,13 @@ struct NodeFunction : public Node
 
 	std::string GetName() const;
 
+	// arguments to function
 	void SetArgSyms(const std::vector<Symbol*>* pvecArgSyms)
-	{ this-> m_pVecArgSyms = pvecArgSyms; }
+	{ this->m_pVecArgSyms = pvecArgSyms; }
 	
 	
-protected:
+//protected:
+	// arguments the function takes
 	std::vector<Node*> m_vecArgs;
 };
 

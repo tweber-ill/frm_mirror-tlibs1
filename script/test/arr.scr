@@ -6,6 +6,29 @@ tst(a)
 
 main()
 {
+	yy = [1.,2.,3.];
+	yy[0] = (tstval="Test");
+	tstval = "1234567";
+	print(yy);
+	print(tstval);
+
+	x = [[1,2],[3,4]];
+	print(x[0,1]);
+	print(x[0][1]);
+
+	print(linspace(1,2,10));
+	print(logspace(1,2,10));
+
+	arr0 = [1,2,3,4,5,6,7,8,9];
+	arr1 = [2,4,6,8,10];
+	print(arr0 + arr1);
+	print(arr0 * 2);
+
+	arr2 = ["Ha", 1];
+	arr3 = ["ll", 2];
+	arr4 = ["o", 3];
+	print(arr2+arr3+arr4);
+ 
 #	a = 1;
 #	arr = [a, 2, 3];
 #	print(arr);
@@ -22,16 +45,16 @@ main()
 #	tst1 = tst(vec(5));
 #	print(tst1);
 
-	tst = [1,2,3];
-	tst[2] = ["x", "y", "z"];
-	tst[2,1] = [1.2, "a", 5];
-	tst[4] = tst[0]*2 + tst[1]*5;
-	print(tst);
+#	tst = [1,2,3];
+#	tst[2] = ["x", "y", "z"];
+#	tst[2,1] = [1.2, "a", 5];
+#	tst[4] = tst[0]*2 + tst[1]*5;
+#	print(tst);
 
-	arr = tst[2];
-	arr[0] = "xxx";
-	tst[2,0] = 7;
-	print(arr + "\n" + tst);
+#	arr = tst[2];
+#	arr[0] = "xxx";
+#	tst[2,0] = 7;
+#	print(arr + "\n" + tst);
 
 
 #	arr0 = [[1,2,3],[4.,5,6]];

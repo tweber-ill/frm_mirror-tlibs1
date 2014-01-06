@@ -10,12 +10,27 @@
 #include "yylexer.h"
 #include "parseobj.h"
 
-extern "C" int yylex(void* _pObj)
+// !! only used for yyerror which should better take it as argument to stay reentrant !!
+static ParseObj *g_pCurParseObj = 0;
+
+extern "C" int yylex(void* _yylval, void* _pParseObj)
 {
-	Lexer* pLexer = ((ParseObj*)_pObj)->pLexer;
+	g_pCurParseObj = (ParseObj*)_pParseObj;
+
+	if(_yylval==0 || _pParseObj==0)
+	{
+		std::cerr << "Error: Invalid lval or parseobj in lexer." << std::endl;
+		return 0;
+	}
+
+	YYSTYPE& yylval = *(YYSTYPE*)_yylval;
+	ParseObj* pParseObj = (ParseObj*)_pParseObj;
+	Lexer* pLexer = pParseObj->pLexer;
 	//pLexer->print();
 	
 	const Token& tok = pLexer->lex();
+	pParseObj->iCurLine = tok.iLine;
+
 	if(tok.type == LEX_TOKEN_END)
 		return 0;
 	else if(tok.type == LEX_TOKEN_INVALID)
@@ -70,12 +85,24 @@ extern "C" int yylex(void* _pObj)
 		}
 	}
 
-	std::cerr << "Error: Invalid token: " << tok.type << std::endl;
+	std::cerr << "Error (line " << pParseObj->iCurLine
+				<< " in \"" << pParseObj->strCurFile
+				<<"\"): Invalid token: " << tok.type << std::endl;
 	return 0;
 }
 
 
 extern "C" void yyerror(const char* pc)
 {
-	std::cerr << "Error: " << pc << "." << std::endl;
+	std::string strLine;
+	if(g_pCurParseObj)		// !!
+	{
+		std::ostringstream ostrLine;
+		ostrLine << " (line " << g_pCurParseObj->iCurLine;
+		ostrLine << " in \"" << g_pCurParseObj->strCurFile << "\"";
+		ostrLine << ")";
+		strLine = ostrLine.str();
+	}
+
+	std::cerr << "Error" << strLine << ": " << pc << "." << std::endl;
 }

@@ -1,0 +1,17 @@
+main()
+{
+	x = linspace(0, 4*pi, 128);
+	y1 = sin(x); y2 = cos(x);
+	yerr = vec(128) + 0.1;
+
+	params = map();
+	params["xlabel"] = "x-Achse";
+	params["ylabel"] = "y-Achse";
+	params["title"] = "Titel";
+	params["style"] = "point";
+
+	params2 = params;
+	params2["style"] = "line";
+
+	plot([[x,y1, yerr, params], [x,y2, params2]]);
+}

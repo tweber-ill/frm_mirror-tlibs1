@@ -1,0 +1,19 @@
+main()
+{
+	othermap = map();
+	othermap["x"] = "y";
+
+	a = map();
+	a["double value"] = 12.3;
+	a["string value"] = "Test";
+	a["array value"] = [1,2,3,4,5];
+	a["map value"] = othermap;
+
+	print("Map: " + a);
+	print("Map Element: " + str(a["array value"]));
+	print("Test: " + a["map value"]["x"]);
+
+	b = vec();
+	b[0] = 12.3;
+	print(b);
+}

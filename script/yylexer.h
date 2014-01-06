@@ -7,13 +7,14 @@
 #define __MIEZE_YYLEXER__
 
 #include "tokens.h"
+#include "parseobj.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
-int yylex(void*);
+int yylex(void*, void* _pParseObj=0);
 void yyerror(const char*);
 
 

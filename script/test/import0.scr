@@ -1,0 +1,15 @@
+__init__()
+{
+	print("Loading module import0...");
+
+	import("test/import1.scr");
+}
+
+main()
+{
+	print("In import0.scr");
+	test();
+	print("In import0.scr");
+
+	print("Global: " + glob);
+}

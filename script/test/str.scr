@@ -1,0 +1,11 @@
+main()
+{
+	print(80*"-");
+	a = input("Enter a = ");
+
+	print("Entered: \"" + a + "\"");
+	print("Trimmed: \"" + trim(a) + "\"");
+	print("Tokens: " + str(split(a)));
+	print("Int: " + int(a));
+	print("Real: " + real(a));
+}

@@ -169,9 +169,11 @@ void SymbolString::assign(Symbol *pSym)
 SymbolArray::~SymbolArray()
 {
 	for(Symbol *pSym : m_arr)
-		delete pSym;
+		if(pSym) delete pSym;
 	
 	m_arr.clear();
+
+	//std::cout << "symarr -> del" << std::endl;
 }
 
 Symbol* SymbolArray::ToType(SymbolType stype) const
@@ -218,7 +220,6 @@ std::string SymbolArray::print() const
 Symbol* SymbolArray::clone() const
 {
 	SymbolArray *pSym = new SymbolArray;
-	//*pSym = *this;
 	
 	pSym->m_arr.reserve(m_arr.size());
 
@@ -247,6 +248,146 @@ void SymbolArray::UpdateIndices()
 		UpdateIndex(iIdx);
 }
 
+std::vector<double> SymbolArray::ToDoubleArray() const
+{
+	std::vector<double> vec;
+	vec.reserve(m_arr.size());
+
+	for(const Symbol *pSym : m_arr)
+	{
+		double dVal = ((SymbolDouble*)pSym->ToType(SYMBOL_DOUBLE))->m_dVal;
+		vec.push_back(dVal);
+	}
+
+	return vec;
+}
+
+void SymbolArray::FromDoubleArray(const std::vector<double>& vec)
+{
+	m_arr.reserve(m_arr.size() + vec.size());
+
+	for(double d : vec)
+	{
+		SymbolDouble *pSym = new SymbolDouble;
+		pSym->m_dVal = d;
+		m_arr.push_back(pSym);
+	}
+}
+
+
+
+SymbolMap::~SymbolMap()
+{
+	for(t_map::value_type& val : m_map)
+		if(val.second) delete val.second;
+
+	m_map.clear();
+}
+
+Symbol* SymbolMap::ToType(SymbolType stype) const
+{
+	Symbol *pNewSym = 0;
+
+	if(stype == SYMBOL_MAP)
+	{
+		pNewSym = this->clone();
+	}
+	if(stype == SYMBOL_STRING)
+	{
+		SymbolString *pNewSymS = new SymbolString();
+		pNewSymS->m_strName = this->m_strName;
+		pNewSymS->m_strVal = print();
+
+		pNewSym = pNewSymS;
+	}
+	else
+		std::cerr << "Error: Cannot convert map to other type."
+					<< std::endl;
+
+	return pNewSym;
+}
+
+std::string SymbolMap::print() const
+{
+	std::ostringstream ostr;
+
+	ostr << "[";
+	unsigned int iIter = 0;
+	for(const t_map::value_type& val : m_map)
+	{
+		const Symbol* pSym = val.second;
+		ostr << val.first << " : " << (val.second ? val.second->print() : "");
+
+		if(iIter < m_map.size()-1)
+			ostr << ", ";
+
+		++iIter;
+	}
+	ostr << "]";
+
+	return ostr.str();
+}
+
+Symbol* SymbolMap::clone() const
+{
+	//std::cout << "SymbolMap::clone" << std::endl;
+	SymbolMap *pSym = new SymbolMap;
+
+	for(const t_map::value_type& val : m_map)
+		pSym->m_map.insert(t_map::value_type(val.first, val.second->clone()));
+
+	pSym->UpdateIndices();
+	return pSym;
+}
+
+void SymbolMap::assign(Symbol *pSym)
+{
+	//std::cout << "SymbolMap::assign" << std::endl;
+
+	SymbolMap *pOther = (SymbolMap*)pSym->ToType(GetType());
+	this->m_map = pOther->m_map;
+}
+
+void SymbolMap::UpdateIndex(const t_map::key_type& strKey)
+{
+	t_map::iterator iter = m_map.find(strKey);
+	if(iter != m_map.end() && iter->second)
+	{
+		//std::cout << "updating index for " << strKey << std::endl;
+
+		iter->second->m_pMap = this;
+		iter->second->m_strMapKey = iter->first;
+	}
+}
+
+void SymbolMap::UpdateIndices()
+{
+	for(const t_map::value_type& val : m_map)
+	{
+		//std::cout << "updating index for " << val.first << std::endl;
+
+		val.second->m_pMap = this;
+		val.second->m_strMapKey = val.first;
+	}
+}
+
+std::string SymbolMap::GetStringVal(const std::string& strKey, bool *pbHasVal) const
+{
+	if(pbHasVal) *pbHasVal = 0;
+
+	t_map::const_iterator iter = m_map.find(strKey);
+	if(iter == m_map.end())
+		return "";
+
+	if(pbHasVal) *pbHasVal = 1;
+
+	Symbol *pSym = iter->second;
+	if(!pSym)
+		return "";
+
+	if(pbHasVal) *pbHasVal = 1;
+	return pSym->print();
+}
 
 
 //--------------------------------------------------------------------------------
@@ -310,10 +451,21 @@ Symbol* SymbolTable::GetSymbol(const std::string& strKey)
 
 void SymbolTable::InsertSymbol(const std::string& strKey, Symbol *pSym)
 {
+	RemoveSymbol(strKey);
 	m_syms[strKey] = pSym;
 }
 
 void SymbolTable::RemoveSymbol(const std::string& strKey)
+{
+	t_syms::iterator iter = m_syms.find(strKey);
+	if(iter != m_syms.end())
+	{
+		if(iter->second) delete iter->second;
+		m_syms.erase(iter);
+	}
+}
+
+void SymbolTable::RemoveSymbolNoDelete(const std::string& strKey)
 {
 	m_syms.erase(strKey);
 }

@@ -8,15 +8,26 @@
 #include <fstream>
 #include <cmath>
 #include "parseobj.h"
+#include "script_helper.h"
+#include "helper/neutrons.hpp"
 
-const char* g_pcVersion = "Hermelin script interpreter, version 0.2";
+const char* g_pcVersion = "Hermelin script interpreter, version 0.4";
 
-extern int yydebug;
-int yyparse(void*);
+//extern int yydebug;
+extern int yyparse(void*);
 
 static void init_global_syms(SymbolTable *pSymTab)
 {
 	pSymTab->InsertSymbol("pi", new SymbolDouble(M_PI));
+
+	// hbar in eVs
+	pSymTab->InsertSymbol("hbar_eVs", new SymbolDouble(co::hbar / one_eV / units::si::second));
+
+	// hbar in Js
+	pSymTab->InsertSymbol("hbar", new SymbolDouble(co::hbar / units::si::joule / units::si::second));
+
+	// neutron mass
+	pSymTab->InsertSymbol("m_n", new SymbolDouble(co::m_n / units::si::kilogram));
 }
 
 
@@ -25,30 +36,20 @@ int main(int argc, char** argv)
 	if(argc<=1)
 	{
 		std::cout << "This is the " << g_pcVersion << "." << std::endl;
-		std::cout << "\tUsage: " << argv[0] << " <script file>" << std::endl;
+		std::cout << "\tUsage: " << argv[0] << " <script file> [arguments]" << std::endl;
 		return -1;
 	}
 
-	std::ifstream ifstr(argv[1]);
-	if(!ifstr.is_open())
-	{
-		std::cerr << "Error: Cannot open \"" << argv[1] << "\"." << std::endl;
+	const char* pcFile = argv[1];
+	char* pcInput = load_file(pcFile);
+	if(!pcInput)
 		return -2;
-	}
-
-	ifstr.seekg(0, std::ios::end);
-	std::size_t iFileLen = ifstr.tellg();
-	ifstr.seekg(0, std::ios::beg);
-
-	char* pcInput = new char[iFileLen+1];
-	ifstr.read(pcInput, iFileLen);
-	pcInput[iFileLen] = 0;
-
-
 
 	ParseObj par;
 	ParseInfo info;
-	par.pLexer = new Lexer(pcInput);
+
+	par.strCurFile = pcFile;
+	par.pLexer = new Lexer(pcInput, pcFile);
 
 	delete[] pcInput;
 	pcInput = 0;
@@ -63,7 +64,7 @@ int main(int argc, char** argv)
 	info.pGlobalSyms = new SymbolTable();
 	init_global_syms(info.pGlobalSyms);
 
-	yydebug = 0;
+	//yydebug = 0;
 	int iParseRet = yyparse(&par);
 
 	delete par.pLexer;
@@ -75,12 +76,21 @@ int main(int argc, char** argv)
 		return -4;
 	}
 
+	SymbolArray arrMainArgs;
+	for(int iArg=1; iArg<argc; ++iArg)
+	{
+		SymbolString *pSymArg = new SymbolString();
+		pSymArg->m_strVal = argv[iArg];
+		arrMainArgs.m_arr.push_back(pSymArg);
+	}
+	std::vector<Symbol*> vecMainArgs = { &arrMainArgs };
+
+	info.pmapModules->insert(ParseInfo::t_mods::value_type(pcFile, par.pRoot));
+	info.strExecFkt = "main";
+	info.pvecExecArg = &vecMainArgs;
+	info.strInitScrFile = pcFile;
 	par.pRoot->eval(info);
 	//info.pGlobalSyms->print();
-
-
-	delete info.pGlobalSyms;
-	delete par.pRoot;
 
 	return 0;
 }

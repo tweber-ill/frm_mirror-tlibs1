@@ -6,6 +6,46 @@
 #include "node.h"
 #include "calls.h"
 
+ParseInfo::ParseInfo() : pmapModules(0), phandles(0),
+			pmutexGlobal(0), pmutexInterpreter(0),
+			pvecExecArg(0), pGlobalSyms(0),
+			pCurFunction(0), pCurCaller(0), bWantReturn(0),
+			pCurLoop(0), bWantBreak(0), bWantContinue(0),
+			bDestroyParseInfo(1)
+{
+	pmapModules = new t_mods();
+	phandles = new HandleManager();
+	pmutexGlobal = new std::mutex();
+	pmutexInterpreter = new std::mutex();
+}
+
+ParseInfo::~ParseInfo()
+{
+	if(!bDestroyParseInfo)
+		return;
+
+	if(phandles) delete phandles;
+	if(pGlobalSyms) delete pGlobalSyms;
+	if(pmutexGlobal) delete pmutexGlobal;
+	if(pmutexInterpreter) delete pmutexInterpreter;
+
+	phandles = 0;
+	pGlobalSyms = 0;
+
+	if(pmapModules)
+	{
+		for(ParseInfo::t_mods::value_type vals : *pmapModules)
+		{
+			if(vals.second)
+				delete vals.second;
+		}
+
+		pmapModules->clear();
+		delete pmapModules;
+		pmapModules = 0;
+	}
+}
+
 template<typename T> T plus_op(T a, T b) { return a+b; }
 template<typename T> T minus_op(T a, T b) { return a-b; }
 template<typename T> T mult_op(T a, T b) { return a*b; }
@@ -103,7 +143,7 @@ static inline bool IsLogicalOp(NodeType op)
 	return 0;
 }
 
-Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
+Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 {
 	if(!pSymLeft || !pSymRight) return 0;
 
@@ -112,8 +152,90 @@ Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 	bool bCleanLeft = 0;
 	bool bCleanRight = 0;
 
+	// vector operations
+	if(pSymLeft->GetType()==SYMBOL_ARRAY || pSymRight->GetType()==SYMBOL_ARRAY)
+	{
+		SymbolArray* pSymResult = new SymbolArray();
+
+		// (vector op vector) piecewise operation
+		if(pSymLeft->GetType()==SYMBOL_ARRAY && pSymRight->GetType()==SYMBOL_ARRAY)
+		{
+			const std::vector<Symbol*>& vecLeft = ((SymbolArray*)pSymLeft)->m_arr;
+			const std::vector<Symbol*>& vecRight = ((SymbolArray*)pSymRight)->m_arr;
+
+			unsigned int iArrSize = std::min(vecLeft.size(), vecRight.size());
+			pSymResult->m_arr.reserve(iArrSize);
+
+			for(unsigned int iElem=0; iElem<iArrSize; ++iElem)
+			{
+				Symbol *pOpResult = Op(vecLeft[iElem], vecRight[iElem], op);
+				pSymResult->m_arr.push_back(pOpResult);
+			}
+		}
+		// (vector op scalar) operation
+		else if(pSymLeft->GetType()==SYMBOL_ARRAY && pSymRight->GetType()!=SYMBOL_ARRAY)
+		{
+			const std::vector<Symbol*>& vecLeft = ((SymbolArray*)pSymLeft)->m_arr;
+
+			unsigned int iArrSize = vecLeft.size();
+			pSymResult->m_arr.reserve(iArrSize);
+
+			for(unsigned int iElem=0; iElem<iArrSize; ++iElem)
+			{
+				Symbol *pOpResult = Op(vecLeft[iElem], pSymRight, op);
+				pSymResult->m_arr.push_back(pOpResult);
+			}
+
+		}
+		// (scalar op vector) operation
+		else if(pSymLeft->GetType()!=SYMBOL_ARRAY && pSymRight->GetType()==SYMBOL_ARRAY)
+		{
+			const std::vector<Symbol*>& vecRight = ((SymbolArray*)pSymRight)->m_arr;
+
+			unsigned int iArrSize = vecRight.size();
+			pSymResult->m_arr.reserve(iArrSize);
+
+			for(unsigned int iElem=0; iElem<iArrSize; ++iElem)
+			{
+				Symbol *pOpResult = Op(pSymLeft, vecRight[iElem], op);
+				pSymResult->m_arr.push_back(pOpResult);
+			}
+		}
+		return pSymResult;
+	}
+
+	// cast to equal symbol types
 	if(pSymLeft->GetType() != pSymRight->GetType())
 	{
+		//int * string
+		if(op==NODE_MULT && (pSymLeft->GetType()==SYMBOL_STRING||pSymRight->GetType()==SYMBOL_STRING))
+		{
+			int iVal = 0;
+			std::string strVal;
+			bool bValidIntStr = 0;
+
+			if(pSymLeft->GetType()==SYMBOL_STRING && pSymRight->GetType()==SYMBOL_INT)
+			{
+				iVal = ((SymbolInt*)pSymRight)->m_iVal;
+				strVal = ((SymbolString*)pSymLeft)->m_strVal;
+				bValidIntStr = 1;
+			}
+			else if(pSymRight->GetType()==SYMBOL_STRING && pSymLeft->GetType()==SYMBOL_INT)
+			{
+				iVal = ((SymbolInt*)pSymLeft)->m_iVal;
+				strVal = ((SymbolString*)pSymRight)->m_strVal;
+				bValidIntStr = 1;
+			}
+
+			if(bValidIntStr)
+			{
+				SymbolString *pSymStrRet = new SymbolString();
+				for(int iCopy=0; iCopy<iVal; ++iCopy)
+					pSymStrRet->m_strVal += strVal;
+				return pSymStrRet;
+			}
+		}
+
 		if(pLeft->GetType()==SYMBOL_INT && pRight->GetType()==SYMBOL_DOUBLE)
 		{
 			pLeft = pLeft->ToType(SYMBOL_DOUBLE);
@@ -138,9 +260,10 @@ Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 		}
 	}
 
+
+	Symbol *pRes = 0;
 	if(pLeft->GetType() == SYMBOL_DOUBLE)
 	{
-		Symbol *pRes = 0;
 		if(IsLogicalOp(op))
 		{
 			SymbolInt *pResult = new SymbolInt();
@@ -175,12 +298,9 @@ Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			}
 			pRes = pResult;
 		}
-
-		return pRes;
 	}
 	else if(pLeft->GetType() == SYMBOL_INT)
 	{
-		Symbol *pRes = 0;
 		if(IsLogicalOp(op))
 		{
 			SymbolInt *pResult = new SymbolInt();
@@ -213,12 +333,9 @@ Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			}
 			pRes = pResult;
 		}
-
-		return pRes;
 	}
 	else if(pLeft->GetType() == SYMBOL_STRING)
 	{
-		Symbol *pRes = 0;
 		if(IsLogicalOp(op))
 		{
 			SymbolInt *pResult = new SymbolInt();
@@ -251,14 +368,12 @@ Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			}
 			pRes = pResult;
 		}
-
-		return pRes;
 	}
 	
 	if(bCleanLeft) delete pLeft;
 	if(bCleanRight) delete pRight;
 
-	return 0;
+	return pRes;
 }
 
 
@@ -274,6 +389,38 @@ NodeFunction* ParseInfo::GetFunction(const std::string& strName)
 	return 0;
 }
 
+
+
+std::string Node::linenr(const std::string& strErr, const ParseInfo &info) const
+{
+	std::ostringstream ostr;
+
+	ostr << strErr << " ";
+	ostr << "(";
+
+	if(m_iLine==0)
+		ostr << "unknown line";
+	else
+		ostr << "line " << m_iLine;
+
+	if(info.pCurFunction)
+	{
+		const std::string& strFile = info.pCurFunction->m_strScrFile;
+		std::string strFkt = info.pCurFunction->GetName();
+
+		if(strFile == "")
+			ostr << " in unknown file";
+		else
+			ostr << " in \"" << strFile << "\"";
+
+		if(strFkt != "")
+			ostr << " -> \"" << strFkt << "\"";
+	}
+
+	ostr << "): ";
+
+	return ostr.str();
+}
 
 //--------------------------------------------------------------------------------
 
@@ -343,84 +490,128 @@ NodeFunction::NodeFunction(Node* pLeft, Node* pMiddle, Node* pRight)
 
 Node* NodeReturn::clone() const
 {
-	return new NodeReturn(m_pExpr?m_pExpr->clone():0);
+	NodeReturn* pNode = new NodeReturn(m_pExpr?m_pExpr->clone():0);
+	*((Node*)pNode) = *((Node*)this);
+	return pNode;
+}
+
+Node* NodeBreak::clone() const
+{
+	NodeBreak* pNode = new NodeBreak();
+	*((Node*)pNode) = *((Node*)this);
+	return pNode;
+}
+
+Node* NodeContinue::clone() const
+{
+	NodeContinue* pNode = new NodeContinue();
+	*((Node*)pNode) = *((Node*)this);
+	return pNode;
 }
 
 Node* NodeIdent::clone() const
 {
-	return new NodeIdent(m_strIdent);
+	NodeIdent* pNode = new NodeIdent(m_strIdent);
+	*((Node*)pNode) = *((Node*)this);
+	return pNode;
 }
 
 Node* NodeCall::clone() const
 {
-	return new NodeCall(m_pIdent?m_pIdent->clone():0,
+	NodeCall* pNode = new NodeCall(m_pIdent?m_pIdent->clone():0,
 						m_pArgs?m_pArgs->clone():0);
+	*((Node*)pNode) = *((Node*)this);
+	return pNode;
 }
 
 Node* NodeIf::clone() const
 {
-	return new NodeIf(m_pExpr?m_pExpr->clone():0,
+	NodeIf* pNode = new NodeIf(m_pExpr?m_pExpr->clone():0,
 					m_pIf?m_pIf->clone():0,
 					m_pElse?m_pElse->clone():0);
+	*((Node*)pNode) = *((Node*)this);
+	return pNode;
 }
 
 Node* NodeWhile::clone() const
 {
-	return new NodeWhile(m_pExpr?m_pExpr->clone():0,
+	NodeWhile* pNode = new NodeWhile(m_pExpr?m_pExpr->clone():0,
 						m_pStmt?m_pStmt->clone():0);
+	*((Node*)pNode) = *((Node*)this);
+	return pNode;
 }
 
 Node* NodeRangedFor::clone() const
 {
-	return new NodeRangedFor(m_pIdent?m_pIdent->clone():0,
+	NodeRangedFor* pNode = new NodeRangedFor(m_pIdent?m_pIdent->clone():0,
 							m_pExpr?m_pExpr->clone():0,
 							m_pStmt?m_pStmt->clone():0);
+	*((Node*)pNode) = *((Node*)this);
+	return pNode;
 }
 
 Node* NodeDouble::clone() const
 {
-	return new NodeDouble(m_dVal);
+	NodeDouble* pNode = new NodeDouble(m_dVal);
+	*((Node*)pNode) = *((Node*)this);
+	return pNode;
 }
 
 Node* NodeInt::clone() const
 {
-	return new NodeInt(m_iVal);
+	NodeInt* pNode = new NodeInt(m_iVal);
+	*((Node*)pNode) = *((Node*)this);
+	return pNode;
 }
 
 Node* NodeString::clone() const
 {
-	return new NodeString(m_strVal);
+	NodeString* pNode = new NodeString(m_strVal);
+	*((Node*)pNode) = *((Node*)this);
+	return pNode;
 }
 
 Node* NodeArray::clone() const
 {
-	return new NodeArray(m_pArr?m_pArr->clone():0);
+	NodeArray* pNode = new NodeArray(m_pArr?m_pArr->clone():0);
+	*((Node*)pNode) = *((Node*)this);
+	return pNode;
 }
 
 Node* NodeArrayAccess::clone() const
 {
-	return new NodeArrayAccess(m_pIdent?m_pIdent->clone():0,
-							m_pExpr?m_pExpr->clone():0);
+	NodeArrayAccess *pNode = new NodeArrayAccess(m_pIdent?m_pIdent->clone():0,
+										m_pExpr?m_pExpr->clone():0);
+	*((Node*)pNode) = *((Node*)this);
+	return pNode;
 }
 
 Node* NodeUnaryOp::clone() const
 {
-	return new NodeUnaryOp(m_pChild?m_pChild->clone():0,
-							m_type);
+	NodeUnaryOp* pNode = new NodeUnaryOp(m_pChild?m_pChild->clone():0,
+										m_type);
+	*((Node*)pNode) = *((Node*)this);
+	return pNode;
 }
 
 Node* NodeBinaryOp::clone() const
 {
-	return new NodeBinaryOp(m_pLeft?m_pLeft->clone():0,
+	NodeBinaryOp* pNode = new NodeBinaryOp(m_pLeft?m_pLeft->clone():0,
 							m_pRight?m_pRight->clone():0,
 							m_type);
+	*((Node*)pNode) = *((Node*)this);
+	return pNode;
 }
 
 Node* NodeFunction::clone() const
 {
-	return new NodeFunction(m_pIdent?m_pIdent->clone():0,
+	NodeFunction* pFkt = new NodeFunction(m_pIdent?m_pIdent->clone():0,
 							m_pArgs?m_pArgs->clone():0,
 							m_pStmts?m_pStmts->clone():0);
+	pFkt->m_strScrFile = this->m_strScrFile;
+
+	*((Node*)pFkt) = *((Node*)this);
+	return pFkt;
 }
 
 

@@ -13,12 +13,20 @@ thread_func(a)
 
 main()
 {
+	nthreads = thread_hwcount();
 	print("Hardware supports " + thread_hwcount() + " threads.\n");
 
-	th1 = thread("thread_func", "thread 1");
-	th2 = thread("thread_func", "thread 2");
+	th = vec(nthreads);
+
+	i = 0;
+	while(i less nthreads)
+	{
+		str = "thread " + (i+1);
+		th[i] = thread("thread_func", str);
+		i = i+1;
+	}
 
 	print("In main thread");
-	join(th1, th2);
+	join(th);
 	print("In main thread -- end");
 }

@@ -1,6 +1,6 @@
 tst()
 {
-	return 1;
+#	return 1;
 
 	a = 5;
 	return a;

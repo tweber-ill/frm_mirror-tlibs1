@@ -8,22 +8,19 @@
 #include <sstream>
 #include <boost/tokenizer.hpp>
 #include <ctype.h>
-
+#include "helper/string.h"
 
 Lexer::Lexer() : m_bOk(1), 
-		m_strWhitespace(" \t\n\r"), m_strSep("=+-*/\%^{}[]();,\":"),
+		m_strWhitespace(" \t\r"), m_strSep("=+-*/\%^{}[]();,\":\n"),
 		m_iLexPos(0), m_iNumToks(0)
 {
 	m_tokEnd.type = LEX_TOKEN_END;
 }
 
-Lexer::Lexer(const std::istream& istr) : Lexer()
+Lexer::Lexer(const std::string& strInput, const char* pcFile)
+		: Lexer()
 {
-	// TODO
-}
-
-Lexer::Lexer(const std::string& strInput) : Lexer()
-{
+	if(pcFile) m_strFile = pcFile;
 	load(strInput);
 }
 
@@ -51,22 +48,59 @@ std::string Lexer::RemoveComments(const std::string& strInput)
 	return strRet;
 }
 
-static void find_all_and_replace(std::string& str1, const std::string& str_old,
-                                                const std::string& str_new)
+static unsigned char ctoi(unsigned char c)
 {
-	while(1)
-	{
-		std::size_t pos = str1.find(str_old);
-		if(pos==std::string::npos)
-				break;
-		str1.replace(pos, str_old.length(), str_new);
-	}
+	return c-'0';
 }
 
-void Lexer::ReplaceExcapes(std::string& str)
+void Lexer::ReplaceEscapes(std::string& str)
 {
 	find_all_and_replace(str, "\\n", "\n");
 	find_all_and_replace(str, "\\t", "\t");
+	find_all_and_replace(str, "\\v", "\v");
+	find_all_and_replace(str, "\\f", "\f");
+	find_all_and_replace(str, "\\b", "\b");
+	find_all_and_replace(str, "\\a", "\a");
+	find_all_and_replace(str, "\\r", "\r");
+
+// TODO: handle "" in string
+	find_all_and_replace(str, "\\\"", "\"");
+	find_all_and_replace(str, "\\\'", "\'");
+	find_all_and_replace(str, "\\\\", "\\");
+
+
+	// octal numbers
+	if(str.length()>=4) for(int i=0; i<str.length()-3; ++i)
+	{
+		unsigned char c0 = str[i+1];
+		unsigned char c1 = str[i+2];
+		unsigned char c2 = str[i+3];
+
+		if(str[i]=='\\' && isdigit(c0) && isdigit(c1) && isdigit(c2))
+		{
+			//std::cout << "Found: " << str.substr(i, 4) << std::endl;
+			char c[2];
+			c[0] = ctoi(c0)*8*8 + ctoi(c1)*8 + ctoi(c2);
+			c[1] = 0;
+			str.replace(i, 4, c);
+		}
+	}
+
+	// hex numbers
+	if(str.length()>=4) for(int i=0; i<str.length()-3; ++i)
+	{
+		unsigned char c0 = str[i+2];
+		unsigned char c1 = str[i+3];
+
+		if(str[i]=='\\' && tolower(str[i+1])=='x' && isdigit(c0) && isdigit(c1))
+		{
+			//std::cout << "Found: " << str.substr(i, 4) << std::endl;
+			char c[2];
+			c[0] = ctoi(c0)*16 + ctoi(c1);
+			c[1] = 0;
+			str.replace(i, 4, c);
+		}
+	}
 }
 
 std::vector<std::string> Lexer::GetStringTable(const std::string& strInput)
@@ -84,7 +118,7 @@ std::vector<std::string> Lexer::GetStringTable(const std::string& strInput)
 				str = "";
 			else
 			{
-				ReplaceExcapes(str);
+				ReplaceEscapes(str);
 				vecStr.push_back(str);
 			}
 			continue;
@@ -102,6 +136,10 @@ std::vector<std::string> Lexer::GetStringTable(const std::string& strInput)
 void Lexer::load(const std::string& _strInput)
 {
 	std::string strInput = RemoveComments(_strInput);
+
+	// Lexer cannot yet handle \" directly -> replace it
+	find_all_and_replace(strInput, "\\\"", "\'");
+
 	std::vector<std::string> vecStr = GetStringTable(strInput);
 
 	typedef boost::char_separator<char> t_sep;
@@ -112,9 +150,15 @@ void Lexer::load(const std::string& _strInput)
 
 	bool bInString = 0;
 	unsigned int iStringIdx = 0;
+	unsigned int iCurLine = 1;
 	for(const std::string& str : tok)
 	{
 		if(str.length() == 0) continue;
+		if(str == "\n")
+		{
+			++iCurLine;
+			continue;
+		}
 
 		if(str=="\"")
 		{
@@ -133,6 +177,7 @@ void Lexer::load(const std::string& _strInput)
 					continue;
 				}
 				tokStr.strVal = vecStr[iStringIdx];
+				tokStr.iLine = iCurLine;
 				m_vecToks.push_back(tokStr);
 
 				++iStringIdx;
@@ -147,6 +192,7 @@ void Lexer::load(const std::string& _strInput)
 
 
 		Token tok;
+		tok.iLine = iCurLine;
 
 		if(str.length()==1 && m_strSep.find(str)!=std::string::npos)
 		{
@@ -158,40 +204,23 @@ void Lexer::load(const std::string& _strInput)
 			tok.type = LEX_TOKEN_IDENT;
 			tok.strVal = str;
 
-			if(str == "if")
-				tok.type = LEX_TOKEN_IF;
-			else if(str == "else")
-				tok.type = LEX_TOKEN_ELSE;
-			else if(str == "for")
-				tok.type = LEX_TOKEN_FOR;
-			else if(str == "while")
-				tok.type = LEX_TOKEN_WHILE;
-			else if(str == "return")
-				tok.type = LEX_TOKEN_RETURN;
-			else if(str == "break")
-				tok.type = LEX_TOKEN_RETURN;
-			else if(str == "continue")
-				tok.type = LEX_TOKEN_RETURN;
-			else if(str == "and")
-				tok.type = LEX_TOKEN_LOG_AND;
-			else if(str == "or")
-				tok.type = LEX_TOKEN_LOG_OR;
-			else if(str == "not")
-				tok.type = LEX_TOKEN_LOG_NOT;
-			else if(str == "eq")
-				tok.type = LEX_TOKEN_LOG_EQ;
-			else if(str == "neq")
-				tok.type = LEX_TOKEN_LOG_NEQ;
-			else if(str == "less")
-				tok.type = LEX_TOKEN_LOG_LESS;
-			else if(str == "greater")
-				tok.type = LEX_TOKEN_LOG_GREATER;
-			else if(str == "leq")
-				tok.type = LEX_TOKEN_LOG_LEQ;
-			else if(str == "geq")
-				tok.type = LEX_TOKEN_LOG_GEQ;
-			else if(str == "global")
-				tok.type = LEX_TOKEN_GLOBAL;
+			if(str == "if")				tok.type = LEX_TOKEN_IF;
+			else if(str == "else")		tok.type = LEX_TOKEN_ELSE;
+			else if(str == "for")		tok.type = LEX_TOKEN_FOR;
+			else if(str == "while")		tok.type = LEX_TOKEN_WHILE;
+			else if(str == "return")	tok.type = LEX_TOKEN_RETURN;
+			else if(str == "break")		tok.type = LEX_TOKEN_BREAK;
+			else if(str == "continue")	tok.type = LEX_TOKEN_CONTINUE;
+			else if(str == "and")		tok.type = LEX_TOKEN_LOG_AND;
+			else if(str == "or")		tok.type = LEX_TOKEN_LOG_OR;
+			else if(str == "not")		tok.type = LEX_TOKEN_LOG_NOT;
+			else if(str == "eq")		tok.type = LEX_TOKEN_LOG_EQ;
+			else if(str == "neq")		tok.type = LEX_TOKEN_LOG_NEQ;
+			else if(str == "less")		tok.type = LEX_TOKEN_LOG_LESS;
+			else if(str == "greater")	tok.type = LEX_TOKEN_LOG_GREATER;
+			else if(str == "leq")		tok.type = LEX_TOKEN_LOG_LEQ;
+			else if(str == "geq")		tok.type = LEX_TOKEN_LOG_GEQ;
+			else if(str == "global")	tok.type = LEX_TOKEN_GLOBAL;
 		}
 		else if(isdigit(str[0]))
 		{
@@ -201,7 +230,12 @@ void Lexer::load(const std::string& _strInput)
 		else
 		{
 			m_bOk = 0;
-			std::cerr << "Error: Unknown token: \"" << str << "\"." << std::endl;
+			std::string strFile;
+			if(m_strFile != "")
+				strFile = std::string(" in \"") + m_strFile + "\"";
+
+			std::cerr << "Error (line " << iCurLine << strFile << "): "
+					<< "Unknown token: \"" << str << "\"." << std::endl;
 			continue;
 		}
 

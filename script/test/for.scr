@@ -5,7 +5,11 @@ main()
 	for(b : a)
 	{
 		print("b = " + b);
+		if(b eq 2)
+			b = "Test";
 	}
+
+	print(a);
 
 
 	x = 12;

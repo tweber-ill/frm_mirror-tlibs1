@@ -18,19 +18,25 @@ enum SymbolType
 	SYMBOL_INT,
 	SYMBOL_STRING,
 	
-	SYMBOL_ARRAY
+	SYMBOL_ARRAY,
+	SYMBOL_MAP
 };
 
 struct SymbolArray;
+struct SymbolMap;
 struct Symbol
 {
 	std::string m_strName;
-	std::string m_strIdent;		// last seen identifier
+	std::string m_strIdent;			// last seen identifier
 
-	unsigned int m_iArrIdx;		// if symbol is contained in an array
+	unsigned int m_iArrIdx;			// if symbol is contained in an array
 	SymbolArray *m_pArr;
 
-	Symbol() : m_iArrIdx(0), m_pArr(0) {}
+	std::string m_strMapKey;		// if symbol is contained in a map
+	SymbolMap *m_pMap;
+
+	Symbol() : m_iArrIdx(0), m_pArr(0), m_pMap(0) {}
+	virtual ~Symbol() {}
 	
 	virtual SymbolType GetType() const = 0;
 	virtual std::string GetTypeName() const = 0;
@@ -41,6 +47,18 @@ struct Symbol
 	virtual void assign(Symbol *pSym) = 0;
 
 	virtual bool IsNotZero() const = 0;
+
+/*	virtual void copyfrom(Symbol *pOther)
+	{
+		this->m_strName = pOther->m_strName;
+		this->m_strIdent = pOther->m_strIdent;
+
+		this->m_iArrIdx = pOther->m_ArrIdx;
+		this->m_pArr = pOther->m_pArr;
+
+		this->m_strMapKey = pOther->m_strMapKey;
+		this->m_pMap = pOther->m_pMap;
+	}*/
 };
 
 struct SymbolDouble : public Symbol
@@ -51,7 +69,7 @@ struct SymbolDouble : public Symbol
 	SymbolDouble(double dVal) : m_dVal(dVal) {}
 
 	virtual SymbolType GetType() const { return SYMBOL_DOUBLE; }
-	virtual std::string GetTypeName() const { return "double"; }
+	virtual std::string GetTypeName() const { return "real"; }
 	virtual Symbol* ToType(SymbolType stype) const;
 
 	virtual std::string print() const;
@@ -76,7 +94,7 @@ struct SymbolInt : public Symbol
 	virtual Symbol* clone() const;
 	virtual void assign(Symbol *pSym);
 
-	virtual bool IsNotZero() const { return m_iVal != 0.; }
+	virtual bool IsNotZero() const { return m_iVal != 0; }
 };
 
 struct SymbolString : public Symbol
@@ -85,6 +103,7 @@ struct SymbolString : public Symbol
 	
 	SymbolString() : Symbol() {}
 	SymbolString(const char* pcStr) : m_strVal(pcStr) {}
+	SymbolString(const std::string& str) : m_strVal(str) {}
 
 	virtual SymbolType GetType() const { return SYMBOL_STRING; }
 	virtual std::string GetTypeName() const { return "string"; }
@@ -104,12 +123,15 @@ struct SymbolArray : public Symbol
 {
 	std::vector<Symbol*> m_arr;
 	
-	SymbolArray() : Symbol() {}
+	SymbolArray() : Symbol() { /*std::cout << "symarr -> new" << std::endl;*/ }
 	virtual ~SymbolArray();
 	
 	virtual SymbolType GetType() const { return SYMBOL_ARRAY; }
 	virtual std::string GetTypeName() const { return "vector"; }
 	virtual Symbol* ToType(SymbolType stype) const;
+
+	std::vector<double> ToDoubleArray() const;
+	void FromDoubleArray(const std::vector<double>& vec);
 
 	virtual std::string print() const;
 	virtual Symbol* clone() const;
@@ -119,6 +141,30 @@ struct SymbolArray : public Symbol
 
 	void UpdateIndex(unsigned int);
 	void UpdateIndices();
+};
+
+struct SymbolMap : public Symbol
+{
+	typedef std::map<std::string, Symbol*> t_map;
+	t_map m_map;
+
+	SymbolMap() : Symbol() {}
+	virtual ~SymbolMap();
+
+	virtual SymbolType GetType() const { return SYMBOL_MAP; }	
+	virtual std::string GetTypeName() const { return "map"; }
+	virtual Symbol* ToType(SymbolType stype) const;
+
+	virtual std::string print() const;
+	virtual Symbol* clone() const;
+	virtual void assign(Symbol *pSym);
+
+	virtual bool IsNotZero() const { return 0; }
+
+	void UpdateIndex(const t_map::key_type& strKey);
+	void UpdateIndices();
+
+	std::string GetStringVal(const std::string& strKey, bool *pbHasVal=0) const;
 };
 
 
@@ -139,6 +185,7 @@ public:
 	Symbol* GetSymbol(const std::string& strKey);
 	void InsertSymbol(const std::string& strKey, Symbol *pSym);
 	void RemoveSymbol(const std::string& strKey);
+	void RemoveSymbolNoDelete(const std::string& strKey);
 	bool IsPtrInMap(const Symbol* pSym) const;
 };
 

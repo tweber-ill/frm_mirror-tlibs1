@@ -52,12 +52,10 @@ struct Token
 	double dVal;
 	std::string strVal;
 	
-	Token()
-	{
-		type = LEX_TOKEN_INVALID;
-		cOp = 0;
-		dVal = 0.;
-	}
+	unsigned int iLine;
+
+	Token() : type(LEX_TOKEN_INVALID), cOp(0), dVal(0), iLine(0)
+	{}
 };
 
 class Lexer
@@ -71,12 +69,13 @@ protected:
 	std::vector<Token> m_vecToks;
 	Token m_tokEnd;
 
+	std::string m_strFile;
+
 	void FixTokens();
 
 public:
 	Lexer();
-	Lexer(const std::istream& istr);
-	Lexer(const std::string& str);
+	Lexer(const std::string& str, const char* pcFile=0);
 	virtual ~Lexer();
 
 	void load(const std::string& strInput);
@@ -88,7 +87,7 @@ public:
 
 	static std::string RemoveComments(const std::string& strInput);
 	static std::vector<std::string> GetStringTable(const std::string& strInput);
-	static void ReplaceExcapes(std::string& str);
+	static void ReplaceEscapes(std::string& str);
 
 	bool IsOk() const { return m_bOk; }
 };
