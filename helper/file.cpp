@@ -11,7 +11,13 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <QtCore/QDir>
+
+#ifndef NO_QT
+	#include <QtCore/QDir>
+#else
+       #include <sys/types.h>
+       #include <dirent.h>
+#endif
 
 unsigned int get_file_size(std::istream& istr)
 {
@@ -35,7 +41,15 @@ unsigned int get_file_pos(std::istream& istr)
 
 bool dir_exists(const char* pcDir)
 {
+#ifndef NO_QT
 	return QDir(pcDir).exists();
+#else
+	DIR* dir = opendir(pcDir);
+	bool bExists = (errno!=ENOENT);
+
+	if(dir) closedir(dir);
+	return bExists;
+#endif
 }
 
 
@@ -74,11 +88,15 @@ int TmpFile::mkstemp(std::string& strFile)
 bool TmpFile::open()
 {
 	const std::string strMemDir = "/dev/shm";
+	std::string strTmpDir = "/tmp";
+#ifndef NO_QT
+		strTmpDir = QDir::tempPath().toStdString();
+#endif
 
 	if(dir_exists(strMemDir.c_str()))
 		m_strFile =  strMemDir;
 	else
-		m_strFile = QDir::tempPath().toStdString();
+		m_strFile = strTmpDir;
 
 	if(m_strFile[m_strFile.length()-1] != '/')
 		m_strFile += "/";

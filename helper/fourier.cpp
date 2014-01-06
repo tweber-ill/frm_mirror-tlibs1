@@ -432,6 +432,9 @@ bool Fourier::get_contrast(double dNumOsc, const double* pDatIn,
 	dC = dAmp/dOffs;
 	dPh = atan2(dImag, dReal) + M_PI/2.;
 
+	// half a bin
+	dPh -= 2.*M_PI*dNumOsc*0.5/double(m_iSize);
+
 	// half of first bin
 	//dPh += - 0.5/dNumOsc * 2.*M_PI;
 

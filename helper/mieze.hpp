@@ -8,6 +8,7 @@
 #define __MIEZE_FORMULAS__
 
 #include "neutrons.hpp"
+#include "linalg.h"
 
 #include <cmath>
 
@@ -34,7 +35,7 @@ namespace ublas = boost::numeric::ublas;
 
 
 //------------------------------------------------------------------------------
-// MIEZE time (eq. 117 from [Keller, Golub, Gähler, 2000])
+// MIEZE time (eq. 117 from [Keller, Golub, G��hler, 2000])
 // tau = hbar * omega * Ls / (m*v^3)
 template<class Sys, class Y>
 units::quantity<units::unit<units::time_dimension, Sys>, Y>
@@ -198,7 +199,8 @@ Y mieze_reduction_sample_cuboid(const units::quantity<units::unit<units::length_
 					const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& fM,
 					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam,
 					const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& twotheta,
-					const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& theta_s)
+					const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& theta_s,
+					unsigned int ITERS=100)
 {
 	using namespace units;
 	using namespace co;
@@ -218,9 +220,9 @@ Y mieze_reduction_sample_cuboid(const units::quantity<units::unit<units::length_
 
 	ublas::vector<Y> q_dir = ki-kf;
 
-	quantity<unit<length_dimension, Sys>, Y> dX = len_x / 100.;
-	quantity<unit<length_dimension, Sys>, Y> dY = len_y / 100.;
-	quantity<unit<length_dimension, Sys>, Y> dZ = len_z / 100.;
+	quantity<unit<length_dimension, Sys>, Y> dX = len_x / Y(ITERS);
+	quantity<unit<length_dimension, Sys>, Y> dY = len_y / Y(ITERS);
+	quantity<unit<length_dimension, Sys>, Y> dZ = len_z / Y(ITERS);
 
 	quantity<unit<length_dimension, Sys>, Y> x, y, z;
 
@@ -256,7 +258,7 @@ Y mieze_reduction_sample_cuboid(const units::quantity<units::unit<units::length_
 	return integral / vol;
 }
 
-// with extinction
+// Scattering with extinction
 template<class Sys, class Y>
 Y mieze_reduction_sample_cuboid_extinction(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_x,
 			const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_y,
@@ -265,9 +267,9 @@ Y mieze_reduction_sample_cuboid_extinction(const units::quantity<units::unit<uni
 			const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& fM,
 			const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam,
 			const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& twotheta,
-			const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& theta_s)
+			unsigned int ITERS=100)
 {
-	const Y SUBDIVS = 100.;
+	const Y SUBDIVS = Y(ITERS);
 
 	using namespace units;
 	using namespace co;
@@ -276,6 +278,7 @@ Y mieze_reduction_sample_cuboid_extinction(const units::quantity<units::unit<uni
 	typedef quantity<unit<volume_dimension, Sys>, Y> volume;
 	typedef const quantity<unit<frequency_dimension, Sys>, Y> frequency;
 	typedef quantity<unit<velocity_dimension, Sys> > velocity;
+	typedef quantity<unit<plane_angle_dimension, Sys>, Y> angle;
 
 	frequency omegaM = 2.*M_PI*fM;
 	velocity v = lam2p(lam)/co::m_n;
@@ -292,22 +295,33 @@ Y mieze_reduction_sample_cuboid_extinction(const units::quantity<units::unit<uni
 
 	ublas::vector<Y> q_dir = ki-kf;
 
-	length dX = len_x / SUBDIVS;
-	length dY = len_y / SUBDIVS;
-	length dZ = len_z / SUBDIVS;
 
 	length x, y, z;
-
 	volume integral = 0.*si::meter*si::meter*si::meter;
 	volume vol = 0.*si::meter*si::meter*si::meter;
 
+
+	angle theta_s = twotheta/2. - M_PI/2.*si::radians;
 	const Y stheta_s = sin(theta_s);
 	const Y ctheta_s = cos(theta_s);
 
+
+	length zpath = 1./(mu*2.);	// reflexive: path taken twice
+	//zpath /= ctheta_s;
+	//if(zpath > len_z)
+		zpath = len_z;
+
+	length dX = len_x / SUBDIVS;
+	length dY = len_y / SUBDIVS;
+	length dZ = zpath / SUBDIVS;
+
+	const volume func_det = dX*dY*dZ;
+
 	for(x=-len_x/2.; x<len_x/2.; x+=dX)
 		for(y=-len_y/2.; y<len_y/2.; y+=dY)
-			for(z=-len_z/2.; z<len_z/2.; z+=dZ)
+			for(z=0.*si::meter; z<zpath; z+=dZ)
 			{
+				//z = len_z/2.;
 				length pos[3];
 				// rotate sample
 				pos[0] = ctheta_s*x + stheta_s*z;
@@ -318,20 +332,39 @@ Y mieze_reduction_sample_cuboid_extinction(const units::quantity<units::unit<uni
 				Y phase = omegaM * path_diff / v;
 
 
-				// TODO
-				length dist = units::abs(path_diff);
-				Y extinction_factor = exp(-mu * dist);
-				//std::cout << "extinction: " << extinction_factor << std::endl;
+				length dist = z/*+len_z/2.*/;
+				dist /= ctheta_s;
 
+				Y extinction_factor = exp(-mu * dist * 2.); // reflexive: path taken twice
+				//std::cout << "extinction: " << extinction_factor << ", phase: " << phase << std::endl;
+				//extinction_factor = 1.;
 
-				volume func_det = dX*dY*dZ;
-				func_det *= extinction_factor;
-
-				vol += func_det;
-				integral += func_det * cos(phase);
+				//if(extinction_factor > 1 / std::exp(1))
+				{
+					vol += extinction_factor * func_det;
+					integral += extinction_factor * func_det * cos(phase);
+				}
 			}
 
 	return integral / vol;
+}
+
+
+// Bragg scattering with extinction
+template<class Sys, class Y>
+Y mieze_reduction_sample_cuboid_bragg(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_x,
+			const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_y,
+			const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_z,
+			const units::quantity<units::unit<units::derived_dimension<units::length_base_dimension, -1>::type, Sys>, Y>& mu,
+			const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& fM,
+			const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam,
+			const units::quantity<units::unit<units::length_dimension, Sys>, Y>& d_ana,
+			unsigned int ITERS=100)
+{
+	const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>
+		twotheta = bragg_real_twotheta(d_ana, lam, 1.);
+
+	return mieze_reduction_sample_cuboid_extinction(len_x, len_y, len_z, mu, fM, lam, twotheta, ITERS);
 }
 
 //------------------------------------------------------------------------------
