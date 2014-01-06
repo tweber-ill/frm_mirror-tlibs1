@@ -398,6 +398,23 @@ void LoadTxt::Unload()
 	m_uiColLen=0;
 }
 
+std::map<std::string, std::string> LoadTxt::GetCommMapSingle() const
+{
+	typedef std::map<std::string, std::string> tmap;
+	tmap mapRet;
+
+	for(const t_mapComm::value_type& val : m_mapComm)
+	{
+		std::string strKey;
+		if(val.second.size() > 0)
+			strKey = val.second[0];
+
+		mapRet.insert(tmap::value_type(val.first, strKey));
+	}
+
+	return mapRet;
+}
+
 void LoadTxt::GetMinMax(double& dMin, double& dMax) const
 {
 	dMin = std::numeric_limits<double>::max();

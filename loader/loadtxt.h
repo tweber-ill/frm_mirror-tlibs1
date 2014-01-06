@@ -101,6 +101,10 @@ class LoadTxt
 
 		const t_mapComm& GetCommMap() const { return m_mapComm; }
 		t_mapComm& GetCommMap() { return m_mapComm; }
+
+		// only first value in map's "second" vector
+		std::map<std::string, std::string> GetCommMapSingle() const;
+
 		void GetMinMax(double& dMin, double& dMax) const;
 
 		void for_each(void (*)(double*));
