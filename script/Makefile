@@ -5,8 +5,8 @@ DEFINES = -DNO_QT -DNO_COMP
 FLAGS = -std=c++11 -fopenmp ${OPT_FLAGS} ${DEFINES}
 LIBS = -lstdc++ -lm -lboost_iostreams-mt
 
-hermelin: script.o lexer.o main.o yylexer.o symbol.o node.o node_eval.o calls.o handles.o gnuplot.o file.o string.o loadtxt.o rand.o fourier.o script_helper.o
-	${CC} ${FLAGS} -o hermelin script.o lexer.o main.o yylexer.o symbol.o node.o node_eval.o calls.o handles.o gnuplot.o file.o string.o loadtxt.o rand.o fourier.o script_helper.o ${LIBS}
+hermelin: script.o lexer.o main.o yylexer.o symbol.o node.o node_eval.o calls.o handles.o gnuplot.o file.o string.o loadtxt.o rand.o fourier.o script_helper.o calls_plot.o calls_math.o calls_file.o calls_thread.o globals.o
+	${CC} ${FLAGS} -o hermelin script.o lexer.o main.o yylexer.o symbol.o node.o node_eval.o calls.o handles.o gnuplot.o file.o string.o loadtxt.o rand.o fourier.o script_helper.o calls_plot.o calls_math.o calls_file.o calls_thread.o globals.o ${LIBS}
 
 script.o: script.yy
 	bison --defines=tokens.h script.yy
@@ -30,8 +30,22 @@ node_eval.o: node_eval.cpp node.h
 symbol.o: symbol.cpp symbol.h
 	${CC} ${FLAGS} -c -o symbol.o symbol.cpp
 
+
 calls.o: calls.cpp calls.h
 	${CC} ${FLAGS} -c -o calls.o calls.cpp
+
+calls_plot.o: calls_plot.cpp calls_plot.h
+	${CC} ${FLAGS} -c -o calls_plot.o calls_plot.cpp
+
+calls_math.o: calls_math.cpp calls_math.h
+	${CC} ${FLAGS} -c -o calls_math.o calls_math.cpp
+
+calls_file.o: calls_file.cpp calls_file.h
+	${CC} ${FLAGS} -c -o calls_file.o calls_file.cpp
+
+calls_thread.o: calls_thread.cpp calls_thread.h
+	${CC} ${FLAGS} -c -o calls_thread.o calls_thread.cpp
+
 
 handles.o: handles.cpp handles.h
 	${CC} ${FLAGS} -c -o handles.o handles.cpp
@@ -56,6 +70,10 @@ fourier.o: helper/fourier.cpp helper/fourier.h
 
 script_helper.o: script_helper.cpp script_helper.h
 	${CC} ${FLAGS} -c -o script_helper.o script_helper.cpp
+
+globals.o: globals.cpp globals.h
+	${CC} ${FLAGS} -c -o globals.o globals.cpp
+
 
 clean:
 	rm -f *.o

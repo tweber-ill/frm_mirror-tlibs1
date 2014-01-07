@@ -1,6 +1,7 @@
 /*
  * Script interpreter
  * @author tweber
+ * @date 2013-2014
  */
 
 #ifndef __MIEZE_NODE__
@@ -63,6 +64,9 @@ struct ParseInfo
 	{
 		return bWantReturn || bWantBreak || bWantContinue;
 	}
+
+protected:
+	void init_global_syms();
 };
 
 

@@ -1,6 +1,7 @@
 /*
  * Script interpreter
  * @author tweber
+ * @date 2013-2014
  */
 
 #include "node.h"
@@ -14,6 +15,7 @@ ParseInfo::ParseInfo() : pmapModules(0), phandles(0),
 			bDestroyParseInfo(1)
 {
 	pmapModules = new t_mods();
+	pGlobalSyms = new SymbolTable();
 	phandles = new HandleManager();
 	pmutexGlobal = new std::mutex();
 	pmutexInterpreter = new std::mutex();
@@ -45,6 +47,7 @@ ParseInfo::~ParseInfo()
 		pmapModules = 0;
 	}
 }
+
 
 template<typename T> T plus_op(T a, T b) { return a+b; }
 template<typename T> T minus_op(T a, T b) { return a-b; }

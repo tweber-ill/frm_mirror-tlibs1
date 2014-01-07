@@ -1,6 +1,7 @@
 /*
  * Symbol Table
  * @author tweber
+ * @date 2013
  */
 
 #include "symbol.h"

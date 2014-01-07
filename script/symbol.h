@@ -1,6 +1,7 @@
 /*
  * Symbol Table
  * @author tweber
+ * @date 2013
  */
 
 #ifndef __MIEZE_SYM__
@@ -40,6 +41,8 @@ struct Symbol
 	
 	virtual SymbolType GetType() const = 0;
 	virtual std::string GetTypeName() const = 0;
+
+	// cast and clone symbol
 	virtual Symbol* ToType(SymbolType stype) const = 0;
 
 	virtual std::string print() const = 0;
@@ -48,17 +51,9 @@ struct Symbol
 
 	virtual bool IsNotZero() const = 0;
 
-/*	virtual void copyfrom(Symbol *pOther)
-	{
-		this->m_strName = pOther->m_strName;
-		this->m_strIdent = pOther->m_strIdent;
-
-		this->m_iArrIdx = pOther->m_ArrIdx;
-		this->m_pArr = pOther->m_pArr;
-
-		this->m_strMapKey = pOther->m_strMapKey;
-		this->m_pMap = pOther->m_pMap;
-	}*/
+	// cast value without converting or cloning symbol
+	virtual int GetValInt() const { return 0; }
+	virtual double GetValDouble() const { return 0.; }
 };
 
 struct SymbolDouble : public Symbol
@@ -77,6 +72,9 @@ struct SymbolDouble : public Symbol
 	virtual void assign(Symbol *pSym);
 
 	virtual bool IsNotZero() const { return m_dVal != 0.; }
+
+	virtual int GetValInt() const { return int(m_dVal); }
+	virtual double GetValDouble() const { return m_dVal; }
 };
 
 struct SymbolInt : public Symbol
@@ -95,6 +93,9 @@ struct SymbolInt : public Symbol
 	virtual void assign(Symbol *pSym);
 
 	virtual bool IsNotZero() const { return m_iVal != 0; }
+
+	virtual int GetValInt() const { return m_iVal; }
+	virtual double GetValDouble() const { return double(m_iVal); }
 };
 
 struct SymbolString : public Symbol

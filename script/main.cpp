@@ -1,35 +1,37 @@
 /*
  * Simple Script
  * @author tweber
+ * @date 2013
  */
 
 #include "flags.h" 
 #include <iostream>
 #include <fstream>
 #include <cmath>
+
 #include "parseobj.h"
 #include "script_helper.h"
-#include "helper/neutrons.hpp"
+
+#include "globals.h"
+#include "calls_plot.h"
+#include "calls_math.h"
+#include "calls_file.h"
+#include "calls_thread.h"
 
 const char* g_pcVersion = "Hermelin script interpreter, version 0.4";
 
 //extern int yydebug;
 extern int yyparse(void*);
 
-static void init_global_syms(SymbolTable *pSymTab)
+void init_all_externals(SymbolTable* pGlobals)
 {
-	pSymTab->InsertSymbol("pi", new SymbolDouble(M_PI));
+	init_global_syms(pGlobals);
 
-	// hbar in eVs
-	pSymTab->InsertSymbol("hbar_eVs", new SymbolDouble(co::hbar / one_eV / units::si::second));
-
-	// hbar in Js
-	pSymTab->InsertSymbol("hbar", new SymbolDouble(co::hbar / units::si::joule / units::si::second));
-
-	// neutron mass
-	pSymTab->InsertSymbol("m_n", new SymbolDouble(co::m_n / units::si::kilogram));
+	init_ext_thread_calls();
+	init_ext_file_calls();
+	init_ext_math_calls();
+	init_ext_plot_calls();
 }
-
 
 int main(int argc, char** argv)
 {
@@ -60,9 +62,7 @@ int main(int argc, char** argv)
 		return -3;
 	}
 
-
-	info.pGlobalSyms = new SymbolTable();
-	init_global_syms(info.pGlobalSyms);
+	init_all_externals(info.pGlobalSyms);
 
 	//yydebug = 0;
 	int iParseRet = yyparse(&par);
