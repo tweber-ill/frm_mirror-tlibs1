@@ -243,7 +243,7 @@ static Symbol* fkt_array_size(const std::vector<Symbol*>& vecSyms,
 	
 	if(pSymArr->GetType() != SYMBOL_ARRAY)
 	{
-		std::cerr << linenr("Warning", info) << "vec_size needs an array type argument." << std::endl;
+		std::cerr << linenr("Warning", info) << "vec_size needs a vector type argument." << std::endl;
 		return pSymRet;
 	}
 
@@ -283,6 +283,53 @@ static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
 	return pSymIter;
 }
 
+
+static Symbol* fkt_zip(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info, SymbolTable* pSymTab)
+{
+	SymbolArray* pArrRet = new SymbolArray();
+	std::vector<Symbol*>* pVec = &pArrRet->m_arr;
+
+	bool bFirst = 1;
+	unsigned int iSize = 0;
+	for(Symbol* pSym : vecSyms)
+	{
+		if(pSym->GetType() != SYMBOL_ARRAY)
+		{
+			std::cerr << linenr("Error", info) << "Symbol \"" << pSym->m_strName
+					<< "\" is of type " << pSym->GetTypeName()
+					<< ", but zip needs vectors." << std::endl;
+			continue;
+		}
+
+		std::vector<Symbol*>& curSym = ((SymbolArray*)pSym)->m_arr;
+		if(bFirst)
+		{
+			iSize = curSym.size();
+			pVec->reserve(iSize);
+			for(unsigned int iCurSym=0; iCurSym<iSize; ++iCurSym)
+				pVec->push_back(new SymbolArray());
+
+			bFirst = 0;
+		}
+
+		if(curSym.size() < iSize)
+		{
+			for(unsigned int i=0; i<iSize-curSym.size(); ++i)
+			{
+				delete *pVec->rbegin();
+				pVec->pop_back();
+			}
+
+			iSize = curSym.size();
+		}
+
+		for(unsigned int i=0; i<iSize; ++i)
+			((SymbolArray*)(*pVec)[i])->m_arr.push_back(curSym[i]->clone());
+	}
+
+	return pArrRet;
+}
 // --------------------------------------------------------------------------------
 
 
@@ -391,6 +438,7 @@ static t_mapFkts g_mapFkts =
 	// array operations
 	t_mapFkts::value_type("vec_size", fkt_array_size),
 	t_mapFkts::value_type("cur_iter", fkt_cur_iter),
+	t_mapFkts::value_type("zip", fkt_zip),
 };
 
 // --------------------------------------------------------------------------------

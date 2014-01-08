@@ -6,6 +6,8 @@ tst(a)
 
 main()
 {
+	print(linspace(0,14,15));
+
 	yy = [1.,2.,3.];
 	yy[0] = (tstval="Test");
 	tstval = "1234567";

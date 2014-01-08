@@ -235,17 +235,11 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 	}
 
 	std::string strIdent;
-	Symbol *pSymbol = 0;
+	Symbol* pSymbol = m_pIdent->eval(info, pSym);
 	if(m_pIdent->m_type == NODE_IDENT)
-	{
-		strIdent = ((NodeIdent*)m_pIdent)->m_strIdent;
-		pSymbol = pSym->GetSymbol(strIdent);
-	}
+		strIdent = pSymbol->m_strIdent;
 	else
-	{
 		strIdent = "<tmp_sym>";
-		pSymbol = m_pIdent->eval(info, pSym);
-	}
 
 	if(!pSymbol)
 	{
