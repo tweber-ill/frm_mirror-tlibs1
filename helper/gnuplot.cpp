@@ -6,13 +6,13 @@
 
 #include "gnuplot.h"
 #include "misc.h"
+#include "string.h"
 #include <sstream>
 namespace ios = boost::iostreams;
 
 
-GnuPlot::GnuPlot() : m_iStartCounter(0), m_pipe(0), m_pfds(0), m_psbuf(0), m_postr(0) {}
+GnuPlot::GnuPlot() : m_iStartCounter(0), m_pipe(0), m_pfds(0), m_psbuf(0), m_postr(0), m_bTermLocked(0) {}
 GnuPlot::~GnuPlot() { DeInit(); }
-
 
 void GnuPlot::DeInit()
 {
@@ -50,6 +50,45 @@ void GnuPlot::Init()
 	(*m_postr) << "set nokey\n";
 	(*m_postr) << "set palette rgbformulae 33,13,10\n";
 	//(*m_postr) << "set palette defined (0 \"blue\", 0.3333 \"cyan\", 0.6666 \"yellow\", 1 \"red\")\n";
+}
+
+void GnuPlot::SetTerminal(int iWnd, const char* pcBackend)
+{
+	if(m_bTermLocked) return;
+
+	(*m_postr) << "set output\n";
+	(*m_postr) << "set obj 1 rectangle behind fillcolor rgbcolor \"white\" from screen 0,0 to screen 1,1\n";
+
+	(*m_postr) << "set term " << pcBackend << " enhanced " << iWnd << "\n";	
+}
+
+void GnuPlot::SetFileTerminal(const char* pcFile)
+{
+	if(m_bTermLocked) return;
+
+	std::string strFile = pcFile;
+	std::string strExt = get_fileext(strFile);
+
+	//std::cout << "File: " << strFile << "\nExtension: " << strExt << std::endl;
+
+	if(is_equal(strExt, "pdf", 0))
+	{
+		//(*m_postr) << "set term pdfcairo enhanced color font \"Helvetica\"\n";
+		(*m_postr) << "set term pdf enhanced color\n";
+	}
+	else if(is_equal(strExt, "ps", 0))
+	{
+		//(*m_postr) << "set term postscript eps enhanced color \"Helvetica\" 24\n";
+		(*m_postr) << "set term postscript eps enhanced color\n";
+	}
+	else
+	{
+		std::cerr << "Error: Unknown file extension \"" 
+			<< strExt << "\" for output terminal." << std::endl;
+		return;
+	}
+
+	(*m_postr) << "set output \"" << strFile << "\"\n";
 }
 
 void GnuPlot::SimplePlot(const std::vector<double>& vecX, const std::vector<double>& vecY,
@@ -160,7 +199,7 @@ void GnuPlot::FinishPlot()
 		std::string strCmd = BuildCmd();
 		//std::cout << "Plot cmd: " << strCmd << std::endl;
 		(*m_postr) << strCmd;
-		(*m_postr) << "refresh\n";
+		//(*m_postr) << "refresh\n";
 		m_postr->flush();
 		m_vecObjs.clear();
 	}

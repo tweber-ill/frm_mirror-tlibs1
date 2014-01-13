@@ -42,6 +42,8 @@ protected:
 	std::string BuildTable(const std::vector<double>& vecX, const std::vector<double>& vecY,
 			const std::vector<double>& vecYErr, const std::vector<double>& vecXErr);
 
+	bool m_bTermLocked;
+
 public:
 	GnuPlot();
 	virtual ~GnuPlot();
@@ -51,6 +53,9 @@ public:
 
 	bool IsReady() const;
 	std::ostream& GetStream();
+
+	void SetTerminal(int iWnd=0, const char* pcBackend="x11");
+	void SetFileTerminal(const char* pcFile);
 
 	void StartPlot();
 	void AddLine(const PlotObj& obj);
@@ -69,6 +74,9 @@ public:
 	void SetYRange(double dMin, double dMax);
 
 	void SetColorBarRange(double dMin, double dMax, bool bCyclic=0);
+
+	void LockTerminal() { m_bTermLocked = 1; }
+	void UnlockTerminal() { m_bTermLocked = 0; }
 };
 
 
