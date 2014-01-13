@@ -12,7 +12,7 @@
 // --------------------------------------------------------------------------------
 // plotting
 
-#define DEFAULT_TERM "x11";
+#define DEFAULT_TERM "qt";
 static GnuPlot g_plot;
 
 static inline bool is_array_of_arrays(const Symbol* pSym)
@@ -102,6 +102,52 @@ static XYLimits get_plot_limits(SymbolMap* pParamMap)
 }
 
 
+static void set_plot_params(GnuPlot& plot, SymbolMap* pParamMap, PlotObj* pCurPlotObj=0, XYLimits* pLimits=0)
+{
+	bool bHasVal = 0;
+	std::string strTitle = pParamMap->GetStringVal("title", &bHasVal);
+	if(bHasVal) plot.SetTitle(strTitle.c_str());
+
+	std::string strXLab = pParamMap->GetStringVal("xlabel", &bHasVal);
+	if(bHasVal) plot.SetXLabel(strXLab.c_str());
+
+	std::string strYLab = pParamMap->GetStringVal("ylabel", &bHasVal);
+	if(bHasVal) plot.SetYLabel(strYLab.c_str());
+
+	if(pCurPlotObj)
+	{
+		std::string strStyle = pParamMap->GetStringVal("style", &bHasVal);
+		if(bHasVal) pCurPlotObj->bConnectLines = (strStyle=="line");
+
+		std::string strLegend = pParamMap->GetStringVal("legend", &bHasVal);
+		if(bHasVal) pCurPlotObj->strLegend = strLegend;
+	}
+
+	XYLimits lim = get_plot_limits(pParamMap);
+	if(lim.bHasX) plot.SetXRange(lim.dMinX, lim.dMaxX);
+	if(lim.bHasY) plot.SetYRange(lim.dMinY, lim.dMaxY);
+
+
+	// for 2D plot
+	if(pLimits)
+	{
+		*pLimits = lim;
+		if(pLimits->bHasCB) plot.SetColorBarRange(pLimits->dMinCB, pLimits->dMaxCB, pLimits->bCBCyclic);
+	}
+
+
+	// terminal
+	std::string strTerm = DEFAULT_TERM;
+	std::string strUserTerm = pParamMap->GetStringVal("term", &bHasVal);
+	if(bHasVal) strTerm = strUserTerm;
+
+	int iPlotWnd = 0;
+	int iUserPlotWnd = atoi(pParamMap->GetStringVal("window", &bHasVal).c_str());
+	if(bHasVal) iPlotWnd = iUserPlotWnd;
+
+	plot.SetTerminal(iPlotWnd, strTerm.c_str());
+}
+
 static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 			ParseInfo& info, SymbolTable* pSymTab)
 {
@@ -118,11 +164,13 @@ static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 		g_plot.StartPlot();
 		for(Symbol *pArr : vecSyms)
 		{
-			// ignore non-array arguments
-			if(pArr->GetType() != SYMBOL_ARRAY)
-				continue;
+			SymbolType symType = pArr->GetType();
 
-			fkt_plot(((SymbolArray*)pArr)->m_arr, info, pSymTab);
+			// ignore non-array arguments
+			if(symType == SYMBOL_ARRAY)
+				fkt_plot(((SymbolArray*)pArr)->m_arr, info, pSymTab);
+			else if(symType == SYMBOL_MAP)
+				set_plot_params(g_plot, (SymbolMap*)pArr);
 		}
 		g_plot.FinishPlot();
 	}
@@ -147,39 +195,7 @@ static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 
 		// parameter map given as last argument
 		if(vecSyms[iNumSyms-1]->GetType()==SYMBOL_MAP)
-		{
-			SymbolMap *pParamMap = (SymbolMap*)vecSyms[iNumSyms-1];
-
-			bool bHasVal = 0;
-			std::string strTitle = pParamMap->GetStringVal("title", &bHasVal);
-			if(bHasVal) g_plot.SetTitle(strTitle.c_str());
-
-			std::string strXLab = pParamMap->GetStringVal("xlabel", &bHasVal);
-			if(bHasVal) g_plot.SetXLabel(strXLab.c_str());
-
-			std::string strYLab = pParamMap->GetStringVal("ylabel", &bHasVal);
-			if(bHasVal) g_plot.SetYLabel(strYLab.c_str());
-
-			std::string strStyle = pParamMap->GetStringVal("style", &bHasVal);
-			if(bHasVal) obj.bConnectLines = (strStyle=="line");
-
-			std::string strLegend = pParamMap->GetStringVal("legend", &bHasVal);
-			if(bHasVal) obj.strLegend = strLegend;
-
-			XYLimits lim = get_plot_limits(pParamMap);
-			if(lim.bHasX) g_plot.SetXRange(lim.dMinX, lim.dMaxX);
-			if(lim.bHasY) g_plot.SetYRange(lim.dMinY, lim.dMaxY);
-
-			std::string strTerm = DEFAULT_TERM;
-			std::string strUserTerm = pParamMap->GetStringVal("term", &bHasVal);
-			if(bHasVal) strTerm = strUserTerm;
-
-			int iPlotWnd = 0;
-			int iUserPlotWnd = atoi(pParamMap->GetStringVal("window", &bHasVal).c_str());
-			if(bHasVal) iPlotWnd = iUserPlotWnd;
-
-			g_plot.SetTerminal(iPlotWnd, strTerm.c_str());
-		}
+			set_plot_params(g_plot, (SymbolMap*)vecSyms[iNumSyms-1], &obj);
 
 		g_plot.StartPlot();
 		g_plot.AddLine(obj);
@@ -225,31 +241,10 @@ static Symbol* fkt_plot2d(const std::vector<Symbol*>& vecSyms,
 		double dRMinX=1., dRMaxX=-1., dRMinY=1., dRMaxY=-1.;
 		if(pMapParam)
 		{
-			bool bHasVal = 0;
-			std::string strTitle = pMapParam->GetStringVal("title", &bHasVal);
-			if(bHasVal) g_plot.SetTitle(strTitle.c_str());
-
-			std::string strXLab = pMapParam->GetStringVal("xlabel", &bHasVal);
-			if(bHasVal) g_plot.SetXLabel(strXLab.c_str());
-
-			std::string strYLab = pMapParam->GetStringVal("ylabel", &bHasVal);
-			if(bHasVal) g_plot.SetYLabel(strYLab.c_str());
-
-			XYLimits lim = get_plot_limits(pMapParam);
-			if(lim.bHasX) { dRMinX = lim.dMinX; dRMaxX = lim.dMaxX; }
-			if(lim.bHasY) { dRMinY = lim.dMinY; dRMaxY = lim.dMaxY; }
-			if(lim.bHasCB) g_plot.SetColorBarRange(lim.dMinCB, lim.dMaxCB, lim.bCBCyclic);
-
-
-			std::string strTerm = DEFAULT_TERM;
-			std::string strUserTerm = pMapParam->GetStringVal("term", &bHasVal);
-			if(bHasVal) strTerm = strUserTerm;
-
-			int iPlotWnd = 0;
-			int iUserPlotWnd = atoi(pMapParam->GetStringVal("window", &bHasVal).c_str());
-			if(bHasVal) iPlotWnd = iUserPlotWnd;
-
-			g_plot.SetTerminal(iPlotWnd, strTerm.c_str());
+			XYLimits lim;
+			set_plot_params(g_plot, (SymbolMap*)pMapParam, 0, &lim);
+        	        if(lim.bHasX) { dRMinX = lim.dMinX; dRMaxX = lim.dMaxX; }
+	                if(lim.bHasY) { dRMinY = lim.dMinY; dRMaxY = lim.dMaxY; }
 		}
 
 		g_plot.SimplePlot2d(vecXY, dRMinX, dRMaxX, dRMinY, dRMaxY);
