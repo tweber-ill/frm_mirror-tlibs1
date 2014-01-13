@@ -95,6 +95,9 @@ enum NodeType
 	NODE_ARRAY,
 	NODE_ARRAY_ACCESS,
 
+	NODE_MAP,
+	NODE_PAIR,
+
 	NODE_IDENTS,
 	NODE_IDENT,
 
@@ -374,8 +377,43 @@ struct NodeArray : public Node
 	
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 	virtual Node* clone() const;
+};
 
-protected:
+struct NodeMap : public Node
+{
+	Node *m_pMap;
+
+	NodeMap(NodeMap* pMap);
+	NodeMap(void* pMap)
+		: NodeMap((NodeMap*)pMap)
+	{}
+
+	virtual ~NodeMap()
+	{
+		if(m_pMap) delete m_pMap;
+	}
+
+	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;	
+	virtual Node* clone() const;
+};
+
+struct NodePair : public Node
+{
+	Node *m_pFirst, *m_pSecond;
+
+	NodePair(Node *pFirst, Node *pSecond);
+	NodePair(void *pFirst, void *pSecond)
+		: NodePair((NodePair*)pFirst, (NodePair*)pSecond)
+	{}
+
+	virtual ~NodePair()
+	{
+		if(m_pFirst) delete m_pFirst;
+		if(m_pSecond) delete m_pSecond;
+	}
+
+	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Node* clone() const;
 };
 
 struct NodeArrayAccess : public Node

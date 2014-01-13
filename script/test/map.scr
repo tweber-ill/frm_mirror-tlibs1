@@ -1,5 +1,8 @@
 main()
 {
+	print(a = ["test" : 4, "abc" : "cde"] + ["test2" : 123]);
+	print(a["test"] + "\n");
+
 	othermap = map();
 	othermap["x"] = "y";
 

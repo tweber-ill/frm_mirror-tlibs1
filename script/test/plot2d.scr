@@ -30,4 +30,5 @@ main()
 	}
 	
 	plot2d(a, params);
+	#fileplot2d("tst.pdf", a, params);
 }

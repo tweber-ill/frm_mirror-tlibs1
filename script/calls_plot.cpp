@@ -12,6 +12,7 @@
 // --------------------------------------------------------------------------------
 // plotting
 
+#define DEFAULT_TERM "x11";
 static GnuPlot g_plot;
 
 static inline bool is_array_of_arrays(const Symbol* pSym)
@@ -102,7 +103,7 @@ static XYLimits get_plot_limits(SymbolMap* pParamMap)
 
 
 static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+			ParseInfo& info, SymbolTable* pSymTab)
 {
 	g_plot.Init();
 
@@ -168,6 +169,16 @@ static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 			XYLimits lim = get_plot_limits(pParamMap);
 			if(lim.bHasX) g_plot.SetXRange(lim.dMinX, lim.dMaxX);
 			if(lim.bHasY) g_plot.SetYRange(lim.dMinY, lim.dMaxY);
+
+			std::string strTerm = DEFAULT_TERM;
+			std::string strUserTerm = pParamMap->GetStringVal("term", &bHasVal);
+			if(bHasVal) strTerm = strUserTerm;
+
+			int iPlotWnd = 0;
+			int iUserPlotWnd = atoi(pParamMap->GetStringVal("window", &bHasVal).c_str());
+			if(bHasVal) iPlotWnd = iUserPlotWnd;
+
+			g_plot.SetTerminal(iPlotWnd, strTerm.c_str());
 		}
 
 		g_plot.StartPlot();
@@ -228,6 +239,17 @@ static Symbol* fkt_plot2d(const std::vector<Symbol*>& vecSyms,
 			if(lim.bHasX) { dRMinX = lim.dMinX; dRMaxX = lim.dMaxX; }
 			if(lim.bHasY) { dRMinY = lim.dMinY; dRMaxY = lim.dMaxY; }
 			if(lim.bHasCB) g_plot.SetColorBarRange(lim.dMinCB, lim.dMaxCB, lim.bCBCyclic);
+
+
+			std::string strTerm = DEFAULT_TERM;
+			std::string strUserTerm = pMapParam->GetStringVal("term", &bHasVal);
+			if(bHasVal) strTerm = strUserTerm;
+
+			int iPlotWnd = 0;
+			int iUserPlotWnd = atoi(pMapParam->GetStringVal("window", &bHasVal).c_str());
+			if(bHasVal) iPlotWnd = iUserPlotWnd;
+
+			g_plot.SetTerminal(iPlotWnd, strTerm.c_str());
 		}
 
 		g_plot.SimplePlot2d(vecXY, dRMinX, dRMaxX, dRMinY, dRMaxY);
@@ -241,6 +263,47 @@ static Symbol* fkt_plot2d(const std::vector<Symbol*>& vecSyms,
 	return 0;
 }
 
+
+static Symbol* _fkt_fileplot(const std::vector<Symbol*>& vecSyms, 
+				ParseInfo& info, SymbolTable* pSymTab,
+				Symbol* (*pPltFkt)(const::std::vector<Symbol*>&, ParseInfo&, SymbolTable*))
+{
+	g_plot.Init();
+	if(vecSyms.size() < 1 || vecSyms[0]->GetType()!=SYMBOL_STRING)
+	{
+		std::cerr << linenr("Error", info) 
+			<< "First argument to fileplot has to be the file name." << std::endl;
+		return 0;
+	}
+
+	const std::string& strFile = ((SymbolString*)vecSyms[0])->m_strVal;
+	g_plot.SetFileTerminal(strFile.c_str());
+	g_plot.LockTerminal();
+
+	std::vector<Symbol*> vecPlot;
+	vecPlot.reserve(vecSyms.size()-1);
+	for(unsigned int iSym=1; iSym<vecSyms.size(); ++iSym)
+		vecPlot.push_back(vecSyms[iSym]);
+
+	Symbol* pSymRet = pPltFkt(vecPlot, info, pSymTab);
+
+	g_plot.UnlockTerminal();
+	return pSymRet;
+}
+
+static Symbol* fkt_fileplot(const std::vector<Symbol*>& vecSyms,
+				ParseInfo& info, SymbolTable* pSymTab)
+{
+	_fkt_fileplot(vecSyms, info, pSymTab, fkt_plot);
+} 
+
+static Symbol* fkt_fileplot2d(const std::vector<Symbol*>& vecSyms,
+				ParseInfo& info, SymbolTable* pSymTab)
+{
+	_fkt_fileplot(vecSyms, info, pSymTab, fkt_plot2d);
+} 
+
+
 // --------------------------------------------------------------------------------
 
 
@@ -251,6 +314,9 @@ extern void init_ext_plot_calls()
 	{
 		t_mapFkts::value_type("plot", fkt_plot),
 		t_mapFkts::value_type("plot2d", fkt_plot2d),
+
+		t_mapFkts::value_type("fileplot", fkt_fileplot),
+		t_mapFkts::value_type("fileplot2d", fkt_fileplot2d),
 	};
 
 	add_ext_calls(mapFkts);

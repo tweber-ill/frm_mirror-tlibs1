@@ -176,6 +176,9 @@ static Symbol* fkt_typeof(const std::vector<Symbol*>& vecSyms,
 static Symbol* fkt_map(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
+	if(vecSyms.size()>=1 && vecSyms[0]->GetType()==SYMBOL_MAP)
+		return vecSyms[0]->clone();
+
 	return new SymbolMap();
 }
 // --------------------------------------------------------------------------------
@@ -191,6 +194,10 @@ static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
 	if(vecSyms.size()<1)
 		return new SymbolArray();
 	
+	if(vecSyms.size()>=1 && vecSyms[0]->GetType()==SYMBOL_ARRAY)
+		return vecSyms[0]->clone();
+
+
 	Symbol *pSymSize = vecSyms[0];
 	if(pSymSize->GetType() != SYMBOL_INT)
 	{

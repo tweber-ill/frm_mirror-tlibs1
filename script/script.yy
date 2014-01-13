@@ -74,6 +74,8 @@
 %type<pNode> stmt
 %type<pNode> expr
 %type<pNode> args
+%type<pNode> pair
+%type<pNode> map_args
 %type<pNode> idents
 %type<pNode> ident
 
@@ -136,6 +138,15 @@ args:	expr ',' args		{ $$ = new NodeBinaryOp($1, $3, NODE_ARGS); set_linenr($$, 
 	| 	/*eps*/				{ $$ = 0; }
 	;
 
+
+pair: expr ':' expr		{ $$ = new NodePair($1, $3); set_linenr($$, pParseObj); }
+	;
+
+map_args: pair ',' map_args	{ $$ = new NodeBinaryOp($1, $3, NODE_ARGS); set_linenr($$, pParseObj); }
+	| pair			{ $$ = $1; }
+//	| 	/*eps*/		{ $$ = 0; }
+	;
+
 idents:	ident ',' idents	{ $$ = new NodeBinaryOp($1, $3, NODE_IDENTS); set_linenr($$, pParseObj); }
 	|   ident				{ $$ = $1; } 
 	| 	/*eps*/				{ $$ = 0; }
@@ -174,7 +185,8 @@ expr:	'(' expr ')'		{ $$ = $2; }
 	| ident					{ $$ = $1; }
 	| ident '(' args ')'	{ $$ = new NodeCall($1, $3);  set_linenr($$, pParseObj); }
 	
-	| '[' args ']'				{ $$ = new NodeArray($2); set_linenr($$, pParseObj); }
+	| '[' args ']'			{ $$ = new NodeArray($2); set_linenr($$, pParseObj); }
+	| '[' map_args ']'		{ $$ = new NodeMap($2); set_linenr($$, pParseObj); }
 	| expr '[' args ']'	 	{ $$ = new NodeArrayAccess($1, $3); set_linenr($$, pParseObj); }
 	;
 

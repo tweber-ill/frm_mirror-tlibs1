@@ -199,13 +199,75 @@ Symbol* NodeString::eval(ParseInfo &info, SymbolTable *pSym) const
 	return m_pSymbol;
 }
 
+Symbol* NodePair::eval(ParseInfo &info, SymbolTable *pSym) const
+{
+	if(info.IsExecDisabled()) return 0;
+
+	std::cerr << linenr("Error", info) 
+		<< "Pairs should not be evaluated directly." 
+		<< std::endl;
+	return 0;
+}
+
+Symbol* NodeMap::eval(ParseInfo &info, SymbolTable *pSym) const
+{
+	if(info.IsExecDisabled()) return 0;
+
+	NodeBinaryOp *pMap = (NodeBinaryOp*)m_pMap;
+	std::vector<Node*> vecNodes;
+	if(pMap) vecNodes = pMap->flatten(NODE_ARGS);
+
+	SymbolMap *pSymMap = new SymbolMap;
+
+	for(Node* pNode : vecNodes)
+	{
+		if(!pNode) continue;
+		if(pNode->m_type != NODE_PAIR)
+		{
+			std::cerr << linenr("Error", info) 
+				<< "Maps have to consist of key-value pairs." 
+				<< std::endl;
+			continue;
+		}
+
+		Symbol* pSymFirst = 0;
+		Symbol* pSymSecond = 0;
+
+		if(((NodePair*)pNode)->m_pFirst)
+			pSymFirst = ((NodePair*)pNode)->m_pFirst->eval(info, pSym);
+		if(((NodePair*)pNode)->m_pSecond)
+			pSymSecond = ((NodePair*)pNode)->m_pSecond->eval(info, pSym);
+
+		if(pSymFirst && pSymSecond)
+		{
+			if(pSymFirst->GetType() != SYMBOL_STRING)
+			{
+				std::cerr << linenr("Error", info) 
+					<< "Only string keys are supported at the moment."
+					<< std::endl;
+				continue; 
+			}
+
+			const std::string& strKey = ((SymbolString*)pSymFirst)->m_strVal;
+
+			pSymMap->m_map.insert(
+				SymbolMap::t_map::value_type(strKey, pSymSecond->clone()));
+		}
+
+		safe_delete(pSymFirst, pSym, info.pGlobalSyms);
+		safe_delete(pSymSecond, pSym, info.pGlobalSyms);
+	}
+
+	return pSymMap;
+}
 
 Symbol* NodeArray::eval(ParseInfo &info, SymbolTable *pSym) const
 {
 	if(info.IsExecDisabled()) return 0;
 
 	NodeBinaryOp *pArr = (NodeBinaryOp*)m_pArr;
-	std::vector<Node*> vecNodes = pArr->flatten(NODE_ARGS);
+	std::vector<Node*> vecNodes;
+	if(pArr) vecNodes = pArr->flatten(NODE_ARGS);
 
 	SymbolArray *pSymArr = new SymbolArray;
 	pSymArr->m_arr.reserve(vecNodes.size());

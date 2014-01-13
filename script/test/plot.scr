@@ -1,21 +1,15 @@
 main()
 {
-	plotparams = map();
-	plotparams["xlabel"] = "x";
-	plotparams["ylabel"] = "y";
-	plotparams["ylimits"] = "-1.1 1.1";
-
 	i=0;
-	while(i less 100)
+	while(i less 500)
 	{
-		plotparams["title"] = "Parameter: " + i;
+		strTitle = "Parameter: " + i;
 
 		ph = i/500.;
 		x = linspace(0, 2*pi, 64);
 		y = sin(x + ph);
 
-#		print(plotparams);
-		plot(x,y, plotparams);
+		plot(x,y, ["xlabel" : "x", "ylabel" : "y", "ylimits" : "-1.1 1.1", "title" : strTitle]);
 
 		i = i+1;
 	}

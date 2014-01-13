@@ -155,6 +155,36 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 	bool bCleanLeft = 0;
 	bool bCleanRight = 0;
 
+
+	// map operations
+	if(pSymLeft->GetType()==SYMBOL_MAP && pSymRight->GetType()==SYMBOL_MAP)
+	{
+		// merge maps
+		if(op == NODE_PLUS)
+		{
+			SymbolMap *pSymMap = new SymbolMap();
+
+			const SymbolMap::t_map& mapLeft = ((SymbolMap*)pSymLeft)->m_map;
+			const SymbolMap::t_map& mapRight = ((SymbolMap*)pSymRight)->m_map;
+			SymbolMap::t_map& mapRes = pSymMap->m_map;
+
+			for(const SymbolMap::t_map::value_type& pair : mapLeft)
+			{
+				mapRes.insert(SymbolMap::t_map::value_type(
+						pair.first, pair.second->clone()));
+			}
+
+			for(const SymbolMap::t_map::value_type& pair : mapRight)
+			{
+				mapRes.insert(SymbolMap::t_map::value_type(
+						pair.first, pair.second->clone()));
+			}
+
+			return pSymMap;
+		}
+	}
+
+
 	// vector operations
 	if(pSymLeft->GetType()==SYMBOL_ARRAY || pSymRight->GetType()==SYMBOL_ARRAY)
 	{
@@ -459,6 +489,14 @@ NodeArray::NodeArray(NodeArray* pArr)
 	// sub-expression
 }
 
+NodeMap::NodeMap(NodeMap* pMap)
+	: Node(NODE_MAP), m_pMap(pMap)
+{}
+
+NodePair::NodePair(Node* pFirst, Node* pSecond)
+	: Node(NODE_PAIR), m_pFirst(pFirst), m_pSecond(pSecond)
+{}
+
 NodeArrayAccess::NodeArrayAccess(Node* pIdent, Node* pExpr)
 	: Node(NODE_ARRAY_ACCESS), m_pIdent(pIdent), m_pExpr(pExpr)
 {
@@ -579,6 +617,21 @@ Node* NodeArray::clone() const
 	NodeArray* pNode = new NodeArray(m_pArr?m_pArr->clone():0);
 	*((Node*)pNode) = *((Node*)this);
 	return pNode;
+}
+
+Node* NodeMap::clone() const
+{
+	NodeMap* pNode = new NodeMap(m_pMap?m_pMap->clone():0);
+	*((Node*)pNode) = *((Node*)this);
+	return pNode;
+}
+
+Node* NodePair::clone() const
+{
+	NodePair* pNode = new NodePair(m_pFirst?m_pFirst->clone():0, 
+					m_pSecond?m_pSecond->clone():0);
+	*((Node*)pNode) = *((Node*)this);
+	return pNode;	
 }
 
 Node* NodeArrayAccess::clone() const
