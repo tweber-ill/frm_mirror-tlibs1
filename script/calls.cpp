@@ -53,7 +53,11 @@ static Symbol* fkt_str(const std::vector<Symbol*>& vecSyms,
 {
 	SymbolString *pSymRet = new SymbolString;
 	for(const Symbol *pSym : vecSyms)
+	{
+		if(!pSym)
+			continue;
 		pSymRet->m_strVal += pSym->print();
+	}
 	return pSymRet;
 }
 
@@ -429,7 +433,7 @@ static t_mapFkts g_mapFkts =
 
 	// modules
 	t_mapFkts::value_type("import", fkt_import),
-	
+
 	// casts
 	t_mapFkts::value_type("int", fkt_int),
 	t_mapFkts::value_type("real", fkt_double),

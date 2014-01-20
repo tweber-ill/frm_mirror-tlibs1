@@ -7,6 +7,7 @@
 #include "calls_math.h"
 #include "calls.h"
 #include "helper/fourier.h"
+#include "helper/linalg.h"
 
 static inline Symbol* _fkt_linlogspace(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab, bool bLog)
@@ -332,31 +333,368 @@ static Symbol* fkt_ifft(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Sy
 // --------------------------------------------------------------------------------
 // linalg stuff
 
-static Symbol* fkt_dot(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+template<typename T=double> using t_vec = ublas::vector<T>;
+template<typename T=double> using t_mat = ublas::matrix<T>;
+
+static bool is_vec(const Symbol* pSym)
+{
+	if(!pSym)
+		return false;
+	if(pSym->GetType() != SYMBOL_ARRAY)
+		return false;
+
+	const SymbolArray* pSymArr = (SymbolArray*)pSym;
+	for(const Symbol* pSymInArr : pSymArr->m_arr)
+	{
+		if(!pSymInArr->IsScalar())
+			return false;
+	}
+	return true;
+}
+
+static bool is_mat(const Symbol* pSym, unsigned int *piNumCols=0, unsigned int *piNumRows=0)
+{
+	if(!pSym)
+		return false;
+	if(pSym->GetType() != SYMBOL_ARRAY)
+		return false;
+
+	const SymbolArray* pSymArr = (SymbolArray*)pSym;
+	if(piNumRows) *piNumRows = pSymArr->m_arr.size();
+
+	unsigned int iVecSize = 0;
+	bool bHasSize = 0;
+	for(const Symbol* pSymInArr : pSymArr->m_arr)
+	{
+		if(!is_vec(pSymInArr))
+			return false;
+
+		unsigned int iSize = ((SymbolArray*)pSymInArr)->m_arr.size();
+		if(!bHasSize)
+		{
+			iVecSize = iSize;
+			bHasSize = 1;
+
+			if(piNumCols) *piNumCols = iVecSize;
+		}
+
+		// element vectors have to be of the same size
+		if(iSize != iVecSize)
+			return false;
+	}
+
+	return true;
+}
+
+template<typename T=double>
+static t_vec<T> sym_to_vec(const Symbol* pSym)
+{
+	if(pSym->GetType() != SYMBOL_ARRAY)
+		return t_vec<T>();
+
+	SymbolArray* pSymArr = (SymbolArray*)pSym;
+	t_vec<T> vec(pSymArr->m_arr.size());
+
+	unsigned int iIdx = 0;
+	for(const Symbol* pSymInArr : pSymArr->m_arr)
+	{
+		vec[iIdx] = pSymInArr->GetValDouble();
+		++iIdx;
+	}
+
+	return vec;
+}
+
+template<typename T=double>
+static t_mat<T> sym_to_mat(const Symbol* pSym, bool* pbIsMat=0)
+{
+	unsigned int iNumCols=0, iNumRows=0;
+	if(!is_mat(pSym, &iNumCols, &iNumRows))
+	{
+		if(pbIsMat) *pbIsMat = 0;
+		return t_mat<T>();
+	}
+	if(pbIsMat) *pbIsMat = 1;
+
+	t_mat<T> mat(iNumRows, iNumCols);
+	const SymbolArray* pSymArr = (SymbolArray*)pSym;
+
+	unsigned int iRow=0;
+	for(const Symbol* pSymInArr : pSymArr->m_arr)
+	{
+		t_vec<T> vecRow = sym_to_vec(pSymInArr);
+		unsigned int iNumActCols = std::min<unsigned int>(vecRow.size(), iNumCols);
+
+		for(unsigned int iCol=0; iCol<iNumActCols; ++iCol)
+			mat(iRow, iCol) = vecRow[iCol];
+
+		// fill rest with 0
+		for(unsigned int iCol=iNumActCols; iCol<iNumCols; ++iCol)
+			mat(iRow, iCol) = 0.;
+
+		++iRow;
+	}
+
+	return mat;
+}
+
+template<typename T=double>
+static Symbol* vec_to_sym(const t_vec<T>& vec)
+{
+	SymbolArray* pSym = new SymbolArray();
+	pSym->m_arr.reserve(vec.size());
+
+	for(const T& t : vec)
+		pSym->m_arr.push_back(new SymbolDouble(t));
+
+	return pSym;
+}
+
+template<typename T=double>
+static Symbol* mat_to_sym(const t_mat<T>& mat)
+{
+	unsigned int iNumRows = mat.size1();
+	unsigned int iNumCols = mat.size2();
+
+	SymbolArray* pSym = new SymbolArray();
+	pSym->m_arr.reserve(iNumRows);
+
+	for(unsigned int iRow=0; iRow<iNumRows; ++iRow)
+	{
+		SymbolArray* pRow = new SymbolArray();
+		pRow->m_arr.reserve(iNumCols);
+
+		for(unsigned int iCol=0; iCol<iNumCols; ++iCol)
+		{
+			SymbolDouble *pSymVal = new SymbolDouble(mat(iRow, iCol));
+			pRow->m_arr.push_back(pSymVal);
+		}
+
+		pSym->m_arr.push_back(pRow);
+	}
+
+	return pSym;
+}
+
+static Symbol* fkt_length(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size() != 1)
+	{
+		std::cerr << linenr("Error", info) << "Length needs one argument."
+			<< std::endl;
+		return 0;
+	}
+
+	if(!is_vec(vecSyms[0]))
+	{
+		std::cerr << linenr("Error", info) << "Length needs a vector argument."
+			<< std::endl;
+		return 0;
+	}
+
+	t_vec<double> vec = sym_to_vec(vecSyms[0]);
+	double dLen = std::sqrt(ublas::inner_prod(vec, vec));
+	return new SymbolDouble(dLen);
+}
+
+static Symbol* fkt_cross(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
 {
 	if(vecSyms.size() != 2)
 	{
-		std::cerr << linenr("Error", info) << "dot needs two arguments." << std::endl;
+		std::cerr << linenr("Error", info) << "Cross product needs two arguments."
+			<< std::endl;
 		return 0;
 	}
 
-	if(vecSyms[0]->GetType()!=SYMBOL_ARRAY || vecSyms[1]->GetType()!=SYMBOL_ARRAY)
+	if(!is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
 	{
-		std::cerr << linenr("Error", info) << "dot needs vector arguments." << std::endl;
+		std::cerr << linenr("Error", info) << "Cross product needs vector arguments."
+			<< std::endl;
 		return 0;
 	}
 
-	SymbolArray* pLeft = (SymbolArray*)vecSyms[0];
-	SymbolArray* pRight = (SymbolArray*)vecSyms[1];
+	t_vec<double> vecLeft = sym_to_vec(vecSyms[0]);
+	t_vec<double> vecRight = sym_to_vec(vecSyms[1]);
 
-	double dRetVal = 0.;
-	unsigned int iSize = std::min(pLeft->m_arr.size(), pRight->m_arr.size());
-	for(unsigned int i=0; i<iSize; ++i)
+	if(vecLeft.size()!=3 || vecRight.size()!=3)
 	{
-		dRetVal += pLeft->m_arr[i]->GetValDouble()*pRight->m_arr[i]->GetValDouble();
+		std::cerr << linenr("Error", info) << "Cross product needs 3-vectors."
+			<< std::endl;
+		return 0;
 	}
 
-	return new SymbolDouble(dRetVal);
+	t_vec<double> vecCross = cross_3(vecLeft, vecRight);
+	return vec_to_sym(vecCross);
+}
+
+// matrix(rows, cols)
+// matrix(dim)
+static Symbol* fkt_matrix(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size()<1)
+	{
+		std::cerr << linenr("Error", info) << "Need size of matrix." << std::endl;
+		return 0;
+	}
+
+	unsigned int iRows = vecSyms[0]->GetValInt();
+	unsigned int iCols = iRows;
+
+	// cols also given
+	if(vecSyms.size() >= 2)
+		iCols = vecSyms[1]->GetValInt();
+
+	t_mat<double> mat = ublas::zero_matrix<double>(iRows, iCols);
+	return mat_to_sym(mat);
+}
+
+static Symbol* fkt_transpose(const std::vector<Symbol*>& vecSyms, 
+				ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size()!=1)
+	{
+		std::cerr << linenr("Error", info) << "Transpose needs one argument" << std::endl;
+		return 0;
+	}
+
+	bool bIsMat = 0;
+	t_mat<double> mat = sym_to_mat(vecSyms[0], &bIsMat);
+	if(!bIsMat)
+	{
+		std::cerr << linenr("Error", info) << "Transpose needs a matrix." << std::endl;
+		return 0;
+	}
+
+	t_mat<double> mat_trans = ublas::trans(mat);
+	return mat_to_sym(mat_trans);
+}
+
+static Symbol* fkt_inverse(const std::vector<Symbol*>& vecSyms, 
+				ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size()!=1)
+	{
+		std::cerr << linenr("Error", info) << "Inverse needs one argument" << std::endl;
+		return 0;
+	}
+
+	bool bIsMat = 0;
+	t_mat<double> mat = sym_to_mat(vecSyms[0], &bIsMat);
+	if(!bIsMat)
+	{
+		std::cerr << linenr("Error", info) << "Inverse needs a matrix." << std::endl;
+		return 0;
+	}
+
+	t_mat<double> mat_inv;
+	if(!inverse(mat, mat_inv))
+		std::cerr << linenr("Warning", info) << "Matrix inversion failed." << std::endl;
+
+	return mat_to_sym(mat_inv);
+}
+
+static Symbol* fkt_determinant(const std::vector<Symbol*>& vecSyms,
+                                ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size()!=1)
+	{
+		std::cerr << linenr("Error", info) << "Determinant needs one argument" << std::endl;
+		return 0;
+	}
+
+	bool bIsMat = 0;
+	t_mat<double> mat = sym_to_mat(vecSyms[0], &bIsMat);
+	if(!bIsMat || mat.size1()!=mat.size2())
+	{
+		std::cerr << linenr("Error", info)
+			<< "Determinant needs a square matrix."
+			<< std::endl;
+		return 0;
+	}
+
+	double dDet = determinant(mat);
+	return new SymbolDouble(dDet);
+}
+
+static Symbol* fkt_unitmatrix(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size()!=1 || vecSyms[0]->GetType()!=SYMBOL_INT)
+	{
+		std::cerr << linenr("Error", info) << "Need size of unit matrix." << std::endl;
+		return 0;
+	}
+
+	int iSize = vecSyms[0]->GetValInt();
+	t_mat<double> mat = unit_matrix<double>(iSize);
+
+	return mat_to_sym(mat);
+}
+
+static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size() != 2)
+	{
+		std::cerr << linenr("Error", info) << "Product needs two arguments." << std::endl;
+		return 0;
+	}
+
+	Symbol* pRet = 0;
+
+	bool bFirstIsVec = is_vec(vecSyms[0]);
+	bool bSecondIsVec = is_vec(vecSyms[1]);
+
+	// dot product
+	if(bFirstIsVec && bSecondIsVec)
+	{
+		t_vec<double> vec1 = sym_to_vec(vecSyms[0]);
+		t_vec<double> vec2 = sym_to_vec(vecSyms[1]);
+
+		pRet = new SymbolDouble(ublas::inner_prod(vec1, vec2));
+	}
+	else
+	{
+		unsigned int iCols1, iRows1, iCols2, iRows2;
+		bool bFirstIsMat = is_mat(vecSyms[0], &iCols1, &iRows1);
+		bool bSecondIsMat = is_mat(vecSyms[1], &iCols2, &iRows2);
+
+		// matrix product
+		if(bFirstIsMat && bSecondIsMat)
+		{
+			if(iRows1 != iCols2 || iCols1 != iRows2)
+			{
+				std::cerr << linenr("Error", info)
+					<< "Row and column counts of matrices do not match."
+					<< std::endl;
+				return 0;
+			}
+
+			t_mat<double> mat1 = sym_to_mat(vecSyms[0]);
+			t_mat<double> mat2 = sym_to_mat(vecSyms[1]);
+
+			t_mat<double> matProd = ublas::prod(mat1, mat2);
+			pRet = mat_to_sym(matProd);
+		}
+		else if(bFirstIsMat && bSecondIsVec)
+		{
+			t_mat<double> mat = sym_to_mat(vecSyms[0]);
+			t_vec<double> vec = sym_to_vec(vecSyms[1]);
+
+			t_vec<double> vecProd = ublas::prod(mat, vec);
+			pRet = vec_to_sym(vecProd);
+		}
+		else if(bFirstIsVec && bSecondIsMat)
+		{
+			t_vec<double> vec = sym_to_vec(vecSyms[0]);
+			t_mat<double> mat = sym_to_mat(vecSyms[1]);
+
+			t_vec<double> vecProd = ublas::prod(vec, mat);
+			pRet = vec_to_sym(vecProd);
+		}
+	}
+
+	if(!pRet)
+		std::cerr << linenr("Error", info) << "Invalid call to prod." << std::endl;
+	return pRet;
 }
 
 // --------------------------------------------------------------------------------
@@ -424,8 +762,20 @@ extern void init_ext_math_calls()
 		t_mapFkts::value_type("linspace", fkt_linspace),
 		t_mapFkts::value_type("logspace", fkt_logspace),
 
-		// vector / matrix operations
-		t_mapFkts::value_type("dot", fkt_dot),
+		// vector operations
+		//t_mapFkts::value_type("dot", fkt_dot), -> use prod
+		t_mapFkts::value_type("cross", fkt_cross),
+		t_mapFkts::value_type("len", fkt_length),
+
+		// matrix operations
+		t_mapFkts::value_type("mat", fkt_matrix),
+		t_mapFkts::value_type("unitmat", fkt_unitmatrix),
+		t_mapFkts::value_type("trans", fkt_transpose),
+		t_mapFkts::value_type("inv", fkt_inverse),
+		t_mapFkts::value_type("det", fkt_determinant),
+
+		// matrix-vector operations
+		t_mapFkts::value_type("prod", fkt_product),
 	};
 
 	add_ext_calls(mapFkts);

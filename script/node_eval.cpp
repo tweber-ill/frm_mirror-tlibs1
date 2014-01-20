@@ -317,19 +317,35 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 			Symbol *pSymExpr = pIndices->eval(info, pSym);
 			if(pSymExpr==0 || pSymExpr->GetType()!=SYMBOL_INT)
 			{
-				std::cerr << linenr("Error", info) << "Array index has to be of integer type."
-							<< std::endl;
+				std::cerr << linenr("Error", info) 
+						<< "Array index has to be of integer type."
+						<< std::endl;
 				return 0;
 			}
 
-			int iIdx = ((SymbolInt*)pSymExpr)->m_iVal;
+			int iIdx = pSymExpr->GetValInt();
 			safe_delete(pSymExpr, pSym, info.pGlobalSyms);
+
 			SymbolArray *pArr = (SymbolArray*)pSymbol;
 
-			// index too high -> fill up with zeroes
-			if(iIdx<0 || iIdx>=pArr->m_arr.size())
+			// convert negative indices
+			if(iIdx < 0)
+				iIdx = pArr->m_arr.size()  + iIdx;
+
+			if(iIdx < 0)
 			{
-	/*			std::cerr << "Warning: Array index (" << iIdx
+				std::cerr << linenr("Error", info) 
+					<< "Invalid array index." 
+					<< std::endl;
+
+				return 0;
+			}
+
+			// index too high -> fill up with zeroes
+			if(iIdx>=pArr->m_arr.size())
+			{
+	/*			std::cerr << linenr("Warning", info)
+						<<  "Array index (" << iIdx
 							<< ") out of bounds (array size: "
 							<< pArr->m_arr.size() << ")."
 							<< " Resizing."<< std::endl;

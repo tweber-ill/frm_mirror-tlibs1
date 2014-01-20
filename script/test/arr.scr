@@ -6,31 +6,36 @@ tst(a)
 
 main()
 {
-	print(linspace(0,14,15));
+	a = [5, 4, 3, 2, 1];
+	a[-2] = "Test";
+	print(str(a));
+	print(a[-10]);
 
-	yy = [1.,2.,3.];
-	yy[0] = (tstval="Test");
-	tstval = "1234567";
-	print(yy);
-	print(tstval);
-
-	x = [[1,2],[3,4]];
-	print(x[0,1]);
-	print(x[0][1]);
-
-	print(linspace(1,2,10));
-	print(logspace(1,2,10));
-
-	arr0 = [1,2,3,4,5,6,7,8,9];
-	arr1 = [2,4,6,8,10];
-	print(arr0 + arr1);
-	print(arr0 * 2);
-
-	arr2 = ["Ha", 1];
-	arr3 = ["ll", 2];
-	arr4 = ["o", 3];
-	print(arr2+arr3+arr4);
- 
+#	print(linspace(0,14,15));
+#
+#	yy = [1.,2.,3.];
+#	yy[0] = (tstval="Test");
+#	tstval = "1234567";
+#	print(yy);
+#	print(tstval);
+#
+#	x = [[1,2],[3,4]];
+#	print(x[0,1]);
+#	print(x[0][1]);
+#
+#	print(linspace(1,2,10));
+#	print(logspace(1,2,10));
+#
+#	arr0 = [1,2,3,4,5,6,7,8,9];
+#	arr1 = [2,4,6,8,10];
+#	print(arr0 + arr1);
+#	print(arr0 * 2);
+#
+#	arr2 = ["Ha", 1];
+#	arr3 = ["ll", 2];
+#	arr4 = ["o", 3];
+#	print(arr2+arr3+arr4);
+# 
 #	a = 1;
 #	arr = [a, 2, 3];
 #	print(arr);

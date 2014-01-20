@@ -38,7 +38,7 @@ struct Symbol
 
 	Symbol() : m_iArrIdx(0), m_pArr(0), m_pMap(0) {}
 	virtual ~Symbol() {}
-	
+
 	virtual SymbolType GetType() const = 0;
 	virtual std::string GetTypeName() const = 0;
 
@@ -54,12 +54,14 @@ struct Symbol
 	// cast value without converting or cloning symbol
 	virtual int GetValInt() const { return 0; }
 	virtual double GetValDouble() const { return 0.; }
+
+	virtual bool IsScalar() const { return 0; }
 };
 
 struct SymbolDouble : public Symbol
 {
 	double m_dVal;
-	
+
 	SymbolDouble() : Symbol() {}
 	SymbolDouble(double dVal) : m_dVal(dVal) {}
 
@@ -75,6 +77,8 @@ struct SymbolDouble : public Symbol
 
 	virtual int GetValInt() const { return int(m_dVal); }
 	virtual double GetValDouble() const { return m_dVal; }
+
+	virtual bool IsScalar() const { return 1; }
 };
 
 struct SymbolInt : public Symbol
@@ -96,6 +100,8 @@ struct SymbolInt : public Symbol
 
 	virtual int GetValInt() const { return m_iVal; }
 	virtual double GetValDouble() const { return double(m_iVal); }
+
+	virtual bool IsScalar() const { return 1; }
 };
 
 struct SymbolString : public Symbol
@@ -142,6 +148,8 @@ struct SymbolArray : public Symbol
 
 	void UpdateIndex(unsigned int);
 	void UpdateIndices();
+
+	virtual bool IsScalar() const { return 0; }
 };
 
 struct SymbolMap : public Symbol
@@ -166,6 +174,8 @@ struct SymbolMap : public Symbol
 	void UpdateIndices();
 
 	std::string GetStringVal(const std::string& strKey, bool *pbHasVal=0) const;
+
+	virtual bool IsScalar() const { return 0; }
 };
 
 

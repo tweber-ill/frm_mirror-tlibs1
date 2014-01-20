@@ -33,7 +33,7 @@ void init_all_externals(SymbolTable* pGlobals)
 	init_ext_plot_calls();
 }
 
-int main(int argc, char** argv)
+static inline int script_main(int argc, char** argv)
 {
 	if(argc<=1)
 	{
@@ -93,4 +93,21 @@ int main(int argc, char** argv)
 	//info.pGlobalSyms->print();
 
 	return 0;
+}
+
+
+int main(int argc, char** argv)
+{
+	int iRet = -99;
+
+	try
+	{
+		iRet = script_main(argc, argv);
+	}
+	catch(const std::exception& ex)
+	{
+		std::cerr << "Critical error in script interpreter: " << ex.what() << std::endl;
+	}
+
+	return iRet;
 }
