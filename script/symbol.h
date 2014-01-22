@@ -62,7 +62,7 @@ struct SymbolDouble : public Symbol
 {
 	double m_dVal;
 
-	SymbolDouble() : Symbol() {}
+	SymbolDouble() : Symbol(), m_dVal(0.) {}
 	SymbolDouble(double dVal) : m_dVal(dVal) {}
 
 	virtual SymbolType GetType() const { return SYMBOL_DOUBLE; }
@@ -85,7 +85,7 @@ struct SymbolInt : public Symbol
 {
 	int m_iVal;
 	
-	SymbolInt() : Symbol() {}
+	SymbolInt() : Symbol(), m_iVal(0) {}
 	SymbolInt(int iVal) : m_iVal(iVal) {}
 
 	virtual SymbolType GetType() const { return SYMBOL_INT; }

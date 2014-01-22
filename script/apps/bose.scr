@@ -44,12 +44,12 @@ main(args)
 		["title" : "occupation factors for " + strT, 
 		"xlabel":"E (meV)", 
 		"ylabel":"occupation", 
-		"window":"0"]);
+		"window":0]);
 
 	plot(omega*1e3, rel, 
 
 		["xlabel":"E (meV)", 
 		"ylabel":"<n+1> / <n>", 
 		"title": "<n+1> / <n> for " + strT, 
-		"window":"1"]);
+		"window":1]);
 }

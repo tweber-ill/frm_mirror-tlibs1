@@ -171,7 +171,7 @@ SymbolArray::~SymbolArray()
 {
 	for(Symbol *pSym : m_arr)
 		if(pSym) delete pSym;
-	
+
 	m_arr.clear();
 
 	//std::cout << "symarr -> del" << std::endl;
@@ -180,7 +180,7 @@ SymbolArray::~SymbolArray()
 Symbol* SymbolArray::ToType(SymbolType stype) const
 {
 	Symbol *pNewSym = 0;
-	
+
 	if(stype == SYMBOL_ARRAY)
 	{
 		pNewSym = this->clone();
@@ -209,19 +209,19 @@ std::string SymbolArray::print() const
 	{
 		const Symbol* pSym = m_arr[i];
 		ostr << pSym->print();
-		
+
 		if(i<m_arr.size()-1)
 			ostr << ", ";
 	}
 	ostr << "]";
-	
+
 	return ostr.str();
 }
 
 Symbol* SymbolArray::clone() const
 {
 	SymbolArray *pSym = new SymbolArray;
-	
+
 	pSym->m_arr.reserve(m_arr.size());
 
 	for(Symbol *pArrSym : m_arr)
