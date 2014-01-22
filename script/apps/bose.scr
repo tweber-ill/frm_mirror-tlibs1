@@ -1,0 +1,42 @@
+#
+# Calculate Bose factor
+#
+
+bose_n(T, E)
+{
+	n = 1. / (exp(E / (k_B_eVperK * T)) - 1.);
+	return n;
+}
+
+bose_nplus1(T, E)
+{
+	n1 = bose_n(T, E) + 1.;
+	return n1;
+}
+
+# S(-Q, -om) / S(Q, om)
+boltz(T, omega)
+{
+	return exp(-hbar*om / (k_B*T));
+}
+
+main(args)
+{
+	if(vec_size(args) leq 1)
+	{
+		print("Usage: ./hermelin " + args[0] + " T=val.");
+		return -1;
+	}
+
+	T = real(split(args[1], "=")[1]);
+	strT = "T = " + T + "K";
+
+	omega = linspace(0.1e-3, 5e-3, 128);
+	b_n = bose_n(T, omega);
+	b_n1 = bose_nplus1(T, omega);
+
+	plot([
+		[omega*1e3, b_n, ["style":"line", "legend":"<n>"]], 
+		[omega*1e3, b_n1, ["style":"line", "legend":"<n+1>"]]
+		], ["title" : strT]);
+}

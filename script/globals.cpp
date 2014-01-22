@@ -39,6 +39,8 @@ static inline void init_physics_const(SymbolTable *pSymTab)
 	pSymTab->InsertSymbol("m_e", new SymbolDouble(co::m_e / units::si::kilogram));
 	// Boltzmann const
 	pSymTab->InsertSymbol("k_B", new SymbolDouble(co::k_B * units::si::kelvin/units::si::joules));
+	// Boltzmann const in eV/K
+	pSymTab->InsertSymbol("k_B_eVperK", new SymbolDouble(co::k_B * units::si::kelvin/one_eV));
 	// Avogadro const
 	pSymTab->InsertSymbol("N_A", new SymbolDouble(co::N_A * units::si::moles));
 	// speed of light

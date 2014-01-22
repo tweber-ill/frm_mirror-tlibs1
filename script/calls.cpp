@@ -383,7 +383,35 @@ static Symbol* fkt_trim(const std::vector<Symbol*>& vecSyms,
 	return vecSyms[0]->clone();
 }
 
+// split(string, delim)
 static Symbol* fkt_split(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size() != 2 || vecSyms[0]->GetType()!=SYMBOL_STRING || vecSyms[1]->GetType()!=SYMBOL_STRING)
+	{
+		std::cerr << linenr("Error", info)
+			<< "Split needs two string arguments." << std::endl;
+		return 0;
+	}
+
+	const std::string& str = ((SymbolString*)vecSyms[0])->m_strVal;
+	const std::string& strDelim = ((SymbolString*)vecSyms[1])->m_strVal;
+	std::size_t iPos = str.find(strDelim);
+
+	std::string str0 = str.substr(0, iPos);
+	std::string str1;
+
+	if(iPos != std::string::npos)
+		str1 = str.substr(iPos + strDelim.length(), std::string::npos);
+
+	SymbolArray* pSymRet = new SymbolArray();
+	pSymRet->m_arr.push_back(new SymbolString(str0));
+	pSymRet->m_arr.push_back(new SymbolString(str1));
+	return pSymRet;
+}
+
+// tokens(string, delim)
+static Symbol* fkt_tokens(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
 	std::string *pstrInput = 0;
@@ -400,7 +428,7 @@ static Symbol* fkt_split(const std::vector<Symbol*>& vecSyms,
 	if(!pstrInput)
 	{
 		std::cerr << linenr("Error", info)
-				<< "Called split with invalid arguments." << std::endl;
+				<< "Called tokens with invalid arguments." << std::endl;
 		return 0;
 	}
 
@@ -445,6 +473,7 @@ static t_mapFkts g_mapFkts =
 	// string operations
 	t_mapFkts::value_type("trim", fkt_trim),
 	t_mapFkts::value_type("split", fkt_split),
+	t_mapFkts::value_type("tokens", fkt_tokens),
 
 	// array operations
 	t_mapFkts::value_type("vec_size", fkt_array_size),
