@@ -9,7 +9,8 @@ main()
 		x = linspace(0, 2*pi, 64);
 		y = sin(x + ph);
 
-		plot(x,y, ["xlabel" : "x", "ylabel" : "y", "ylimits" : "-1.1 1.1", "title" : strTitle, "term" : "qt"]);
+		plot(x,y, ["xlabel" : "x", "ylabel" : "y", "ylimits" : "-1.1 1.1", "title" : strTitle, "term" : 
+"x11"]);
 
 		i = i+1;
 	}

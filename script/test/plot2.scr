@@ -9,7 +9,7 @@ main()
 	params["ylabel"] = "y-Achse";
 	params["title"] = "Titel";
 	params["style"] = "point";
-	params["term"] = "qt";
+	params["term"] = "x11";
 
 	params2 = params;
 	params2["style"] = "line";

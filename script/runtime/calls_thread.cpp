@@ -4,13 +4,14 @@
  * @date dec 2013
  */
 
+#include "../helper/flags.h"
 #include "calls_thread.h"
-#include "calls.h"
+#include "../calls.h"
 #include <thread>
 #include <wait.h>
+#include <cstdlib>
 
-
-static Symbol* fkt_exec(const std::vector<Symbol*>& vecSyms,
+static inline Symbol* fkt_exec(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
 	std::string strExec;
@@ -23,7 +24,12 @@ static Symbol* fkt_exec(const std::vector<Symbol*>& vecSyms,
 		}
 
 	bool bOk = 0;
-	FILE *pPipe = ::popen(strExec.c_str(), "w");
+	//std::cout << "Executing " << strExec << std::endl;
+	//int iRet = system(strExec.c_str());
+
+	FILE *pPipe = (FILE*)::my_popen(strExec.c_str(), "w");
+
+//	fflush(pPipe);
 	if(pPipe)
 	{
 		bOk = 1;
@@ -34,7 +40,6 @@ static Symbol* fkt_exec(const std::vector<Symbol*>& vecSyms,
 		}
 		else
 		{
-			//int bHasExited = WIFEXITED(iRet);
 			int iExitCode = int(char(WEXITSTATUS(iRet)));
 			//std::cout << "Exit code: " << iExitCode << std::endl;
 			bOk = (iExitCode==0);
@@ -43,7 +48,6 @@ static Symbol* fkt_exec(const std::vector<Symbol*>& vecSyms,
 
 	return new SymbolInt(bOk);
 }
-
 
 // --------------------------------------------------------------------------------
 // thread

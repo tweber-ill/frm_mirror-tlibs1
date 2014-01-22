@@ -4,7 +4,7 @@
  * @date 2013
  */
 
-#include "flags.h" 
+#include "helper/flags.h"
 #include <iostream>
 #include <fstream>
 #include <cmath>
@@ -13,25 +13,10 @@
 #include "script_helper.h"
 
 #include "globals.h"
-#include "calls_plot.h"
-#include "calls_math.h"
-#include "calls_file.h"
-#include "calls_thread.h"
 
-const char* g_pcVersion = "Hermelin script interpreter, version 0.4";
 
 //extern int yydebug;
 extern int yyparse(void*);
-
-void init_all_externals(SymbolTable* pGlobals)
-{
-	init_global_syms(pGlobals);
-
-	init_ext_thread_calls();
-	init_ext_file_calls();
-	init_ext_math_calls();
-	init_ext_plot_calls();
-}
 
 static inline int script_main(int argc, char** argv)
 {
@@ -62,7 +47,7 @@ static inline int script_main(int argc, char** argv)
 		return -3;
 	}
 
-	init_all_externals(info.pGlobalSyms);
+	init_global_syms(info.pGlobalSyms);
 
 	//yydebug = 0;
 	int iParseRet = yyparse(&par);

@@ -14,8 +14,10 @@ main()
 	print("inverse: " + str(inv(mat1)));
 	print("invinv: " + str(inv(inv(mat1))));
 
-	print("unit matrix: " + str(unitmat(4)));
+	print("unit matrix: " + str(unity(4)));
 	print("3x4 matrix: " + str(mat(3,4)));
+
+	print("sum: " + str(unity(4) + unity(4)));
 
 	print("prod: " + str(prod([[0,1],[1,0]], [1,0])));
 	print("prod: " + str(prod([0,1], [[0,1],[1,0]])));

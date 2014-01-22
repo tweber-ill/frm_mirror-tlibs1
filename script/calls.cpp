@@ -4,7 +4,7 @@
  * @date 2013-2014
  */
 
-#include "flags.h"
+#include "helper/flags.h"
 #include "calls.h"
 #include "parseobj.h"
 #include "script_helper.h"

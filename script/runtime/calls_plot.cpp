@@ -5,14 +5,15 @@
  */
 
 #include "calls_plot.h"
-#include "calls.h"
-#include "helper/gnuplot.h"
+#include "../calls.h"
+#include "../helper/gnuplot.h"
 
 
 // --------------------------------------------------------------------------------
 // plotting
 
 #define DEFAULT_TERM "qt";
+//#define DEFAULT_TERM "x11";
 static GnuPlot g_plot;
 
 static inline bool is_array_of_arrays(const Symbol* pSym)

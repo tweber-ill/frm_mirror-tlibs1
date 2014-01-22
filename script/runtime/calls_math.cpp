@@ -5,9 +5,9 @@
  */
 
 #include "calls_math.h"
-#include "calls.h"
-#include "helper/fourier.h"
-#include "helper/linalg.h"
+#include "../calls.h"
+#include "../helper/fourier.h"
+#include "../helper/linalg.h"
 
 static inline Symbol* _fkt_linlogspace(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab, bool bLog)
@@ -769,7 +769,7 @@ extern void init_ext_math_calls()
 
 		// matrix operations
 		t_mapFkts::value_type("mat", fkt_matrix),
-		t_mapFkts::value_type("unitmat", fkt_unitmatrix),
+		t_mapFkts::value_type("unity", fkt_unitmatrix),
 		t_mapFkts::value_type("trans", fkt_transpose),
 		t_mapFkts::value_type("inv", fkt_inverse),
 		t_mapFkts::value_type("det", fkt_determinant),

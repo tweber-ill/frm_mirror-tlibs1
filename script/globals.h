@@ -9,7 +9,7 @@
 
 #include "symbol.h"
 
+extern const char* g_pcVersion;
 extern void init_global_syms(SymbolTable *pSymTab);
-
 
 #endif

@@ -5,8 +5,8 @@ DEFINES = -DNO_QT -DNO_COMP
 FLAGS = -std=c++11 -fopenmp ${OPT_FLAGS} ${DEFINES}
 LIBS = -lstdc++ -lm -lboost_iostreams-mt
 
-hermelin: script.o lexer.o main.o yylexer.o symbol.o node.o node_eval.o calls.o handles.o gnuplot.o file.o string.o loadtxt.o rand.o fourier.o script_helper.o calls_plot.o calls_math.o calls_file.o calls_thread.o globals.o
-	${CC} ${FLAGS} -o hermelin script.o lexer.o main.o yylexer.o symbol.o node.o node_eval.o calls.o handles.o gnuplot.o file.o string.o loadtxt.o rand.o fourier.o script_helper.o calls_plot.o calls_math.o calls_file.o calls_thread.o globals.o ${LIBS}
+hermelin: script.o lexer.o main.o yylexer.o symbol.o node.o node_eval.o calls.o handles.o gnuplot.o file.o string.o loadtxt.o rand.o fourier.o script_helper.o calls_plot.o calls_math.o calls_file.o calls_thread.o calls_fit.o globals.o flags.o
+	${CC} ${FLAGS} -o hermelin script.o lexer.o main.o yylexer.o symbol.o node.o node_eval.o calls.o handles.o gnuplot.o file.o string.o loadtxt.o rand.o fourier.o script_helper.o calls_plot.o calls_math.o calls_file.o calls_thread.o calls_fit.o globals.o flags.o ${LIBS}
 
 script.o: script.yy
 	bison --defines=tokens.h script.yy
@@ -34,17 +34,20 @@ symbol.o: symbol.cpp symbol.h
 calls.o: calls.cpp calls.h
 	${CC} ${FLAGS} -c -o calls.o calls.cpp
 
-calls_plot.o: calls_plot.cpp calls_plot.h
-	${CC} ${FLAGS} -c -o calls_plot.o calls_plot.cpp
+calls_plot.o: runtime/calls_plot.cpp runtime/calls_plot.h
+	${CC} ${FLAGS} -c -o calls_plot.o runtime/calls_plot.cpp
 
-calls_math.o: calls_math.cpp calls_math.h
-	${CC} ${FLAGS} -c -o calls_math.o calls_math.cpp
+calls_math.o: runtime/calls_math.cpp runtime/calls_math.h
+	${CC} ${FLAGS} -c -o calls_math.o runtime/calls_math.cpp
 
-calls_file.o: calls_file.cpp calls_file.h
-	${CC} ${FLAGS} -c -o calls_file.o calls_file.cpp
+calls_file.o: runtime/calls_file.cpp runtime/calls_file.h
+	${CC} ${FLAGS} -c -o calls_file.o runtime/calls_file.cpp
 
-calls_thread.o: calls_thread.cpp calls_thread.h
-	${CC} ${FLAGS} -c -o calls_thread.o calls_thread.cpp
+calls_thread.o: runtime/calls_thread.cpp runtime/calls_thread.h
+	${CC} ${FLAGS} -c -o calls_thread.o runtime/calls_thread.cpp
+
+calls_fit.o: runtime/calls_fit.cpp runtime/calls_fit.h
+	${CC} ${FLAGS} -c -o calls_fit.o runtime/calls_fit.cpp
 
 
 handles.o: handles.cpp handles.h
@@ -73,6 +76,9 @@ script_helper.o: script_helper.cpp script_helper.h
 
 globals.o: globals.cpp globals.h
 	${CC} ${FLAGS} -c -o globals.o globals.cpp
+
+flags.o: helper/flags.cpp helper/flags.h
+	${CC} ${FLAGS} -c -o flags.o helper/flags.cpp
 
 
 clean:

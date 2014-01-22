@@ -11,6 +11,7 @@ main()
 	params["title"] = "Testing 2D plotting";
 	params["cblimits"] = "-1 1";
 	params["cbcyclic"] = "1";
+	params["term"] = "x11";
 
 	a = vec(64);
 	iY = 0;

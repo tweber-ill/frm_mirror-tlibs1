@@ -5,8 +5,8 @@
  */
 
 #include "calls_file.h"
-#include "calls.h"
-#include "loader/loadtxt.h"
+#include "../calls.h"
+#include "../loader/loadtxt.h"
 #include <sstream>
 #include <fstream>
 
