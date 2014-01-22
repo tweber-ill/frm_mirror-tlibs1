@@ -35,8 +35,21 @@ main(args)
 	b_n = bose_n(T, omega);
 	b_n1 = bose_nplus1(T, omega);
 
-	plot([
-		[omega*1e3, b_n, ["style":"line", "legend":"<n>"]], 
+	rel = b_n1 / b_n;
+
+	plot([[omega*1e3, b_n, ["style":"line", "legend":"<n>"]], 
 		[omega*1e3, b_n1, ["style":"line", "legend":"<n+1>"]]
-		], ["title" : strT]);
+		], 
+		
+		["title" : "occupation factors for " + strT, 
+		"xlabel":"E (meV)", 
+		"ylabel":"occupation", 
+		"window":"0"]);
+
+	plot(omega*1e3, rel, 
+
+		["xlabel":"E (meV)", 
+		"ylabel":"<n+1> / <n>", 
+		"title": "<n+1> / <n> for " + strT, 
+		"window":"1"]);
 }
