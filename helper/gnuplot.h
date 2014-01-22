@@ -43,6 +43,9 @@ protected:
 			const std::vector<double>& vecYErr, const std::vector<double>& vecXErr);
 
 	bool m_bTermLocked;
+	bool m_bHasLegend;
+
+	void RefreshVars();
 
 public:
 	GnuPlot();

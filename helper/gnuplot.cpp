@@ -13,7 +13,9 @@
 namespace ios = boost::iostreams;
 
 
-GnuPlot::GnuPlot() : m_iStartCounter(0), m_pipe(0), m_pfds(0), m_psbuf(0), m_postr(0), m_bTermLocked(0) {}
+GnuPlot::GnuPlot() : m_iStartCounter(0), m_pipe(0), m_pfds(0), m_psbuf(0), m_postr(0),
+			m_bTermLocked(0), m_bHasLegend(0)
+{}
 GnuPlot::~GnuPlot() { DeInit(); }
 
 void GnuPlot::DeInit()
@@ -91,6 +93,14 @@ void GnuPlot::SetFileTerminal(const char* pcFile)
 	}
 
 	(*m_postr) << "set output \"" << strFile << "\"\n";
+}
+
+void GnuPlot::RefreshVars()
+{
+	if(m_bHasLegend)
+		(*m_postr) << "set key on default\n";
+	else
+		(*m_postr) << "set nokey\n";
 }
 
 void GnuPlot::SimplePlot(const std::vector<double>& vecX, const std::vector<double>& vecY,
@@ -199,6 +209,8 @@ void GnuPlot::FinishPlot()
 	if(--m_iStartCounter == 0)
 	{
 		std::string strCmd = BuildCmd();
+		RefreshVars();
+
 		//std::cout << "Plot cmd: " << strCmd << std::endl;
 		(*m_postr) << strCmd;
 		//(*m_postr) << "refresh\n";
@@ -207,9 +219,10 @@ void GnuPlot::FinishPlot()
 	}
 }
 
-// TODO: Legend
 std::string GnuPlot::BuildCmd()
 {
+	m_bHasLegend = 0;
+
 	std::ostringstream ostr;
 	ostr << "plot ";
 
@@ -229,7 +242,13 @@ std::string GnuPlot::BuildCmd()
 			strPointStyle = "with points";
 
 		ostr << "'-' ";
-		ostr << (obj.bConnectLines ? "with lines" : strPointStyle);
+		ostr << (obj.bConnectLines ? "with lines lw 1.2" : strPointStyle);
+
+		if(obj.strLegend != "")
+		{
+			m_bHasLegend = 1;
+			ostr << " title \"" << obj.strLegend << "\" ";
+		}
 
 		if(&obj != &(*m_vecObjs.rbegin()))
 			ostr << ", ";
