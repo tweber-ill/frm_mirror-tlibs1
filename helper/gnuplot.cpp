@@ -63,7 +63,9 @@ void GnuPlot::SetTerminal(int iWnd, const char* pcBackend)
 	(*m_postr) << "set output\n";
 	(*m_postr) << "set obj 1 rectangle behind fillcolor rgbcolor \"white\" from screen 0,0 to screen 1,1\n";
 
-	(*m_postr) << "set term " << pcBackend << " enhanced " << iWnd << "\n";	
+	(*m_postr) << "set term " << pcBackend <<  " " << iWnd << " enhanced "
+//			<< " title \"" << "Plot " << (iWnd+1) << "\"" 
+			<<  "\n";
 }
 
 void GnuPlot::SetFileTerminal(const char* pcFile)
@@ -213,7 +215,7 @@ void GnuPlot::FinishPlot()
 
 		//std::cout << "Plot cmd: " << strCmd << std::endl;
 		(*m_postr) << strCmd;
-		//(*m_postr) << "refresh\n";
+		(*m_postr) << "refresh\n";
 		m_postr->flush();
 		m_vecObjs.clear();
 	}
