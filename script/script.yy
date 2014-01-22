@@ -166,8 +166,8 @@ expr:	'(' expr ')'		{ $$ = $2; }
 	| expr '/' expr			{ $$ = new NodeBinaryOp($1, $3, NODE_DIV); set_linenr($$, pParseObj); }
 	| expr '%' expr			{ $$ = new NodeBinaryOp($1, $3, NODE_MOD); set_linenr($$, pParseObj); }
 	| expr '^' expr			{ $$ = new NodeBinaryOp($1, $3, NODE_POW); set_linenr($$, pParseObj); }
-	| '-' expr %prec UMINUS	{ $$ = new NodeUnaryOp($2, NODE_UMINUS); set_linenr($$, pParseObj); }
-	| '+' expr %prec UPLUS	{ $$ = $2; }
+	| '-' expr %prec UMINUS		{ $$ = new NodeUnaryOp($2, NODE_UMINUS); set_linenr($$, pParseObj); }
+	| '+' expr %prec UPLUS		{ $$ = $2; }
 	
 	| expr TOK_LOG_AND expr		{ $$ = new NodeBinaryOp($1, $3, NODE_LOG_AND); set_linenr($$, pParseObj); }
 	| expr TOK_LOG_OR expr 		{ $$ = new NodeBinaryOp($1, $3, NODE_LOG_OR); set_linenr($$, pParseObj); }

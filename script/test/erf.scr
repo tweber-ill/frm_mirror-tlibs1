@@ -1,0 +1,7 @@
+main()
+{
+	x = linspace(-3, 3, 128);
+	y = erf(x);
+
+	plot(x,y, ["style":"line"]);
+}

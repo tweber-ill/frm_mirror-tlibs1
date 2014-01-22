@@ -9,19 +9,40 @@ bose_n(T, E)
 	return n;
 }
 
-
 bose_nplus1(T, E)
 {
 	n1 = bose_n(T, E) + 1.;
 	return n1;
 }
 
+bose_both(T, Es)
+{
+	facs = vec(vec_size(Es));
+
+	for(E : Es)
+	{
+		iter = cur_iter(E);
+
+		if(E geq 0.)
+			facs[iter] = bose_nplus1(T, E);
+		else
+			facs[iter] = bose_n(T, -E);
+	}
+
+	return facs;
+}
 
 # S(-Q, -om) / S(Q, om)
-boltz(T, omega)
+boltz(T, E)
 {
-	return exp(-hbar*omega / (k_B_eVperK * T));
+	return exp(-E / (k_B_eVperK * T));
 }
+
+gauss(E, E0, sigma, amp)
+{
+	return amp*exp(-((E-E0)/(sqrt(2.)*sigma))^2);
+}
+
 
 
 usage(app)
@@ -41,7 +62,7 @@ main(args)
 
 	Emin = 0.1;
 	Emax = 5.;
-	
+
 	for(arg : args)
 	{
 		arg_split = trim(split(arg, "="));
@@ -59,19 +80,19 @@ main(args)
 	if(not has_var("T"))
 	{
 		usage(args[0]);
-		print("Error: No temperature T given");
+		print("Error: No temperature T given.");
 		return -1;
 	}
 
 
-	omega = linspace(Emin*1e-3, Emax*1e-3, 128);
-	b_n = bose_n(T, omega);
-	b_n1 = bose_nplus1(T, omega);
+	E = linspace(Emin*1e-3, Emax*1e-3, 128);
+	b_n = bose_n(T, E);
+	b_n1 = bose_nplus1(T, E);
 
 	rel = b_n1 / b_n;
 
-	plot([[omega*1e3, b_n, ["style":"line", "legend":"<n>"]], 
-		[omega*1e3, b_n1, ["style":"line", "legend":"<n+1>"]]
+	plot([[E*1e3, b_n, ["style":"line", "legend":"<n>"]], 
+		[E*1e3, b_n1, ["style":"line", "legend":"<n+1>"]]
 		], 
 		
 		["title" : "Bose occupation factors for " + strT, 
@@ -79,13 +100,40 @@ main(args)
 		"ylabel" : "Occupation", 
 		"window" : 0]);
 
-	plot(omega*1e3, rel, 
+	plot(E*1e3, rel, 
 
 		["xlabel" : "E (meV)", 
 		"ylabel" : "<n+1> / <n>", 
 		"style" : "line",
 		"title" : "<n+1> / <n> for " + strT, 
 		"window" : 1]);
+
+
+
+	E = linspace(-Emax*1e-3, Emax*1e-3, 256);
+	E0 = 3e-3;
+	amp = bose_both(T, E);
+#	amp = 1.;
+	back = 0.;
+	sigma = 0.5e-3;
+	sigma_inc = 0.5e-3;
+
+	elast = gauss(E, 0., sigma_inc, amp) + back;
+	plot(E*1e3, elast, 
+		["style" : "line", 
+		"xlabel" : "E (meV)", 
+		"ylabel" : "Intensity", 
+		"title" : "Elastic peak, sigma = " + str(sigma*1e3) + " meV",
+		"window" : 2]);
+
+
+	inelast = gauss(E, E0, sigma, amp) + gauss(E, -E0, sigma, amp) + back;
+	plot(E*1e3, inelast, 
+		["style" : "line", 
+		"xlabel" : "E (meV)", 
+		"ylabel" : "Intensity", 
+		"title" : "Inelastic peaks, sigma = " + str(sigma*1e3) + " meV, E0 = " + str(E0*1e3) + " meV",
+		"window" : 3]);
 
 	return 0;
 }

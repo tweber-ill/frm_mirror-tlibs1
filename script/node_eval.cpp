@@ -414,6 +414,21 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 	return pSymbol;
 }
 
+Symbol* uminus_inplace(Symbol* pSym)
+{
+	if(!pSym) return 0;
+
+	if(pSym->GetType() == SYMBOL_DOUBLE)
+		((SymbolDouble*)pSym)->m_dVal = -((SymbolDouble*)pSym)->m_dVal;
+	else if(pSym->GetType() == SYMBOL_INT)
+		((SymbolInt*)pSym)->m_iVal = -((SymbolInt*)pSym)->m_iVal;
+	else if(pSym->GetType() == SYMBOL_ARRAY)
+	{
+		for(Symbol* pElem : ((SymbolArray*)pSym)->m_arr)
+			uminus_inplace(pElem);
+	}
+}
+
 Symbol* NodeUnaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 {
 	if(info.IsExecDisabled()) return 0;
@@ -428,11 +443,7 @@ Symbol* NodeUnaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 			Symbol *pSymbol = pSymbolEval->clone();
 			safe_delete(pSymbolEval, pSym, info.pGlobalSyms);
 
-			if(pSymbol->GetType() == SYMBOL_DOUBLE)
-				((SymbolDouble*)pSymbol)->m_dVal = -((SymbolDouble*)pSymbol)->m_dVal;
-			else if(pSymbol->GetType() == SYMBOL_INT)
-				((SymbolInt*)pSymbol)->m_iVal = -((SymbolInt*)pSymbol)->m_iVal;
-
+			uminus_inplace(pSymbol);
 			return pSymbol;
 		}
 
