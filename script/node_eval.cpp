@@ -414,9 +414,9 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 	return pSymbol;
 }
 
-Symbol* uminus_inplace(Symbol* pSym)
+static void uminus_inplace(Symbol* pSym, ParseInfo& info)
 {
-	if(!pSym) return 0;
+	if(!pSym) return;
 
 	if(pSym->GetType() == SYMBOL_DOUBLE)
 		((SymbolDouble*)pSym)->m_dVal = -((SymbolDouble*)pSym)->m_dVal;
@@ -425,7 +425,19 @@ Symbol* uminus_inplace(Symbol* pSym)
 	else if(pSym->GetType() == SYMBOL_ARRAY)
 	{
 		for(Symbol* pElem : ((SymbolArray*)pSym)->m_arr)
-			uminus_inplace(pElem);
+			uminus_inplace(pElem, info);
+	}
+	/*else if(pSym->GetType() == SYMBOL_MAP)
+	{
+		for(SymbolMap::t_map::value_type& pair : ((SymbolMap*)pSym)->m_map)
+			uminus_inplace(pair.second);
+	}*/
+	else
+	{
+		std::cerr << linenr("Error", info) 
+			<< "Unary minus not defined for " 
+			<< pSym->GetTypeName() << "."
+			<< std::endl;
 	}
 }
 
@@ -443,7 +455,7 @@ Symbol* NodeUnaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 			Symbol *pSymbol = pSymbolEval->clone();
 			safe_delete(pSymbolEval, pSym, info.pGlobalSyms);
 
-			uminus_inplace(pSymbol);
+			uminus_inplace(pSymbol, info);
 			return pSymbol;
 		}
 
