@@ -43,7 +43,7 @@ struct ParseInfo
 	std::mutex *pmutexGlobal;
 	// mutex for interpreter
 	std::mutex *pmutexInterpreter;
-	
+
 	// currently active function
 	const NodeFunction *pCurFunction;
 	const NodeCall *pCurCaller;
@@ -54,7 +54,7 @@ struct ParseInfo
 	bool bWantContinue;
 
 	bool bDestroyParseInfo;
-	
+
 	ParseInfo();
 	virtual ~ParseInfo();
 

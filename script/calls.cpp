@@ -65,7 +65,7 @@ static Symbol* fkt_output(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
 	std::ostream& ostr = std::cout;
-	
+
 	for(Symbol *pSym : vecSyms)
 		if(pSym)
 			ostr << pSym->print();
@@ -140,7 +140,7 @@ static bool _import_file(const std::string& strFile, ParseInfo& info, SymbolTabl
 }
 
 static Symbol* fkt_import(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+			ParseInfo& info, SymbolTable* pSymTab)
 {
 	for(Symbol *pSym : vecSyms)
 		if(pSym && pSym->GetType()==SYMBOL_STRING)
@@ -152,9 +152,33 @@ static Symbol* fkt_import(const std::vector<Symbol*>& vecSyms,
 	return 0;
 }
 
+static Symbol* fkt_has_var(const std::vector<Symbol*>& vecSyms,
+			ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size()!=1)
+	{
+		std::cerr << linenr("Error", info)
+			<< "Need a symbol name for has_var."
+			<< std::endl;
+		return 0;
+	}
+
+	const std::string strVar = vecSyms[0]->print();
+	bool bHasVar = 0;
+
+	// check local variables
+	if(pSymTab->GetSymbol(strVar))
+		bHasVar = 1;
+
+	// check global variables
+	if(info.pGlobalSyms->GetSymbol(strVar))
+		bHasVar = 1;
+
+	return new SymbolInt(bHasVar);
+}
 
 static Symbol* fkt_typeof(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, SymbolTable* pSymTab)
+			ParseInfo& info, SymbolTable* pSymTab)
 {
 	if(vecSyms.size()!=1)
 	{
@@ -462,12 +486,13 @@ static t_mapFkts g_mapFkts =
 	// modules
 	t_mapFkts::value_type("import", fkt_import),
 
-	// casts
+	// symbols & casts
 	t_mapFkts::value_type("int", fkt_int),
 	t_mapFkts::value_type("real", fkt_double),
 	t_mapFkts::value_type("str", fkt_str),
 	t_mapFkts::value_type("map", fkt_map),
 	t_mapFkts::value_type("vec", fkt_array),
+	t_mapFkts::value_type("has_var", fkt_has_var),
 	t_mapFkts::value_type("typeof", fkt_typeof),
 
 	// string operations
@@ -497,7 +522,7 @@ extern Symbol* ext_call(const std::string& strFkt,
 					<< std::endl;
 		return 0;
 	}
-	
+
 	return (*iter).second(vecSyms, info, pSymTab);
 }
 
