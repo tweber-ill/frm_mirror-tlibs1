@@ -52,6 +52,8 @@ void GnuPlot::Init()
 
 	(*m_postr) << "set grid\n";
 	(*m_postr) << "set nokey\n";
+	//(*m_postr) << "set noborder\n";
+	(*m_postr) << "set size 1,1\n";
 	(*m_postr) << "set palette rgbformulae 33,13,10\n";
 	//(*m_postr) << "set palette defined (0 \"blue\", 0.3333 \"cyan\", 0.6666 \"yellow\", 1 \"red\")\n";
 }
@@ -63,8 +65,12 @@ void GnuPlot::SetTerminal(int iWnd, const char* pcBackend)
 	(*m_postr) << "set output\n";
 	(*m_postr) << "set obj 1 rectangle behind fillcolor rgbcolor \"white\" from screen 0,0 to screen 1,1\n";
 
-	(*m_postr) << "set term " << pcBackend <<  " " << iWnd << " enhanced "
-//			<< " title \"" << "Plot " << (iWnd+1) << "\"" 
+	(*m_postr) << "set term " << pcBackend <<  " " << iWnd << " "
+			<< "size 640,480 "
+			<< "enhanced "
+			<< "font 'Helvetica,10' "
+//			<< "title \"" << "Plot " << (iWnd+1) << "\" " 
+			<< "persist "
 			<<  "\n";
 }
 
@@ -215,7 +221,7 @@ void GnuPlot::FinishPlot()
 
 		//std::cout << "Plot cmd: " << strCmd << std::endl;
 		(*m_postr) << strCmd;
-		(*m_postr) << "refresh\n";
+		//(*m_postr) << "replot\n";
 		m_postr->flush();
 		m_vecObjs.clear();
 	}
