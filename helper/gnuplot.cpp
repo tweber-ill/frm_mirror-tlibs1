@@ -4,9 +4,11 @@
  * @date 24-dec-2013
  */
 
+#include "flags.h"
 #include "gnuplot.h"
 #include "misc.h"
 #include "string.h"
+#include <cstdio>
 #include <sstream>
 namespace ios = boost::iostreams;
 
@@ -19,7 +21,7 @@ void GnuPlot::DeInit()
 	if(m_postr) delete m_postr;
 	if(m_psbuf) delete m_psbuf;
 	if(m_pfds) delete m_pfds;
-	if(m_pipe) pclose(m_pipe);
+	if(m_pipe) ::pclose(m_pipe);
 
 	m_postr = 0;
 	m_psbuf = 0;
@@ -34,7 +36,7 @@ void GnuPlot::Init()
 	if(IsReady()) return;
 	DeInit();
 
-	m_pipe = popen("gnuplot -persist 2>/dev/null 1>/dev/null", "w");
+	m_pipe = (FILE*)::/*my_*/popen("gnuplot -persist 2>/dev/null 1>/dev/null", "w");
 	//m_pipe = popen("gnuplot -persist 2>gnuplot.err 1>gnuplot.out", "w");
 	if(!m_pipe)
 	{
