@@ -5,8 +5,14 @@ DEFINES = -DNO_QT -DNO_COMP
 FLAGS = -std=c++11 -fopenmp ${OPT_FLAGS} ${DEFINES}
 LIBS = -lstdc++ -lm -lboost_iostreams-mt
 
-hermelin: script.o lexer.o main.o yylexer.o symbol.o node.o node_eval.o calls.o handles.o gnuplot.o file.o string.o loadtxt.o rand.o fourier.o script_helper.o calls_plot.o calls_math.o calls_file.o calls_thread.o calls_fit.o globals.o flags.o fitter.o interpolation.o
-	${CC} ${FLAGS} -o hermelin script.o lexer.o main.o yylexer.o symbol.o node.o node_eval.o calls.o handles.o gnuplot.o file.o string.o loadtxt.o rand.o fourier.o script_helper.o calls_plot.o calls_math.o calls_file.o calls_thread.o calls_fit.o globals.o flags.o fitter.o interpolation.o ${LIBS}
+hermelin: script.o lexer.o main.o yylexer.o symbol.o node.o node_eval.o calls.o handles.o gnuplot.o \
+		file.o string.o loadtxt.o rand.o fourier.o script_helper.o calls_plot.o calls_math.o \
+		calls_file.o calls_thread.o calls_fit.o globals.o flags.o fitter.o interpolation.o
+	${CC} ${FLAGS} -o hermelin script.o lexer.o main.o yylexer.o symbol.o node.o node_eval.o \
+			calls.o handles.o gnuplot.o file.o string.o loadtxt.o rand.o fourier.o \
+			script_helper.o calls_plot.o calls_math.o calls_file.o calls_thread.o \
+			calls_fit.o globals.o flags.o fitter.o interpolation.o \
+			${LIBS}
 
 script.o: script.yy
 	bison --defines=tokens.h script.yy
@@ -15,7 +21,7 @@ script.o: script.yy
 lexer.o: lexer.h lexer.cpp
 	${CC} ${FLAGS} -c -o lexer.o lexer.cpp
 
-yylexer.o: yylexer.h yylexer.cpp
+yylexer.o: yylexer.h yylexer.cpp script.o
 	${CC} ${FLAGS} -c -o yylexer.o yylexer.cpp
 
 main.o: main.cpp
