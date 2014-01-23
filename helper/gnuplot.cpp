@@ -246,11 +246,11 @@ std::string GnuPlot::BuildCmd()
 			strPointStyle = "with xerrorbars";
 		else if(!bHasXErr && bHasYErr)
 			strPointStyle = "with yerrorbars";
-		else if(!bHasXErr && bHasYErr)
-			strPointStyle = "with points";
+		else if(!bHasXErr && !bHasYErr)
+			strPointStyle = "with points pt 7 ps 2";
 
 		ostr << "'-' ";
-		ostr << (obj.bConnectLines ? "with lines lw 1.2" : strPointStyle);
+		ostr << (obj.bConnectLines ? "with lines lw 1.25" : strPointStyle);
 
 		if(obj.strLegend != "")
 		{
