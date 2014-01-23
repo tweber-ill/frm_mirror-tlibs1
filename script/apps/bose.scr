@@ -93,14 +93,14 @@ main(args)
 
 	plot([[E*1e3, b_n, ["style":"line", "legend":"<n>"]], 
 		[E*1e3, b_n1, ["style":"line", "legend":"<n+1>"]]
-		], 
-		
+		],
+
 		["title" : "Bose occupation factors for " + strT, 
 		"xlabel" : "E (meV)", 
 		"ylabel" : "Occupation", 
 		"window" : 0]);
 
-	plot(E*1e3, rel, 
+	plot(E*1e3, rel,
 
 		["xlabel" : "E (meV)", 
 		"ylabel" : "<n+1> / <n>", 
