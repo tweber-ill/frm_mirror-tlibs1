@@ -336,7 +336,7 @@ static Symbol* fkt_ifft(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Sy
 template<typename T=double> using t_vec = ublas::vector<T>;
 template<typename T=double> using t_mat = ublas::matrix<T>;
 
-static bool is_vec(const Symbol* pSym)
+bool is_vec(const Symbol* pSym)
 {
 	if(!pSym)
 		return false;
@@ -352,7 +352,7 @@ static bool is_vec(const Symbol* pSym)
 	return true;
 }
 
-static bool is_mat(const Symbol* pSym, unsigned int *piNumCols=0, unsigned int *piNumRows=0)
+bool is_mat(const Symbol* pSym, unsigned int *piNumCols, unsigned int *piNumRows)
 {
 	if(!pSym)
 		return false;
@@ -386,96 +386,6 @@ static bool is_mat(const Symbol* pSym, unsigned int *piNumCols=0, unsigned int *
 	return true;
 }
 
-template<typename T=double>
-static t_vec<T> sym_to_vec(const Symbol* pSym)
-{
-	if(pSym->GetType() != SYMBOL_ARRAY)
-		return t_vec<T>();
-
-	SymbolArray* pSymArr = (SymbolArray*)pSym;
-	t_vec<T> vec(pSymArr->m_arr.size());
-
-	unsigned int iIdx = 0;
-	for(const Symbol* pSymInArr : pSymArr->m_arr)
-	{
-		vec[iIdx] = pSymInArr->GetValDouble();
-		++iIdx;
-	}
-
-	return vec;
-}
-
-template<typename T=double>
-static t_mat<T> sym_to_mat(const Symbol* pSym, bool* pbIsMat=0)
-{
-	unsigned int iNumCols=0, iNumRows=0;
-	if(!is_mat(pSym, &iNumCols, &iNumRows))
-	{
-		if(pbIsMat) *pbIsMat = 0;
-		return t_mat<T>();
-	}
-	if(pbIsMat) *pbIsMat = 1;
-
-	t_mat<T> mat(iNumRows, iNumCols);
-	const SymbolArray* pSymArr = (SymbolArray*)pSym;
-
-	unsigned int iRow=0;
-	for(const Symbol* pSymInArr : pSymArr->m_arr)
-	{
-		t_vec<T> vecRow = sym_to_vec(pSymInArr);
-		unsigned int iNumActCols = std::min<unsigned int>(vecRow.size(), iNumCols);
-
-		for(unsigned int iCol=0; iCol<iNumActCols; ++iCol)
-			mat(iRow, iCol) = vecRow[iCol];
-
-		// fill rest with 0
-		for(unsigned int iCol=iNumActCols; iCol<iNumCols; ++iCol)
-			mat(iRow, iCol) = 0.;
-
-		++iRow;
-	}
-
-	return mat;
-}
-
-template<typename T=double>
-static Symbol* vec_to_sym(const t_vec<T>& vec)
-{
-	SymbolArray* pSym = new SymbolArray();
-	pSym->m_arr.reserve(vec.size());
-
-	for(const T& t : vec)
-		pSym->m_arr.push_back(new SymbolDouble(t));
-
-	return pSym;
-}
-
-template<typename T=double>
-static Symbol* mat_to_sym(const t_mat<T>& mat)
-{
-	unsigned int iNumRows = mat.size1();
-	unsigned int iNumCols = mat.size2();
-
-	SymbolArray* pSym = new SymbolArray();
-	pSym->m_arr.reserve(iNumRows);
-
-	for(unsigned int iRow=0; iRow<iNumRows; ++iRow)
-	{
-		SymbolArray* pRow = new SymbolArray();
-		pRow->m_arr.reserve(iNumCols);
-
-		for(unsigned int iCol=0; iCol<iNumCols; ++iCol)
-		{
-			SymbolDouble *pSymVal = new SymbolDouble(mat(iRow, iCol));
-			pRow->m_arr.push_back(pSymVal);
-		}
-
-		pSym->m_arr.push_back(pRow);
-	}
-
-	return pSym;
-}
-
 static Symbol* fkt_length(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
 {
 	if(vecSyms.size() != 1)
@@ -492,7 +402,7 @@ static Symbol* fkt_length(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 		return 0;
 	}
 
-	t_vec<double> vec = sym_to_vec(vecSyms[0]);
+	t_vec<double> vec = sym_to_vec<t_vec>(vecSyms[0]);
 	double dLen = std::sqrt(ublas::inner_prod(vec, vec));
 	return new SymbolDouble(dLen);
 }
@@ -513,8 +423,8 @@ static Symbol* fkt_cross(const std::vector<Symbol*>& vecSyms, ParseInfo& info, S
 		return 0;
 	}
 
-	t_vec<double> vecLeft = sym_to_vec(vecSyms[0]);
-	t_vec<double> vecRight = sym_to_vec(vecSyms[1]);
+	t_vec<double> vecLeft = sym_to_vec<t_vec>(vecSyms[0]);
+	t_vec<double> vecRight = sym_to_vec<t_vec>(vecSyms[1]);
 
 	if(vecLeft.size()!=3 || vecRight.size()!=3)
 	{
@@ -524,7 +434,7 @@ static Symbol* fkt_cross(const std::vector<Symbol*>& vecSyms, ParseInfo& info, S
 	}
 
 	t_vec<double> vecCross = cross_3(vecLeft, vecRight);
-	return vec_to_sym(vecCross);
+	return vec_to_sym<t_vec>(vecCross);
 }
 
 // matrix(rows, cols)
@@ -545,7 +455,7 @@ static Symbol* fkt_matrix(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 		iCols = vecSyms[1]->GetValInt();
 
 	t_mat<double> mat = ublas::zero_matrix<double>(iRows, iCols);
-	return mat_to_sym(mat);
+	return mat_to_sym<t_mat>(mat);
 }
 
 static Symbol* fkt_transpose(const std::vector<Symbol*>& vecSyms, 
@@ -558,7 +468,7 @@ static Symbol* fkt_transpose(const std::vector<Symbol*>& vecSyms,
 	}
 
 	bool bIsMat = 0;
-	t_mat<double> mat = sym_to_mat(vecSyms[0], &bIsMat);
+	t_mat<double> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0], &bIsMat);
 	if(!bIsMat)
 	{
 		std::cerr << linenr("Error", info) << "Transpose needs a matrix." << std::endl;
@@ -566,7 +476,7 @@ static Symbol* fkt_transpose(const std::vector<Symbol*>& vecSyms,
 	}
 
 	t_mat<double> mat_trans = ublas::trans(mat);
-	return mat_to_sym(mat_trans);
+	return mat_to_sym<t_mat>(mat_trans);
 }
 
 static Symbol* fkt_inverse(const std::vector<Symbol*>& vecSyms, 
@@ -579,7 +489,7 @@ static Symbol* fkt_inverse(const std::vector<Symbol*>& vecSyms,
 	}
 
 	bool bIsMat = 0;
-	t_mat<double> mat = sym_to_mat(vecSyms[0], &bIsMat);
+	t_mat<double> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0], &bIsMat);
 	if(!bIsMat)
 	{
 		std::cerr << linenr("Error", info) << "Inverse needs a matrix." << std::endl;
@@ -590,7 +500,7 @@ static Symbol* fkt_inverse(const std::vector<Symbol*>& vecSyms,
 	if(!inverse(mat, mat_inv))
 		std::cerr << linenr("Warning", info) << "Matrix inversion failed." << std::endl;
 
-	return mat_to_sym(mat_inv);
+	return mat_to_sym<t_mat>(mat_inv);
 }
 
 static Symbol* fkt_determinant(const std::vector<Symbol*>& vecSyms,
@@ -603,7 +513,7 @@ static Symbol* fkt_determinant(const std::vector<Symbol*>& vecSyms,
 	}
 
 	bool bIsMat = 0;
-	t_mat<double> mat = sym_to_mat(vecSyms[0], &bIsMat);
+	t_mat<double> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0], &bIsMat);
 	if(!bIsMat || mat.size1()!=mat.size2())
 	{
 		std::cerr << linenr("Error", info)
@@ -627,7 +537,7 @@ static Symbol* fkt_unitmatrix(const std::vector<Symbol*>& vecSyms, ParseInfo& in
 	int iSize = vecSyms[0]->GetValInt();
 	t_mat<double> mat = unit_matrix<double>(iSize);
 
-	return mat_to_sym(mat);
+	return mat_to_sym<t_mat>(mat);
 }
 
 static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
@@ -646,8 +556,8 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 	// dot product
 	if(bFirstIsVec && bSecondIsVec)
 	{
-		t_vec<double> vec1 = sym_to_vec(vecSyms[0]);
-		t_vec<double> vec2 = sym_to_vec(vecSyms[1]);
+		t_vec<double> vec1 = sym_to_vec<t_vec>(vecSyms[0]);
+		t_vec<double> vec2 = sym_to_vec<t_vec>(vecSyms[1]);
 
 		pRet = new SymbolDouble(ublas::inner_prod(vec1, vec2));
 	}
@@ -668,27 +578,27 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 				return 0;
 			}
 
-			t_mat<double> mat1 = sym_to_mat(vecSyms[0]);
-			t_mat<double> mat2 = sym_to_mat(vecSyms[1]);
+			t_mat<double> mat1 = sym_to_mat<t_mat, t_vec>(vecSyms[0]);
+			t_mat<double> mat2 = sym_to_mat<t_mat, t_vec>(vecSyms[1]);
 
 			t_mat<double> matProd = ublas::prod(mat1, mat2);
-			pRet = mat_to_sym(matProd);
+			pRet = mat_to_sym<t_mat>(matProd);
 		}
 		else if(bFirstIsMat && bSecondIsVec)
 		{
-			t_mat<double> mat = sym_to_mat(vecSyms[0]);
-			t_vec<double> vec = sym_to_vec(vecSyms[1]);
+			t_mat<double> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0]);
+			t_vec<double> vec = sym_to_vec<t_vec>(vecSyms[1]);
 
 			t_vec<double> vecProd = ublas::prod(mat, vec);
-			pRet = vec_to_sym(vecProd);
+			pRet = vec_to_sym<t_vec>(vecProd);
 		}
 		else if(bFirstIsVec && bSecondIsMat)
 		{
-			t_vec<double> vec = sym_to_vec(vecSyms[0]);
-			t_mat<double> mat = sym_to_mat(vecSyms[1]);
+			t_vec<double> vec = sym_to_vec<t_vec>(vecSyms[0]);
+			t_mat<double> mat = sym_to_mat<t_mat, t_vec>(vecSyms[1]);
 
 			t_vec<double> vecProd = ublas::prod(vec, mat);
-			pRet = vec_to_sym(vecProd);
+			pRet = vec_to_sym<t_vec>(vecProd);
 		}
 	}
 
