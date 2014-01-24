@@ -75,6 +75,8 @@
 %type<pNode> expr
 %type<pNode> args
 %type<pNode> pair
+%type<pNode> ranged_expr
+%type<pNode> arr_args
 %type<pNode> map_args
 %type<pNode> idents
 %type<pNode> ident
@@ -134,17 +136,26 @@ stmt:	expr ';'		{ $$ = $1; }
 
 
 args:	expr ',' args		{ $$ = new NodeBinaryOp($1, $3, NODE_ARGS); set_linenr($$, pParseObj); }
-	|   expr				{ $$ = $1; }
-	| 	/*eps*/				{ $$ = 0; }
+	|	expr				{ $$ = $1; }
+	|	/*eps*/				{ $$ = 0; }
 	;
 
+ranged_expr: expr				{ $$ = $1; }
+	|	':'						{ $$ = new NodeRange(RANGE_FULL); set_linenr($$, pParseObj);}
+	|	expr ':' expr			{ $$ = new NodeRange($1, $3); set_linenr($$, pParseObj);}
+	;
+
+arr_args: ranged_expr ',' arr_args	{ $$ = new NodeBinaryOp($1, $3, NODE_ARGS); set_linenr($$, pParseObj); }
+	|	ranged_expr					{ $$ = $1; }
+	|	/*eps*/						{ $$ = 0; }
+	;
 
 pair: expr ':' expr		{ $$ = new NodePair($1, $3); set_linenr($$, pParseObj); }
 	;
 
 map_args: pair ',' map_args	{ $$ = new NodeBinaryOp($1, $3, NODE_ARGS); set_linenr($$, pParseObj); }
-	| pair			{ $$ = $1; }
-//	| 	/*eps*/		{ $$ = 0; }
+	|	pair			{ $$ = $1; }
+//	|	/*eps*/		{ $$ = 0; }
 	;
 
 idents:	ident ',' idents	{ $$ = new NodeBinaryOp($1, $3, NODE_IDENTS); set_linenr($$, pParseObj); }
@@ -187,7 +198,7 @@ expr:	'(' expr ')'		{ $$ = $2; }
 	
 	| '[' args ']'			{ $$ = new NodeArray($2); set_linenr($$, pParseObj); }
 	| '[' map_args ']'		{ $$ = new NodeMap($2); set_linenr($$, pParseObj); }
-	| expr '[' args ']'	 	{ $$ = new NodeArrayAccess($1, $3); set_linenr($$, pParseObj); }
+	| expr '[' arr_args ']'	{ $$ = new NodeArrayAccess($1, $3); set_linenr($$, pParseObj); }
 	;
 
 	

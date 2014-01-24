@@ -269,21 +269,20 @@ static Symbol* fkt_array_size(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size()<1)
 	{
-		std::cerr << linenr("Error", info) << "vec_size(vec) needs one argument." << std::endl;
+		std::cerr << linenr("Error", info) << "vec_size needs one argument." << std::endl;
 		return 0;
 	}
 	
 	Symbol *pSymArr = vecSyms[0];
 	SymbolInt *pSymRet = new SymbolInt(0);
 	
-	if(pSymArr->GetType() != SYMBOL_ARRAY)
-	{
-		std::cerr << linenr("Warning", info) << "vec_size needs a vector type argument." << std::endl;
-		return pSymRet;
-	}
+	if(pSymArr->GetType() == SYMBOL_ARRAY)
+		pSymRet->m_iVal = ((SymbolArray*)pSymArr)->m_arr.size();
+	else if(pSymArr->GetType() == SYMBOL_STRING)
+		pSymRet->m_iVal = ((SymbolString*)pSymArr)->m_strVal.length();
+	else
+		std::cerr << linenr("Error", info) << "vec_size needs a vector type argument." << std::endl;
 
-	
-	pSymRet->m_iVal = ((SymbolArray*)pSymArr)->m_arr.size();
 	return pSymRet;
 }
 
@@ -499,10 +498,11 @@ static t_mapFkts g_mapFkts =
 	t_mapFkts::value_type("trim", fkt_trim),
 	t_mapFkts::value_type("split", fkt_split),
 	t_mapFkts::value_type("tokens", fkt_tokens),
+	t_mapFkts::value_type("length", fkt_array_size),
 
 	// array operations
 	t_mapFkts::value_type("vec_size", fkt_array_size),
-	t_mapFkts::value_type("cur_iter", fkt_cur_iter),
+	t_mapFkts::value_type("cur_iter", fkt_cur_iter),	// deprecated, use "length" instead
 	t_mapFkts::value_type("zip", fkt_zip),
 };
 

@@ -497,6 +497,14 @@ NodePair::NodePair(Node* pFirst, Node* pSecond)
 	: Node(NODE_PAIR), m_pFirst(pFirst), m_pSecond(pSecond)
 {}
 
+NodeRange::NodeRange(RangeType rt)
+	: Node(NODE_RANGE), m_rangetype(RANGE_FULL), m_pBegin(0), m_pEnd(0)
+{}
+
+NodeRange::NodeRange(Node *pBegin, Node *pEnd)
+	: Node(NODE_RANGE), m_rangetype(RANGE_BEGINEND), m_pBegin(pBegin), m_pEnd(pEnd)
+{}
+
 NodeArrayAccess::NodeArrayAccess(Node* pIdent, Node* pExpr)
 	: Node(NODE_ARRAY_ACCESS), m_pIdent(pIdent), m_pExpr(pExpr)
 {
@@ -632,6 +640,15 @@ Node* NodePair::clone() const
 					m_pSecond?m_pSecond->clone():0);
 	*((Node*)pNode) = *((Node*)this);
 	return pNode;	
+}
+
+Node* NodeRange::clone() const
+{
+	NodeRange *pNode = new NodeRange(m_rangetype);
+	if(m_pBegin) pNode->m_pBegin = m_pBegin->clone();
+	if(m_pEnd) pNode->m_pEnd = m_pEnd->clone();
+
+	return pNode;
 }
 
 Node* NodeArrayAccess::clone() const

@@ -286,6 +286,155 @@ Symbol* NodeArray::eval(ParseInfo &info, SymbolTable *pSym) const
 	return pSymArr;
 }
 
+Symbol* NodeRange::eval(ParseInfo &info, SymbolTable *pSym) const
+{
+	if(info.IsExecDisabled()) return 0;
+
+	std::cerr << linenr("Error", info)
+				<< "Range should not be evaluated directly."
+				<< std::endl;
+	return 0;
+}
+
+void NodeRange::GetRangeIndices(ParseInfo &info, SymbolTable *pSym,
+					int iMaxLen, int& iBeginIdx, int& iEndIdx)
+{
+	/*if(!pArr)
+	{
+		std::cerr << linenr("Error", info)
+					<< "Range operation needs an array."
+					<< std::endl;
+		return;
+	}*/
+
+	if(m_rangetype == RANGE_FULL)
+	{
+		iBeginIdx = 0;
+		iEndIdx = iMaxLen;
+	}
+	else if(m_rangetype == RANGE_BEGINEND)
+	{
+		if(m_pBegin==0 || m_pEnd==0)
+		{
+			std::cerr << linenr("Error", info)
+						<< "Invalid range."
+						<< std::endl;
+			return;
+		}
+
+		Symbol *pSymBeg = m_pBegin->eval(info, pSym);
+		Symbol *pSymEnd = m_pEnd->eval(info, pSym);
+
+		iBeginIdx = pSymBeg->GetValInt();
+		iEndIdx = pSymEnd->GetValInt();
+
+		// convert negative indices
+		if(iBeginIdx < 0) iBeginIdx = iMaxLen + iBeginIdx;
+		if(iEndIdx < 0) iEndIdx = iMaxLen + iEndIdx;
+
+
+		if(iBeginIdx<0 || iBeginIdx>=iMaxLen)
+		{
+			std::cerr << linenr("Error", info)
+						<< "Lower array index out of bounds: "
+						<< iBeginIdx << ". Adjusting to lower limit."
+						<< std::endl;
+			iBeginIdx = 0;
+		}
+		if(iEndIdx<-1 || iEndIdx>iMaxLen)
+		{
+			std::cerr << linenr("Error", info)
+						<< "Upper array index out of bounds: "
+						<< iEndIdx << ". Adjusting to upper limit."
+						<< std::endl;
+			iEndIdx = iMaxLen;
+		}
+
+		//std::cout << "begin: " << iBeginIdx << ", end: " << iEndIdx << std::endl;
+
+		safe_delete(pSymBeg, pSym, info.pGlobalSyms);
+		safe_delete(pSymEnd, pSym, info.pGlobalSyms);
+	}
+	else
+	{
+		std::cerr << linenr("Error", info)
+					<< "Invalid range operation."
+					<< std::endl;
+	}
+}
+
+unsigned int get_max_cols(SymbolArray* pArr, std::vector<unsigned int>* pvecCols=0)
+{
+	unsigned int iCols = 0;
+	for(Symbol* pSym : pArr->m_arr)
+	{
+		if(!pSym)
+		{
+			if(pvecCols) pvecCols->push_back(0);
+			continue;
+		}
+		if(pSym->GetType() == SYMBOL_ARRAY)
+			iCols = std::max<unsigned int>(iCols, ((SymbolArray*)pSym)->m_arr.size());
+		else
+			iCols = std::max<unsigned int>(iCols, 1);
+
+		if(pvecCols) pvecCols->push_back(iCols);
+	}
+
+	return iCols;
+}
+
+Symbol* get_mat_elem(SymbolArray* pArr, unsigned int iLine, unsigned int iCol)
+{
+	if(iLine >= pArr->m_arr.size())
+		return 0;
+
+	Symbol* pLine = pArr->m_arr[iLine];
+	if(pLine->GetType() == SYMBOL_ARRAY)
+	{
+		SymbolArray* pArrLine = (SymbolArray*)pLine;
+		if(iCol >= pArrLine->m_arr.size())
+			return 0;
+
+		return pArrLine->m_arr[iCol]->clone();
+	}
+	else	// single scalar element
+	{
+		if(iCol == 0)
+			return pLine;
+		else
+			return 0;
+	}
+}
+
+SymbolArray* transpose(SymbolArray* pArr, std::vector<unsigned int>* pvecCols=0)
+{
+	unsigned int iLines = pArr->m_arr.size();
+	unsigned int iCols = get_max_cols(pArr, pvecCols);
+
+	SymbolArray *pArrNew = new SymbolArray();
+	pArrNew->m_arr.reserve(iCols);
+
+	for(unsigned int iCol=0; iCol<iCols; ++iCol)
+	{
+		SymbolArray* pArrCol = new SymbolArray();
+		pArrCol->m_arr.reserve(iLines);
+
+		for(unsigned int iLine=0; iLine<iLines; ++iLine)
+		{
+			Symbol *pElem = get_mat_elem(pArr, iLine, iCol);
+			if(!pElem) pElem = new SymbolInt(0);
+			pArrCol->m_arr.push_back(pElem);
+		}
+
+		pArrCol->UpdateIndices();
+		pArrNew->m_arr.push_back(pArrCol);
+	}
+
+	pArrNew->UpdateIndices();
+	return pArrNew;
+}
+
 Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 {
 	if(info.IsExecDisabled()) return 0;
@@ -312,57 +461,116 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 
 	if(pSymbol->GetType() == SYMBOL_ARRAY)
 	{
+		bool bCreatedSym = 0;
+		bool bEvenIndex = 0;
+		bool bAlreadyTransposed = 0;
+
 		for(Node *pIndices : m_vecIndices)
 		{
-			Symbol *pSymExpr = pIndices->eval(info, pSym);
-			if(pSymExpr==0 || pSymExpr->GetType()!=SYMBOL_INT)
-			{
-				std::cerr << linenr("Error", info) 
-						<< "Array index has to be of integer type."
-						<< std::endl;
-				return 0;
-			}
-
-			int iIdx = pSymExpr->GetValInt();
-			safe_delete(pSymExpr, pSym, info.pGlobalSyms);
-
 			SymbolArray *pArr = (SymbolArray*)pSymbol;
 
-			// convert negative indices
-			if(iIdx < 0)
-				iIdx = pArr->m_arr.size()  + iIdx;
-
-			if(iIdx < 0)
+			if(bCreatedSym /*&& bEvenIndex*/)
 			{
-				std::cerr << linenr("Error", info) 
-					<< "Invalid array index." 
-					<< std::endl;
+				pArr = transpose(pArr);
+				delete pSymbol;
+				pSymbol = pArr;
 
-				return 0;
+				bAlreadyTransposed = 1;
 			}
 
-			// index too high -> fill up with zeroes
-			if(iIdx>=pArr->m_arr.size())
+			// TODO: assigment for ranged access
+			if(pIndices->m_type == NODE_RANGE)	// range index
 			{
-	/*			std::cerr << linenr("Warning", info)
-						<<  "Array index (" << iIdx
-							<< ") out of bounds (array size: "
-							<< pArr->m_arr.size() << ")."
-							<< " Resizing."<< std::endl;
-	*/
+				NodeRange *pRange = (NodeRange*)pIndices;
+				int iBeginIdx = 0, iEndIdx = 0;
+				pRange->GetRangeIndices(info, pSym, pArr->m_arr.size(), iBeginIdx, iEndIdx);
 
-				unsigned int iOldSize = pArr->m_arr.size();
-				for(unsigned int iRem=0; iRem<iIdx+1-iOldSize; ++iRem)
+				int iStep = 1;
+				int iSize = iEndIdx - iBeginIdx;
+				if(iEndIdx < iBeginIdx)
 				{
-					SymbolDouble *pNewSym = new SymbolDouble(0.);
-					pNewSym->m_strName = "<const>";
-					pArr->m_arr.push_back(pNewSym);
-					//std::cout << "Inserting: " << iRem << std::endl;
+					iSize = -iSize;
+					iStep = -1;
 				}
+
+				SymbolArray *pSubArr = new SymbolArray();
+				pSubArr->m_arr.reserve(iSize);
+
+				for(int iIdx=iBeginIdx, iNewIdx=0; iIdx!=iEndIdx && iNewIdx<iSize; iIdx+=iStep, ++iNewIdx)
+				{
+					Symbol *pElemClone = pArr->m_arr[iIdx]->clone();
+					pSubArr->m_arr.push_back(pElemClone);
+					pSubArr->UpdateIndex(iNewIdx);
+				}
+
+				if(bAlreadyTransposed)
+				{
+					SymbolArray *pOrgSubArr = pSubArr;
+					pSubArr = transpose(pSubArr);
+					delete pOrgSubArr;
+
+					bAlreadyTransposed = 0;
+				}
+
+				if(bCreatedSym)
+				{
+					delete pSymbol;
+					pSymbol = 0;
+					bCreatedSym = 0;
+				}
+
+				safe_delete(pSymbol, pSym, info.pGlobalSyms);
+				pSymbol = pSubArr;
+				bCreatedSym = 1;
+			}
+			else								// integer index
+			{
+				Symbol *pSymExpr = pIndices->eval(info, pSym);
+				if(pSymExpr==0 || pSymExpr->GetType()!=SYMBOL_INT)
+				{
+					std::cerr << linenr("Error", info)
+							<< "Array index has to be of integer type."
+							<< std::endl;
+					return 0;
+				}
+
+				int iIdx = pSymExpr->GetValInt();
+				safe_delete(pSymExpr, pSym, info.pGlobalSyms);
+
+				// convert negative indices
+				if(iIdx < 0)
+					iIdx = pArr->m_arr.size()  + iIdx;
+
+				if(iIdx < 0)
+				{
+					std::cerr << linenr("Error", info)
+						<< "Invalid array index."
+						<< std::endl;
+
+					return 0;
+				}
+
+				// index too high -> fill up with zeroes
+				if(iIdx>=pArr->m_arr.size())
+				{
+					unsigned int iOldSize = pArr->m_arr.size();
+					for(unsigned int iRem=0; iRem<iIdx+1-iOldSize; ++iRem)
+					{
+						SymbolDouble *pNewSym = new SymbolDouble(0.);
+						pNewSym->m_strName = "<const>";
+						pArr->m_arr.push_back(pNewSym);
+						//std::cout << "Inserting: " << iRem << std::endl;
+					}
+				}
+
+				if((void*)pSymbol != (void*)pArr)
+					safe_delete(pSymbol, pSym, info.pGlobalSyms);
+
+				pSymbol = pArr->m_arr[iIdx];
+				pArr->UpdateIndex(iIdx);
 			}
 
-			pSymbol = pArr->m_arr[iIdx];
-			pArr->UpdateIndex(iIdx);
+			bEvenIndex = !bEvenIndex;
 		}
 	}
 	else if(pSymbol->GetType() == SYMBOL_MAP)
@@ -400,9 +608,84 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 			iterMap = pMap->m_map.insert(SymbolMap::t_map::value_type(strKey, pNewSym)).first;
 		}
 
+		if((void*)pSymbol != (void*)iterMap->second)
+			safe_delete(pSymbol, pSym, info.pGlobalSyms);
+
 		pSymbol = iterMap->second;
 		pMap->UpdateIndex(strKey);
 		safe_delete(pSymExpr, pSym, info.pGlobalSyms);
+	}
+	else if(pSymbol->GetType() == SYMBOL_STRING)
+	{
+		SymbolString *pStr = (SymbolString*)pSymbol;
+		int iStrLen = pStr->m_strVal.length();
+
+		if(m_vecIndices.size()!=1)
+		{
+			std::cerr << linenr("Error", info)
+					<< "Need exactly one string index."
+					<< std::endl;
+			return 0;
+		}
+
+		Node *pIndices = m_vecIndices[0];
+
+		if(pIndices->m_type == NODE_RANGE)	// range index
+		{
+			NodeRange *pRange = (NodeRange*)pIndices;
+			int iBeginIdx = 0, iEndIdx = 0;
+			pRange->GetRangeIndices(info, pSym, iStrLen, iBeginIdx, iEndIdx);
+
+			int iStep = 1;
+			int iSize = iEndIdx - iBeginIdx;
+			if(iEndIdx < iBeginIdx)
+			{
+				iSize = -iSize;
+				iStep = -1;
+			}
+
+			std::string strNew;
+			strNew.resize(iSize);
+
+			for(int iIdx=iBeginIdx, iNewIdx=0; iIdx!=iEndIdx && iNewIdx<iSize; iIdx+=iStep, ++iNewIdx)
+				strNew[iNewIdx] = pStr->m_strVal[iIdx];
+
+			SymbolString *pSubStr = new SymbolString(strNew);
+			safe_delete(pSymbol, pSym, info.pGlobalSyms);
+			pSymbol = pSubStr;
+		}
+		else								// integer index
+		{
+			Symbol *pSymExpr = pIndices->eval(info, pSym);
+			if(pSymExpr==0 || pSymExpr->GetType()!=SYMBOL_INT)
+			{
+				std::cerr << linenr("Error", info)
+						<< "String index has to be of integer type."
+						<< std::endl;
+				return 0;
+			}
+
+			int iIdx = pSymExpr->GetValInt();
+			safe_delete(pSymExpr, pSym, info.pGlobalSyms);
+
+			// convert negative indices
+			if(iIdx < 0)
+				iIdx = iStrLen  + iIdx;
+
+			if(iIdx < 0 || iIdx >= iStrLen)
+			{
+				std::cerr << linenr("Error", info)
+					<< "String index out of bounds."
+					<< std::endl;
+
+				return 0;
+			}
+
+			std::string strNew;
+			strNew += pStr->m_strVal[iIdx];
+			safe_delete(pSymbol, pSym, info.pGlobalSyms);
+			pSymbol = new SymbolString(strNew);
+		}
 	}
 	else
 	{

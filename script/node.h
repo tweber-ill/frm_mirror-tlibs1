@@ -101,6 +101,7 @@ enum NodeType
 	NODE_IDENTS,
 	NODE_IDENT,
 
+	NODE_RANGE,
 	NODE_ARGS,
 
 	NODE_FUNCS,
@@ -411,6 +412,37 @@ struct NodePair : public Node
 		if(m_pFirst) delete m_pFirst;
 		if(m_pSecond) delete m_pSecond;
 	}
+
+	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Node* clone() const;
+};
+
+enum RangeType
+{
+	RANGE_BEGINEND,
+	RANGE_FULL,
+};
+
+struct NodeRange : public Node
+{
+	RangeType m_rangetype;
+	Node *m_pBegin;
+	Node *m_pEnd;
+
+	NodeRange(RangeType rt);
+	NodeRange(Node* pBegin, Node* pEnd);
+	NodeRange(void* pBegin, void* pEnd)
+		: NodeRange((Node*)pBegin, (Node*)pEnd)
+	{}
+
+	virtual ~NodeRange()
+	{
+		if(m_pBegin) delete m_pBegin;
+		if(m_pEnd) delete m_pEnd;
+	}
+
+	void GetRangeIndices(ParseInfo &info, SymbolTable *pSym,
+				int iMaxLen, int& iBeginIdx, int& iEndIdx);
 
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 	virtual Node* clone() const;
