@@ -501,8 +501,8 @@ static t_mapFkts g_mapFkts =
 	t_mapFkts::value_type("length", fkt_array_size),
 
 	// array operations
-	t_mapFkts::value_type("vec_size", fkt_array_size),
-	t_mapFkts::value_type("cur_iter", fkt_cur_iter),	// deprecated, use "length" instead
+	t_mapFkts::value_type("vec_size", fkt_array_size),	// deprecated, use "length" instead
+	t_mapFkts::value_type("cur_iter", fkt_cur_iter),
 	t_mapFkts::value_type("zip", fkt_zip),
 };
 

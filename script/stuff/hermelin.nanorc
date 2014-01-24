@@ -15,7 +15,7 @@ color brightmagenta "\<(and|or|not|eq|neq|less|greater|leq|geq)\>"
 color cyan "\<(global)\>"
 
 # some builtin runtime functions
-color brightcyan "\<(output|input|print|import|int|real|str|map|vec|has_var|typeof|trim|split|tokens|vec_size|cur_iter|zip)\>"
+color brightcyan "\<(output|input|print|import|int|real|str|map|vec|has_var|typeof|trim|split|tokens|vec_size|length|cur_iter|zip)\>"
 color brightcyan "\<(sqrt|exp|pow|sin|cos|tan|asin|acos|atan|atan2|sinh|cosh|tanh|asinh|acosh|atanh|erf|log)\>"
 color brightcyan "\<(fft|ifft)\>"
 color brightcyan "\<(linspace|logspace|plot)\>"
