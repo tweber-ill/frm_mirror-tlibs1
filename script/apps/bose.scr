@@ -47,7 +47,7 @@ gauss(E, E0, sigma, amp)
 
 usage(app)
 {
-	print("\nBose factor calculation\n\nUsage: e.g. " + app + " T=25 Emin=0.1 Emax=5");
+	print("\nBose factor calculation\n\nUsage: e.g. " + app + " T=25 Emin=0.1 Emax=5 show_peaks");
 	print("\tT in K\n\tEmin in meV\n\tEmax in meV\n");
 }
 
@@ -62,9 +62,16 @@ main(args)
 
 	Emin = 0.1;
 	Emax = 5.;
+	show_peaks = 0;
 
 	for(arg : args)
 	{
+		if(trim(arg) eq "show_peaks")
+		{
+			show_peaks = 1;
+			continue;
+		}
+
 		arg_split = trim(split(arg, "="));
 
 		if(arg_split[0] eq "T")
@@ -110,30 +117,33 @@ main(args)
 
 
 
-	E = linspace(-Emax*1e-3, Emax*1e-3, 256);
-	E0 = 3e-3;
-	amp = bose_both(T, E);
-#	amp = 1.;
-	back = 0.;
-	sigma = 0.5e-3;
-	sigma_inc = 0.5e-3;
+	if(show_peaks)
+	{
+		E = linspace(-Emax*1e-3, Emax*1e-3, 256);
+		E0 = 3e-3;
+		amp = bose_both(T, E);
+#		amp = 1.;
+		back = 0.;
+		sigma = 0.5e-3;
+		sigma_inc = 0.5e-3;
 
-	elast = gauss(E, 0., sigma_inc, amp) + back;
-	plot(E*1e3, elast, 
-		["style" : "line", 
-		"xlabel" : "E (meV)", 
-		"ylabel" : "Intensity", 
-		"title" : "Elastic peak, sigma = " + str(sigma*1e3) + " meV",
-		"window" : 2]);
+		elast = gauss(E, 0., sigma_inc, amp) + back;
+		plot(E*1e3, elast, 
+			["style" : "line", 
+			"xlabel" : "E (meV)", 
+			"ylabel" : "Intensity", 
+			"title" : "Elastic peak, sigma = " + str(sigma*1e3) + " meV",
+			"window" : 2]);
 
 
-	inelast = gauss(E, E0, sigma, amp) + gauss(E, -E0, sigma, amp) + back;
-	plot(E*1e3, inelast, 
-		["style" : "line", 
-		"xlabel" : "E (meV)", 
-		"ylabel" : "Intensity", 
-		"title" : "Inelastic peaks, sigma = " + str(sigma*1e3) + " meV, E0 = " + str(E0*1e3) + " meV",
-		"window" : 3]);
+		inelast = gauss(E, E0, sigma, amp) + gauss(E, -E0, sigma, amp) + back;
+		plot(E*1e3, inelast, 
+			["style" : "line", 
+			"xlabel" : "E (meV)", 
+			"ylabel" : "Intensity", 
+			"title" : "Inelastic peaks, sigma = " + str(sigma*1e3) + " meV, E0 = " + str(E0*1e3) + " meV",
+			"window" : 3]);
+	}
 
 	return 0;
 }

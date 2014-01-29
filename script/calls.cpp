@@ -177,6 +177,31 @@ static Symbol* fkt_has_var(const std::vector<Symbol*>& vecSyms,
 	return new SymbolInt(bHasVar);
 }
 
+// register a variable in the symbol table
+static Symbol* fkt_register_var(const std::vector<Symbol*>& vecSyms,
+			ParseInfo& info, SymbolTable* pSymTab)
+{
+	bool bUseGlobal = 0;
+
+	if(vecSyms.size()!=2)
+	{
+		std::cerr << linenr("Error", info)
+			<< "Need a symbol name and a symbol for register_var."
+			<< std::endl;
+		return 0;
+	}
+
+	const std::string strVar = vecSyms[0]->print();
+	Symbol* pVar = vecSyms[1]->clone();
+
+	SymbolTable *pThisSymTab = pSymTab;
+	if(bUseGlobal)
+		pThisSymTab = info.pGlobalSyms;
+	pThisSymTab->InsertSymbol(strVar, pVar);
+
+	return 0;
+}
+
 static Symbol* fkt_typeof(const std::vector<Symbol*>& vecSyms,
 			ParseInfo& info, SymbolTable* pSymTab)
 {
@@ -476,6 +501,7 @@ static t_mapFkts g_mapFkts =
 {
 	// basic stuff
 	t_mapFkts::value_type("ver", fkt_version),
+	t_mapFkts::value_type("register_var", fkt_register_var),
 
 	// input/output
 	t_mapFkts::value_type("output", fkt_output),
