@@ -45,11 +45,13 @@ main(args)
 	om1 = disp(beta, m1, m2, q, a, 1.);
 	om2 = disp(beta, m1, m2, q, a, -1.);
 
+	xlim = str(min(q)) + " " + str(max(q));
+
 	plopt1 = ["style":"line", "legend":"optic phonon"];
 	plopt2 = ["style":"line", "legend":"acoustic phonon"];
 
 	title = "m1=" + m1 + ", m2=" + m2 + ", a=" + a + ", beta="+beta;
-	plopt = ["xlabel":"q", "ylabel":"omega", "title":title];
+	plopt = ["xlabel":"q", "ylabel":"omega", "title":title, "xlimits":xlim];
 
 	plot([q, om1, plopt1], [q, om2, plopt2], plopt);
 }
