@@ -280,7 +280,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			pRight = pRight->ToType(SYMBOL_DOUBLE);
 			bCleanRight = 1;
 		}
-		
+
 		if(pLeft->GetType()==SYMBOL_STRING)
 		{
 			pRight = pRight->ToType(SYMBOL_STRING);
@@ -301,7 +301,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 		{
 			SymbolInt *pResult = new SymbolInt();
 			pResult->m_strName = "<op_logical_result>";
-			
+
 			if(g_mapBinLogOps_d.find(op) != g_mapBinLogOps_d.end())
 			{
 				pResult->m_iVal = g_mapBinLogOps_d[op](((SymbolDouble*)pLeft)->m_dVal,
@@ -402,7 +402,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			pRes = pResult;
 		}
 	}
-	
+
 	if(bCleanLeft) delete pLeft;
 	if(bCleanRight) delete pRight;
 
@@ -516,9 +516,15 @@ NodeArrayAccess::NodeArrayAccess(Node* pIdent, Node* pExpr)
 
 NodeBinaryOp::NodeBinaryOp(Node* pLeft, Node* pRight, NodeType ntype)
 	: Node(ntype), m_pLeft(pLeft), m_pRight(pRight), m_bGlobal(0)
+{}
+
+void NodeBinaryOp::FlattenNodes(NodeType ntype)
 {
-	if(ntype == NODE_STMTS || ntype == NODE_ARGS)
+	if(m_type == ntype)
+	{
 		m_vecNodesFlat = this->flatten(ntype);
+		//std::cout << "Node type: " << ntype << ", flattened: " << m_vecNodesFlat.size() << std::endl;
+	}
 }
 
 
@@ -526,7 +532,7 @@ NodeCall::NodeCall(Node* _pIdent, Node* _pArgs)
 	: Node(NODE_CALL), m_pIdent(_pIdent), m_pArgs(_pArgs)
 {
 	NodeBinaryOp* pArgs = (NodeBinaryOp*) m_pArgs;
-	
+
 	if(pArgs)
 		m_vecArgs = pArgs->flatten(NODE_ARGS);
 }
@@ -657,7 +663,7 @@ Node* NodePair::clone() const
 	NodePair* pNode = new NodePair(m_pFirst?m_pFirst->clone():0, 
 					m_pSecond?m_pSecond->clone():0);
 	*((Node*)pNode) = *((Node*)this);
-	return pNode;	
+	return pNode;
 }
 
 Node* NodeRange::clone() const
@@ -690,6 +696,7 @@ Node* NodeBinaryOp::clone() const
 	NodeBinaryOp* pNode = new NodeBinaryOp(m_pLeft?m_pLeft->clone():0,
 							m_pRight?m_pRight->clone():0,
 							m_type);
+	pNode->m_vecNodesFlat = this->m_vecNodesFlat;
 	*((Node*)pNode) = *((Node*)this);
 	return pNode;
 }
@@ -720,7 +727,7 @@ std::vector<Node*> NodeBinaryOp::flatten(NodeType ntype) const
 	{
 		NodeBinaryOp *pLeft = (NodeBinaryOp*) m_pLeft;
 		NodeBinaryOp *pRight = (NodeBinaryOp*) m_pRight;
-		
+
 		if(m_pLeft)
 		{
 			if(m_pLeft->m_type==ntype)

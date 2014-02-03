@@ -122,7 +122,7 @@ stmts:	stmt stmts		{ $$ = new NodeBinaryOp($1, $2, NODE_STMTS); set_linenr($$, p
 	;
 	
 stmt:	expr ';'		{ $$ = $1; }
-	| 	'{' stmts '}'	{ $$ = $2; }
+	| 	'{' stmts '}'	{ $$ = $2; if($$) { ((NodeBinaryOp*)$$)->FlattenNodes(NODE_STMTS); } }
 	
 	|	TOK_IF '(' expr ')' stmt 								%prec TOK_IF 			{ $$ = new NodeIf($3, $5); set_linenr($$, pParseObj); }
 	|	TOK_IF '(' expr ')' stmt TOK_ELSE stmt 	%prec TOK_ELSE 	{ $$ = new NodeIf($3, $5, $7); set_linenr($$, pParseObj); }

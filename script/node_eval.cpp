@@ -1058,11 +1058,11 @@ Symbol* NodeBinaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 		switch(m_type)
 		{
 			case NODE_STMTS:
-			case NODE_ARGS:
+			//case NODE_ARGS:
 			{
 				std::cerr << linenr("Info", info)
-							<< "Should better be evaluated sequentially in interpreter."
-							<< std::endl;
+						<< "Should better be evaluated sequentially in interpreter."
+						<< std::endl;
 				return eval_recursive(info, pSym);
 			}
 

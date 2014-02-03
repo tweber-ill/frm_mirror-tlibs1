@@ -91,7 +91,7 @@ enum NodeType
 	NODE_DOUBLE,
 	NODE_INT,
 	NODE_STRING,
-	
+
 	NODE_ARRAY,
 	NODE_ARRAY_ACCESS,
 
@@ -120,13 +120,13 @@ enum NodeType
 	NODE_IF,
 	NODE_WHILE,
 	NODE_RANGED_FOR,
-	
+
 	NODE_RETURN,
 	NODE_CONTINUE,
 	NODE_BREAK,
-	
+
 	NODE_UNPACK,
-	
+
 	NODE_INVALID
 };
 
@@ -156,20 +156,20 @@ struct Node
 struct NodeReturn : public Node
 {
 	Node *m_pExpr;
-	
+
 	NodeReturn(Node *pExpr=0)
 		: Node(NODE_RETURN), m_pExpr(pExpr)
 	{}
-	
+
 	NodeReturn(void *pExpr)
 		: NodeReturn((Node*)pExpr)
 	{}
-	
+
 	virtual ~NodeReturn()
 	{
 		if(m_pExpr) delete m_pExpr;
 	}
-	
+
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 	virtual Node* clone() const;
 };
@@ -228,11 +228,11 @@ struct NodeCall : public Node
 		if(m_pIdent) delete m_pIdent;
 		if(m_pArgs) delete m_pArgs;
 	}
-	
+
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 	virtual Node* clone() const;
 
-	
+
 protected:
 	std::vector<Node*> m_vecArgs;
 };
@@ -315,16 +315,16 @@ struct NodeRangedFor : public Node
 struct NodeDouble : public Node
 {
 	double m_dVal;
-	
+
 	NodeDouble(double dVal);
 	virtual ~NodeDouble()
 	{
 		if(m_pSymbol) delete m_pSymbol;
 	}
-	
+
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 	virtual Node* clone() const;
-	
+
 protected:
 	SymbolDouble *m_pSymbol;
 };
@@ -332,13 +332,13 @@ protected:
 struct NodeInt : public Node
 {
 	double m_iVal;
-	
+
 	NodeInt(int iVal);
 	virtual ~NodeInt()
 	{
 		if(m_pSymbol) delete m_pSymbol;
 	}
-	
+
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 	virtual Node* clone() const;
 
@@ -366,17 +366,17 @@ protected:
 struct NodeArray : public Node
 {
 	Node *m_pArr;
-	
+
 	NodeArray(NodeArray* pArr);
 	NodeArray(void *pArr)
 		: NodeArray((NodeArray*)pArr)
 	{}
-	
+
 	virtual ~NodeArray()
 	{
 		if(m_pArr) delete m_pArr;
 	}
-	
+
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 	virtual Node* clone() const;
 };
@@ -395,7 +395,7 @@ struct NodeMap : public Node
 		if(m_pMap) delete m_pMap;
 	}
 
-	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;	
+	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 	virtual Node* clone() const;
 };
 
@@ -453,18 +453,18 @@ struct NodeArrayAccess : public Node
 {
 	Node *m_pIdent;
 	Node *m_pExpr;
-	
+
 	NodeArrayAccess(Node* pIdent, Node* pExpr);
 	NodeArrayAccess(void* pIdent, void* pExpr)
 		: NodeArrayAccess((Node*)pIdent, (Node*)pExpr)
 	{}
-	
+
 	virtual ~NodeArrayAccess()
 	{
 		if(m_pIdent) delete m_pIdent;
 		if(m_pExpr) delete m_pExpr;
 	}
-	
+
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 	virtual Node* clone() const;
 
@@ -483,7 +483,7 @@ struct NodeUnaryOp : public Node
 	NodeUnaryOp(void* pChild, NodeType ntype)
 		: NodeUnaryOp((Node*)pChild, ntype)
 	{}
-	
+
 	virtual ~NodeUnaryOp()
 	{
 		if(m_pChild) delete m_pChild;
@@ -519,6 +519,7 @@ struct NodeBinaryOp : public Node
 
 	virtual Node* clone() const;
 
+	void FlattenNodes(NodeType ntype);
 	std::vector<Node*> flatten(NodeType ntype=NODE_ARGS) const;
 };
 
