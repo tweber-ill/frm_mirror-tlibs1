@@ -83,7 +83,7 @@ static void thread_proc(NodeFunction* pFunc, ParseInfo* pinfo, std::vector<Symbo
 	if(!pFunc || !pinfo) return;
 
 	pinfo->pmutexInterpreter->lock();
-		NodeFunction* pThreadFunc = (NodeFunction*)pFunc->clone();
+		NodeFunction* pThreadFunc = (NodeFunction*)pFunc/*->clone()*/;
 		pThreadFunc->SetArgSyms(pvecSyms);
 		ParseInfo *pinfo2 = new ParseInfo(*pinfo);	// threads cannot share the same bWantReturn etc.
 		pinfo2->bDestroyParseInfo = 0;
@@ -93,7 +93,7 @@ static void thread_proc(NodeFunction* pFunc, ParseInfo* pinfo, std::vector<Symbo
 
 	if(pRet) delete pRet;
 	if(pvecSyms) delete_symbols(pvecSyms);
-	if(pThreadFunc) delete pThreadFunc;
+	//if(pThreadFunc) delete pThreadFunc;
 	if(pinfo2) delete pinfo2;
 }
 

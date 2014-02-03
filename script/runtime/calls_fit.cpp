@@ -41,7 +41,7 @@ public:
 	GenericModel(const GenericModel& mod)
 			: m_pinfo(new ParseInfo(*mod.m_pinfo)),
 			  m_pCallerSymTab(mod.m_pCallerSymTab),
-			  m_pFkt((NodeFunction*)mod.m_pFkt->clone())
+			  m_pFkt((NodeFunction*)mod.m_pFkt/*->clone()*/)
 	{
 		m_pinfo->bDestroyParseInfo = 0;
 		m_strFreeParam = mod.m_strFreeParam;
@@ -55,7 +55,7 @@ public:
 	GenericModel(const NodeFunction *pFkt, ParseInfo& info, SymbolTable *pCallerSymTab)
 				: m_pinfo(new ParseInfo(info)),
 				  m_pCallerSymTab(pCallerSymTab),
-				  m_pFkt((NodeFunction*)pFkt->clone())
+				  m_pFkt((NodeFunction*)pFkt/*->clone()*/)
 	{
 		m_pinfo->bDestroyParseInfo = 0;
 		std::vector<std::string> vecParams = m_pFkt->GetParamNames();
@@ -77,7 +77,7 @@ public:
 
 	virtual ~GenericModel()
 	{
-		if(m_pFkt) { delete m_pFkt; m_pFkt=0; }
+		//if(m_pFkt) { delete m_pFkt; m_pFkt=0; }
 		if(m_pinfo) { delete m_pinfo; m_pinfo=0; }
 	}
 
