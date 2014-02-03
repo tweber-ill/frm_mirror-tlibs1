@@ -119,8 +119,6 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 	if(info.IsExecDisabled()) return 0;
 	info.pCurCaller = this;
 
-	std::vector<NodeFunction*>& vecFuncs = info.vecFuncs;
-
 	if(m_pIdent->m_type != NODE_IDENT)
 		return 0;
 	//if(m_pArgs->m_type != NODE_ARGS)
@@ -133,13 +131,7 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 
 	bool bCallUserFkt = 0;
 	// user-defined function
-	NodeFunction *pFkt = 0;
-	for(NodeFunction *pFktIter : vecFuncs)
-	{
-		if(pFktIter && pFktIter->GetName()==strFkt)
-			pFkt = pFktIter;
-	}
-
+	NodeFunction *pFkt = info.GetFunction(strFkt);;
 	if(pFkt)
 		bCallUserFkt = 1;
 
@@ -154,10 +146,53 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 	std::vector<Symbol*> vecArgSyms;
 	for(Node* pNode : m_vecArgs)
 	{
-		Symbol *pSymbol = pNode->eval(info, pSym);
-		//std::cout << "argument: " << pSymbol->print() << std::endl;
+		// TODO: Unpack operation for vector.
+		if(pNode->m_type == NODE_UNPACK)
+		{
+			Node *pChild = ((NodeUnaryOp*)pNode)->m_pChild;
+			if(!pChild)
+			{
+				std::cerr << linenr("Error", info)
+						<< "Invalid symbol to unpack." << std::endl;
+				continue;
+			}
+			Symbol *pSymChild = pChild->eval(info, pSym);
+			if(pSymChild->GetType() != SYMBOL_MAP)
+			{
+				std::cerr << linenr("Error", info)
+						<< "Cannot unpack non-map." << std::endl;
+				continue;
+			}
 
-		vecArgSyms.push_back(pSymbol);
+			SymbolMap::t_map& mapSyms = ((SymbolMap*)pSymChild)->m_map;
+
+			std::vector<std::string> vecParamNames = pFkt->GetParamNames();
+			for(unsigned int iParam=vecArgSyms.size(); iParam<vecParamNames.size(); ++iParam)
+			{
+				const std::string& strParamName = vecParamNames[iParam];
+				SymbolMap::t_map::iterator iter = mapSyms.find(strParamName);
+				if(iter == mapSyms.end())
+				{
+					std::cerr << linenr("Error", info)
+							<< "Parameter \"" << strParamName
+							<< "\" not in map." << std::endl;
+
+					vecArgSyms.push_back(new SymbolDouble(0.));
+					continue;
+				}
+
+				vecArgSyms.push_back(iter->second->clone());
+			}
+
+			safe_delete(pSymChild, pSym, info.pGlobalSyms);
+		}
+		else
+		{
+			Symbol *pSymbol = pNode->eval(info, pSym);
+			//std::cout << "argument: " << pSymbol->print() << std::endl;
+
+			vecArgSyms.push_back(pSymbol);
+		}
 	}
 
 	Symbol* pFktRet = 0;
@@ -165,11 +200,7 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 	{
 		pFkt->SetArgSyms(&vecArgSyms);
 		pFktRet = pFkt->eval(info, pSym);
-		if(info.bWantReturn)
-		{
-			//std::cout << "returned" << std::endl;
-			info.bWantReturn = 0;
-		}
+		info.bWantReturn = 0;
 	}
 	else				// call system function
 	{
@@ -765,7 +796,19 @@ Symbol* NodeUnaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 			}
 			return 0;
 		}
+
+		case NODE_UNPACK:
+		{
+			std::cerr << linenr("Warning", info)
+					<< "Unpack operation only allowed in function call. Ignoring."
+					<< std::endl;
+
+			if(m_pChild)
+				return m_pChild->eval(info, pSym);
+		}
 	}
+
+	return 0;
 }
 
 Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym) const
@@ -974,7 +1017,7 @@ Symbol* NodeBinaryOp::eval_funcinit(ParseInfo &info, SymbolTable *pSym) const
 	return 0;
 }
 
-Symbol* NodeBinaryOp::eval_sequential(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeBinaryOp::eval_recursive(ParseInfo &info, SymbolTable *pSym) const
 {
 	if(m_pLeft)
 	{
@@ -991,33 +1034,56 @@ Symbol* NodeBinaryOp::eval_sequential(ParseInfo &info, SymbolTable *pSym) const
 	return 0;
 }
 
+Symbol* NodeBinaryOp::eval_sequential(ParseInfo &info, SymbolTable *pSym) const
+{
+	for(Node* pNode : m_vecNodesFlat)
+	{
+		if(info.IsExecDisabled()) break;
+
+		Symbol *pSymbol = pNode->eval(info, pSym);
+		safe_delete(pSymbol, pSym, info.pGlobalSyms);
+	}
+	return 0;
+}
+
 Symbol* NodeBinaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 {
 	if(info.IsExecDisabled()) return 0;
-
-	switch(m_type)
+	if(m_vecNodesFlat.size() != 0)
 	{
-		case NODE_STMTS:
-		case NODE_ARGS:
-			return eval_sequential(info, pSym);
+		return eval_sequential(info, pSym);
+	}
+	else
+	{
+		switch(m_type)
+		{
+			case NODE_STMTS:
+			case NODE_ARGS:
+			{
+				std::cerr << linenr("Info", info)
+							<< "Should better be evaluated sequentially in interpreter."
+							<< std::endl;
+				return eval_recursive(info, pSym);
+			}
 
-		case NODE_ASSIGN: return eval_assign(info, pSym);
+			case NODE_ASSIGN: return eval_assign(info, pSym);
 
-		// should only be called once per module
-		case NODE_FUNCS: return eval_funcinit(info, pSym);
-	};
+			// should only be called once per module
+			case NODE_FUNCS: return eval_funcinit(info, pSym);
+		};
 
-	Symbol *pSymbolLeft = m_pLeft->eval(info, pSym);
-	Symbol *pSymbolRight = m_pRight->eval(info, pSym);
-	Symbol *pSymbol = Op(pSymbolLeft, pSymbolRight, m_type);
-	safe_delete(pSymbolLeft, pSym, info.pGlobalSyms);
-	safe_delete(pSymbolRight, pSym, info.pGlobalSyms);
+		Symbol *pSymbolLeft = m_pLeft->eval(info, pSym);
+		Symbol *pSymbolRight = m_pRight->eval(info, pSym);
+		Symbol *pSymbol = Op(pSymbolLeft, pSymbolRight, m_type);
+		safe_delete(pSymbolLeft, pSym, info.pGlobalSyms);
+		safe_delete(pSymbolRight, pSym, info.pGlobalSyms);
 
-	return pSymbol;
+		return pSymbol;
+	}
 }
 
 
-Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable*) const
 {
 	if(info.IsExecDisabled()) return 0;
 	info.pCurFunction = this;
@@ -1025,7 +1091,6 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable *pSym) const
 	std::vector<NodeFunction*>& vecFuncs = info.vecFuncs;
 	std::string strName = GetName();
 	//std::cout << "in fkt " << strName << std::endl;
-
 
 	SymbolTable *pLocalSym = new SymbolTable;
 	if(m_pVecArgSyms)
@@ -1041,18 +1106,9 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable *pSym) const
 
 		for(unsigned int iArg=0; iArg<m_vecArgs.size(); ++iArg)
 		{
-			Node* pNode = m_vecArgs[iArg];
+			NodeIdent* pIdent = (NodeIdent*)m_vecArgs[iArg];
 			Symbol *pSymbol = (*m_pVecArgSyms)[iArg];
-
-			NodeIdent* pIdent = (NodeIdent*)pNode;
 			//std::cout << "arg: " << pIdent->m_strIdent << std::endl;
-
-			/*Symbol *pSymbol = pSym->GetSymbol(pIdent->m_strIdent);
-			if(!pSymbol)
-			{
-				std::cerr << "Error: Symbol \"" << pIdent->m_strIdent << "\" not found."
-							<< std::endl;
-			}*/
 
 			pLocalSym->InsertSymbol(pIdent->m_strIdent, pSymbol->clone());
 		}

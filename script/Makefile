@@ -3,15 +3,15 @@ CC = gcc
 OPT_FLAGS = -ggdb -DDEBUG
 DEFINES = -DNO_QT -DNO_COMP
 FLAGS = -std=c++11 -fopenmp ${OPT_FLAGS} ${DEFINES}
-LIBS = -lstdc++ -lm -lboost_iostreams-mt
+LIBS = -lstdc++ -lm -lboost_iostreams-mt -lMinuit2
 
 hermelin: script.o lexer.o main.o yylexer.o symbol.o node.o node_eval.o calls.o handles.o gnuplot.o \
 		file.o string.o loadtxt.o rand.o fourier.o script_helper.o calls_plot.o calls_math.o \
-		calls_file.o calls_thread.o calls_fit.o globals.o flags.o fitter.o interpolation.o
+		calls_file.o calls_thread.o calls_fit.o globals.o flags.o fitter.o chi2.o interpolation.o
 	${CC} ${FLAGS} -o hermelin script.o lexer.o main.o yylexer.o symbol.o node.o node_eval.o \
 			calls.o handles.o gnuplot.o file.o string.o loadtxt.o rand.o fourier.o \
 			script_helper.o calls_plot.o calls_math.o calls_file.o calls_thread.o \
-			calls_fit.o globals.o flags.o fitter.o interpolation.o \
+			calls_fit.o globals.o flags.o fitter.o chi2.o interpolation.o \
 			${LIBS}
 
 script.o: script.yy
@@ -89,6 +89,9 @@ flags.o: helper/flags.cpp helper/flags.h
 
 fitter.o: fitter/fitter.cpp fitter/fitter.h
 	${CC} ${FLAGS} -c -o fitter.o fitter/fitter.cpp
+
+chi2.o: fitter/chi2.cpp fitter/chi2.h
+	${CC} ${FLAGS} -c -o chi2.o fitter/chi2.cpp
 
 interpolation.o: fitter/models/interpolation.cpp fitter/models/interpolation.h
 	${CC} ${FLAGS} -c -o interpolation.o fitter/models/interpolation.cpp

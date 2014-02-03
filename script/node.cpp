@@ -514,6 +514,14 @@ NodeArrayAccess::NodeArrayAccess(Node* pIdent, Node* pExpr)
 }
 
 
+NodeBinaryOp::NodeBinaryOp(Node* pLeft, Node* pRight, NodeType ntype)
+	: Node(ntype), m_pLeft(pLeft), m_pRight(pRight), m_bGlobal(0)
+{
+	if(ntype == NODE_STMTS || ntype == NODE_ARGS)
+		m_vecNodesFlat = this->flatten(ntype);
+}
+
+
 NodeCall::NodeCall(Node* _pIdent, Node* _pArgs)
 	: Node(NODE_CALL), m_pIdent(_pIdent), m_pArgs(_pArgs)
 {
@@ -533,6 +541,16 @@ NodeFunction::NodeFunction(Node* pLeft, Node* pMiddle, Node* pRight)
 		NodeBinaryOp* pArgs = (NodeBinaryOp*) m_pArgs;
 		m_vecArgs = pArgs->flatten(NODE_IDENTS);
 	}
+}
+
+std::vector<std::string> NodeFunction::GetParamNames() const
+{
+	std::vector<std::string> vecNames;
+
+	for(Node *pNode : m_vecArgs)
+		vecNames.push_back(((NodeIdent*)pNode)->m_strIdent);
+
+	return vecNames;
 }
 
 //--------------------------------------------------------------------------------
@@ -682,6 +700,7 @@ Node* NodeFunction::clone() const
 							m_pArgs?m_pArgs->clone():0,
 							m_pStmts?m_pStmts->clone():0);
 	pFkt->m_strScrFile = this->m_strScrFile;
+	pFkt->m_pVecArgSyms = this->m_pVecArgSyms;
 
 	*((Node*)pFkt) = *((Node*)this);
 	return pFkt;

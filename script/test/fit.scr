@@ -1,0 +1,25 @@
+line_model(x, a, b)
+{
+	return a*x + b;
+}
+
+main()
+{
+	x = [0, 1, 2, 3, 4, 5];
+	y = [-0.2, 0.9, 2.4, 2.9, 3.5, 5.3];
+	yerr = [0.2, 0.2, 0.3, 0.3, 0.4, 0.4];
+	hints = [1., 0.];
+
+	params = fit("line_model", x, y, yerr, ["hints":hints]);
+	print("fit parameters: " + str(params));
+
+	params_vals = map_vec_to_val(params);
+	params_errs = map_vec_to_val(params, 1);
+	print("values: " + str(params_vals));
+	print("errors: " + str(params_errs));
+
+	fitx = linspace(min(x), max(x), 128);
+#	fity = line_model(fitx, params["a"][0], params["b"][0]);
+	fity = line_model(fitx, *params_vals);
+	plot([x,y,yerr], [fitx, fity, ["style":"line"]]);
+}

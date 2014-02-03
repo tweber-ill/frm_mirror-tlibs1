@@ -189,6 +189,8 @@ expr:	'(' expr ')'		{ $$ = $2; }
 	| expr TOK_LOG_LEQ expr 	{ $$ = new NodeBinaryOp($1, $3, NODE_LOG_LEQ); set_linenr($$, pParseObj); }
 	| expr TOK_LOG_GEQ expr		{ $$ = new NodeBinaryOp($1, $3, NODE_LOG_GEQ); set_linenr($$, pParseObj); }
 	| TOK_LOG_NOT expr			{ $$ = new NodeUnaryOp($2, NODE_LOG_NOT); set_linenr($$, pParseObj); }
+	
+	| '*' expr					{ $$ = new NodeUnaryOp($2, NODE_UNPACK); set_linenr($$, pParseObj); }
 		
 	| TOK_DOUBLE			{ $$ = $1; }
 	| TOK_INT				{ $$ = $1; }

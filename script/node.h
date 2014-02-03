@@ -125,6 +125,7 @@ enum NodeType
 	NODE_CONTINUE,
 	NODE_BREAK,
 	
+	NODE_UNPACK,
 	
 	NODE_INVALID
 };
@@ -132,7 +133,7 @@ enum NodeType
 
 extern std::map<NodeType, double (*)(double,double)> g_mapBinOps_d;
 extern Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op);
-extern void safe_delete(Symbol *pSym, const SymbolTable* pSymTab);
+extern void safe_delete(Symbol *&pSym, const SymbolTable* pSymTab, const SymbolTable* pGlobalSymTab);
 
 
 struct Node
@@ -496,11 +497,9 @@ struct NodeBinaryOp : public Node
 {
 	Node *m_pLeft, *m_pRight;
 	bool m_bGlobal;
+	std::vector<Node*> m_vecNodesFlat;
 
-	NodeBinaryOp(Node* pLeft, Node* pRight, NodeType ntype)
-		: Node(ntype), m_pLeft(pLeft), m_pRight(pRight), m_bGlobal(0)
-	{}
-
+	NodeBinaryOp(Node* pLeft, Node* pRight, NodeType ntype);
 	NodeBinaryOp(void* pLeft, void* pRight, NodeType ntype)
 		: NodeBinaryOp((Node*)pLeft, (Node*)pRight, ntype)
 	{}
@@ -514,7 +513,10 @@ struct NodeBinaryOp : public Node
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 	virtual Symbol* eval_assign(ParseInfo &info, SymbolTable *pSym=0) const;
 	virtual Symbol* eval_funcinit(ParseInfo &info, SymbolTable *pSym=0) const;
+
+	virtual Symbol* eval_recursive(ParseInfo &info, SymbolTable *pSym=0) const;
 	virtual Symbol* eval_sequential(ParseInfo &info, SymbolTable *pSym=0) const;
+
 	virtual Node* clone() const;
 
 	std::vector<Node*> flatten(NodeType ntype=NODE_ARGS) const;
@@ -523,6 +525,9 @@ struct NodeBinaryOp : public Node
 struct NodeFunction : public Node
 {
 	Node *m_pIdent, *m_pArgs, *m_pStmts;
+
+	// arguments the function takes
+	std::vector<Node*> m_vecArgs;
 
 	// symbols for the arguments the function takes
 	const std::vector<Symbol*>* m_pVecArgSyms;
@@ -547,15 +552,11 @@ struct NodeFunction : public Node
 	virtual Node* clone() const;
 
 	std::string GetName() const;
+	std::vector<std::string> GetParamNames() const;
 
 	// arguments to function
 	void SetArgSyms(const std::vector<Symbol*>* pvecArgSyms)
 	{ this->m_pVecArgSyms = pvecArgSyms; }
-	
-	
-//protected:
-	// arguments the function takes
-	std::vector<Node*> m_vecArgs;
 };
 
 #endif
