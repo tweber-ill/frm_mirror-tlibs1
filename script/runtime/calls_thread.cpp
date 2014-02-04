@@ -82,15 +82,22 @@ static void thread_proc(NodeFunction* pFunc, ParseInfo* pinfo, std::vector<Symbo
 {
 	if(!pFunc || !pinfo) return;
 
+	SymbolTable *pTable = new SymbolTable();
+	SymbolArray arrArgs;
+	arrArgs.m_bDontDel = 1;
+
 	pinfo->pmutexInterpreter->lock();
-		NodeFunction* pThreadFunc = (NodeFunction*)pFunc/*->clone()*/;
-		pThreadFunc->SetArgSyms(pvecSyms);
+		const NodeFunction* pThreadFunc = (NodeFunction*)pFunc/*->clone()*/;
 		ParseInfo *pinfo2 = new ParseInfo(*pinfo);	// threads cannot share the same bWantReturn etc.
 		pinfo2->bDestroyParseInfo = 0;
+		if(pvecSyms) arrArgs.m_arr = *pvecSyms;
 	pinfo->pmutexInterpreter->unlock();
 
-	Symbol* pRet = pThreadFunc->eval(*pinfo2, 0);
+	pTable->InsertSymbol("<args>", &arrArgs);
+	Symbol* pRet = pThreadFunc->eval(*pinfo2, pTable);
+	pTable->RemoveSymbolNoDelete("<args>");
 
+	if(pTable) delete pTable;
 	if(pRet) delete pRet;
 	if(pvecSyms) delete_symbols(pvecSyms);
 	//if(pThreadFunc) delete pThreadFunc;

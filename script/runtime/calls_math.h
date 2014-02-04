@@ -8,6 +8,7 @@
 #define __SCRIPT_CALLS_MATH_H__
 
 #include "../symbol.h"
+#include <type_traits>
 
 extern bool is_vec(const Symbol* pSym);
 extern bool is_mat(const Symbol* pSym, unsigned int *piNumCols=0, unsigned int *piNumRows=0);
@@ -24,7 +25,11 @@ static t_vec<T> sym_to_vec(const Symbol* pSym)
 	unsigned int iIdx = 0;
 	for(const Symbol* pSymInArr : pSymArr->m_arr)
 	{
-		vec[iIdx] = pSymInArr->GetValDouble();
+		// TODO: Find a pure template meta solution
+		if(std::is_floating_point<T>::value || std::is_integral<T>::value)
+			*(double*)&vec[iIdx] = pSymInArr->GetValDouble();
+		else /*if(std::is_same<T, std::string>::value)*/	// TODO
+			*(std::string*)&vec[iIdx] = pSymInArr->print();
 		++iIdx;
 	}
 
@@ -38,7 +43,13 @@ static Symbol* vec_to_sym(const t_vec<T>& vec)
 	pSym->m_arr.reserve(vec.size());
 
 	for(const T& t : vec)
-		pSym->m_arr.push_back(new SymbolDouble(t));
+	{
+		// TODO: Find a pure template meta solution
+		if(std::is_floating_point<T>::value || std::is_integral<T>::value)
+			pSym->m_arr.push_back(new SymbolDouble(t));
+		else if(std::is_same<T, std::string>::value)
+			pSym->m_arr.push_back(new SymbolString(t));
+	}
 
 	return pSym;
 }

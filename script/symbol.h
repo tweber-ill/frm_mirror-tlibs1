@@ -18,7 +18,7 @@ enum SymbolType
 	SYMBOL_DOUBLE,
 	SYMBOL_INT,
 	SYMBOL_STRING,
-	
+
 	SYMBOL_ARRAY,
 	SYMBOL_MAP
 };
@@ -64,6 +64,7 @@ struct SymbolDouble : public Symbol
 
 	SymbolDouble() : Symbol(), m_dVal(0.) {}
 	SymbolDouble(double dVal) : m_dVal(dVal) {}
+	SymbolDouble(const std::string&) { throw "Error: Invalid SymbolDouble constructor."; }
 
 	virtual SymbolType GetType() const { return SYMBOL_DOUBLE; }
 	virtual std::string GetTypeName() const { return "real"; }
@@ -84,7 +85,7 @@ struct SymbolDouble : public Symbol
 struct SymbolInt : public Symbol
 {
 	int m_iVal;
-	
+
 	SymbolInt() : Symbol(), m_iVal(0) {}
 	SymbolInt(int iVal) : m_iVal(iVal) {}
 
@@ -107,10 +108,11 @@ struct SymbolInt : public Symbol
 struct SymbolString : public Symbol
 {
 	std::string m_strVal;
-	
+
 	SymbolString() : Symbol() {}
 	SymbolString(const char* pcStr) : m_strVal(pcStr) {}
 	SymbolString(const std::string& str) : m_strVal(str) {}
+	SymbolString(double dVal) { throw "Error: Invalid SymbolString constructor."; }
 
 	virtual SymbolType GetType() const { return SYMBOL_STRING; }
 	virtual std::string GetTypeName() const { return "string"; }
@@ -128,11 +130,12 @@ struct SymbolString : public Symbol
 
 struct SymbolArray : public Symbol
 {
+	bool m_bDontDel;
 	std::vector<Symbol*> m_arr;
-	
-	SymbolArray() : Symbol() { /*std::cout << "symarr -> new" << std::endl;*/ }
+
+	SymbolArray() : Symbol(), m_bDontDel(0) { /*std::cout << "symarr -> new" << std::endl;*/ }
 	virtual ~SymbolArray();
-	
+
 	virtual SymbolType GetType() const { return SYMBOL_ARRAY; }
 	virtual std::string GetTypeName() const { return "vector"; }
 	virtual Symbol* ToType(SymbolType stype) const;
@@ -143,7 +146,7 @@ struct SymbolArray : public Symbol
 	virtual std::string print() const;
 	virtual Symbol* clone() const;
 	virtual void assign(Symbol *pSym);
-	
+
 	virtual bool IsNotZero() const { return 0; }
 
 	void UpdateIndex(unsigned int);
@@ -190,9 +193,9 @@ protected:
 public:
 	SymbolTable();
 	virtual ~SymbolTable();
-	
+
 	void print() const;
-	
+
 	Symbol* GetSymbol(const std::string& strKey);
 	void InsertSymbol(const std::string& strKey, Symbol *pSym);
 	void RemoveSymbol(const std::string& strKey);

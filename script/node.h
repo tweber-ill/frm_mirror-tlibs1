@@ -29,7 +29,7 @@ struct ParseInfo
 
 	// function to execute, e.g. "main"
 	std::string strExecFkt;
-	const std::vector<Symbol*>* pvecExecArg;
+	//const std::vector<Symbol*>* pvecExecArg;
 	std::string strInitScrFile;
 
 	// all functions from all modules
@@ -531,7 +531,7 @@ struct NodeFunction : public Node
 	std::vector<Node*> m_vecArgs;
 
 	// symbols for the arguments the function takes
-	const std::vector<Symbol*>* m_pVecArgSyms;
+	//const std::vector<Symbol*>* m_pVecArgSyms;
 
 	// script file this function resides in
 	std::string m_strScrFile;
@@ -556,8 +556,8 @@ struct NodeFunction : public Node
 	std::vector<std::string> GetParamNames() const;
 
 	// arguments to function
-	void SetArgSyms(const std::vector<Symbol*>* pvecArgSyms)
-	{ this->m_pVecArgSyms = pvecArgSyms; }
+	//void SetArgSyms(const std::vector<Symbol*>* pvecArgSyms)
+	//{ this->m_pVecArgSyms = pvecArgSyms; }
 };
 
 #endif

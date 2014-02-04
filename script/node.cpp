@@ -9,7 +9,7 @@
 
 ParseInfo::ParseInfo() : pmapModules(0), phandles(0),
 			pmutexGlobal(0), pmutexInterpreter(0),
-			pvecExecArg(0), pGlobalSyms(0),
+			/*pvecExecArg(0),*/ pGlobalSyms(0),
 			pCurFunction(0), pCurCaller(0), bWantReturn(0),
 			pCurLoop(0), bWantBreak(0), bWantContinue(0),
 			bDestroyParseInfo(1)
@@ -539,8 +539,7 @@ NodeCall::NodeCall(Node* _pIdent, Node* _pArgs)
 
 
 NodeFunction::NodeFunction(Node* pLeft, Node* pMiddle, Node* pRight)
-	: Node(NODE_FUNC), m_pIdent(pLeft), m_pArgs(pMiddle), m_pStmts(pRight),
-		m_pVecArgSyms(0)
+	: Node(NODE_FUNC), m_pIdent(pLeft), m_pArgs(pMiddle), m_pStmts(pRight)/*, m_pVecArgSyms(0)*/
 {
 	if(m_pArgs && (m_pArgs->m_type==NODE_IDENTS || m_pArgs->m_type==NODE_IDENT))
 	{
@@ -707,7 +706,7 @@ Node* NodeFunction::clone() const
 							m_pArgs?m_pArgs->clone():0,
 							m_pStmts?m_pStmts->clone():0);
 	pFkt->m_strScrFile = this->m_strScrFile;
-	pFkt->m_pVecArgSyms = this->m_pVecArgSyms;
+	//pFkt->m_pVecArgSyms = this->m_pVecArgSyms;
 
 	*((Node*)pFkt) = *((Node*)this);
 	return pFkt;

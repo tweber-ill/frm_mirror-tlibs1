@@ -11,6 +11,7 @@
 
 
 template<typename T=double> using t_stdvec = std::vector<T>;
+template<typename T=std::string> using t_stdvecstr = std::vector<T>;
 
 // --------------------------------------------------------------------------------
 // fitting
@@ -29,9 +30,11 @@ template<typename T=double> using t_stdvec = std::vector<T>;
 class GenericModel : public FunctionModel
 {
 protected:
-	NodeFunction *m_pFkt;
+	const NodeFunction *m_pFkt;
 	ParseInfo *m_pinfo;
-	SymbolTable *m_pCallerSymTab;
+	const SymbolTable *m_pCallerSymTab;
+
+	SymbolTable *m_pTable;
 
 	std::string m_strFreeParam;
 	std::vector<std::string> m_vecParamNames;
@@ -41,7 +44,8 @@ public:
 	GenericModel(const GenericModel& mod)
 			: m_pinfo(new ParseInfo(*mod.m_pinfo)),
 			  m_pCallerSymTab(mod.m_pCallerSymTab),
-			  m_pFkt((NodeFunction*)mod.m_pFkt/*->clone()*/)
+			  m_pFkt((NodeFunction*)mod.m_pFkt/*->clone()*/),
+			  m_pTable(new SymbolTable())
 	{
 		m_pinfo->bDestroyParseInfo = 0;
 		m_strFreeParam = mod.m_strFreeParam;
@@ -55,7 +59,8 @@ public:
 	GenericModel(const NodeFunction *pFkt, ParseInfo& info, SymbolTable *pCallerSymTab)
 				: m_pinfo(new ParseInfo(info)),
 				  m_pCallerSymTab(pCallerSymTab),
-				  m_pFkt((NodeFunction*)pFkt/*->clone()*/)
+				  m_pFkt((NodeFunction*)pFkt/*->clone()*/),
+				  m_pTable(new SymbolTable())
 	{
 		m_pinfo->bDestroyParseInfo = 0;
 		std::vector<std::string> vecParams = m_pFkt->GetParamNames();
@@ -79,6 +84,7 @@ public:
 	{
 		//if(m_pFkt) { delete m_pFkt; m_pFkt=0; }
 		if(m_pinfo) { delete m_pinfo; m_pinfo=0; }
+		if(m_pTable) { delete m_pTable; m_pTable=0; }
 	}
 
 	virtual bool SetParams(const std::vector<double>& vecParams)
@@ -102,11 +108,18 @@ public:
 	virtual double operator()(double x) const
 	{
 		((SymbolDouble*)m_vecSyms[0])->m_dVal = x;
-		m_pFkt->SetArgSyms(&m_vecSyms);
+
+		SymbolArray arrArgs;
+		arrArgs.m_bDontDel = 1;
+		arrArgs.m_arr = m_vecSyms;
+		//m_pFkt->SetArgSyms(&m_vecSyms);
+
+		m_pTable->InsertSymbol("<args>", &arrArgs);
+		Symbol *pSymRet = m_pFkt->eval(*m_pinfo, m_pTable);
+		m_pinfo->bWantReturn = 0;
+		m_pTable->RemoveSymbolNoDelete("<args>");
 
 		double dRetVal = 0.;
-		Symbol *pSymRet = m_pFkt->eval(*m_pinfo, 0);
-		m_pinfo->bWantReturn = 0;
 		if(pSymRet)
 			dRetVal = pSymRet->GetValDouble();
 		safe_delete(pSymRet, m_pCallerSymTab, m_pinfo->pGlobalSyms);
@@ -208,6 +221,8 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	std::vector<double> vecLimMin, vecLimMax;
 	std::vector<bool> vecLimMinActive, vecLimMaxActive;
 
+	std::vector<std::string> vecFixedParams;
+
 	vecLimMinActive.resize(iParamSize);
 	vecLimMaxActive.resize(iParamSize);
 
@@ -222,6 +237,9 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		SymbolMap::t_map::iterator iterLimitsMin = mapSym.find("lower_limits");
 		SymbolMap::t_map::iterator iterLimitsMax = mapSym.find("upper_limits");
 
+		SymbolMap::t_map::iterator iterFixed = mapSym.find("fixed");
+
+
 		if(iterHints != mapSym.end())
 			get_values(vecParamNames, iterHints->second, vecHints, vecHintsActive);
 		if(iterHintsErr != mapSym.end())
@@ -231,6 +249,12 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 			get_values(vecParamNames, iterLimitsMin->second, vecLimMin, vecLimMinActive);
 		if(iterLimitsMax != mapSym.end())
 			get_values(vecParamNames, iterLimitsMax->second, vecLimMax, vecLimMaxActive);
+
+
+		vecFixedParams = sym_to_vec<t_stdvecstr, std::string>(iterFixed->second);
+
+//		for(const std::string& strFixed : vecFixedParams)
+//			std::cout << "fixed params: " << strFixed << std::endl;
 	}
 
 
@@ -255,8 +279,8 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		if(iParam < vecHintsErr.size())
 			dErr = vecHintsErr[iParam];
 
-		//std::cout << "hints for " << vecParamNames[iParam] << ": "
-		//		<< dHint << " +- " << dErr << std::endl;
+//		std::cout << "hints for " << vecParamNames[iParam] << ": "
+//				<< dHint << " +- " << dErr << std::endl;
 		params.Add(vecParamNames[iParam], dHint, dErr);
 
 
@@ -283,7 +307,8 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		else if(vecLimMinActive[iParam]==0 && vecLimMaxActive[iParam])
 			params.SetUpperLimit(vecParamNames[iParam], dLimMax);
 
-		//params.Fix(vecParamNames[iParam]);
+		if(std::find(vecFixedParams.begin(), vecFixedParams.end(), vecParamNames[iParam]) != vecFixedParams.end())
+			params.Fix(vecParamNames[iParam]);
 	}
 
 
@@ -295,7 +320,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	{
 		// step 1: free fit (limited)
 
-		ROOT::Minuit2::MnMigrad migrad(chi2fkt, params, 1);
+		ROOT::Minuit2::MnMigrad migrad(chi2fkt, params, 2);
 		ROOT::Minuit2::FunctionMinimum mini = migrad();
 		bValidFit = mini.IsValid() && mini.HasValidParameters();
 
@@ -315,8 +340,8 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		for(const std::string& strSym : vecParamNames)
 			params.RemoveLimits(strSym);
 
-		ROOT::Minuit2::MnMigrad migrad2(chi2fkt, params, 2);
-		ROOT::Minuit2::FunctionMinimum mini = migrad2();
+		ROOT::Minuit2::MnMigrad migrad(chi2fkt, params, 2);
+		ROOT::Minuit2::FunctionMinimum mini = migrad();
 		bValidFit = mini.IsValid() && mini.HasValidParameters();
 
 		minis.push_back(mini);

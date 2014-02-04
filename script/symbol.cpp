@@ -169,12 +169,11 @@ void SymbolString::assign(Symbol *pSym)
 
 SymbolArray::~SymbolArray()
 {
-	for(Symbol *pSym : m_arr)
-		if(pSym) delete pSym;
+	if(!m_bDontDel)
+		for(Symbol *pSym : m_arr)
+			if(pSym) delete pSym;
 
 	m_arr.clear();
-
-	//std::cout << "symarr -> del" << std::endl;
 }
 
 Symbol* SymbolArray::ToType(SymbolType stype) const

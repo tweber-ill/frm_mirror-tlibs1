@@ -143,7 +143,9 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 	}*/
 
 
-	std::vector<Symbol*> vecArgSyms;
+	SymbolArray arrArgs;
+	arrArgs.m_bDontDel = 1;
+	std::vector<Symbol*> &vecArgSyms = arrArgs.m_arr;
 	for(Node* pNode : m_vecArgs)
 	{
 		// TODO: Unpack operation for vector.
@@ -198,8 +200,10 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 	Symbol* pFktRet = 0;
 	if(bCallUserFkt)	// call user-defined function
 	{
-		pFkt->SetArgSyms(&vecArgSyms);
+		//pFkt->SetArgSyms(&vecArgSyms);
+		pSym->InsertSymbol("<args>", &arrArgs);
 		pFktRet = pFkt->eval(info, pSym);
+		pSym->RemoveSymbolNoDelete("<args>");
 		info.bWantReturn = 0;
 	}
 	else				// call system function
@@ -989,7 +993,7 @@ Symbol* NodeBinaryOp::eval_funcinit(ParseInfo &info, SymbolTable *pSym) const
 	{
 		std::string strExecBck = info.strExecFkt;
 
-		Symbol *pSymInitRet = pToRun->eval(info, pSym);
+		Symbol *pSymInitRet = pToRun->eval(info, /*pSym*/0);
 		safe_delete(pSymInitRet, pSym, info.pGlobalSyms);
 
 		info.strExecFkt = strExecBck;
@@ -1002,11 +1006,22 @@ Symbol* NodeBinaryOp::eval_funcinit(ParseInfo &info, SymbolTable *pSym) const
 		{
 			if(pFkt->GetName() == info.strExecFkt)
 			{
+				//SymbolArray arrArgs;
 				// argument counts have to match
-				if(info.pvecExecArg && pFkt->m_vecArgs.size() == info.pvecExecArg->size())
-					pFkt->SetArgSyms(info.pvecExecArg);
+				/*if(info.pvecExecArg && pFkt->m_vecArgs.size() == info.pvecExecArg->size())
+				{
+					arrArgs.m_bDontDel = 1;
+					arrArgs.m_arr = *info.pvecExecArg;
+					if(pSym) pSym->InsertSymbol("<args>", &arrArgs);
+				}*/
+				//pFkt->SetArgSyms(info.pvecExecArg);
+				if(pFkt->m_vecArgs.size() == 0)
+					pSym->RemoveSymbolNoDelete("<args>");
+
 				Symbol *pSymRet = pFkt->eval(info, pSym);
-				info.pvecExecArg = 0;
+				if(pSym) pSym->RemoveSymbolNoDelete("<args>");
+
+				//info.pvecExecArg = 0;
 				return pSymRet;
 			}
 		}
@@ -1083,7 +1098,7 @@ Symbol* NodeBinaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 }
 
 
-Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable*) const
+Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 {
 	if(info.IsExecDisabled()) return 0;
 	info.pCurFunction = this;
@@ -1093,21 +1108,27 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable*) const
 	//std::cout << "in fkt " << strName << std::endl;
 
 	SymbolTable *pLocalSym = new SymbolTable;
-	if(m_pVecArgSyms)
+
+	SymbolArray* pArgs = 0;
+	if(pTableSup)
+		pArgs = (SymbolArray*)pTableSup->GetSymbol("<args>");
+	if(pArgs)
 	{
-		if(m_vecArgs.size() != m_pVecArgSyms->size())
+		const std::vector<Symbol*> *pVecArgSyms = &pArgs->m_arr;
+
+		if(m_vecArgs.size() != pVecArgSyms->size())
 		{
 			std::cerr << linenr("Error", info) << "Function \""
 					<< strName << "\"" << " takes "
 					<< m_vecArgs.size() << " arguments, but "
-					<< m_pVecArgSyms->size() << " given."
+					<< pVecArgSyms->size() << " given."
 					<< std::endl;
 		}
 
 		for(unsigned int iArg=0; iArg<m_vecArgs.size(); ++iArg)
 		{
 			NodeIdent* pIdent = (NodeIdent*)m_vecArgs[iArg];
-			Symbol *pSymbol = (*m_pVecArgSyms)[iArg];
+			Symbol *pSymbol = (*pVecArgSyms)[iArg];
 			//std::cout << "arg: " << pIdent->m_strIdent << std::endl;
 
 			pLocalSym->InsertSymbol(pIdent->m_strIdent, pSymbol->clone());

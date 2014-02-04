@@ -61,21 +61,31 @@ static inline int script_main(int argc, char** argv)
 		return -4;
 	}
 
-	SymbolArray arrMainArgs;
+	SymbolArray *parrMainArgs = new SymbolArray();
 	for(int iArg=1; iArg<argc; ++iArg)
 	{
 		SymbolString *pSymArg = new SymbolString();
 		pSymArg->m_strVal = argv[iArg];
-		arrMainArgs.m_arr.push_back(pSymArg);
+		parrMainArgs->m_arr.push_back(pSymArg);
 	}
-	std::vector<Symbol*> vecMainArgs = { &arrMainArgs };
+	//std::vector<Symbol*> vecMainArgs = { &arrMainArgs };
+
+	SymbolTable *pTableSup = new SymbolTable();
 
 	info.pmapModules->insert(ParseInfo::t_mods::value_type(pcFile, par.pRoot));
 	info.strExecFkt = "main";
-	info.pvecExecArg = &vecMainArgs;
+	//info.pvecExecArg = &vecMainArgs;
 	info.strInitScrFile = pcFile;
-	par.pRoot->eval(info);
+
+	SymbolArray arrMainArgs;
+	arrMainArgs.m_arr.push_back(parrMainArgs);
+	pTableSup->InsertSymbol("<args>", &arrMainArgs);
+	par.pRoot->eval(info, pTableSup);
+	pTableSup->RemoveSymbolNoDelete("<args>");
+
 	//info.pGlobalSyms->print();
+
+	delete pTableSup;
 
 	return 0;
 }
