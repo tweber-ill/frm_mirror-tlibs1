@@ -10,7 +10,11 @@ main()
 	yerr = [0.2, 0.2, 0.3, 0.3, 0.4, 0.4];
 	hints = [1., 0.];
 
-	params = fit("line_model", x, y, yerr, ["hints":hints]);
+	lower = ["b":-1, "a":0];
+	upper = ["b":1, "a":2];
+
+	params = fit("line_model", x, y, yerr, ["hints":hints, 
+				"lower_limits":lower, "upper_limits":upper]);
 	print("fit parameters: " + str(params));
 
 	params_vals = map_vec_to_val(params);

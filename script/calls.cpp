@@ -246,7 +246,7 @@ static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size()<1)
 		return new SymbolArray();
-	
+
 	if(vecSyms.size()>=1 && vecSyms[0]->GetType()==SYMBOL_ARRAY)
 		return vecSyms[0]->clone();
 
@@ -257,10 +257,10 @@ static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
 		std::cerr << linenr("Error", info) << "\"num\" in vec(num, val=0) has to be integer." << std::endl;
 		return 0;
 	}
-	
+
 	int iVal = ((SymbolInt*)pSymSize)->m_iVal;
 	if(iVal < 0) iVal = 0;
-	
+
 
 
 	bool bOwnVal = 0;

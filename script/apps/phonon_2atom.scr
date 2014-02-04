@@ -2,7 +2,7 @@
 
 
 # branch = 1	=>	optic phonon
-# branch = -1	=>	accoustic phonon
+# branch = -1	=>	acoustic phonon
 disp(beta, m1, m2, q, a, branch)
 {
 	# see Furrer p. 92

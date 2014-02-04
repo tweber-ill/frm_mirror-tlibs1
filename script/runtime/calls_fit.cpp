@@ -130,6 +130,41 @@ public:
 };
 
 
+static void get_values(const std::vector<std::string>& vecParamNames,
+						const Symbol* pSym,
+						std::vector<double>& vec, std::vector<bool>& vecActive)
+{
+	vecActive.resize(vecParamNames.size());
+
+	if(pSym->GetType() == SYMBOL_ARRAY)
+	{
+		vec = sym_to_vec<t_stdvec>(pSym);
+
+		for(unsigned int i=0; i<vecActive.size(); ++i)
+			vecActive[i] = 1;
+	}
+	else if(pSym->GetType() == SYMBOL_MAP)
+	{
+		vec.resize(vecParamNames.size());
+		std::map<std::string, double> mymap = sym_to_map<std::string, double>(pSym);
+
+		for(unsigned int iParam=0; iParam<vecParamNames.size(); ++iParam)
+		{
+			const std::string& strKey = vecParamNames[iParam];
+
+			std::map<std::string, double>::iterator iter = mymap.find(strKey);
+			if(iter == mymap.end())
+			{
+				vecActive[iParam] = 0;
+			}
+			else
+			{
+				vecActive[iParam] = 1;
+				vec[iParam] = iter->second;
+			}
+		}
+	}
+}
 
 // fit("function", x, y, yerr, params)
 static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
@@ -161,8 +196,21 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 
+
+	GenericModel mod(pFkt, info, pSymTab);
+	std::vector<std::string> vecParamNames = mod.GetParamNames();
+	const unsigned int iParamSize = vecParamNames.size();
+
+
 	std::vector<double> vecHints, vecHintsErr;
+	std::vector<bool> vecHintsActive, vecHintsErrActive;
+
 	std::vector<double> vecLimMin, vecLimMax;
+	std::vector<bool> vecLimMinActive, vecLimMaxActive;
+
+	vecLimMinActive.resize(iParamSize);
+	vecLimMaxActive.resize(iParamSize);
+
 	// parameter map
 	if(vecSyms.size()==5 && vecSyms[4]->GetType()==SYMBOL_MAP)
 	{
@@ -171,22 +219,20 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		SymbolMap::t_map::iterator iterHints = mapSym.find("hints");
 		SymbolMap::t_map::iterator iterHintsErr = mapSym.find("hints_errors");
 
-		SymbolMap::t_map::iterator iterLimitsMin = mapSym.find("lower_limit");
-		SymbolMap::t_map::iterator iterLimitsMax = mapSym.find("upper_limit");
+		SymbolMap::t_map::iterator iterLimitsMin = mapSym.find("lower_limits");
+		SymbolMap::t_map::iterator iterLimitsMax = mapSym.find("upper_limits");
 
 		if(iterHints != mapSym.end())
-			vecHints = sym_to_vec<t_stdvec>(iterHints->second);
+			get_values(vecParamNames, iterHints->second, vecHints, vecHintsActive);
 		if(iterHintsErr != mapSym.end())
-			vecHintsErr = sym_to_vec<t_stdvec>(iterHintsErr->second);
+			get_values(vecParamNames, iterHintsErr->second, vecHintsErr, vecHintsErrActive);
 
 		if(iterLimitsMin != mapSym.end())
-			vecLimMin = sym_to_vec<t_stdvec>(iterLimitsMin->second);
+			get_values(vecParamNames, iterLimitsMin->second, vecLimMin, vecLimMinActive);
 		if(iterLimitsMax != mapSym.end())
-			vecLimMax = sym_to_vec<t_stdvec>(iterLimitsMax->second);
+			get_values(vecParamNames, iterLimitsMax->second, vecLimMax, vecLimMaxActive);
 	}
 
-	GenericModel mod(pFkt, info, pSymTab);
-	std::vector<std::string> vecParamNames = mod.GetParamNames();
 
 	std::vector<double> vecX = sym_to_vec<t_stdvec>(vecSyms[1]);
 	std::vector<double> vecY = sym_to_vec<t_stdvec>(vecSyms[2]);
@@ -197,8 +243,6 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 
 	Chi2Function chi2fkt(&mod, iSize, vecX.data(), vecY.data(), vecYErr.data());
 
-
-	const unsigned int iParamSize = vecParamNames.size();
 
 	ROOT::Minuit2::MnUserParameters params;
 	for(unsigned int iParam=0; iParam<iParamSize; ++iParam)
@@ -215,12 +259,29 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		//		<< dHint << " +- " << dErr << std::endl;
 		params.Add(vecParamNames[iParam], dHint, dErr);
 
-		if(iParam < vecLimMin.size() && iParam < vecLimMax.size())
-		{
-			double dLimMin = vecLimMin[iParam];
-			double dLimMax = vecLimMax[iParam];
+
+
+		double dLimMin = 0.;
+		double dLimMax = 0.;
+
+		if(iParam < vecLimMin.size())
+			dLimMin = vecLimMin[iParam];
+		if(iParam < vecLimMax.size())
+			dLimMax = vecLimMax[iParam];
+
+/*		if(vecLimMinActive[iParam])
+			std::cout << "lower limit for " << vecParamNames[iParam] << ": "
+						<< dLimMin << std::endl;
+		if(vecLimMaxActive[iParam])
+			std::cout << "upper limit for " << vecParamNames[iParam] << ": "
+						<< dLimMax << std::endl;*/
+
+		if(vecLimMinActive[iParam] && vecLimMaxActive[iParam])
 			params.SetLimits(vecParamNames[iParam], dLimMin, dLimMax);
-		}
+		else if(vecLimMinActive[iParam] && vecLimMaxActive[iParam]==0)
+			params.SetLowerLimit(vecParamNames[iParam], dLimMin);
+		else if(vecLimMinActive[iParam]==0 && vecLimMaxActive[iParam])
+			params.SetUpperLimit(vecParamNames[iParam], dLimMax);
 
 		//params.Fix(vecParamNames[iParam]);
 	}
@@ -293,6 +354,8 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		std::cerr << "--------------------------------------------------------------------------------" << std::endl;
 	}
 
+	if(!bValidFit)
+		std::cerr << "Error: Fit invalid!" << std::endl;
 	return pSymMap;
 }
 // --------------------------------------------------------------------------------

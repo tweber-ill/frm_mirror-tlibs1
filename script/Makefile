@@ -3,7 +3,7 @@ CC = gcc
 OPT_FLAGS = -ggdb -DDEBUG
 DEFINES = -DNO_QT -DNO_COMP
 FLAGS = -std=c++11 -fopenmp ${OPT_FLAGS} ${DEFINES}
-LIBS = -lstdc++ -lm -lboost_iostreams-mt -lMinuit2
+LIBS = -lboost_iostreams-mt -L/usr/local/lib -lMinuit2 -lstdc++ -lm
 
 hermelin: script.o lexer.o main.o yylexer.o symbol.o node.o node_eval.o calls.o handles.o gnuplot.o \
 		file.o string.o loadtxt.o rand.o fourier.o script_helper.o calls_plot.o calls_math.o \
