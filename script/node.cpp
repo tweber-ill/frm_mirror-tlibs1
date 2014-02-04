@@ -311,7 +311,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			{
 				std::cerr << "Error: Operator \"" << op << "\" not defined for double type."
 						 << std::endl;
-				pResult->m_iVal = 0;		 
+				pResult->m_iVal = 0;
 			}
 			pRes = pResult;
 		}
@@ -539,7 +539,7 @@ NodeCall::NodeCall(Node* _pIdent, Node* _pArgs)
 
 
 NodeFunction::NodeFunction(Node* pLeft, Node* pMiddle, Node* pRight)
-	: Node(NODE_FUNC), m_pIdent(pLeft), m_pArgs(pMiddle), m_pStmts(pRight)/*, m_pVecArgSyms(0)*/
+	: Node(NODE_FUNC), m_pIdent(pLeft), m_pArgs(pMiddle), m_pStmts(pRight)
 {
 	if(m_pArgs && (m_pArgs->m_type==NODE_IDENTS || m_pArgs->m_type==NODE_IDENT))
 	{

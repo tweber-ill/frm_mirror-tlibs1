@@ -1006,22 +1006,12 @@ Symbol* NodeBinaryOp::eval_funcinit(ParseInfo &info, SymbolTable *pSym) const
 		{
 			if(pFkt->GetName() == info.strExecFkt)
 			{
-				//SymbolArray arrArgs;
-				// argument counts have to match
-				/*if(info.pvecExecArg && pFkt->m_vecArgs.size() == info.pvecExecArg->size())
-				{
-					arrArgs.m_bDontDel = 1;
-					arrArgs.m_arr = *info.pvecExecArg;
-					if(pSym) pSym->InsertSymbol("<args>", &arrArgs);
-				}*/
-				//pFkt->SetArgSyms(info.pvecExecArg);
 				if(pFkt->m_vecArgs.size() == 0)
 					pSym->RemoveSymbolNoDelete("<args>");
 
 				Symbol *pSymRet = pFkt->eval(info, pSym);
 				if(pSym) pSym->RemoveSymbolNoDelete("<args>");
 
-				//info.pvecExecArg = 0;
 				return pSymRet;
 			}
 		}
