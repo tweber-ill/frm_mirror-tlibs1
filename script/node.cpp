@@ -9,7 +9,7 @@
 
 ParseInfo::ParseInfo() : pmapModules(0), phandles(0),
 			pmutexGlobal(0), pmutexInterpreter(0),
-			/*pvecExecArg(0),*/ pGlobalSyms(0),
+			pGlobalSyms(0),
 			pCurFunction(0), pCurCaller(0), bWantReturn(0),
 			pCurLoop(0), bWantBreak(0), bWantContinue(0),
 			bDestroyParseInfo(1)
@@ -706,7 +706,6 @@ Node* NodeFunction::clone() const
 							m_pArgs?m_pArgs->clone():0,
 							m_pStmts?m_pStmts->clone():0);
 	pFkt->m_strScrFile = this->m_strScrFile;
-	//pFkt->m_pVecArgSyms = this->m_pVecArgSyms;
 
 	*((Node*)pFkt) = *((Node*)this);
 	return pFkt;

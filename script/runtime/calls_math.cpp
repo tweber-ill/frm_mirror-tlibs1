@@ -336,55 +336,6 @@ static Symbol* fkt_ifft(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Sy
 template<typename T=double> using t_vec = ublas::vector<T>;
 template<typename T=double> using t_mat = ublas::matrix<T>;
 
-bool is_vec(const Symbol* pSym)
-{
-	if(!pSym)
-		return false;
-	if(pSym->GetType() != SYMBOL_ARRAY)
-		return false;
-
-	const SymbolArray* pSymArr = (SymbolArray*)pSym;
-	for(const Symbol* pSymInArr : pSymArr->m_arr)
-	{
-		if(!pSymInArr->IsScalar())
-			return false;
-	}
-	return true;
-}
-
-bool is_mat(const Symbol* pSym, unsigned int *piNumCols, unsigned int *piNumRows)
-{
-	if(!pSym)
-		return false;
-	if(pSym->GetType() != SYMBOL_ARRAY)
-		return false;
-
-	const SymbolArray* pSymArr = (SymbolArray*)pSym;
-	if(piNumRows) *piNumRows = pSymArr->m_arr.size();
-
-	unsigned int iVecSize = 0;
-	bool bHasSize = 0;
-	for(const Symbol* pSymInArr : pSymArr->m_arr)
-	{
-		if(!is_vec(pSymInArr))
-			return false;
-
-		unsigned int iSize = ((SymbolArray*)pSymInArr)->m_arr.size();
-		if(!bHasSize)
-		{
-			iVecSize = iSize;
-			bHasSize = 1;
-
-			if(piNumCols) *piNumCols = iVecSize;
-		}
-
-		// element vectors have to be of the same size
-		if(iSize != iVecSize)
-			return false;
-	}
-
-	return true;
-}
 
 static Symbol* fkt_length(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
 {

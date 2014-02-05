@@ -392,6 +392,7 @@ std::string SymbolMap::GetStringVal(const std::string& strKey, bool *pbHasVal) c
 
 //--------------------------------------------------------------------------------
 
+
 SymbolTable::SymbolTable()
 {
 }
@@ -480,4 +481,58 @@ bool SymbolTable::IsPtrInMap(const Symbol* pSym) const
 	}
 
 	return 0;
+}
+
+
+// --------------------------------------------------------------------------------
+
+
+bool is_vec(const Symbol* pSym)
+{
+	if(!pSym)
+		return false;
+	if(pSym->GetType() != SYMBOL_ARRAY)
+		return false;
+
+	const SymbolArray* pSymArr = (SymbolArray*)pSym;
+	for(const Symbol* pSymInArr : pSymArr->m_arr)
+	{
+		if(!pSymInArr->IsScalar())
+			return false;
+	}
+	return true;
+}
+
+bool is_mat(const Symbol* pSym, unsigned int *piNumCols, unsigned int *piNumRows)
+{
+	if(!pSym)
+		return false;
+	if(pSym->GetType() != SYMBOL_ARRAY)
+		return false;
+
+	const SymbolArray* pSymArr = (SymbolArray*)pSym;
+	if(piNumRows) *piNumRows = pSymArr->m_arr.size();
+
+	unsigned int iVecSize = 0;
+	bool bHasSize = 0;
+	for(const Symbol* pSymInArr : pSymArr->m_arr)
+	{
+		if(!is_vec(pSymInArr))
+			return false;
+
+		unsigned int iSize = ((SymbolArray*)pSymInArr)->m_arr.size();
+		if(!bHasSize)
+		{
+			iVecSize = iSize;
+			bHasSize = 1;
+
+			if(piNumCols) *piNumCols = iVecSize;
+		}
+
+		// element vectors have to be of the same size
+		if(iSize != iVecSize)
+			return false;
+	}
+
+	return true;
 }

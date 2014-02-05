@@ -5,13 +5,11 @@
  */
 
 #include "calls_fit.h"
-#include "calls_math.h"
 #include "../calls.h"
 #include "../node.h"
 
 
-template<typename T=double> using t_stdvec = std::vector<T>;
-template<typename T=std::string> using t_stdvecstr = std::vector<T>;
+template<typename T> using t_stdvec = std::vector<T>;
 
 // --------------------------------------------------------------------------------
 // fitting
@@ -250,8 +248,8 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		if(iterLimitsMax != mapSym.end())
 			get_values(vecParamNames, iterLimitsMax->second, vecLimMax, vecLimMaxActive);
 
-
-		vecFixedParams = sym_to_vec<t_stdvecstr, std::string>(iterFixed->second);
+		if(iterFixed != mapSym.end())
+			vecFixedParams = sym_to_vec<t_stdvec, std::string>(iterFixed->second);
 
 //		for(const std::string& strFixed : vecFixedParams)
 //			std::cout << "fixed params: " << strFixed << std::endl;
