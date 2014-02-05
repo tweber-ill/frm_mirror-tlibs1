@@ -41,7 +41,8 @@ main(args)
 	}
 
 
-	q = linspace(-pi/(2.*a), pi/(2.*a), 128);
+	#q = linspace(-pi/(2.*a), pi/(2.*a), 128);
+	q = linspace(-pi/a, pi/a, 256);
 	om1 = disp(beta, m1, m2, q, a, 1.);
 	om2 = disp(beta, m1, m2, q, a, -1.);
 
