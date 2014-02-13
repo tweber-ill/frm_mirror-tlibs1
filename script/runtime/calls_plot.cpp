@@ -122,6 +122,13 @@ static void set_plot_params(GnuPlot& plot, SymbolMap* pParamMap, PlotObj* pCurPl
 
 		std::string strLegend = pParamMap->GetStringVal("legend", &bHasVal);
 		if(bHasVal) pCurPlotObj->strLegend = strLegend;
+
+		std::string strSize = pParamMap->GetStringVal("size", &pCurPlotObj->bHasSize);
+		if(pCurPlotObj->bHasSize)
+		{
+			std::istringstream istrSize(strSize);
+			istrSize >> pCurPlotObj->dSize;
+		}
 	}
 
 	XYLimits lim = get_plot_limits(pParamMap);
@@ -267,7 +274,7 @@ static Symbol* _fkt_fileplot(const std::vector<Symbol*>& vecSyms,
 	g_plot.Init();
 	if(vecSyms.size() < 1 || vecSyms[0]->GetType()!=SYMBOL_STRING)
 	{
-		std::cerr << linenr("Error", info) 
+		std::cerr << linenr("Error", info)
 			<< "First argument to fileplot has to be the file name." << std::endl;
 		return 0;
 	}
