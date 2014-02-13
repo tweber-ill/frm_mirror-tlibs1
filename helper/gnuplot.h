@@ -21,8 +21,10 @@ struct PlotObj
 	std::string strLegend;
 
 	bool bConnectLines;
+	bool bHasSize;
+	double dSize;
 
-	PlotObj() : bConnectLines(0)
+	PlotObj() : bConnectLines(0), bHasSize(0)
 	{}
 };
 

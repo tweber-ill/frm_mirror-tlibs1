@@ -238,6 +238,16 @@ std::string GnuPlot::BuildCmd()
 	{
 		const bool bHasXErr = (obj.vecErrX.size() != 0);
 		const bool bHasYErr = (obj.vecErrY.size() != 0);
+		const bool bHasSize = obj.bHasSize;
+		double dSize = obj.dSize;
+
+		if(!bHasSize)
+		{
+			if(obj.bConnectLines)
+				dSize = 1.25;
+			else
+				dSize = 1.5;
+		}
 
 		std::string strPointStyle;
 		if(bHasXErr && bHasYErr)
@@ -247,10 +257,17 @@ std::string GnuPlot::BuildCmd()
 		else if(!bHasXErr && bHasYErr)
 			strPointStyle = "with yerrorbars";
 		else if(!bHasXErr && !bHasYErr)
-			strPointStyle = "with points pt 7 ps 1.5";
+		{
+			std::ostringstream ostrTmp;
+			ostrTmp << "with points pt 7 ps " << dSize;
+			strPointStyle = ostrTmp.str();
+		}
 
 		ostr << "'-' ";
-		ostr << (obj.bConnectLines ? "with lines lw 1.25" : strPointStyle);
+		if(obj.bConnectLines)
+			ostr << "with lines lw " << dSize;
+		else
+			ostr << strPointStyle;
 
 		if(obj.strLegend != "")
 		{
