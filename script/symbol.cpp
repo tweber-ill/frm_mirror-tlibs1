@@ -184,7 +184,7 @@ Symbol* SymbolArray::ToType(SymbolType stype) const
 	{
 		pNewSym = this->clone();
 	}
-	if(stype == SYMBOL_STRING)
+	else if(stype == SYMBOL_STRING)
 	{
 		SymbolString *pNewSymS = new SymbolString();
 		pNewSymS->m_strName = this->m_strName;
@@ -193,8 +193,8 @@ Symbol* SymbolArray::ToType(SymbolType stype) const
 		pNewSym = pNewSymS;
 	}
 	else
-		std::cerr << "Error: Cannot convert array to other type."
-					<< std::endl;
+		std::cerr << "Error: Cannot convert array to type " 
+			<< stype << "." << std::endl;
 
 	return pNewSym;
 }
