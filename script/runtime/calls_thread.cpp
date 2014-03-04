@@ -49,6 +49,17 @@ static inline Symbol* fkt_exec(const std::vector<Symbol*>& vecSyms,
 	return new SymbolInt(bOk);
 }
 
+static inline Symbol* fkt_exit(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info, SymbolTable* pSymTab)
+{
+	int iStatus = 0;
+	if(vecSyms.size()>=1 && vecSyms[0])
+		iStatus = vecSyms[0]->GetValInt();
+
+	std::exit(iStatus);		// TODO: change to less brutal way to exit
+	return 0;
+}
+
 // --------------------------------------------------------------------------------
 // thread
 
@@ -352,6 +363,7 @@ extern void init_ext_thread_calls()
 
 		// processes
 		t_mapFkts::value_type("exec", fkt_exec),
+		t_mapFkts::value_type("exit", fkt_exit),
 	};
 
 	add_ext_calls(mapFkts);

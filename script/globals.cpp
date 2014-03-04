@@ -45,6 +45,8 @@ static inline void init_physics_const(SymbolTable *pSymTab)
 	pSymTab->InsertSymbol("N_A", new SymbolDouble(co::N_A * units::si::moles));
 	// speed of light
 	pSymTab->InsertSymbol("c_0", new SymbolDouble(co::c / units::si::meters*units::si::seconds));
+	// electron charge
+	pSymTab->InsertSymbol("q_e", new SymbolDouble(co::e / units::si::coulomb));
 }
 
 extern void init_global_syms(SymbolTable *pSymTab)

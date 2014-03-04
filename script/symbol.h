@@ -12,6 +12,7 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
+#include "helper/exception.h"
 
 enum SymbolType
 {
@@ -64,7 +65,7 @@ struct SymbolDouble : public Symbol
 
 	SymbolDouble() : Symbol(), m_dVal(0.) {}
 	SymbolDouble(double dVal) : m_dVal(dVal) {}
-	SymbolDouble(const std::string&) { throw "Error: Invalid SymbolDouble constructor."; }
+	SymbolDouble(const std::string&) { throw Err("Invalid SymbolDouble constructor."); }
 
 	virtual SymbolType GetType() const { return SYMBOL_DOUBLE; }
 	virtual std::string GetTypeName() const { return "real"; }
@@ -112,7 +113,7 @@ struct SymbolString : public Symbol
 	SymbolString() : Symbol() {}
 	SymbolString(const char* pcStr) : m_strVal(pcStr) {}
 	SymbolString(const std::string& str) : m_strVal(str) {}
-	SymbolString(double dVal) { throw "Error: Invalid SymbolString constructor."; }
+	SymbolString(double dVal) { throw Err("Invalid SymbolString constructor."); }
 
 	virtual SymbolType GetType() const { return SYMBOL_STRING; }
 	virtual std::string GetTypeName() const { return "string"; }

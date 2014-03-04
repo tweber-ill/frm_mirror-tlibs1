@@ -135,9 +135,9 @@ public:
 	{ return m_vecParamNames; }
 
 	virtual std::vector<double> GetParamValues() const
-	{ throw "Called invalid function in generic fitter model"; }
+	{ throw Err("Called invalid function in generic fitter model"); }
 	virtual std::vector<double> GetParamErrors() const
-	{ throw "Called invalid function in generic fitter model"; }
+	{ throw Err("Called invalid function in generic fitter model"); }
 };
 
 
