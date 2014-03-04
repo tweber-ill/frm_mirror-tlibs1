@@ -133,17 +133,10 @@ main(args)
 	if(show_peaks)
 	{
 		E = linspace(-Emax*1e-3, Emax*1e-3, 256);
-		amp_qe = abs(bose_both(T, E) * E);
+		amp = abs(bose_both(T, E) * E);
 
-#		amp_in = abs(bose_both(T, E) * erf(E / (0.1*E0*1e-3) )^2.);
-#		amp_in = erf(E / (0.3*E0*1e-3) )^2.;
-#		amp_in_plus = amp_in;
-#		amp_in_minus = amp_in;
-		amp_in_plus = abs(bose_both(T, E) * mysteryfactor(E*1e3, E0));
-		amp_in_minus = abs(bose_both(T, E) * mysteryfactor(E*1e3, -E0));
-
-#		elast = gauss(E, 0., sigma_inc*1e-3, amp) + back*1e-3;
-		elast = lorentzian(E, 0., sigma_inc*1e-3, amp_qe) + back*1e-3;
+		elast = gauss(E, 0., sigma_inc*1e-3, amp) + back*1e-3;
+#		elast = lorentzian(E, 0., sigma_inc*1e-3, amp) + back*1e-3;
 		plot(E*1e3, elast, 
 			["style" : "line", 
 			"xlabel" : "E (meV)", 
@@ -152,9 +145,9 @@ main(args)
 			"window" : 2]);
 
 
-#		inelast = gauss(E, E0*1e-3, sigma*1e-3, amp) + gauss(E, -E0*1e-3, sigma*1e-3, amp) + back*1e-3;
-		inelast = lorentzian(E, E0*1e-3, sigma*1e-3, amp_in_plus) 
-				+ lorentzian(E, -E0*1e-3, sigma*1e-3, amp_in_minus) + back*1e-3;
+		inelast = gauss(E, E0*1e-3, sigma*1e-3, amp) + gauss(E, -E0*1e-3, sigma*1e-3, amp) + back*1e-3;
+#		inelast = lorentzian(E, E0*1e-3, sigma*1e-3, amp) 
+#				+ lorentzian(E, -E0*1e-3, sigma*1e-3, amp) + back*1e-3;
 		plot(E*1e3, inelast, 
 			["style" : "line", 
 			"xlabel" : "E (meV)", 
@@ -162,131 +155,7 @@ main(args)
 			"title" : "Inelastic peaks, sigma = " + str(sigma) + " meV, E0 = " + str(E0) + " meV",
 			"window" : 3]);
 
-
-
-#
-#                inelast_nocorr = lorentzian(E, E0*1e-3, sigma*1e-3, 1.)
-#                               + lorentzian(E, -E0*1e-3, sigma*1e-3, 1.) + back*1e-3;
-#
-#                plot(E*1e3, inelast_nocorr,
-#                        ["style" : "line",
-#                        "xlabel" : "E (meV)",
-#                        "ylabel" : "Intensity",
-#                        "title" : "Inelastic peaks (no corr.), sigma = " + str(sigma) + " meV, E0 = " + str(E0) + " meV",
-#                        "window" : 4]);
-#
-#                inelast_nocorr = lorentzian(E, E0*1e-3, sigma*1e-3, mysteryfactor(E*1e3, E0))
-#                                + lorentzian(E, -E0*1e-3, sigma*1e-3, mysteryfactor(E*1e3, -E0)) + back*1e-3;
-#
-#                plot(E*1e3, inelast_nocorr,
-#                        ["style" : "line",
-#                        "xlabel" : "E (meV)",
-#                        "ylabel" : "Intensity",
-#                        "title" : "Inelastic peaks (only mystery), sigma = " + str(sigma) + " meV, E0 = " + str(E0) + " meV",
-#                        "window" : 5]);
-#
-#
-#
-#
-#
-#               inelast_nocorr_g = lorentzian(E, E0*1e-3, sigma*1e-3, 1.) * abs(E)
-#                                + lorentzian(E, -E0*1e-3, sigma*1e-3, 1.) * abs(E) + back*1e-3;
-#
-#                plot(E*1e3, inelast_nocorr_g,
-#                        ["style" : "line",
-#                        "xlabel" : "E (meV)",
-#                        "ylabel" : "Intensity",
-#                        "title" : "Inelastic peaks (only g), sigma = " + str(sigma) + " meV, E0 = " + str(E0) + " meV",
-#                        "window" : 6]);
-#
-#                inelast_gcorr = lorentzian(E, E0*1e-3, sigma*1e-3, amp_qe)
-#                                + lorentzian(E, -E0*1e-3, sigma*1e-3, amp_qe) + back*1e-3;
-#
-#                plot(E*1e3, inelast_gcorr,
-#                        ["style" : "line",
-#                        "xlabel" : "E (meV)",
-#                        "ylabel" : "Intensity",
-#                        "title" : "Inelastic peaks (g corr), sigma = " + str(sigma) + " meV, E0 = " + str(E0) + " meV",
-#                        "window" : 7]);
-#
-#
-#
-#		E2 = linspace(-5., 5., 256);
-#		my1 = mysteryfactor(E2, E0);
-#		my2 = mysteryfactor(E2, -E0);
-#		plot([[E2, my1, ["style":"line"]], [E2, my2, ["style":"line"]]], 
-#			["xlimits":"-5 5", "ylimits":"-1.5 1.5", "window":6]);
 	}
 
 	return 0;
 }
-
-
-# neuer Kugler-Weber Mysteryfaktor mit Botchkonstante b
-mysteryfactor(Es, E0)
-{
-        b = abs(1. / (0.5 * E0));
-        newE = vec(vec_size(Es));
-#       print("b = " + b);
-#       print("pi/b = " + pi/b);
-
-        for(E : Es)
-        {
-                i = cur_iter(E);
-
-                if(E0 greater 0.)
-                {
-                        if(E less 0)
-                                newE[i] = 0.;
-                        else
-                                newE[i] = erf(b*E)^2;
-                }
-                else
-                {
-                        if(E greater 0)
-                                newE[i] = 0.;
-                        else
-                                newE[i] = erf(b*E)^2;
-                }
-        }
-
-        return newE;
-}
-
-
-# alter Kugler-Weber Mysteryfaktor mit Botchkonstante b
-mysteryfactor_old(Es, E0)
-{
-	b = abs(1. / (0.25 * E0));
-	newE = vec(vec_size(Es));
-#	print("b = " + b);
-#	print("pi/b = " + pi/b);
-
-	for(E : Es)
-	{
-		i = cur_iter(E);
-
-		if(E0 greater 0.)
-		{
-			if(E less 0)
-				newE[i] = 0.;
-			else if(E less pi/b)
-				newE[i] = 0.5*(1. - cos(b*E));
-			else
-				newE[i] = 1.;
-		}
-		else
-		{
-                        if(E greater 0)
-                                newE[i] = 0.;
-                        else if(E greater -pi/b)
-                                newE[i] = 0.5*(1. - cos(-b*E));
-                        else
-                                newE[i] = 1.;
-		}
-	}
-
-	return newE;
-}
-
-
