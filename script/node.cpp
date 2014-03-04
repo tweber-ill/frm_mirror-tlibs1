@@ -431,20 +431,25 @@ std::string Node::linenr(const std::string& strErr, const ParseInfo &info) const
 	ostr << strErr << " ";
 	ostr << "(";
 
-	if(m_iLine==0)
-		ostr << "unknown line";
-	else
+	bool bHasLine = 0;
+	if(m_iLine>0)
+	{
 		ostr << "line " << m_iLine;
+		bHasLine = 1;
+	}
 
 	if(info.pCurFunction)
 	{
+		if(bHasLine)
+			ostr << " ";
+
 		const std::string& strFile = info.pCurFunction->m_strScrFile;
 		std::string strFkt = info.pCurFunction->GetName();
 
 		if(strFile == "")
-			ostr << " in unknown file";
+			ostr << "in unknown file";
 		else
-			ostr << " in \"" << strFile << "\"";
+			ostr << "in \"" << strFile << "\"";
 
 		if(strFkt != "")
 			ostr << " -> \"" << strFkt << "\"";
