@@ -982,8 +982,15 @@ Symbol* NodeBinaryOp::eval_funcinit(ParseInfo &info, SymbolTable *pSym) const
 		NodeFunction *pNodeFunc = (NodeFunction*)_pNodeFunc;
 		pNodeFunc->m_strScrFile = info.strInitScrFile;
 
-		if(pNodeFunc->GetName() == "__init__")
+		const std::string& strFktName = pNodeFunc->GetName();
+
+		if(strFktName == "__init__")
 			pToRun = pNodeFunc;
+		else if(info.GetFunction(strFktName))
+			std::cerr << linenr("Warning", info)
+					<< "Function \"" << strFktName
+					<< "\" redefined in \"" << info.strInitScrFile << "\"."
+					<< " Ignoring." << std::endl;
 		else
 			vecFuncs.push_back(pNodeFunc);
 	}

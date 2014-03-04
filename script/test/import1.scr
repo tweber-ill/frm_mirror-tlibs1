@@ -11,3 +11,8 @@ test()
 {
 	print("In import1.scr");
 }
+
+main()
+{
+	print("In import1 main.");
+}
