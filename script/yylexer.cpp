@@ -4,6 +4,7 @@
  * @date 2013
  */
 
+#include "types.h"
 #include <iostream>
 #include <string.h>
 
@@ -20,7 +21,7 @@ extern "C" int yylex(void* _yylval, void* _pParseObj)
 
 	if(_yylval==0 || _pParseObj==0)
 	{
-		std::cerr << "Error: Invalid lval or parseobj in lexer." << std::endl;
+		G_CERR << "Error: Invalid lval or parseobj in lexer." << std::endl;
 		return 0;
 	}
 
@@ -66,9 +67,9 @@ extern "C" int yylex(void* _yylval, void* _pParseObj)
 	{
 		switch(tok.type)
 		{
-			case LEX_TOKEN_IF: 	return TOK_IF;
+			case LEX_TOKEN_IF: 		return TOK_IF;
 			case LEX_TOKEN_ELSE:	return TOK_ELSE;
-			case LEX_TOKEN_FOR:	return TOK_FOR;
+			case LEX_TOKEN_FOR:		return TOK_FOR;
 			case LEX_TOKEN_WHILE:	return TOK_WHILE;
 			case LEX_TOKEN_RETURN:	return TOK_RETURN;
 			case LEX_TOKEN_BREAK:	return TOK_BREAK;
@@ -86,7 +87,7 @@ extern "C" int yylex(void* _yylval, void* _pParseObj)
 		}
 	}
 
-	std::cerr << "Error (line " << pParseObj->iCurLine
+	G_CERR << "Error (line " << pParseObj->iCurLine
 				<< " in \"" << pParseObj->strCurFile
 				<<"\"): Invalid token: " << tok.type << std::endl;
 	return 0;
@@ -95,15 +96,15 @@ extern "C" int yylex(void* _yylval, void* _pParseObj)
 
 extern "C" void yyerror(const char* pc)
 {
-	std::string strLine;
+	t_string strLine;
 	if(g_pCurParseObj)		// !!
 	{
-		std::ostringstream ostrLine;
+		t_ostringstream ostrLine;
 		ostrLine << " (line " << g_pCurParseObj->iCurLine;
 		ostrLine << " in \"" << g_pCurParseObj->strCurFile << "\"";
 		ostrLine << ")";
 		strLine = ostrLine.str();
 	}
 
-	std::cerr << "Error" << strLine << ": " << pc << "." << std::endl;
+	G_CERR << "Error" << strLine << ": " << pc << "." << std::endl;
 }

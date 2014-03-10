@@ -10,13 +10,14 @@ hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/nod
 		obj/string.o obj/loadtxt.o obj/rand.o obj/fourier.o obj/script_helper.o \
 		obj/calls_plot.o obj/calls_math.o obj/calls_file.o obj/calls_thread.o \
 		obj/calls_fit.o obj/globals.o obj/flags.o obj/fitter.o obj/chi2.o \
-		obj/interpolation.o
+		obj/interpolation.o obj/spec_char.o
 	${CC} ${FLAGS} -o hermelin obj/script.o obj/lexer.o obj/main.o obj/yylexer.o \
 		obj/symbol.o obj/node.o obj/node_eval.o obj/calls.o obj/handles.o \
 		obj/gnuplot.o obj/file.o obj/string.o obj/loadtxt.o obj/rand.o \
 		obj/fourier.o obj/script_helper.o obj/calls_plot.o obj/calls_math.o \
 		obj/calls_file.o obj/calls_thread.o obj/calls_fit.o obj/globals.o \
 		obj/flags.o obj/fitter.o obj/chi2.o obj/interpolation.o \
+		obj/spec_char.o \
 			${LIBS}
 
 obj/script.o: script.yy
@@ -72,6 +73,9 @@ obj/file.o: helper/file.cpp helper/file.h
 
 obj/string.o: helper/string.cpp helper/string.h
 	${CC} ${FLAGS} -c -o obj/string.o helper/string.cpp
+
+obj/spec_char.o: helper/spec_char.cpp helper/spec_char.h
+	${CC} ${FLAGS} -c -o obj/spec_char.o helper/spec_char.cpp
 
 obj/loadtxt.o: loader/loadtxt.cpp loader/loadtxt.h
 	${CC} ${FLAGS} -c -o obj/loadtxt.o loader/loadtxt.cpp

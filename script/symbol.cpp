@@ -36,9 +36,9 @@ Symbol* SymbolDouble::ToType(SymbolType stype) const
 	return pNewSym;
 }
 
-std::string SymbolDouble::print() const
+t_string SymbolDouble::print() const
 {
-	std::ostringstream ostr;
+	t_ostringstream ostr;
 	ostr << m_dVal;
 	return ostr.str();
 }
@@ -88,9 +88,9 @@ Symbol* SymbolInt::ToType(SymbolType stype) const
 	return pNewSym;
 }
 
-std::string SymbolInt::print() const
+t_string SymbolInt::print() const
 {
-	std::ostringstream ostr;
+	t_ostringstream ostr;
 	ostr << m_iVal;
 	return ostr.str();
 }
@@ -122,7 +122,7 @@ Symbol* SymbolString::ToType(SymbolType stype) const
 	}
 	else if(stype == SYMBOL_INT)
 	{
-		std::istringstream istr(m_strVal);
+		t_istringstream istr(m_strVal);
 
 		SymbolInt *pNewSymI = new SymbolInt();
 		pNewSymI->m_strName = this->m_strName;
@@ -132,7 +132,7 @@ Symbol* SymbolString::ToType(SymbolType stype) const
 	}
 	else if(stype == SYMBOL_DOUBLE)
 	{
-		std::istringstream istr(m_strVal);
+		t_istringstream istr(m_strVal);
 
 		SymbolDouble *pNewSymD = new SymbolDouble();
 		pNewSymD->m_strName = this->m_strName;
@@ -144,9 +144,9 @@ Symbol* SymbolString::ToType(SymbolType stype) const
 	return pNewSym;
 }
 
-std::string SymbolString::print() const
+t_string SymbolString::print() const
 {
-	std::ostringstream ostr;
+	t_ostringstream ostr;
 	ostr << m_strVal;
 	return ostr.str();
 }
@@ -193,15 +193,15 @@ Symbol* SymbolArray::ToType(SymbolType stype) const
 		pNewSym = pNewSymS;
 	}
 	else
-		std::cerr << "Error: Cannot convert array to type " 
+		G_CERR << "Error: Cannot convert array to type "
 			<< stype << "." << std::endl;
 
 	return pNewSym;
 }
 
-std::string SymbolArray::print() const
+t_string SymbolArray::print() const
 {
-	std::ostringstream ostr;
+	t_ostringstream ostr;
 
 	ostr << "[";
 	for(unsigned int i=0; i<m_arr.size(); ++i)
@@ -301,22 +301,22 @@ Symbol* SymbolMap::ToType(SymbolType stype) const
 		pNewSym = pNewSymS;
 	}
 	else
-		std::cerr << "Error: Cannot convert map to other type."
+		G_CERR << "Error: Cannot convert map to other type."
 					<< std::endl;
 
 	return pNewSym;
 }
 
-std::string SymbolMap::print() const
+t_string SymbolMap::print() const
 {
-	std::ostringstream ostr;
+	t_ostringstream ostr;
 
 	ostr << "[";
 	unsigned int iIter = 0;
 	for(const t_map::value_type& val : m_map)
 	{
 		const Symbol* pSym = val.second;
-		ostr << val.first << " : " << (val.second ? val.second->print() : "");
+		ostr << val.first << " : " << (val.second ? val.second->print() : T_STR"");
 
 		if(iIter < m_map.size()-1)
 			ostr << ", ";
@@ -330,7 +330,7 @@ std::string SymbolMap::print() const
 
 Symbol* SymbolMap::clone() const
 {
-	//std::cout << "SymbolMap::clone" << std::endl;
+	//G_COUT << "SymbolMap::clone" << std::endl;
 	SymbolMap *pSym = new SymbolMap;
 
 	for(const t_map::value_type& val : m_map)
@@ -342,7 +342,7 @@ Symbol* SymbolMap::clone() const
 
 void SymbolMap::assign(Symbol *pSym)
 {
-	//std::cout << "SymbolMap::assign" << std::endl;
+	//G_COUT << "SymbolMap::assign" << std::endl;
 
 	SymbolMap *pOther = (SymbolMap*)pSym->ToType(GetType());
 	this->m_map = pOther->m_map;
@@ -353,7 +353,7 @@ void SymbolMap::UpdateIndex(const t_map::key_type& strKey)
 	t_map::iterator iter = m_map.find(strKey);
 	if(iter != m_map.end() && iter->second)
 	{
-		//std::cout << "updating index for " << strKey << std::endl;
+		//G_COUT << "updating index for " << strKey << std::endl;
 
 		iter->second->m_pMap = this;
 		iter->second->m_strMapKey = iter->first;
@@ -364,26 +364,26 @@ void SymbolMap::UpdateIndices()
 {
 	for(const t_map::value_type& val : m_map)
 	{
-		//std::cout << "updating index for " << val.first << std::endl;
+		//G_COUT << "updating index for " << val.first << std::endl;
 
 		val.second->m_pMap = this;
 		val.second->m_strMapKey = val.first;
 	}
 }
 
-std::string SymbolMap::GetStringVal(const std::string& strKey, bool *pbHasVal) const
+t_string SymbolMap::GetStringVal(const t_string& strKey, bool *pbHasVal) const
 {
 	if(pbHasVal) *pbHasVal = 0;
 
 	t_map::const_iterator iter = m_map.find(strKey);
 	if(iter == m_map.end())
-		return "";
+		return T_STR"";
 
 	if(pbHasVal) *pbHasVal = 1;
 
 	Symbol *pSym = iter->second;
 	if(!pSym)
-		return "";
+		return T_STR"";
 
 	if(pbHasVal) *pbHasVal = 1;
 	return pSym->print();
@@ -420,29 +420,29 @@ void SymbolTable::print() const
 	for(const auto& val : m_syms)
 	{
 		Symbol *pSym = val.second;
-		std::string strSym;
+		t_string strSym;
 		if(pSym)
 		{
-			std::string strType;
+			t_string strType;
 			if(pSym->GetType() == SYMBOL_DOUBLE)
-				strType = "double";
+				strType = T_STR"double";
 			else if(pSym->GetType() == SYMBOL_INT)
-				strType = "int";
+				strType = T_STR"int";
 			else if(pSym->GetType() == SYMBOL_STRING)
-				strType = "string";
+				strType = T_STR"string";
 			else
-				strType = "<unknown>";
+				strType = T_STR"<unknown>";
 
-			strSym = pSym->print() + " (" + strType + ")";
+			strSym = pSym->print() + T_STR" (" + strType + T_STR")";
 		}
 		else
-			strSym = "<null>";
+			strSym = T_STR"<null>";
 
-		std::cout << val.first << " = " << strSym << std::endl;
+		G_COUT << val.first << " = " << strSym << std::endl;
 	}
 }
 
-Symbol* SymbolTable::GetSymbol(const std::string& strKey)
+Symbol* SymbolTable::GetSymbol(const t_string& strKey)
 {
 	auto sym = m_syms.find(strKey);
 	if(sym == m_syms.end())
@@ -450,13 +450,13 @@ Symbol* SymbolTable::GetSymbol(const std::string& strKey)
 	return sym->second;
 }
 
-void SymbolTable::InsertSymbol(const std::string& strKey, Symbol *pSym)
+void SymbolTable::InsertSymbol(const t_string& strKey, Symbol *pSym)
 {
 	RemoveSymbol(strKey);
 	m_syms[strKey] = pSym;
 }
 
-void SymbolTable::RemoveSymbol(const std::string& strKey)
+void SymbolTable::RemoveSymbol(const t_string& strKey)
 {
 	t_syms::iterator iter = m_syms.find(strKey);
 	if(iter != m_syms.end())
@@ -466,7 +466,7 @@ void SymbolTable::RemoveSymbol(const std::string& strKey)
 	}
 }
 
-void SymbolTable::RemoveSymbolNoDelete(const std::string& strKey)
+void SymbolTable::RemoveSymbolNoDelete(const t_string& strKey)
 {
 	m_syms.erase(strKey);
 }

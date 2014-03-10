@@ -7,6 +7,7 @@
 #ifndef __MIEZE_SYM__
 #define __MIEZE_SYM__
 
+#include "types.h"
 #include <map>
 #include <string>
 #include <vector>
@@ -28,25 +29,25 @@ struct SymbolArray;
 struct SymbolMap;
 struct Symbol
 {
-	std::string m_strName;
-	std::string m_strIdent;			// last seen identifier
+	t_string m_strName;
+	t_string m_strIdent;			// last seen identifier
 
 	unsigned int m_iArrIdx;			// if symbol is contained in an array
 	SymbolArray *m_pArr;
 
-	std::string m_strMapKey;		// if symbol is contained in a map
+	t_string m_strMapKey;		// if symbol is contained in a map
 	SymbolMap *m_pMap;
 
 	Symbol() : m_iArrIdx(0), m_pArr(0), m_pMap(0) {}
 	virtual ~Symbol() {}
 
 	virtual SymbolType GetType() const = 0;
-	virtual std::string GetTypeName() const = 0;
+	virtual t_string GetTypeName() const = 0;
 
 	// cast and clone symbol
 	virtual Symbol* ToType(SymbolType stype) const = 0;
 
-	virtual std::string print() const = 0;
+	virtual t_string print() const = 0;
 	virtual Symbol* clone() const = 0;
 	virtual void assign(Symbol *pSym) = 0;
 
@@ -65,13 +66,13 @@ struct SymbolDouble : public Symbol
 
 	SymbolDouble() : Symbol(), m_dVal(0.) {}
 	SymbolDouble(double dVal) : m_dVal(dVal) {}
-	SymbolDouble(const std::string&) { throw Err("Invalid SymbolDouble constructor."); }
+	SymbolDouble(const t_string&) { throw Err("Invalid SymbolDouble constructor."); }
 
 	virtual SymbolType GetType() const { return SYMBOL_DOUBLE; }
-	virtual std::string GetTypeName() const { return "real"; }
+	virtual t_string GetTypeName() const { return T_STR"reaT_STR"; }
 	virtual Symbol* ToType(SymbolType stype) const;
 
-	virtual std::string print() const;
+	virtual t_string print() const;
 	virtual Symbol* clone() const;
 	virtual void assign(Symbol *pSym);
 
@@ -91,10 +92,10 @@ struct SymbolInt : public Symbol
 	SymbolInt(int iVal) : m_iVal(iVal) {}
 
 	virtual SymbolType GetType() const { return SYMBOL_INT; }
-	virtual std::string GetTypeName() const { return "int"; }
+	virtual t_string GetTypeName() const { return T_STR"int"; }
 	virtual Symbol* ToType(SymbolType stype) const;
 
-	virtual std::string print() const;
+	virtual t_string print() const;
 	virtual Symbol* clone() const;
 	virtual void assign(Symbol *pSym);
 
@@ -108,18 +109,18 @@ struct SymbolInt : public Symbol
 
 struct SymbolString : public Symbol
 {
-	std::string m_strVal;
+	t_string m_strVal;
 
 	SymbolString() : Symbol() {}
-	SymbolString(const char* pcStr) : m_strVal(pcStr) {}
-	SymbolString(const std::string& str) : m_strVal(str) {}
+	SymbolString(const t_char* pcStr) : m_strVal(pcStr) {}
+	SymbolString(const t_string& str) : m_strVal(str) {}
 	SymbolString(double dVal) { throw Err("Invalid SymbolString constructor."); }
 
 	virtual SymbolType GetType() const { return SYMBOL_STRING; }
-	virtual std::string GetTypeName() const { return "string"; }
+	virtual t_string GetTypeName() const { return T_STR"string"; }
 	virtual Symbol* ToType(SymbolType stype) const;
 
-	virtual std::string print() const;
+	virtual t_string print() const;
 	virtual Symbol* clone() const;
 	virtual void assign(Symbol *pSym);
 
@@ -136,13 +137,13 @@ struct SymbolArray : public Symbol
 	virtual ~SymbolArray();
 
 	virtual SymbolType GetType() const { return SYMBOL_ARRAY; }
-	virtual std::string GetTypeName() const { return "vector"; }
+	virtual t_string GetTypeName() const { return T_STR"vector"; }
 	virtual Symbol* ToType(SymbolType stype) const;
 
 	std::vector<double> ToDoubleArray() const;
 	void FromDoubleArray(const std::vector<double>& vec);
 
-	virtual std::string print() const;
+	virtual t_string print() const;
 	virtual Symbol* clone() const;
 	virtual void assign(Symbol *pSym);
 
@@ -156,17 +157,17 @@ struct SymbolArray : public Symbol
 
 struct SymbolMap : public Symbol
 {
-	typedef std::map<std::string, Symbol*> t_map;
+	typedef std::map<t_string, Symbol*> t_map;
 	t_map m_map;
 
 	SymbolMap() : Symbol() {}
 	virtual ~SymbolMap();
 
 	virtual SymbolType GetType() const { return SYMBOL_MAP; }	
-	virtual std::string GetTypeName() const { return "map"; }
+	virtual t_string GetTypeName() const { return T_STR"map"; }
 	virtual Symbol* ToType(SymbolType stype) const;
 
-	virtual std::string print() const;
+	virtual t_string print() const;
 	virtual Symbol* clone() const;
 	virtual void assign(Symbol *pSym);
 
@@ -175,7 +176,7 @@ struct SymbolMap : public Symbol
 	void UpdateIndex(const t_map::key_type& strKey);
 	void UpdateIndices();
 
-	std::string GetStringVal(const std::string& strKey, bool *pbHasVal=0) const;
+	t_string GetStringVal(const t_string& strKey, bool *pbHasVal=0) const;
 
 	virtual bool IsScalar() const { return 0; }
 };
@@ -187,7 +188,7 @@ struct SymbolMap : public Symbol
 class SymbolTable
 {
 protected:
-	typedef std::map<std::string, Symbol*> t_syms;
+	typedef std::map<t_string, Symbol*> t_syms;
 	t_syms m_syms;
 
 public:
@@ -196,10 +197,10 @@ public:
 
 	void print() const;
 
-	Symbol* GetSymbol(const std::string& strKey);
-	void InsertSymbol(const std::string& strKey, Symbol *pSym);
-	void RemoveSymbol(const std::string& strKey);
-	void RemoveSymbolNoDelete(const std::string& strKey);
+	Symbol* GetSymbol(const t_string& strKey);
+	void InsertSymbol(const t_string& strKey, Symbol *pSym);
+	void RemoveSymbol(const t_string& strKey);
+	void RemoveSymbolNoDelete(const t_string& strKey);
 	bool IsPtrInMap(const Symbol* pSym) const;
 };
 
@@ -213,7 +214,7 @@ public:
 template<typename T> static T convert_symbol(const Symbol* pSym)
 { std::cerr << "Error: Invalid symbol conversion." << std::endl; return T(); }
 
-template<> std::string convert_symbol<std::string>(const Symbol* pSym)
+template<> t_string convert_symbol<t_string>(const Symbol* pSym)
 { return pSym->print(); }
 template<>  double convert_symbol<double>(const Symbol* pSym)
 { return pSym->GetValDouble(); }
@@ -222,17 +223,17 @@ template<> int convert_symbol<int>(const Symbol* pSym)
 
 
 template<typename T> static Symbol* create_symbol(const T& t)
-{ std::cerr << "Error: Invalid symbol creation." << std::endl; return 0; }
+{ G_CERR << "Error: Invalid symbol creation." << std::endl; return 0; }
 
 template<> Symbol* create_symbol<double>(const double& t)
 { return new SymbolDouble(t); }
 template<> Symbol* create_symbol<int>(const int& t)
 { return new SymbolInt(t); }
-template<> Symbol* create_symbol<std::string>(const std::string& t)
+template<> Symbol* create_symbol<t_string>(const t_string& t)
 { return new SymbolString(t); }
 
 
-template<typename T1=std::string, typename T2=double>
+template<typename T1=t_string, typename T2=double>
 static std::map<T1, T2> sym_to_map(const Symbol* pSym)
 {
 	if(pSym->GetType() != SYMBOL_MAP)

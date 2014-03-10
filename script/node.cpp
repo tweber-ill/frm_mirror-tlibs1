@@ -90,9 +90,9 @@ std::map<NodeType, int (*)(int,int)> g_mapBinOps_i =
 	std::pair<NodeType, int (*)(int,int)>(NODE_POW, pow_int)
 };
 
-std::map<NodeType, std::string (*)(std::string, std::string)> g_mapBinOps_s =
+std::map<NodeType, t_string (*)(t_string, t_string)> g_mapBinOps_s =
 {
-	std::pair<NodeType, std::string (*)(std::string,std::string)>(NODE_PLUS, plus_op),
+	std::pair<NodeType, t_string (*)(t_string,t_string)>(NODE_PLUS, plus_op),
 };
 
 
@@ -120,10 +120,10 @@ std::map<NodeType, bool (*)(int,int)> g_mapBinLogOps_i =
 	std::pair<NodeType, bool (*)(int,int)>(NODE_LOG_GREATER, log_greater_op)
 };
 
-std::map<NodeType, bool (*)(std::string,std::string)> g_mapBinLogOps_s =
+std::map<NodeType, bool (*)(t_string,t_string)> g_mapBinLogOps_s =
 {
-	std::pair<NodeType, bool (*)(std::string,std::string)>(NODE_LOG_EQ, log_eq_op),
-	std::pair<NodeType, bool (*)(std::string,std::string)>(NODE_LOG_NEQ, log_neq_op),
+	std::pair<NodeType, bool (*)(t_string,t_string)>(NODE_LOG_EQ, log_eq_op),
+	std::pair<NodeType, bool (*)(t_string,t_string)>(NODE_LOG_NEQ, log_neq_op),
 };
 
 
@@ -244,7 +244,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 		if(op==NODE_MULT && (pSymLeft->GetType()==SYMBOL_STRING||pSymRight->GetType()==SYMBOL_STRING))
 		{
 			int iVal = 0;
-			std::string strVal;
+			t_string strVal;
 			bool bValidIntStr = 0;
 
 			if(pSymLeft->GetType()==SYMBOL_STRING && pSymRight->GetType()==SYMBOL_INT)
@@ -300,7 +300,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 		if(IsLogicalOp(op))
 		{
 			SymbolInt *pResult = new SymbolInt();
-			pResult->m_strName = "<op_logical_result>";
+			pResult->m_strName = T_STR"<op_logical_result>";
 
 			if(g_mapBinLogOps_d.find(op) != g_mapBinLogOps_d.end())
 			{
@@ -309,7 +309,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			}
 			else
 			{
-				std::cerr << "Error: Operator \"" << op << "\" not defined for double type."
+				G_CERR << "Error: Operator \"" << op << "\" not defined for double type."
 						 << std::endl;
 				pResult->m_iVal = 0;
 			}
@@ -318,7 +318,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 		else
 		{
 			SymbolDouble *pResult = new SymbolDouble();
-			pResult->m_strName = "<op_result>";
+			pResult->m_strName = T_STR"<op_result>";
 			if(g_mapBinOps_d.find(op) != g_mapBinOps_d.end())
 			{
 				pResult->m_dVal = g_mapBinOps_d[op](((SymbolDouble*)pLeft)->m_dVal,
@@ -326,7 +326,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			}
 			else
 			{
-				std::cerr << "Error: Operator \"" << op << "\" not defined for double type."
+				G_CERR << "Error: Operator \"" << op << "\" not defined for double type."
 						 << std::endl;
 			}
 			pRes = pResult;
@@ -337,7 +337,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 		if(IsLogicalOp(op))
 		{
 			SymbolInt *pResult = new SymbolInt();
-			pResult->m_strName = "<op_logical_result>";
+			pResult->m_strName = T_STR"<op_logical_result>";
 			if(g_mapBinLogOps_i.find(op) != g_mapBinLogOps_i.end())
 			{
 				pResult->m_iVal = g_mapBinLogOps_i[op](((SymbolInt*)pLeft)->m_iVal,
@@ -345,7 +345,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			}
 			else
 			{
-				std::cerr << "Error: Operator \"" << op << "\" not defined for int type."
+				G_CERR << "Error: Operator \"" << op << "\" not defined for int type."
 						 << std::endl;
 			}
 			pRes = pResult;
@@ -353,7 +353,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 		else
 		{
 			SymbolInt *pResult = new SymbolInt();
-			pResult->m_strName = "<op_result>";
+			pResult->m_strName = T_STR"<op_result>";
 			if(g_mapBinOps_i.find(op) != g_mapBinOps_i.end())
 			{
 				pResult->m_iVal = g_mapBinOps_i[op](((SymbolInt*)pLeft)->m_iVal,
@@ -361,7 +361,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			}
 			else
 			{
-				std::cerr << "Error: Operator \"" << op << "\" not defined for int type."
+				G_CERR << "Error: Operator \"" << op << "\" not defined for int type."
 						 << std::endl;
 			}
 			pRes = pResult;
@@ -372,7 +372,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 		if(IsLogicalOp(op))
 		{
 			SymbolInt *pResult = new SymbolInt();
-			pResult->m_strName = "<op_logical_result>";
+			pResult->m_strName = T_STR"<op_logical_result>";
 			if(g_mapBinLogOps_s.find(op) != g_mapBinLogOps_s.end())
 			{
 				pResult->m_iVal = g_mapBinLogOps_s[op](((SymbolString*)pLeft)->m_strVal,
@@ -380,7 +380,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			}
 			else
 			{
-				std::cerr << "Error: Operator \"" << op << "\" not defined for string type."
+				G_CERR << "Error: Operator \"" << op << "\" not defined for string type."
 						 << std::endl;
 			}
 			pRes = pResult;
@@ -388,7 +388,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 		else
 		{
 			SymbolString *pResult = new SymbolString();
-			pResult->m_strName = "<op_result>";
+			pResult->m_strName = T_STR"<op_result>";
 			if(g_mapBinOps_s.find(op) != g_mapBinOps_s.end())
 			{
 				pResult->m_strVal = g_mapBinOps_s[op](((SymbolString*)pLeft)->m_strVal,
@@ -396,7 +396,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			}
 			else
 			{
-				std::cerr << "Error: Operator \"" << op << "\" not defined for string type."
+				G_CERR << "Error: Operator \"" << op << "\" not defined for string type."
 						 << std::endl;
 			}
 			pRes = pResult;
@@ -411,7 +411,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 
 
 
-NodeFunction* ParseInfo::GetFunction(const std::string& strName)
+NodeFunction* ParseInfo::GetFunction(const t_string& strName)
 {
 	for(NodeFunction* pFunc : vecFuncs)
 	{
@@ -424,9 +424,9 @@ NodeFunction* ParseInfo::GetFunction(const std::string& strName)
 
 
 
-std::string Node::linenr(const std::string& strErr, const ParseInfo &info) const
+t_string Node::linenr(const t_string& strErr, const ParseInfo &info) const
 {
-	std::ostringstream ostr;
+	t_ostringstream ostr;
 
 	ostr << strErr << " ";
 	ostr << "(";
@@ -443,15 +443,15 @@ std::string Node::linenr(const std::string& strErr, const ParseInfo &info) const
 		if(bHasLine)
 			ostr << " ";
 
-		const std::string& strFile = info.pCurFunction->m_strScrFile;
-		std::string strFkt = info.pCurFunction->GetName();
+		const t_string& strFile = info.pCurFunction->m_strScrFile;
+		t_string strFkt = info.pCurFunction->GetName();
 
-		if(strFile == "")
+		if(strFile == T_STR"")
 			ostr << "in unknown file";
 		else
 			ostr << "in \"" << strFile << "\"";
 
-		if(strFkt != "")
+		if(strFkt != T_STR"")
 			ostr << " -> \"" << strFkt << "\"";
 	}
 
@@ -467,7 +467,7 @@ NodeDouble::NodeDouble(double dVal)
 {
 	m_pSymbol = new SymbolDouble;
 	m_pSymbol->m_dVal = m_dVal;
-	m_pSymbol->m_strName = "<const>";
+	m_pSymbol->m_strName = T_STR"<const>";
 }
 
 NodeInt::NodeInt(int iVal)
@@ -475,15 +475,15 @@ NodeInt::NodeInt(int iVal)
 {
 	m_pSymbol = new SymbolInt;
 	m_pSymbol->m_iVal = m_iVal;
-	m_pSymbol->m_strName = "<const>";
+	m_pSymbol->m_strName = T_STR"<const>";
 }
 
-NodeString::NodeString(std::string strVal)
+NodeString::NodeString(t_string strVal)
 	: Node(NODE_STRING), m_strVal(strVal)
 {
 	m_pSymbol = new SymbolString;
 	m_pSymbol->m_strVal = m_strVal;
-	m_pSymbol->m_strName = "<const>";
+	m_pSymbol->m_strName = T_STR"<const>";
 }
 
 NodeArray::NodeArray(NodeArray* pArr)
@@ -528,7 +528,7 @@ void NodeBinaryOp::FlattenNodes(NodeType ntype)
 	if(m_type == ntype)
 	{
 		m_vecNodesFlat = this->flatten(ntype);
-		//std::cout << "Node type: " << ntype << ", flattened: " << m_vecNodesFlat.size() << std::endl;
+		//G_COUT << "Node type: " << ntype << ", flattened: " << m_vecNodesFlat.size() << std::endl;
 	}
 }
 
@@ -553,9 +553,9 @@ NodeFunction::NodeFunction(Node* pLeft, Node* pMiddle, Node* pRight)
 	}
 }
 
-std::vector<std::string> NodeFunction::GetParamNames() const
+std::vector<t_string> NodeFunction::GetParamNames() const
 {
-	std::vector<std::string> vecNames;
+	std::vector<t_string> vecNames;
 
 	for(Node *pNode : m_vecArgs)
 		vecNames.push_back(((NodeIdent*)pNode)->m_strIdent);
@@ -722,7 +722,7 @@ Node* NodeFunction::clone() const
 // TODO: Fix: Gets called for non casted NodeBinaryOps which are of other type!
 std::vector<Node*> NodeBinaryOp::flatten(NodeType ntype) const
 {
-	//std::cout << m_type << ", " << ntype << std::endl;
+	//G_COUT << m_type << ", " << ntype << std::endl;
 
 	std::vector<Node*> vecNodes;
 
@@ -766,10 +766,10 @@ std::vector<Node*> NodeBinaryOp::flatten(NodeType ntype) const
 }
 
 
-std::string NodeFunction::GetName() const
+t_string NodeFunction::GetName() const
 {
 	if(!m_pIdent || m_pIdent->m_type != NODE_IDENT)
-		return "<null>";
+		return T_STR"<null>";
 
 	NodeIdent *pIdent = (NodeIdent*)m_pIdent;
 	return pIdent->m_strIdent;

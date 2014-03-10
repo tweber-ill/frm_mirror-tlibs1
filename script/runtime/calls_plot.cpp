@@ -4,16 +4,18 @@
  * @date dec 2013
  */
 
+#include "../types.h"
 #include "calls_plot.h"
 #include "../calls.h"
 #include "../helper/gnuplot.h"
+#include "../helper/string.h"
 
 
 // --------------------------------------------------------------------------------
 // plotting
 
-#define DEFAULT_TERM "qt";
-//#define DEFAULT_TERM "x11";
+#define DEFAULT_TERM T_STR"qt";
+//#define DEFAULT_TERM T_STR"x11";
 static GnuPlot g_plot;
 
 static inline bool is_array_of_arrays(const Symbol* pSym)
@@ -56,10 +58,10 @@ static XYLimits get_plot_limits(SymbolMap* pParamMap)
 	XYLimits lim;
 
 	bool bHasVal=0;
-	std::string strVal = pParamMap->GetStringVal("xylimits", &bHasVal);
+	t_string strVal = pParamMap->GetStringVal(T_STR"xylimits", &bHasVal);
 	if(bHasVal)
 	{
-		std::istringstream istr(strVal);
+		t_istringstream istr(strVal);
 		istr >> lim.dMinX >> lim.dMaxX >> lim.dMinY >> lim.dMaxY;
 
 		lim.bHasX = 1;
@@ -67,35 +69,35 @@ static XYLimits get_plot_limits(SymbolMap* pParamMap)
 	}
 	else
 	{
-		std::string strX = pParamMap->GetStringVal("xlimits", &lim.bHasX);
-		std::string strY = pParamMap->GetStringVal("ylimits", &lim.bHasY);
+		t_string strX = pParamMap->GetStringVal(T_STR"xlimits", &lim.bHasX);
+		t_string strY = pParamMap->GetStringVal(T_STR"ylimits", &lim.bHasY);
 
 		if(lim.bHasX)
 		{
-			std::istringstream istrX(strX);
+			t_istringstream istrX(strX);
 			istrX >> lim.dMinX >> lim.dMaxX;
 		}
 
 		if(lim.bHasY)
 		{
-			std::istringstream istrY(strY);
+			t_istringstream istrY(strY);
 			istrY >> lim.dMinY >> lim.dMaxY;
 		}
 	}
-	//std::cout << "xlimits: " << lim.dMinX << ", " << lim.dMaxX << std::endl;
-	//std::cout << "ylimits: " << lim.dMinY << ", " << lim.dMaxY << std::endl;
+	//G_COUT << "xlimits: " << lim.dMinX << ", " << lim.dMaxX << std::endl;
+	//G_COUT << "ylimits: " << lim.dMinY << ", " << lim.dMaxY << std::endl;
 
 
-	std::string strValCB = pParamMap->GetStringVal("cblimits", &lim.bHasCB);
-	std::istringstream istrCB(strValCB);
+	t_string strValCB = pParamMap->GetStringVal(T_STR"cblimits", &lim.bHasCB);
+	t_istringstream istrCB(strValCB);
 	istrCB >> lim.dMinCB >> lim.dMaxCB;
-	//std::cout << "colorbar: " << lim.dMinCB << ", " << lim.dMaxCB << std::endl;
+	//G_COUT << "colorbar: " << lim.dMinCB << ", " << lim.dMaxCB << std::endl;
 
 	bool bHasCyc = 0;
-	std::string strValCBCyc = pParamMap->GetStringVal("cbcyclic", &bHasCyc);
+	t_string strValCBCyc = pParamMap->GetStringVal(T_STR"cbcyclic", &bHasCyc);
 	if(bHasCyc)
 	{
-		std::istringstream istrCyc(strValCBCyc);
+		t_istringstream istrCyc(strValCBCyc);
 		istrCyc >> lim.bCBCyclic;
 	}
 
@@ -106,27 +108,27 @@ static XYLimits get_plot_limits(SymbolMap* pParamMap)
 static void set_plot_params(GnuPlot& plot, SymbolMap* pParamMap, PlotObj* pCurPlotObj=0, XYLimits* pLimits=0)
 {
 	bool bHasVal = 0;
-	std::string strTitle = pParamMap->GetStringVal("title", &bHasVal);
-	if(bHasVal) plot.SetTitle(strTitle.c_str());
+	t_string strTitle = pParamMap->GetStringVal(T_STR"title", &bHasVal);
+	if(bHasVal) plot.SetTitle(WSTR_TO_STR(strTitle).c_str());
 
-	std::string strXLab = pParamMap->GetStringVal("xlabel", &bHasVal);
-	if(bHasVal) plot.SetXLabel(strXLab.c_str());
+	t_string strXLab = pParamMap->GetStringVal(T_STR"xlabeT_STR", &bHasVal);
+	if(bHasVal) plot.SetXLabel(WSTR_TO_STR(strXLab).c_str());
 
-	std::string strYLab = pParamMap->GetStringVal("ylabel", &bHasVal);
-	if(bHasVal) plot.SetYLabel(strYLab.c_str());
+	t_string strYLab = pParamMap->GetStringVal(T_STR"ylabeT_STR", &bHasVal);
+	if(bHasVal) plot.SetYLabel(WSTR_TO_STR(strYLab).c_str());
 
 	if(pCurPlotObj)
 	{
-		std::string strStyle = pParamMap->GetStringVal("style", &bHasVal);
-		if(bHasVal) pCurPlotObj->bConnectLines = (strStyle=="line");
+		t_string strStyle = pParamMap->GetStringVal(T_STR"style", &bHasVal);
+		if(bHasVal) pCurPlotObj->bConnectLines = (strStyle==T_STR"line");
 
-		std::string strLegend = pParamMap->GetStringVal("legend", &bHasVal);
-		if(bHasVal) pCurPlotObj->strLegend = strLegend;
+		t_string strLegend = pParamMap->GetStringVal(T_STR"legend", &bHasVal);
+		if(bHasVal) pCurPlotObj->strLegend = WSTR_TO_STR(strLegend);
 
-		std::string strSize = pParamMap->GetStringVal("size", &pCurPlotObj->bHasSize);
+		t_string strSize = pParamMap->GetStringVal(T_STR"size", &pCurPlotObj->bHasSize);
 		if(pCurPlotObj->bHasSize)
 		{
-			std::istringstream istrSize(strSize);
+			t_istringstream istrSize(strSize);
 			istrSize >> pCurPlotObj->dSize;
 		}
 	}
@@ -140,20 +142,21 @@ static void set_plot_params(GnuPlot& plot, SymbolMap* pParamMap, PlotObj* pCurPl
 	if(pLimits)
 	{
 		*pLimits = lim;
-		if(pLimits->bHasCB) plot.SetColorBarRange(pLimits->dMinCB, pLimits->dMaxCB, pLimits->bCBCyclic);
+		if(pLimits->bHasCB)
+			plot.SetColorBarRange(pLimits->dMinCB, pLimits->dMaxCB, pLimits->bCBCyclic);
 	}
 
 
 	// terminal
-	std::string strTerm = DEFAULT_TERM;
-	std::string strUserTerm = pParamMap->GetStringVal("term", &bHasVal);
+	t_string strTerm = DEFAULT_TERM;
+	t_string strUserTerm = pParamMap->GetStringVal(T_STR"term", &bHasVal);
 	if(bHasVal) strTerm = strUserTerm;
 
 	int iPlotWnd = 0;
-	int iUserPlotWnd = atoi(pParamMap->GetStringVal("window", &bHasVal).c_str());
+	int iUserPlotWnd = atoi(WSTR_TO_STR(pParamMap->GetStringVal(T_STR"window", &bHasVal)).c_str());
 	if(bHasVal) iPlotWnd = iUserPlotWnd;
 
-	plot.SetTerminal(iPlotWnd, strTerm.c_str());
+	plot.SetTerminal(iPlotWnd, WSTR_TO_STR(strTerm).c_str());
 }
 
 static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
@@ -211,7 +214,7 @@ static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 	}
 	else
 	{
-		std::cerr << linenr("Error", info) << "Invalid call to plot." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "Invalid call to plot." << std::endl;
 		return 0;
 	}
 
@@ -259,7 +262,7 @@ static Symbol* fkt_plot2d(const std::vector<Symbol*>& vecSyms,
 	}
 	else
 	{
-		std::cerr << linenr("Error", info) << "Invalid call to plot2d." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "Invalid call to plot2d." << std::endl;
 		return 0;
 	}
 
@@ -274,13 +277,13 @@ static Symbol* _fkt_fileplot(const std::vector<Symbol*>& vecSyms,
 	g_plot.Init();
 	if(vecSyms.size() < 1 || vecSyms[0]->GetType()!=SYMBOL_STRING)
 	{
-		std::cerr << linenr("Error", info)
+		G_CERR << linenr(T_STR"Error", info)
 			<< "First argument to fileplot has to be the file name." << std::endl;
 		return 0;
 	}
 
-	const std::string& strFile = ((SymbolString*)vecSyms[0])->m_strVal;
-	g_plot.SetFileTerminal(strFile.c_str());
+	const t_string& strFile = ((SymbolString*)vecSyms[0])->m_strVal;
+	g_plot.SetFileTerminal(WSTR_TO_STR(strFile).c_str());
 	g_plot.LockTerminal();
 
 	std::vector<Symbol*> vecPlot;
@@ -315,11 +318,11 @@ extern void init_ext_plot_calls()
 {
 	t_mapFkts mapFkts =
 	{
-		t_mapFkts::value_type("plot", fkt_plot),
-		t_mapFkts::value_type("plot2d", fkt_plot2d),
+		t_mapFkts::value_type(T_STR"plot", fkt_plot),
+		t_mapFkts::value_type(T_STR"plot2d", fkt_plot2d),
 
-		t_mapFkts::value_type("fileplot", fkt_fileplot),
-		t_mapFkts::value_type("fileplot2d", fkt_fileplot2d),
+		t_mapFkts::value_type(T_STR"fileplot", fkt_fileplot),
+		t_mapFkts::value_type(T_STR"fileplot2d", fkt_fileplot2d),
 	};
 
 	add_ext_calls(mapFkts);

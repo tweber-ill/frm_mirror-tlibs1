@@ -4,7 +4,9 @@
  * @date dec 2013
  */
 
+#include "../types.h"
 #include "../helper/flags.h"
+#include "../helper/string.h"
 #include "calls_thread.h"
 #include "../calls.h"
 #include <thread>
@@ -14,20 +16,21 @@
 static inline Symbol* fkt_exec(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
-	std::string strExec;
+	t_string strExec;
 
 	for(Symbol *pSym : vecSyms)
 		if(pSym)
 		{
 			strExec += pSym->print();
-			strExec += " ";
+			strExec += T_STR" ";
 		}
 
 	bool bOk = 0;
-	//std::cout << "Executing " << strExec << std::endl;
+	//G_COUT << "Executing " << strExec << std::endl;
 	//int iRet = system(strExec.c_str());
 
-	FILE *pPipe = (FILE*)::my_popen(strExec.c_str(), "w");
+	std::string _strExec = WSTR_TO_STR(strExec);
+	FILE *pPipe = (FILE*)::my_popen(_strExec.c_str(), "w");
 
 //	fflush(pPipe);
 	if(pPipe)
@@ -41,7 +44,7 @@ static inline Symbol* fkt_exec(const std::vector<Symbol*>& vecSyms,
 		else
 		{
 			int iExitCode = int(char(WEXITSTATUS(iRet)));
-			//std::cout << "Exit code: " << iExitCode << std::endl;
+			//G_COUT << "Exit code: " << iExitCode << std::endl;
 			bOk = (iExitCode==0);
 		}
 	}
@@ -104,9 +107,9 @@ static void thread_proc(NodeFunction* pFunc, ParseInfo* pinfo, std::vector<Symbo
 		if(pvecSyms) arrArgs.m_arr = *pvecSyms;
 	pinfo->pmutexInterpreter->unlock();
 
-	pTable->InsertSymbol("<args>", &arrArgs);
+	pTable->InsertSymbol(T_STR"<args>", &arrArgs);
 	Symbol* pRet = pThreadFunc->eval(*pinfo2, pTable);
-	pTable->RemoveSymbolNoDelete("<args>");
+	pTable->RemoveSymbolNoDelete(T_STR"<args>");
 
 	if(pTable) delete pTable;
 	if(pRet) delete pRet;
@@ -121,25 +124,25 @@ static Symbol* fkt_thread(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size()<1)
 	{
-		std::cerr << linenr("Error", info) << "Need thread proc identifier." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "Need thread proc identifier." << std::endl;
 		return 0;
 	}
 
 	Symbol* _pSymIdent = vecSyms[0];
 	if(_pSymIdent->GetType() != SYMBOL_STRING)
 	{
-		std::cerr << linenr("Error", info) << "Thread proc identifier needs to be a string." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "Thread proc identifier needs to be a string." << std::endl;
 		return 0;
 	}
 
 	SymbolString *pSymIdent = (SymbolString*)_pSymIdent;
-	const std::string& strIdent = pSymIdent->m_strVal;
+	const t_string& strIdent = pSymIdent->m_strVal;
 
 
 	NodeFunction* pFunc = info.GetFunction(strIdent);
 	if(pFunc == 0)
 	{
-		std::cerr << linenr("Error", info) << "Thread proc \"" << strIdent << "\" not defined." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "Thread proc \"" << strIdent << "\" not defined." << std::endl;
 		return 0;
 	}
 
@@ -180,7 +183,7 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size()<1)
 	{
-		std::cerr << linenr("Error", info) << "join needs at least one argument." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "join needs at least one argument." << std::endl;
 		return 0;
 	}
 
@@ -195,7 +198,7 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 
 		if(pSym->GetType() != SYMBOL_INT)
 		{
-			std::cerr << linenr("Error", info) << "join needs thread handles." << std::endl;
+			G_CERR << linenr(T_STR"Error", info) << "join needs thread handles." << std::endl;
 			continue;
 		}
 
@@ -204,7 +207,7 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 
 		if(pHandle==0 || pHandle->GetType()!=HANDLE_THREAD)
 		{
-			std::cerr << linenr("Error", info) << "Handle (" << iHandle << ") does not exist"
+			G_CERR << linenr(T_STR"Error", info) << "Handle (" << iHandle << ") does not exist"
 					 << " or is not a thread handle." << std::endl;
 			continue;
 		}
@@ -227,14 +230,14 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size()<3)
 	{
-		std::cerr << linenr("Error", info) << "nthread needs at least 3 arguments: N, func, arg." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "nthread needs at least 3 arguments: N, func, arg." << std::endl;
 		return 0;
 	}
 
 	Symbol* _pSymN = vecSyms[0];
 	if(_pSymN->GetType() != SYMBOL_INT)
 	{
-		std::cerr << linenr("Error", info) << "Number of threads has to be integer." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "Number of threads has to be integer." << std::endl;
 		return 0;
 	}
 
@@ -246,19 +249,19 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 	Symbol* _pSymIdent = vecSyms[1];
 	if(_pSymIdent->GetType() != SYMBOL_STRING)
 	{
-		std::cerr << linenr("Error", info) << "Thread proc identifier needs to be a string." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "Thread proc identifier needs to be a string." << std::endl;
 		return 0;
 	}
 
 	SymbolString *pSymIdent = (SymbolString*)_pSymIdent;
-	const std::string& strIdent = pSymIdent->m_strVal;
+	const t_string& strIdent = pSymIdent->m_strVal;
 
 
 
 	Symbol* _pSymArr = vecSyms[2];
 	if(_pSymArr->GetType() != SYMBOL_ARRAY)
 	{
-		std::cerr << linenr("Error", info) << "Thread arg has to be an array." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "Thread arg has to be an array." << std::endl;
 		return 0;
 	}
 
@@ -270,7 +273,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 	NodeFunction* pFunc = info.GetFunction(strIdent);
 	if(pFunc == 0)
 	{
-		std::cerr << linenr("Error", info) << "Thread proc \"" << strIdent << "\" not defined." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "Thread proc \"" << strIdent << "\" not defined." << std::endl;
 		return 0;
 	}
 
@@ -281,7 +284,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 	if(iNumThreads > vecArr.size())
 	{
 		iNumThreads = vecArr.size();
-		std::cerr << linenr("Warning", info) << "More threads requested in nthread than necessary, "
+		G_CERR << linenr(T_STR"Warning", info) << "More threads requested in nthread than necessary, "
 						  << "reducing to array size (" << iNumThreads << ")."
 						  << std::endl;
 	}
@@ -354,16 +357,16 @@ extern void init_ext_thread_calls()
 	t_mapFkts mapFkts =
 	{
 		// threads
-		t_mapFkts::value_type("thread", fkt_thread),
-		t_mapFkts::value_type("nthread", fkt_nthread),
-		t_mapFkts::value_type("thread_hwcount", fkt_thread_hwcount),
-		t_mapFkts::value_type("join", fkt_thread_join),
-		t_mapFkts::value_type("begin_critical", fkt_begin_critical),
-		t_mapFkts::value_type("end_critical", fkt_end_critical),
+		t_mapFkts::value_type(T_STR"thread", fkt_thread),
+		t_mapFkts::value_type(T_STR"nthread", fkt_nthread),
+		t_mapFkts::value_type(T_STR"thread_hwcount", fkt_thread_hwcount),
+		t_mapFkts::value_type(T_STR"join", fkt_thread_join),
+		t_mapFkts::value_type(T_STR"begin_critical", fkt_begin_critical),
+		t_mapFkts::value_type(T_STR"end_critical", fkt_end_critical),
 
 		// processes
-		t_mapFkts::value_type("exec", fkt_exec),
-		t_mapFkts::value_type("exit", fkt_exit),
+		t_mapFkts::value_type(T_STR"exec", fkt_exec),
+		t_mapFkts::value_type(T_STR"exit", fkt_exit),
 	};
 
 	add_ext_calls(mapFkts);

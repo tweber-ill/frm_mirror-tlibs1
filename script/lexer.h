@@ -7,6 +7,8 @@
 #ifndef __MIEZE_LEXER__
 #define __MIEZE_LEXER__
 
+#include "types.h"
+
 #include <istream>
 #include <string>
 #include <vector>
@@ -48,10 +50,10 @@ struct Token
 {
 	TokenType type;
 	
-	char cOp;
+	t_char cOp;
 	int iVal;
 	double dVal;
-	std::string strVal;
+	t_string strVal;
 	
 	unsigned int iLine;
 
@@ -63,32 +65,32 @@ class Lexer
 {
 protected:
 	bool m_bOk;
-	std::string m_strWhitespace, m_strSep;
+	t_string m_strWhitespace, m_strSep;
 
 	unsigned int m_iNumToks;
 	unsigned int m_iLexPos;
 	std::vector<Token> m_vecToks;
 	Token m_tokEnd;
 
-	std::string m_strFile;
+	t_string m_strFile;
 
 	void FixTokens();
 
 public:
 	Lexer();
-	Lexer(const std::string& str, const char* pcFile=0);
+	Lexer(const t_string& str, const t_char* pcFile=0);
 	virtual ~Lexer();
 
-	void load(const std::string& strInput);
+	void load(const t_string& strInput);
 	void print();
 	const Token& lex();
 
 	unsigned int GetNumTokens() const { return m_vecToks.size(); }
 	const Token& GetToken(unsigned int i) const { return m_vecToks[i]; }
 
-	static std::string RemoveComments(const std::string& strInput);
-	static std::vector<std::string> GetStringTable(const std::string& strInput);
-	static void ReplaceEscapes(std::string& str);
+	static t_string RemoveComments(const t_string& strInput);
+	static std::vector<t_string> GetStringTable(const t_string& strInput);
+	static void ReplaceEscapes(t_string& str);
 
 	bool IsOk() const { return m_bOk; }
 };

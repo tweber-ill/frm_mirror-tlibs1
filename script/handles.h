@@ -7,6 +7,8 @@
 #ifndef __SCRIPT_HANDLES__
 #define __SCRIPT_HANDLES__
 
+#include "types.h"
+
 #include <vector>
 #include <thread>
 #include <stdio.h>

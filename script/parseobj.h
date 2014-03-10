@@ -7,6 +7,8 @@
 #ifndef __MIEZE_SCRIPT_GLOBAL__
 #define __MIEZE_SCRIPT_GLOBAL__
 
+#include "types.h"
+
 #include "lexer.h"
 #include "node.h"
 #include "symbol.h"
@@ -19,7 +21,7 @@ struct ParseObj
 
 	// only used during parsing/lexing for yyerror(), NOT during exec
 	unsigned int iCurLine;
-	std::string strCurFile;
+	t_string strCurFile;
 };
 
 #endif

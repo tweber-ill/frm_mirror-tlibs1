@@ -4,6 +4,8 @@
  * @date jan 2014
  */
 
+#include "../types.h"
+#include "../helper/string.h"
 #include "calls_fit.h"
 #include "../calls.h"
 #include "../node.h"
@@ -24,6 +26,30 @@ template<typename T> using t_stdvec = std::vector<T>;
 #include <Minuit2/MnMigrad.h>
 #include <Minuit2/MnPrint.h>
 
+/*
+static inline std::vector<std::string>
+convert_string_vector(const std::vector<t_string>& vecStr)
+{
+	std::vector<std::string> vecRet;
+	vecRet.reserve(vecStr.size());
+
+	for(const t_string& str : vecStr)
+		vecRet.push_back(WSTR_TO_STR(str));
+
+	return vecRet;
+}
+
+static inline std::vector<t_string>
+convert_string_vector(const std::vector<std::string>& vecStr)
+{
+	std::vector<t_string> vecRet;
+	vecRet.reserve(vecStr.size());
+
+	for(const std::string& str : vecStr)
+		vecRet.push_back(STR_TO_WSTR(str));
+
+	return vecRet;
+}*/
 
 class GenericModel : public FunctionModel
 {
@@ -61,7 +87,8 @@ public:
 				  m_pTable(new SymbolTable())
 	{
 		m_pinfo->bDestroyParseInfo = 0;
-		std::vector<std::string> vecParams = m_pFkt->GetParamNames();
+
+		std::vector<std::string> vecParams = /*convert_string_vector*/(m_pFkt->GetParamNames());
 		m_strFreeParam = vecParams[0];
 
 		m_vecParamNames.resize(vecParams.size()-1);
@@ -71,11 +98,11 @@ public:
 		for(unsigned int i=0; i<m_vecParamNames.size()+1; ++i)
 			m_vecSyms.push_back(new SymbolDouble(0.));
 
-		/*std::cout << "free param: " << m_strFreeParam << std::endl;
-		std::cout << "args: ";
+		/*G_COUT << "free param: " << m_strFreeParam << std::endl;
+		G_COUT << "args: ";
 		for(const std::string& strName : m_vecParamNames)
-			std::cout << strName << ", ";
-		std::cout << std::endl;*/
+			G_COUT << strName << ", ";
+		G_COUT << std::endl;*/
 	}
 
 	virtual ~GenericModel()
@@ -89,7 +116,7 @@ public:
 	{
 		if(vecParams.size() != m_vecParamNames.size())
 		{
-			std::cerr << "Error: Parameter array length mismatch."
+			G_CERR << "Error: Parameter array length mismatch."
 					<< std::endl;
 			return 0;
 		}
@@ -112,10 +139,10 @@ public:
 		arrArgs.m_arr = m_vecSyms;
 		//m_pFkt->SetArgSyms(&m_vecSyms);
 
-		m_pTable->InsertSymbol("<args>", &arrArgs);
+		m_pTable->InsertSymbol(T_STR"<args>", &arrArgs);
 		Symbol *pSymRet = m_pFkt->eval(*m_pinfo, m_pTable);
 		m_pinfo->bWantReturn = 0;
-		m_pTable->RemoveSymbolNoDelete("<args>");
+		m_pTable->RemoveSymbolNoDelete(T_STR"<args>");
 
 		double dRetVal = 0.;
 		if(pSymRet)
@@ -130,18 +157,18 @@ public:
 	virtual std::string print(bool bFillInSyms=true) const
 	{ return "<not implemented>"; }
 	virtual const char* GetModelName() const
-	{ return "generic fitter model"; }
+	{ return "generic fitter modeT_STR"; }
 	virtual std::vector<std::string> GetParamNames() const
 	{ return m_vecParamNames; }
 
 	virtual std::vector<double> GetParamValues() const
-	{ throw Err("Called invalid function in generic fitter model"); }
+	{ throw Err("Called invalid function in generic fitter modeT_STR"); }
 	virtual std::vector<double> GetParamErrors() const
-	{ throw Err("Called invalid function in generic fitter model"); }
+	{ throw Err("Called invalid function in generic fitter modeT_STR"); }
 };
 
 
-static void get_values(const std::vector<std::string>& vecParamNames,
+static void get_values(const std::vector<t_string>& vecParamNames,
 						const Symbol* pSym,
 						std::vector<double>& vec, std::vector<bool>& vecActive)
 {
@@ -157,13 +184,13 @@ static void get_values(const std::vector<std::string>& vecParamNames,
 	else if(pSym->GetType() == SYMBOL_MAP)
 	{
 		vec.resize(vecParamNames.size());
-		std::map<std::string, double> mymap = sym_to_map<std::string, double>(pSym);
+		std::map<t_string, double> mymap = sym_to_map<t_string, double>(pSym);
 
 		for(unsigned int iParam=0; iParam<vecParamNames.size(); ++iParam)
 		{
-			const std::string& strKey = vecParamNames[iParam];
+			const t_string& strKey = vecParamNames[iParam];
 
-			std::map<std::string, double>::iterator iter = mymap.find(strKey);
+			std::map<t_string, double>::iterator iter = mymap.find(strKey);
 			if(iter == mymap.end())
 			{
 				vecActive[iParam] = 0;
@@ -183,7 +210,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size()<4 || !is_vec(vecSyms[1]) || !is_vec(vecSyms[2]) || !is_vec(vecSyms[3]))
 	{
-		std::cerr << linenr("Error", info)
+		G_CERR << linenr(T_STR"Error", info)
 			<< "Invalid arguments for fit."
 			<< std::endl;
 		return 0;
@@ -191,17 +218,17 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 
 	if(vecSyms[0]->GetType() != SYMBOL_STRING)
 	{
-		std::cerr << linenr("Error", info)
+		G_CERR << linenr(T_STR"Error", info)
 			<< "Need a fit function name."
 			<< std::endl;
 		return 0;
 	}
 
-	const std::string& strFkt = ((SymbolString*)vecSyms[0])->m_strVal;
+	const t_string& strFkt = ((SymbolString*)vecSyms[0])->m_strVal;
 	NodeFunction *pFkt = info.GetFunction(strFkt);
 	if(!pFkt)
 	{
-		std::cerr << linenr("Error", info) << "Invalid function \""
+		G_CERR << linenr(T_STR"Error", info) << "Invalid function \""
 			<< strFkt << "\"."
 			<< std::endl;
 		return 0;
@@ -209,7 +236,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 
 
 	GenericModel mod(pFkt, info, pSymTab);
-	std::vector<std::string> vecParamNames = mod.GetParamNames();
+	std::vector<t_string> vecParamNames = /*convert_string_vector*/(mod.GetParamNames());
 	const unsigned int iParamSize = vecParamNames.size();
 
 
@@ -219,7 +246,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	std::vector<double> vecLimMin, vecLimMax;
 	std::vector<bool> vecLimMinActive, vecLimMaxActive;
 
-	std::vector<std::string> vecFixedParams;
+	std::vector<t_string> vecFixedParams;
 
 	vecLimMinActive.resize(iParamSize);
 	vecLimMaxActive.resize(iParamSize);
@@ -229,13 +256,13 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	{
 		SymbolMap::t_map& mapSym = ((SymbolMap*)vecSyms[4])->m_map;
 
-		SymbolMap::t_map::iterator iterHints = mapSym.find("hints");
-		SymbolMap::t_map::iterator iterHintsErr = mapSym.find("hints_errors");
+		SymbolMap::t_map::iterator iterHints = mapSym.find(T_STR"hints");
+		SymbolMap::t_map::iterator iterHintsErr = mapSym.find(T_STR"hints_errors");
 
-		SymbolMap::t_map::iterator iterLimitsMin = mapSym.find("lower_limits");
-		SymbolMap::t_map::iterator iterLimitsMax = mapSym.find("upper_limits");
+		SymbolMap::t_map::iterator iterLimitsMin = mapSym.find(T_STR"lower_limits");
+		SymbolMap::t_map::iterator iterLimitsMax = mapSym.find(T_STR"upper_limits");
 
-		SymbolMap::t_map::iterator iterFixed = mapSym.find("fixed");
+		SymbolMap::t_map::iterator iterFixed = mapSym.find(T_STR"fixed");
 
 
 		if(iterHints != mapSym.end())
@@ -249,10 +276,10 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 			get_values(vecParamNames, iterLimitsMax->second, vecLimMax, vecLimMaxActive);
 
 		if(iterFixed != mapSym.end())
-			vecFixedParams = sym_to_vec<t_stdvec, std::string>(iterFixed->second);
+			vecFixedParams = sym_to_vec<t_stdvec, t_string>(iterFixed->second);
 
-//		for(const std::string& strFixed : vecFixedParams)
-//			std::cout << "fixed params: " << strFixed << std::endl;
+//		for(const t_string& strFixed : vecFixedParams)
+//			G_COUT << "fixed params: " << strFixed << std::endl;
 	}
 
 
@@ -269,6 +296,9 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	ROOT::Minuit2::MnUserParameters params;
 	for(unsigned int iParam=0; iParam<iParamSize; ++iParam)
 	{
+		const t_string& strParam = vecParamNames[iParam];
+		//std::string strParam = WSTR_TO_STR(wstrParam);
+
 		double dHint = 0.;
 		double dErr = 0.;
 
@@ -277,9 +307,9 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		if(iParam < vecHintsErr.size())
 			dErr = vecHintsErr[iParam];
 
-//		std::cout << "hints for " << vecParamNames[iParam] << ": "
+//		G_COUT << "hints for " << vecParamNames[iParam] << ": "
 //				<< dHint << " +- " << dErr << std::endl;
-		params.Add(vecParamNames[iParam], dHint, dErr);
+		params.Add(strParam, dHint, dErr);
 
 
 
@@ -292,21 +322,21 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 			dLimMax = vecLimMax[iParam];
 
 /*		if(vecLimMinActive[iParam])
-			std::cout << "lower limit for " << vecParamNames[iParam] << ": "
+			G_COUT << "lower limit for " << vecParamNames[iParam] << ": "
 						<< dLimMin << std::endl;
 		if(vecLimMaxActive[iParam])
-			std::cout << "upper limit for " << vecParamNames[iParam] << ": "
+			G_COUT << "upper limit for " << vecParamNames[iParam] << ": "
 						<< dLimMax << std::endl;*/
 
 		if(vecLimMinActive[iParam] && vecLimMaxActive[iParam])
-			params.SetLimits(vecParamNames[iParam], dLimMin, dLimMax);
+			params.SetLimits(strParam, dLimMin, dLimMax);
 		else if(vecLimMinActive[iParam] && vecLimMaxActive[iParam]==0)
-			params.SetLowerLimit(vecParamNames[iParam], dLimMin);
+			params.SetLowerLimit(strParam, dLimMin);
 		else if(vecLimMinActive[iParam]==0 && vecLimMaxActive[iParam])
-			params.SetUpperLimit(vecParamNames[iParam], dLimMax);
+			params.SetUpperLimit(strParam, dLimMax);
 
-		if(std::find(vecFixedParams.begin(), vecFixedParams.end(), vecParamNames[iParam]) != vecFixedParams.end())
-			params.Fix(vecParamNames[iParam]);
+		if(std::find(vecFixedParams.begin(), vecFixedParams.end(), /*w*/strParam) != vecFixedParams.end())
+			params.Fix(strParam);
 	}
 
 
@@ -322,10 +352,12 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		ROOT::Minuit2::FunctionMinimum mini = migrad();
 		bValidFit = mini.IsValid() && mini.HasValidParameters();
 
-		for(const std::string& strSym : vecParamNames)
+		for(const t_string& strSym : vecParamNames)
 		{
-			params.SetValue(strSym, mini.UserState().Value(strSym));
-			params.SetError(strSym, mini.UserState().Error(strSym));
+			std::string _strSym = WSTR_TO_STR(strSym);
+
+			params.SetValue(_strSym, mini.UserState().Value(_strSym));
+			params.SetError(_strSym, mini.UserState().Error(_strSym));
 		}
 
 		minis.push_back(mini);
@@ -335,8 +367,8 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	{
 		// step 2: free fit (unlimited)
 
-		for(const std::string& strSym : vecParamNames)
-			params.RemoveLimits(strSym);
+		for(const t_string& strSym : vecParamNames)
+			params.RemoveLimits(WSTR_TO_STR(strSym));
 
 		ROOT::Minuit2::MnMigrad migrad(chi2fkt, params, 2);
 		ROOT::Minuit2::FunctionMinimum mini = migrad();
@@ -350,10 +382,12 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 
 
 	SymbolMap *pSymMap = new SymbolMap();
-	for(const std::string& strSym : vecParamNames)
+	for(const t_string& strSym : vecParamNames)
 	{
-		double dVal = lastmini.UserState().Value(strSym);
-		double dErr = lastmini.UserState().Error(strSym);
+		std::string _strSym = WSTR_TO_STR(strSym);
+
+		double dVal = lastmini.UserState().Value(_strSym);
+		double dErr = lastmini.UserState().Error(_strSym);
 		dErr = fabs(dErr);
 
 		SymbolArray* pArr = new SymbolArray();
@@ -366,19 +400,22 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	bool bFitterDebug = 0;
 	if(bFitterDebug)
 	{
-		std::cerr << "--------------------------------------------------------------------------------" << std::endl;
+		G_CERR << "--------------------------------------------------------------------------------" << std::endl;
 		unsigned int uiMini=0;
 		for(const auto& mini : minis)
 		{
-			std::cerr << "result of user-defined fit step " << (++uiMini) << std::endl;
-			std::cerr << "=================================" << std::endl;
-			std::cerr << mini << std::endl;
+			std::ostringstream ostrMini;
+			ostrMini << mini;
+
+			G_CERR << "result of user-defined fit step " << (++uiMini) << std::endl;
+			G_CERR << "=================================" << std::endl;
+			G_CERR << STR_TO_WSTR(ostrMini.str()) << std::endl;
 		}
-		std::cerr << "--------------------------------------------------------------------------------" << std::endl;
+		G_CERR << "--------------------------------------------------------------------------------" << std::endl;
 	}
 
 	if(!bValidFit)
-		std::cerr << "Error: Fit invalid!" << std::endl;
+		G_CERR << "Error: Fit invalid!" << std::endl;
 	return pSymMap;
 }
 // --------------------------------------------------------------------------------
@@ -406,7 +443,7 @@ static Symbol* _fkt_param(FktParam whichfkt, const std::vector<Symbol*>& vecSyms
 {
 	if(vecSyms.size() < 2 || !is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
 	{
-		std::cerr << linenr("Error", info) << "Function needs x and y vector arguments."
+		G_CERR << linenr(T_STR"Error", info) << "Function needs x and y vector arguments."
 			<< std::endl;
 		return 0;
 	}
@@ -431,7 +468,7 @@ static Symbol* _fkt_param(FktParam whichfkt, const std::vector<Symbol*>& vecSyms
 		pfkt = new Bezier(iSize, vecX.data(), vecY.data());
 	else
 	{
-		std::cerr << linenr("Error", info) << "Unknown parametric function selected."
+		G_CERR << linenr(T_STR"Error", info) << "Unknown parametric function selected."
 					<< std::endl;
 		return 0;
 	}
@@ -481,7 +518,7 @@ static Symbol* fkt_map_vec_to_val(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size()<1 || vecSyms[0]->GetType()!=SYMBOL_MAP)
 	{
-		std::cerr << linenr("Error", info)
+		G_CERR << linenr(T_STR"Error", info)
 					<< "Need a map of vectors."
 					<< std::endl;
 
@@ -496,7 +533,7 @@ static Symbol* fkt_map_vec_to_val(const std::vector<Symbol*>& vecSyms,
 		iIdx = vecSyms[1]->GetValInt();
 		if(iIdx < 0)
 		{
-			std::cerr << linenr("Warning", info)
+			G_CERR << linenr(T_STR"Warning", info)
 						<< "Ignoring negative index."
 						<< std::endl;
 			iIdx = 0;
@@ -508,12 +545,12 @@ static Symbol* fkt_map_vec_to_val(const std::vector<Symbol*>& vecSyms,
 
 	for(const SymbolMap::t_map::value_type& pair : ((SymbolMap*)vecSyms[0])->m_map)
 	{
-		const std::string& strKey = pair.first;
+		const t_string& strKey = pair.first;
 		const Symbol* pSym = pair.second;
 
 		if(pSym->GetType() != SYMBOL_ARRAY)
 		{
-			std::cerr << linenr("Warning", info)
+			G_CERR << linenr(T_STR"Warning", info)
 						<< "Ignoring non-vector variable in map."
 						<< std::endl;
 			continue;
@@ -522,7 +559,7 @@ static Symbol* fkt_map_vec_to_val(const std::vector<Symbol*>& vecSyms,
 		const std::vector<Symbol*>& arr = ((SymbolArray*)pSym)->m_arr;
 		if(iIdx >= arr.size())
 		{
-			std::cerr << linenr("Warning", info)
+			G_CERR << linenr(T_STR"Warning", info)
 						<< "Ignoring invalid index."
 						<< std::endl;
 			continue;
@@ -540,14 +577,14 @@ extern void init_ext_fit_calls()
 {
 	t_mapFkts mapFkts =
 	{
-		t_mapFkts::value_type("fit", fkt_fit),
-//		t_mapFkts::value_type("fit_sin", fkt_fit_sin),
-//		t_mapFkts::value_type("fit_gauss", fkt_fit_sin),
+		t_mapFkts::value_type(T_STR"fit", fkt_fit),
+//		t_mapFkts::value_type(T_STR"fit_sin", fkt_fit_sin),
+//		t_mapFkts::value_type(T_STR"fit_gauss", fkt_fit_sin),
 
-		t_mapFkts::value_type("map_vec_to_val", fkt_map_vec_to_val),
+		t_mapFkts::value_type(T_STR"map_vec_to_val", fkt_map_vec_to_val),
 
-		t_mapFkts::value_type("spline", fkt_spline),
-		t_mapFkts::value_type("bezier", fkt_bezier),
+		t_mapFkts::value_type(T_STR"spline", fkt_spline),
+		t_mapFkts::value_type(T_STR"bezier", fkt_bezier),
 	};
 
 	add_ext_calls(mapFkts);

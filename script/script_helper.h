@@ -7,6 +7,8 @@
 #ifndef __SCRIPT_HELPER__
 #define __SCRIPT_HELPER__
 
-extern char* load_file(const char* pcFile);
+#include "types.h"
+
+extern t_char* load_file(const char* pcFile);
 
 #endif

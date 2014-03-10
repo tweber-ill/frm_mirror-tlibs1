@@ -7,6 +7,8 @@
 #ifndef __MIEZE_NODE__
 #define __MIEZE_NODE__
 
+#include "types.h"
+
 #include <cmath>
 #include <string>
 #include <iostream>
@@ -24,12 +26,12 @@ struct NodeCall;
 struct ParseInfo
 {
 	// external imported modules
-	typedef std::map<std::string, Node*> t_mods;
+	typedef std::map<t_string, Node*> t_mods;
 	t_mods *pmapModules;
 
 	// function to execute, e.g. "main"
-	std::string strExecFkt;
-	std::string strInitScrFile;
+	t_string strExecFkt;
+	t_string strInitScrFile;
 
 	// all functions from all modules
 	std::vector<NodeFunction*> vecFuncs;
@@ -57,7 +59,7 @@ struct ParseInfo
 	ParseInfo();
 	virtual ~ParseInfo();
 
-	NodeFunction* GetFunction(const std::string& strName);
+	NodeFunction* GetFunction(const t_string& strName);
 
 	bool IsExecDisabled() const
 	{
@@ -147,7 +149,7 @@ struct Node
 	virtual Node* clone() const = 0;
 
 	// create a string containing the line number for error output
-	std::string linenr(const std::string& strErr, const ParseInfo &info) const;
+	t_string linenr(const t_string& strErr, const ParseInfo &info) const;
 
 	static Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op);
 };
@@ -201,9 +203,9 @@ struct NodeContinue : public Node
 
 struct NodeIdent : public Node
 {
-	std::string m_strIdent;
+	t_string m_strIdent;
 
-	NodeIdent(const std::string& strIdent)
+	NodeIdent(const t_string& strIdent)
 		: Node(NODE_IDENT), m_strIdent(strIdent)
 	{}
 
@@ -347,9 +349,9 @@ protected:
 
 struct NodeString : public Node
 {
-	std::string m_strVal;
+	t_string m_strVal;
 
-	NodeString(std::string strVal);
+	NodeString(t_string strVal);
 	virtual ~NodeString()
 	{
 		if(m_pSymbol) delete m_pSymbol;
@@ -530,7 +532,7 @@ struct NodeFunction : public Node
 	std::vector<Node*> m_vecArgs;
 
 	// script file this function resides in
-	std::string m_strScrFile;
+	t_string m_strScrFile;
 
 	NodeFunction(Node* pLeft, Node* pMiddle, Node* pRight);
 
@@ -548,8 +550,8 @@ struct NodeFunction : public Node
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 	virtual Node* clone() const;
 
-	std::string GetName() const;
-	std::vector<std::string> GetParamNames() const;
+	t_string GetName() const;
+	std::vector<t_string> GetParamNames() const;
 };
 
 #endif

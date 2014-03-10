@@ -4,6 +4,8 @@
  * @date dec-2013
  */
 
+#include "../types.h"
+#include "../helper/string.h"
 #include "calls_file.h"
 #include "../calls.h"
 #include "../loader/loadtxt.h"
@@ -18,27 +20,27 @@ static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size() != 1)
 	{
-		std::cerr << linenr("Error", info) << "loadtxt takes exactly one argument." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "loadtxt takes exactly one argument." << std::endl;
 		return 0;
 	}
 
 	if(vecSyms[0]->GetType() != SYMBOL_STRING)
 	{
-		std::cerr << linenr("Error", info) << "loadtxt needs a string argument." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "loadtxt needs a string argument." << std::endl;
 		return 0;
 	}
 
-	const std::string& strFile = ((SymbolString*)vecSyms[0])->m_strVal;
+	const t_string& strFile = ((SymbolString*)vecSyms[0])->m_strVal;
 
 
 	SymbolArray *pArr = new SymbolArray();
 
 	LoadTxt dat;
 
-	bool bLoaded = dat.Load(strFile.c_str());
+	bool bLoaded = dat.Load(WSTR_TO_STR(strFile).c_str());
 	if(!bLoaded)
 	{
-		std::cerr << linenr("Error", info) << "loadtxt could not open \"" << strFile << "\"." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "loadtxt could not open \"" << strFile << "\"." << std::endl;
 		return pArr;
 	}
 
@@ -69,10 +71,12 @@ static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
 	SymbolMap *pSymMap = new SymbolMap();
 	for(const tmapcomm::value_type &val : mapComm)
 	{
-		SymbolString *pSymStrVal = new SymbolString;
-		pSymStrVal->m_strVal = val.second;
+		t_string strKey = STR_TO_WSTR(val.first);
 
-		pSymMap->m_map.insert(SymbolMap::t_map::value_type(val.first, pSymStrVal));
+		SymbolString *pSymStrVal = new SymbolString;
+		pSymStrVal->m_strVal = STR_TO_WSTR(val.second);
+
+		pSymMap->m_map.insert(SymbolMap::t_map::value_type(strKey, pSymStrVal));
 	}
 	pArr->m_arr.push_back(pSymMap);
 
@@ -138,7 +142,7 @@ static double get_2darr_val(const SymbolArray* pArr,
 
 	if(!bFoundCol)
 	{
-		std::cerr << "Error: Invalid column index: " << iCol << "." << std::endl;
+		G_CERR << "Error: Invalid column index: " << iCol << "." << std::endl;
 		return 0.;
 	}
 
@@ -158,18 +162,18 @@ static Symbol* fkt_savetxt(const std::vector<Symbol*>& vecSyms,
 	if(vecSyms.size()!=2 ||
 		(vecSyms[0]->GetType()!=SYMBOL_STRING || vecSyms[1]->GetType()!=SYMBOL_ARRAY))
 	{
-		std::cerr << linenr("Error", info) << "savetxt takes two arguments (file name, 2d array)." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "savetxt takes two arguments (file name, 2d array)." << std::endl;
 		return 0;
 	}
 
-	const std::string& strFile = ((SymbolString*)vecSyms[0])->m_strVal;
+	const t_string& strFile = ((SymbolString*)vecSyms[0])->m_strVal;
 	SymbolArray* pArr = (SymbolArray*)vecSyms[1];
 
 
-	std::ofstream ofstr(strFile.c_str());
+	t_ofstream ofstr(WSTR_TO_STR(strFile).c_str());
 	if(!ofstr.is_open())
 	{
-		std::cerr << linenr("Error", info) << "Cannot open \"" << strFile << "\"." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "Cannot open \"" << strFile << "\"." << std::endl;
 		return 0;
 	}
 
@@ -184,14 +188,14 @@ static Symbol* fkt_savetxt(const std::vector<Symbol*>& vecSyms,
 			for(const SymbolMap::t_map::value_type& val : pSymMap->m_map)
 			{
 				ofstr << "# " << val.first << " : "
-							<< (val.second?val.second->print():"") << "\n";
+						<< (val.second?val.second->print():T_STR"") << "\n";
 			}
 		}
 	}
 
 	unsigned int iColLen=0, iRowLen=0;
 	get_2darr_size(pArr, iColLen, iRowLen);
-	//std::cout << "col len: " << iColLen << ", row len: " << iRowLen << std::endl;
+	//G_COUT << "col len: " << iColLen << ", row len: " << iRowLen << std::endl;
 
 	for(unsigned int iRow=0; iRow<iRowLen; ++iRow)
 	{
@@ -214,8 +218,8 @@ extern void init_ext_file_calls()
 	t_mapFkts mapFkts =
 	{
 			// dat files
-			t_mapFkts::value_type("loadtxt", fkt_loadtxt),
-			t_mapFkts::value_type("savetxt", fkt_savetxt),
+			t_mapFkts::value_type(T_STR"loadtxt", fkt_loadtxt),
+			t_mapFkts::value_type(T_STR"savetxt", fkt_savetxt),
 	};
 
 	add_ext_calls(mapFkts);

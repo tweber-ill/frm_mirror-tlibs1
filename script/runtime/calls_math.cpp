@@ -4,6 +4,7 @@
  * @date 2013
  */
 
+#include "../types.h"
 #include "calls_math.h"
 #include "../calls.h"
 #include "../helper/fourier.h"
@@ -14,7 +15,9 @@ static inline Symbol* _fkt_linlogspace(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size()<3)
 	{
-		std::cerr << linenr("Error", info) << "Invalid call to linspace(start, end, count)." << std::endl;
+		G_CERR << linenr(T_STR"Error", info)
+				<< "Invalid call to linspace(start, end, count)."
+				<< std::endl;
 		return 0;
 	}
 
@@ -73,7 +76,7 @@ const T& math_fkt(const T& t1, const T& t2)
 		return std::min<T>(t1, t2);
 
 	static const T tErr = T(0);
-	std::cerr << "Error: Invalid function selected in math_fkt." << std::endl;
+	G_CERR << "Error: Invalid function selected in math_fkt." << std::endl;
 	return tErr;
 }
 
@@ -83,7 +86,7 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size() < 1)
 	{
-		std::cerr << linenr("Error", info) << "fkt_math_for_every needs at least one argument" << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "fkt_math_for_every needs at least one argument" << std::endl;
 		return 0;
 	}
 
@@ -139,7 +142,7 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 	else if(!bHadInt && bHadDouble)
 		return new SymbolDouble(dRes);
 
-	std::cerr << linenr("Error", info) << "No valid arguments given for fkt_math_for_every." << std::endl;
+	G_CERR << linenr(T_STR"Error", info) << "No valid arguments given for fkt_math_for_every." << std::endl;
 	return 0;
 }
 
@@ -150,7 +153,7 @@ static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size() != 1)
 	{
-		std::cerr << linenr("Error", info) << "fkt_math_1arg takes exactly one argument." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "fkt_math_1arg takes exactly one argument." << std::endl;
 		return 0;
 	}
 
@@ -186,7 +189,7 @@ static Symbol* fkt_math_2args(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size() != 2)
 	{
-		std::cerr << linenr("Error", info) << "fkt_math_2args takes exactly two arguments." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "fkt_math_2args takes exactly two arguments." << std::endl;
 		return 0;
 	}
 
@@ -211,7 +214,7 @@ static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size() != 1)
 	{
-		std::cerr << linenr("Error", info) << "abs takes exactly one argument." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "abs takes exactly one argument." << std::endl;
 		return 0;
 	}
 
@@ -243,7 +246,7 @@ static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
 	}
 
 
-	std::cerr << linenr("Error", info) << "abs received unsupported symbol type." << std::endl;
+	G_CERR << linenr(T_STR"Error", info) << "abs received unsupported symbol type." << std::endl;
 	return 0;
 }
 
@@ -288,7 +291,7 @@ static Symbol* _fkt_fft(const std::vector<Symbol*>& vecSyms,
 
 	if(!bArgsOk)
 	{
-		std::cerr << linenr("Error", info)
+		G_CERR << linenr(T_STR"Error", info)
 				<< "fft received invalid arguments."
 				<< std::endl;
 		return 0;
@@ -341,14 +344,14 @@ static Symbol* fkt_length(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 {
 	if(vecSyms.size() != 1)
 	{
-		std::cerr << linenr("Error", info) << "Length needs one argument."
+		G_CERR << linenr(T_STR"Error", info) << "Length needs one argument."
 			<< std::endl;
 		return 0;
 	}
 
 	if(!is_vec(vecSyms[0]))
 	{
-		std::cerr << linenr("Error", info) << "Length needs a vector argument."
+		G_CERR << linenr(T_STR"Error", info) << "Length needs a vector argument."
 			<< std::endl;
 		return 0;
 	}
@@ -362,14 +365,14 @@ static Symbol* fkt_cross(const std::vector<Symbol*>& vecSyms, ParseInfo& info, S
 {
 	if(vecSyms.size() != 2)
 	{
-		std::cerr << linenr("Error", info) << "Cross product needs two arguments."
+		G_CERR << linenr(T_STR"Error", info) << "Cross product needs two arguments."
 			<< std::endl;
 		return 0;
 	}
 
 	if(!is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
 	{
-		std::cerr << linenr("Error", info) << "Cross product needs vector arguments."
+		G_CERR << linenr(T_STR"Error", info) << "Cross product needs vector arguments."
 			<< std::endl;
 		return 0;
 	}
@@ -379,7 +382,7 @@ static Symbol* fkt_cross(const std::vector<Symbol*>& vecSyms, ParseInfo& info, S
 
 	if(vecLeft.size()!=3 || vecRight.size()!=3)
 	{
-		std::cerr << linenr("Error", info) << "Cross product needs 3-vectors."
+		G_CERR << linenr(T_STR"Error", info) << "Cross product needs 3-vectors."
 			<< std::endl;
 		return 0;
 	}
@@ -394,7 +397,7 @@ static Symbol* fkt_matrix(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 {
 	if(vecSyms.size()<1)
 	{
-		std::cerr << linenr("Error", info) << "Need size of matrix." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "Need size of matrix." << std::endl;
 		return 0;
 	}
 
@@ -414,7 +417,7 @@ static Symbol* fkt_transpose(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size()!=1)
 	{
-		std::cerr << linenr("Error", info) << "Transpose needs one argument" << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "Transpose needs one argument" << std::endl;
 		return 0;
 	}
 
@@ -422,7 +425,7 @@ static Symbol* fkt_transpose(const std::vector<Symbol*>& vecSyms,
 	t_mat<double> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0], &bIsMat);
 	if(!bIsMat)
 	{
-		std::cerr << linenr("Error", info) << "Transpose needs a matrix." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "Transpose needs a matrix." << std::endl;
 		return 0;
 	}
 
@@ -435,7 +438,7 @@ static Symbol* fkt_inverse(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size()!=1)
 	{
-		std::cerr << linenr("Error", info) << "Inverse needs one argument" << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "Inverse needs one argument" << std::endl;
 		return 0;
 	}
 
@@ -443,13 +446,13 @@ static Symbol* fkt_inverse(const std::vector<Symbol*>& vecSyms,
 	t_mat<double> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0], &bIsMat);
 	if(!bIsMat)
 	{
-		std::cerr << linenr("Error", info) << "Inverse needs a matrix." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "Inverse needs a matrix." << std::endl;
 		return 0;
 	}
 
 	t_mat<double> mat_inv;
 	if(!inverse(mat, mat_inv))
-		std::cerr << linenr("Warning", info) << "Matrix inversion failed." << std::endl;
+		G_CERR << linenr(T_STR"Warning", info) << "Matrix inversion failed." << std::endl;
 
 	return mat_to_sym<t_mat>(mat_inv);
 }
@@ -459,7 +462,7 @@ static Symbol* fkt_determinant(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size()!=1)
 	{
-		std::cerr << linenr("Error", info) << "Determinant needs one argument" << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "Determinant needs one argument" << std::endl;
 		return 0;
 	}
 
@@ -467,7 +470,7 @@ static Symbol* fkt_determinant(const std::vector<Symbol*>& vecSyms,
 	t_mat<double> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0], &bIsMat);
 	if(!bIsMat || mat.size1()!=mat.size2())
 	{
-		std::cerr << linenr("Error", info)
+		G_CERR << linenr(T_STR"Error", info)
 			<< "Determinant needs a square matrix."
 			<< std::endl;
 		return 0;
@@ -481,7 +484,7 @@ static Symbol* fkt_unitmatrix(const std::vector<Symbol*>& vecSyms, ParseInfo& in
 {
 	if(vecSyms.size()!=1 || vecSyms[0]->GetType()!=SYMBOL_INT)
 	{
-		std::cerr << linenr("Error", info) << "Need size of unit matrix." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "Need size of unit matrix." << std::endl;
 		return 0;
 	}
 
@@ -495,7 +498,7 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 {
 	if(vecSyms.size() != 2)
 	{
-		std::cerr << linenr("Error", info) << "Product needs two arguments." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "Product needs two arguments." << std::endl;
 		return 0;
 	}
 
@@ -523,7 +526,7 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 		{
 			if(iRows1 != iCols2 || iCols1 != iRows2)
 			{
-				std::cerr << linenr("Error", info)
+				G_CERR << linenr(T_STR"Error", info)
 					<< "Row and column counts of matrices do not match."
 					<< std::endl;
 				return 0;
@@ -554,7 +557,7 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 	}
 
 	if(!pRet)
-		std::cerr << linenr("Error", info) << "Invalid call to prod." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "Invalid call to prod." << std::endl;
 	return pRet;
 }
 
@@ -567,76 +570,76 @@ extern void init_ext_math_calls()
 	t_mapFkts mapFkts =
 	{
 		// math stuff
-		t_mapFkts::value_type("sqrt", fkt_math_1arg< ::sqrt >),
-		t_mapFkts::value_type("cbrt", fkt_math_1arg< ::cbrt >),
-		t_mapFkts::value_type("exp", fkt_math_1arg< ::exp >),
-		t_mapFkts::value_type("exp2", fkt_math_1arg< ::exp2 >),
-		t_mapFkts::value_type("expm1", fkt_math_1arg< ::expm1 >),
-		t_mapFkts::value_type("log", fkt_math_1arg< ::log >),
-		t_mapFkts::value_type("log1p", fkt_math_1arg< ::log1p >),
-		t_mapFkts::value_type("log10", fkt_math_1arg< ::log10 >),
-		t_mapFkts::value_type("log2", fkt_math_1arg< ::log2 >),
-		t_mapFkts::value_type("logb", fkt_math_1arg< ::logb >),
-		t_mapFkts::value_type("pow", fkt_math_2args< ::pow >),
+		t_mapFkts::value_type(T_STR"sqrt", fkt_math_1arg< ::sqrt >),
+		t_mapFkts::value_type(T_STR"cbrt", fkt_math_1arg< ::cbrt >),
+		t_mapFkts::value_type(T_STR"exp", fkt_math_1arg< ::exp >),
+		t_mapFkts::value_type(T_STR"exp2", fkt_math_1arg< ::exp2 >),
+		t_mapFkts::value_type(T_STR"expm1", fkt_math_1arg< ::expm1 >),
+		t_mapFkts::value_type(T_STR"log", fkt_math_1arg< ::log >),
+		t_mapFkts::value_type(T_STR"log1p", fkt_math_1arg< ::log1p >),
+		t_mapFkts::value_type(T_STR"log10", fkt_math_1arg< ::log10 >),
+		t_mapFkts::value_type(T_STR"log2", fkt_math_1arg< ::log2 >),
+		t_mapFkts::value_type(T_STR"logb", fkt_math_1arg< ::logb >),
+		t_mapFkts::value_type(T_STR"pow", fkt_math_2args< ::pow >),
 
-		t_mapFkts::value_type("sin", fkt_math_1arg< ::sin >),
-		t_mapFkts::value_type("cos", fkt_math_1arg< ::cos >),
-		t_mapFkts::value_type("tan", fkt_math_1arg< ::tan >),
-		t_mapFkts::value_type("asin", fkt_math_1arg< ::asin >),
-		t_mapFkts::value_type("acos", fkt_math_1arg< ::acos >),
-		t_mapFkts::value_type("atan", fkt_math_1arg< ::atan >),
-		t_mapFkts::value_type("atan2", fkt_math_2args< ::atan2 >),
-		t_mapFkts::value_type("hypot", fkt_math_2args< ::hypot >),
+		t_mapFkts::value_type(T_STR"sin", fkt_math_1arg< ::sin >),
+		t_mapFkts::value_type(T_STR"cos", fkt_math_1arg< ::cos >),
+		t_mapFkts::value_type(T_STR"tan", fkt_math_1arg< ::tan >),
+		t_mapFkts::value_type(T_STR"asin", fkt_math_1arg< ::asin >),
+		t_mapFkts::value_type(T_STR"acos", fkt_math_1arg< ::acos >),
+		t_mapFkts::value_type(T_STR"atan", fkt_math_1arg< ::atan >),
+		t_mapFkts::value_type(T_STR"atan2", fkt_math_2args< ::atan2 >),
+		t_mapFkts::value_type(T_STR"hypot", fkt_math_2args< ::hypot >),
 
-		t_mapFkts::value_type("sinh", fkt_math_1arg< ::sinh >),
-		t_mapFkts::value_type("cosh", fkt_math_1arg< ::cosh >),
-		t_mapFkts::value_type("tanh", fkt_math_1arg< ::tanh >),
-		t_mapFkts::value_type("asinh", fkt_math_1arg< ::asinh >),
-		t_mapFkts::value_type("acosh", fkt_math_1arg< ::acosh >),
-		t_mapFkts::value_type("atanh", fkt_math_1arg< ::atanh >),
+		t_mapFkts::value_type(T_STR"sinh", fkt_math_1arg< ::sinh >),
+		t_mapFkts::value_type(T_STR"cosh", fkt_math_1arg< ::cosh >),
+		t_mapFkts::value_type(T_STR"tanh", fkt_math_1arg< ::tanh >),
+		t_mapFkts::value_type(T_STR"asinh", fkt_math_1arg< ::asinh >),
+		t_mapFkts::value_type(T_STR"acosh", fkt_math_1arg< ::acosh >),
+		t_mapFkts::value_type(T_STR"atanh", fkt_math_1arg< ::atanh >),
 
-		t_mapFkts::value_type("erf", fkt_math_1arg< ::erf >),
-		t_mapFkts::value_type("erfc", fkt_math_1arg< ::erfc >),
-		t_mapFkts::value_type("tgamma", fkt_math_1arg< ::tgamma >),
-		t_mapFkts::value_type("lgamma", fkt_math_1arg< ::lgamma >),
+		t_mapFkts::value_type(T_STR"erf", fkt_math_1arg< ::erf >),
+		t_mapFkts::value_type(T_STR"erfc", fkt_math_1arg< ::erfc >),
+		t_mapFkts::value_type(T_STR"tgamma", fkt_math_1arg< ::tgamma >),
+		t_mapFkts::value_type(T_STR"lgamma", fkt_math_1arg< ::lgamma >),
 
-		t_mapFkts::value_type("round", fkt_math_1arg< ::round >),
-		t_mapFkts::value_type("trunc", fkt_math_1arg< ::trunc >),
-		t_mapFkts::value_type("rint", fkt_math_1arg< ::rint >),
-		t_mapFkts::value_type("nearbyint", fkt_math_1arg< ::nearbyint >),
-		t_mapFkts::value_type("fmod", fkt_math_2args< ::fmod >),
-		t_mapFkts::value_type("nextafter", fkt_math_2args< ::nextafter >),
-		//t_mapFkts::value_type("nexttoward", fkt_math_2args< ::nexttoward >),
-		t_mapFkts::value_type("ceil", fkt_math_1arg< ::ceil >),
-		t_mapFkts::value_type("floor", fkt_math_1arg< ::floor >),
-		t_mapFkts::value_type("abs", fkt_math_abs),
-		t_mapFkts::value_type("max", fkt_math_for_every<MATH_MAX>),
-		t_mapFkts::value_type("min", fkt_math_for_every<MATH_MIN>),
-		t_mapFkts::value_type("fdim", fkt_math_2args< ::fdim >),
-		t_mapFkts::value_type("remainder", fkt_math_2args< ::remainder >),
+		t_mapFkts::value_type(T_STR"round", fkt_math_1arg< ::round >),
+		t_mapFkts::value_type(T_STR"trunc", fkt_math_1arg< ::trunc >),
+		t_mapFkts::value_type(T_STR"rint", fkt_math_1arg< ::rint >),
+		t_mapFkts::value_type(T_STR"nearbyint", fkt_math_1arg< ::nearbyint >),
+		t_mapFkts::value_type(T_STR"fmod", fkt_math_2args< ::fmod >),
+		t_mapFkts::value_type(T_STR"nextafter", fkt_math_2args< ::nextafter >),
+		//t_mapFkts::value_type(T_STR"nexttoward", fkt_math_2args< ::nexttoward >),
+		t_mapFkts::value_type(T_STR"ceil", fkt_math_1arg< ::ceil >),
+		t_mapFkts::value_type(T_STR"floor", fkt_math_1arg< ::floor >),
+		t_mapFkts::value_type(T_STR"abs", fkt_math_abs),
+		t_mapFkts::value_type(T_STR"max", fkt_math_for_every<MATH_MAX>),
+		t_mapFkts::value_type(T_STR"min", fkt_math_for_every<MATH_MIN>),
+		t_mapFkts::value_type(T_STR"fdim", fkt_math_2args< ::fdim >),
+		t_mapFkts::value_type(T_STR"remainder", fkt_math_2args< ::remainder >),
 
 		// fft
-		t_mapFkts::value_type("fft", fkt_fft),
-		t_mapFkts::value_type("ifft", fkt_ifft),
+		t_mapFkts::value_type(T_STR"fft", fkt_fft),
+		t_mapFkts::value_type(T_STR"ifft", fkt_ifft),
 
 		// arrays
-		t_mapFkts::value_type("linspace", fkt_linspace),
-		t_mapFkts::value_type("logspace", fkt_logspace),
+		t_mapFkts::value_type(T_STR"linspace", fkt_linspace),
+		t_mapFkts::value_type(T_STR"logspace", fkt_logspace),
 
 		// vector operations
-		//t_mapFkts::value_type("dot", fkt_dot), -> use prod
-		t_mapFkts::value_type("cross", fkt_cross),
-		t_mapFkts::value_type("len", fkt_length),
+		//t_mapFkts::value_type(T_STR"dot", fkt_dot), -> use prod
+		t_mapFkts::value_type(T_STR"cross", fkt_cross),
+		t_mapFkts::value_type(T_STR"len", fkt_length),
 
 		// matrix operations
-		t_mapFkts::value_type("mat", fkt_matrix),
-		t_mapFkts::value_type("unity", fkt_unitmatrix),
-		t_mapFkts::value_type("trans", fkt_transpose),
-		t_mapFkts::value_type("inv", fkt_inverse),
-		t_mapFkts::value_type("det", fkt_determinant),
+		t_mapFkts::value_type(T_STR"mat", fkt_matrix),
+		t_mapFkts::value_type(T_STR"unity", fkt_unitmatrix),
+		t_mapFkts::value_type(T_STR"trans", fkt_transpose),
+		t_mapFkts::value_type(T_STR"inv", fkt_inverse),
+		t_mapFkts::value_type(T_STR"det", fkt_determinant),
 
 		// matrix-vector operations
-		t_mapFkts::value_type("prod", fkt_product),
+		t_mapFkts::value_type(T_STR"prod", fkt_product),
 	};
 
 	add_ext_calls(mapFkts);
