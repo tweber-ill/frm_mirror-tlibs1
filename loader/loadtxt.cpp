@@ -25,12 +25,12 @@ static bool CleanString(std::string& strLine)
 
 	while(strLine.find("nan")!=std::string::npos)
 	{
-		find_and_replace(strLine, "nan", "0");
+		find_and_replace(strLine, std::string("nan"), std::string("0"));
 		bModified = 1;
 	}
 	while(strLine.find("inf")!=std::string::npos)
 	{
-		find_and_replace(strLine, "inf", "0");
+		find_and_replace(strLine, std::string("inf"), std::string("0"));
 		bModified = 1;
 	}
 
@@ -111,7 +111,7 @@ void LoadTxt::StrTrim(std::string& str)
 			trim(strVal);
 
 			// if key is "Param" then the value itself is a "Key = Value" pair!
-			if(is_equal(strKey, "param", false))
+			if(is_equal(strKey, std::string("param"), false))
 			{
 				std::size_t iParamSep = strVal.find("=");
 				if(iParamSep != std::string::npos && iParamSep < strVal.length())
@@ -161,8 +161,8 @@ bool LoadTxt::Load(const char* pcFile)
 	bool bIsResData = false;
 
 	
-	std::string strExt = get_fileext(pcFile);
-	if(is_equal(strExt, "sqw"))
+	std::string strExt = get_fileext(std::string(pcFile));
+	if(is_equal(strExt, std::string("sqw")))
 	{
 		m_mapComm["type"].push_back("array_2d");
 		m_mapComm["subtype"].push_back("tobisown");		// 1 data block
@@ -171,7 +171,7 @@ bool LoadTxt::Load(const char* pcFile)
 		bHasAxesLines = true;
 		bTranspose = true;
 	}
-	else if(is_equal(strExt, "res"))
+	else if(is_equal(strExt, std::string("res")))
 	{
 		bIsResData = true;
 	}
@@ -258,7 +258,7 @@ bool LoadTxt::Load(const char* pcFile)
 				<< uiLine << std::endl;
 
 		vecLine.clear();
-		get_tokens<double>(strLine, " \t", vecLine);
+		get_tokens<double>(strLine, std::string(" \t"), vecLine);
 
 		if(iLineSize==-1)
 		{
@@ -487,9 +487,9 @@ std::ostream& operator<<(std::ostream& ostr, LoadTxt& txt)
 
 void convert_mcstas_string(std::string& str)
 {
-	find_and_replace(str, "\\gf", "phi");
-	find_and_replace(str, "\\gh", "theta");
-	find_and_replace(str, "\\gm", "u");
+	find_and_replace(str, std::string("\\gf"), std::string("phi"));
+	find_and_replace(str, std::string("\\gh"), std::string("theta"));
+	find_and_replace(str, std::string("\\gm"), std::string("u"));
 }
 
 //------------------------------------------------------------------------------
