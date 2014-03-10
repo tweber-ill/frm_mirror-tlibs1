@@ -80,7 +80,7 @@ void Lexer::ReplaceEscapes(t_string& str)
 	if(!s_bEscapesInited)
 	for(const t_mapSpecChars::value_type& pair : mapSpec)
 	{
-		const t_string strKey = T_STR("\\") + pair.first;
+		const t_string strKey = T_STR("\\{") + pair.first + T_STR("}");
 		const t_string& strVal = T_STR(pair.second.strUTF8);
 
 		s_mapstrSpecial.insert(std::pair<t_string, t_string>(strKey, strVal));

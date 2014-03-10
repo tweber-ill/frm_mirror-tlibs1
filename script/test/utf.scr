@@ -1,11 +1,10 @@
 main()
 {
-	print("\lambda = 12.3 \AA \pm 0.5 \AA");
-	print("Q = 5 \AA\sup-\sup1");
-	print("E = m\cdotc\sup2");
-	print("E = \hbar\omega");
-	print("P \neq NP");
-	print("\alpha\sub2 = 8\deg");
-	print("\sub0 \sub1 \sub2 \sub3 \sub4 \sub5 \sub6 \sub7 \sub8 \sub9 \sup0 \sup1 \sup2 \sup3 \sup4 \sup5 \sup6 \sup7 \sup8 \sup9");
-	print("a\rightarrowb");
+	print("\{lambda} = 12.3 \{AA} \{pm} 0.5 \{AA}");
+	print("Q = 5 \{AA}\{sup-}\{sup1}");
+	print("E = m\{cdot}c\{sup2}");
+	print("E = \{hbar}\{omega}");
+	print("P \{neq} NP");
+	print("\{alpha}\{sub2} = 8\{deg}");
+	print("a \{rightarrow} b");
 }
