@@ -146,9 +146,9 @@ static inline bool __comp_file_to_file(const char* pcFileIn, const char* pcFileO
 	{
 		std::string strExt;
 		if(bDecomp)
-			strExt = get_fileext(pcFileIn);
+			strExt = get_fileext(std::string(pcFileIn));
 		else
-			strExt = get_fileext(pcFileOut);
+			strExt = get_fileext(std::string(pcFileOut));
 
 		if(strExt == "gz")
 			comp = COMP_GZ;

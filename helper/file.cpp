@@ -74,7 +74,7 @@ int TmpFile::mkstemp(std::string& strFile)
 	for(unsigned int iRnd=0; iRnd<6; ++iRnd)
 		strRnd.push_back(strChars[simple_rand(iLenChars)]);
 
-	if(!find_and_replace(strFile, "XXXXXX", strRnd))
+	if(!find_and_replace(strFile, std::string("XXXXXX"), strRnd))
 		return -1;
 
 	int iFile = ::open(strFile.c_str(), O_RDWR | O_CREAT | O_EXCL, 0600);
