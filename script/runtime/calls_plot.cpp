@@ -111,10 +111,10 @@ static void set_plot_params(GnuPlot& plot, SymbolMap* pParamMap, PlotObj* pCurPl
 	t_string strTitle = pParamMap->GetStringVal(T_STR"title", &bHasVal);
 	if(bHasVal) plot.SetTitle(WSTR_TO_STR(strTitle).c_str());
 
-	t_string strXLab = pParamMap->GetStringVal(T_STR"xlabeT_STR", &bHasVal);
+	t_string strXLab = pParamMap->GetStringVal(T_STR"xlabel", &bHasVal);
 	if(bHasVal) plot.SetXLabel(WSTR_TO_STR(strXLab).c_str());
 
-	t_string strYLab = pParamMap->GetStringVal(T_STR"ylabeT_STR", &bHasVal);
+	t_string strYLab = pParamMap->GetStringVal(T_STR"ylabel", &bHasVal);
 	if(bHasVal) plot.SetYLabel(WSTR_TO_STR(strYLab).c_str());
 
 	if(pCurPlotObj)
