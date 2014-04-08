@@ -248,7 +248,7 @@ void Lexer::load(const t_string& _strInput)
 			else if(str == T_STR"greater")	tok.type = LEX_TOKEN_LOG_GREATER;
 			else if(str == T_STR"leq")		tok.type = LEX_TOKEN_LOG_LEQ;
 			else if(str == T_STR"geq")		tok.type = LEX_TOKEN_LOG_GEQ;
-			else if(str == T_STR"globaT_STR")	tok.type = LEX_TOKEN_GLOBAL;
+			else if(str == T_STR"global")		tok.type = LEX_TOKEN_GLOBAL;
 		}
 		else if(isdigit(str[0]))
 		{

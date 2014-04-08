@@ -69,7 +69,7 @@ struct SymbolDouble : public Symbol
 	SymbolDouble(const t_string&) { throw Err("Invalid SymbolDouble constructor."); }
 
 	virtual SymbolType GetType() const { return SYMBOL_DOUBLE; }
-	virtual t_string GetTypeName() const { return T_STR"reaT_STR"; }
+	virtual t_string GetTypeName() const { return T_STR"real"; }
 	virtual Symbol* ToType(SymbolType stype) const;
 
 	virtual t_string print() const;
@@ -163,7 +163,7 @@ struct SymbolMap : public Symbol
 	SymbolMap() : Symbol() {}
 	virtual ~SymbolMap();
 
-	virtual SymbolType GetType() const { return SYMBOL_MAP; }	
+	virtual SymbolType GetType() const { return SYMBOL_MAP; }
 	virtual t_string GetTypeName() const { return T_STR"map"; }
 	virtual Symbol* ToType(SymbolType stype) const;
 

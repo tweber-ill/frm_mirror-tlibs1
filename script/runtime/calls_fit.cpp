@@ -157,14 +157,14 @@ public:
 	virtual std::string print(bool bFillInSyms=true) const
 	{ return "<not implemented>"; }
 	virtual const char* GetModelName() const
-	{ return "generic fitter modeT_STR"; }
+	{ return "generic fitter model"; }
 	virtual std::vector<std::string> GetParamNames() const
 	{ return m_vecParamNames; }
 
 	virtual std::vector<double> GetParamValues() const
-	{ throw Err("Called invalid function in generic fitter modeT_STR"); }
+	{ throw Err("Called invalid function in generic fitter model"); }
 	virtual std::vector<double> GetParamErrors() const
-	{ throw Err("Called invalid function in generic fitter modeT_STR"); }
+	{ throw Err("Called invalid function in generic fitter model"); }
 };
 
 
