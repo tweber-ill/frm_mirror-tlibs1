@@ -1,19 +1,20 @@
-line_model(x, a, b)
+parab_model(x, a, b, c)
 {
-	return a*x + b;
+	return a*x^2. + b*x + c;
 }
 
 main()
 {
-	x = [0, 1, 2, 3, 4, 5];
-	y = [-0.2, 0.9, 2.4, 2.9, 3.5, 5.3];
-	yerr = [0.2, 0.2, 0.3, 0.3, 0.4, 0.4];
-	hints = [1., 0.];
+	x = linspace(0, 10, 32);
+	y = -2.*x^2. - 0.5*x + 1.5;
+	yerr = y/10.;
+	hints = [1.75, 0.3, 2.];
+	hints_err = [0.25, 0.5, 0.5];
 
-	lower = ["b":-1, "a":0];
-	upper = ["b":1, "a":2];
+	lower = ["b":-1, "a":-2.];
+	upper = ["b":1, "a":2.];
 
-	params = fit("line_model", x, y, yerr, ["hints":hints, 
+	params = fit("parab_model", x, y, yerr, ["hints":hints, "hints_errors":hints_err,
 				"lower_limits":lower, "upper_limits":upper,
 				"debug":1]);
 	print("fit parameters: " + str(params));
@@ -25,6 +26,6 @@ main()
 
 	fitx = linspace(min(x), max(x), 128);
 #	fity = line_model(fitx, params["a"][0], params["b"][0]);
-	fity = line_model(fitx, *params_vals);
+	fity = parab_model(fitx, *params_vals);
 	plot([x,y,yerr], [fitx, fity, ["style":"line"]]);
 }

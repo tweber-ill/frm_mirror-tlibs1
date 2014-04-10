@@ -17,6 +17,7 @@ template<typename T> using t_stdvec = std::vector<T>;
 // fitting
 
 #include "../fitter/fitter.h"
+#include "../fitter/models/interpolation.h"
 #include "../fitter/chi2.h"
 #include <algorithm>
 #include <exception>
@@ -146,7 +147,17 @@ public:
 
 		double dRetVal = 0.;
 		if(pSymRet)
+		{
 			dRetVal = pSymRet->GetValDouble();
+			//if(std::isnan(dRetVal) || std::isinf(dRetVal))
+			//	dRetVal = std::numeric_limits<double>::max();
+
+			/*std::cout << "parameters: ";
+			for(Symbol* pSym : m_vecSyms)
+				std::cout << pSym->GetValDouble() << ", ";
+
+			std::cout << "evaluated: f(" << x << ") = " << dRetVal << std::endl;*/
+		}
 		safe_delete(pSymRet, m_pCallerSymTab, m_pinfo->pGlobalSyms);
 
 		return dRetVal;
@@ -208,6 +219,8 @@ static void get_values(const std::vector<t_string>& vecParamNames,
 static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
+	int iDebug = 0;
+
 	if(vecSyms.size()<4 || !is_vec(vecSyms[1]) || !is_vec(vecSyms[2]) || !is_vec(vecSyms[3]))
 	{
 		G_CERR << linenr(T_STR"Error", info)
@@ -264,6 +277,8 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 
 		SymbolMap::t_map::iterator iterFixed = mapSym.find(T_STR"fixed");
 
+		SymbolMap::t_map::iterator iterDebug = mapSym.find(T_STR"debug");
+
 
 		if(iterHints != mapSym.end())
 			get_values(vecParamNames, iterHints->second, vecHints, vecHintsActive);
@@ -277,6 +292,9 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 
 		if(iterFixed != mapSym.end())
 			vecFixedParams = sym_to_vec<t_stdvec, t_string>(iterFixed->second);
+
+		if(iterDebug != mapSym.end())
+			iDebug = iterDebug->second->GetValInt();
 
 //		for(const t_string& strFixed : vecFixedParams)
 //			G_COUT << "fixed params: " << strFixed << std::endl;
@@ -307,8 +325,8 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		if(iParam < vecHintsErr.size())
 			dErr = vecHintsErr[iParam];
 
-//		G_COUT << "hints for " << vecParamNames[iParam] << ": "
-//				<< dHint << " +- " << dErr << std::endl;
+		//G_COUT << "hints for " << vecParamNames[iParam] << ": "
+		//		<< dHint << " +- " << dErr << std::endl;
 		params.Add(strParam, dHint, dErr);
 
 
@@ -329,7 +347,10 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 						<< dLimMax << std::endl;*/
 
 		if(vecLimMinActive[iParam] && vecLimMaxActive[iParam])
+		{
+			//std::cout << "Limit for " << strParam << ": " << dLimMin << ", " << dLimMax << std::endl;
 			params.SetLimits(strParam, dLimMin, dLimMax);
+		}
 		else if(vecLimMinActive[iParam] && vecLimMaxActive[iParam]==0)
 			params.SetLowerLimit(strParam, dLimMin);
 		else if(vecLimMinActive[iParam]==0 && vecLimMaxActive[iParam])
@@ -397,7 +418,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		pSymMap->m_map.insert(SymbolMap::t_map::value_type(strSym, pArr));
 	}
 
-	bool bFitterDebug = 0;
+	bool bFitterDebug = (iDebug>0);
 	if(bFitterDebug)
 	{
 		G_CERR << "--------------------------------------------------------------------------------" << std::endl;
@@ -509,6 +530,37 @@ static Symbol* fkt_spline(const std::vector<Symbol*>& vecSyms,
 {
 	return _fkt_param(FKT_SPLINE, vecSyms, info, pSymTab);
 }
+
+static Symbol* fkt_find_peaks(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size() < 2)
+	{
+		G_CERR << linenr(T_STR"Error", info) << "find_peaks needs x and y arrays."
+					<< std::endl;
+		return 0;
+	}
+
+	const unsigned int iOrder = 5;
+
+	std::vector<double> vecX = sym_to_vec<t_stdvec>(vecSyms[0]);
+	std::vector<double> vecY = sym_to_vec<t_stdvec>(vecSyms[1]);
+	const unsigned int iLen = std::min(vecX.size(), vecY.size());
+
+	std::vector<double> vecMaximaX, vecMaximaSize, vecMaximaWidth;
+	::find_peaks<double>(iLen, vecX.data(), vecY.data(), iOrder,
+						vecMaximaX, vecMaximaSize, vecMaximaWidth);
+
+	SymbolArray* pArrX = (SymbolArray*)vec_to_sym<t_stdvec>(vecMaximaX);
+	SymbolArray* pArrSizes = (SymbolArray*)vec_to_sym<t_stdvec>(vecMaximaSize);
+	SymbolArray* pArrWidths = (SymbolArray*)vec_to_sym<t_stdvec>(vecMaximaWidth);
+
+	SymbolArray *pArr = new SymbolArray();
+	pArr->m_arr.push_back(pArrX);
+	pArr->m_arr.push_back(pArrSizes);
+	pArr->m_arr.push_back(pArrWidths);
+	return pArr;
+}
 // --------------------------------------------------------------------------------
 
 
@@ -585,6 +637,8 @@ extern void init_ext_fit_calls()
 
 		t_mapFkts::value_type(T_STR"spline", fkt_spline),
 		t_mapFkts::value_type(T_STR"bezier", fkt_bezier),
+
+		t_mapFkts::value_type(T_STR"find_peaks", fkt_find_peaks),
 	};
 
 	add_ext_calls(mapFkts);
