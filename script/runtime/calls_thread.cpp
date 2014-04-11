@@ -36,7 +36,7 @@ static inline Symbol* fkt_exec(const std::vector<Symbol*>& vecSyms,
 	if(pPipe)
 	{
 		bOk = 1;
-		int iRet = ::pclose(pPipe);
+		int iRet = ::my_pclose(pPipe);
 		if(iRet == -1)
 		{
 			bOk = 0;

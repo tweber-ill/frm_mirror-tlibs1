@@ -9,6 +9,7 @@
 #include "../calls.h"
 #include "../helper/fourier.h"
 #include "../helper/linalg.h"
+#include "../helper/rand.h"
 
 static inline Symbol* _fkt_linlogspace(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab, bool bLog)
@@ -565,8 +566,75 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 
 
 
+
+
+// --------------------------------------------------------------------------------
+// rand stuff
+
+
+static Symbol* fkt_rand01(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+{
+	double dRand = rand01();
+	return new SymbolDouble(dRand);
+}
+
+static Symbol* fkt_rand_real(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size() != 2)
+	{
+		G_CERR << linenr(T_STR"Error", info) << "rand_real needs two arguments." << std::endl;
+		return 0;
+	}
+
+	double dMin = vecSyms[0]->GetValDouble();
+	double dMax = vecSyms[1]->GetValDouble();
+
+	double dRand = rand_double(dMin, dMax);
+	return new SymbolDouble(dRand);
+}
+
+static Symbol* fkt_rand_int(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size() != 2)
+	{
+		G_CERR << linenr(T_STR"Error", info) << "rand_int needs two arguments." << std::endl;
+		return 0;
+	}
+
+	int iMin = vecSyms[0]->GetValInt();
+	int iMax = vecSyms[1]->GetValInt();
+
+	int iRand = rand_int(iMin, iMax);
+	return new SymbolInt(iRand);
+}
+
+static Symbol* fkt_rand_norm(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size() != 2)
+	{
+		G_CERR << linenr(T_STR"Error", info) << "rand_norm needs two arguments." << std::endl;
+		return 0;
+	}
+
+	double dMu = 0.;
+	double dSigma = 1.;
+
+	if(vecSyms.size() >= 1)
+		dMu = vecSyms[0]->GetValDouble();
+	if(vecSyms.size() >= 2)
+		dSigma = vecSyms[1]->GetValDouble();
+
+	double dRand = rand_norm(dMu, dSigma);
+	return new SymbolDouble(dRand);
+}
+// --------------------------------------------------------------------------------
+
+
+
 extern void init_ext_math_calls()
 {
+	init_rand();
+
 	t_mapFkts mapFkts =
 	{
 		// math stuff
@@ -640,6 +708,13 @@ extern void init_ext_math_calls()
 
 		// matrix-vector operations
 		t_mapFkts::value_type(T_STR"prod", fkt_product),
+
+
+		// random numbers
+		t_mapFkts::value_type(T_STR"rand01", fkt_rand01),
+		t_mapFkts::value_type(T_STR"rand_real", fkt_rand_real),
+		t_mapFkts::value_type(T_STR"rand_int", fkt_rand_int),
+		t_mapFkts::value_type(T_STR"rand_norm", fkt_rand_norm),
 	};
 
 	add_ext_calls(mapFkts);

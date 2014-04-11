@@ -1,0 +1,26 @@
+rand_gauss()
+{
+	BINS = 32;
+	vals = vec(BINS);
+
+	cnt = 0;
+	while(cnt less 1000)
+	{
+		rnd = rand_norm(BINS/2., BINS/4.);
+		bin_rnd = int(rnd);
+		if(bin_rnd greater 0 and bin_rnd less BINS)
+			vals[bin_rnd] = vals[bin_rnd]+1;
+
+		cnt = cnt + 1;
+	}
+
+	print("gaussian: " + str(vals));
+}
+
+main()
+{
+	print("rand01: " + rand01());
+	print("rand int: " + rand_int(0, 123));
+
+	rand_gauss();
+}
