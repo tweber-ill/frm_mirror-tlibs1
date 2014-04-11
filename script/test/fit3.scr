@@ -14,7 +14,15 @@ main()
 	hints = [4.5, 1.1, 5.2, 0.];
 	hints_err = [0.4, 0.4, 0.4, 2.];
 
-	params = fit("gauss_model", x, y, yerr, ["hints":hints, "hints_errors":hints_err, "debug":1]);
+	params = fit("gauss_model", x, y, yerr, 
+			[
+				"hints":hints, 
+				"hints_errors":hints_err,
+				"lower_limits":["offs":min(y), "amp":0., "sigma":0.],
+				"upper_limits":["offs":max(y), "amp":max(y)],
+				"steps":["rfff", "rrff", "rrrf", "rrrr"],
+				"debug":1
+			]);
 	print("fit parameters: " + str(params));
 
 	params_vals = map_vec_to_val(params);

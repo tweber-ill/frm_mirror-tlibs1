@@ -259,6 +259,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	std::vector<double> vecLimMin, vecLimMax;
 	std::vector<bool> vecLimMinActive, vecLimMaxActive;
 
+	std::vector<t_string> vecFittingSteps;
 	std::vector<t_string> vecFixedParams;
 
 	vecLimMinActive.resize(iParamSize);
@@ -277,6 +278,8 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 
 		SymbolMap::t_map::iterator iterFixed = mapSym.find(T_STR"fixed");
 
+		SymbolMap::t_map::iterator iterSteps = mapSym.find(T_STR"steps");
+
 		SymbolMap::t_map::iterator iterDebug = mapSym.find(T_STR"debug");
 
 
@@ -290,6 +293,9 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		if(iterLimitsMax != mapSym.end())
 			get_values(vecParamNames, iterLimitsMax->second, vecLimMax, vecLimMaxActive);
 
+		if(iterSteps != mapSym.end())
+			vecFittingSteps = sym_to_vec<t_stdvec, t_string>(iterSteps->second);
+
 		if(iterFixed != mapSym.end())
 			vecFixedParams = sym_to_vec<t_stdvec, t_string>(iterFixed->second);
 
@@ -299,6 +305,8 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 //		for(const t_string& strFixed : vecFixedParams)
 //			G_COUT << "fixed params: " << strFixed << std::endl;
 	}
+
+	bool bFitterDebug = (iDebug>0);
 
 
 	std::vector<double> vecX = sym_to_vec<t_stdvec>(vecSyms[1]);
@@ -314,8 +322,8 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	ROOT::Minuit2::MnUserParameters params;
 	for(unsigned int iParam=0; iParam<iParamSize; ++iParam)
 	{
-		const t_string& strParam = vecParamNames[iParam];
-		//std::string strParam = WSTR_TO_STR(wstrParam);
+		const t_string& wstrParam = vecParamNames[iParam];
+		std::string strParam = WSTR_TO_STR(wstrParam);
 
 		double dHint = 0.;
 		double dErr = 0.;
@@ -348,7 +356,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 
 		if(vecLimMinActive[iParam] && vecLimMaxActive[iParam])
 		{
-			//std::cout << "Limit for " << strParam << ": " << dLimMin << ", " << dLimMax << std::endl;
+			//std::cout << "Limits for " << strParam << ": " << dLimMin << ", " << dLimMax << std::endl;
 			params.SetLimits(strParam, dLimMin, dLimMax);
 		}
 		else if(vecLimMinActive[iParam] && vecLimMaxActive[iParam]==0)
@@ -362,41 +370,118 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 
 
 	bool bValidFit = 1;
-
 	std::vector<ROOT::Minuit2::FunctionMinimum> minis;
-	minis.reserve(2);
 
+	if(vecFittingSteps.size() == 0)
 	{
-		// step 1: free fit (limited)
+		if(bFitterDebug)
+			G_COUT << "Using default fitting steps." << std::endl;
 
-		ROOT::Minuit2::MnMigrad migrad(chi2fkt, params, 2);
-		ROOT::Minuit2::FunctionMinimum mini = migrad();
-		bValidFit = mini.IsValid() && mini.HasValidParameters();
+		minis.reserve(2);
 
-		for(const t_string& strSym : vecParamNames)
 		{
-			std::string _strSym = WSTR_TO_STR(strSym);
+			// step 1: free fit (limited)
 
-			params.SetValue(_strSym, mini.UserState().Value(_strSym));
-			params.SetError(_strSym, mini.UserState().Error(_strSym));
+			ROOT::Minuit2::MnMigrad migrad(chi2fkt, params, 2);
+			ROOT::Minuit2::FunctionMinimum mini = migrad();
+			bValidFit = mini.IsValid() && mini.HasValidParameters();
+
+			for(const t_string& strSym : vecParamNames)
+			{
+				std::string _strSym = WSTR_TO_STR(strSym);
+
+				params.SetValue(_strSym, mini.UserState().Value(_strSym));
+				params.SetError(_strSym, mini.UserState().Error(_strSym));
+			}
+
+			minis.push_back(mini);
 		}
 
-		minis.push_back(mini);
+
+		{
+			// step 2: free fit (unlimited)
+
+			for(const t_string& strSym : vecParamNames)
+				params.RemoveLimits(WSTR_TO_STR(strSym));
+
+			ROOT::Minuit2::MnMigrad migrad(chi2fkt, params, 2);
+			ROOT::Minuit2::FunctionMinimum mini = migrad();
+			bValidFit = mini.IsValid() && mini.HasValidParameters();
+
+			minis.push_back(mini);
+		}
 	}
-
-
+	else	// custom fitting steps
 	{
-		// step 2: free fit (unlimited)
+		if(bFitterDebug)
+			G_COUT << "Using " << vecFittingSteps.size()
+					<< " custom fitting steps." << std::endl;
 
-		for(const t_string& strSym : vecParamNames)
-			params.RemoveLimits(WSTR_TO_STR(strSym));
+		minis.reserve(vecFittingSteps.size());
 
-		ROOT::Minuit2::MnMigrad migrad(chi2fkt, params, 2);
-		ROOT::Minuit2::FunctionMinimum mini = migrad();
-		bValidFit = mini.IsValid() && mini.HasValidParameters();
+		// one strip per fitting step
+		unsigned int iFitStep = 0;
+		for(const t_string& strStep : vecFittingSteps)
+		{
+			if(bFitterDebug)
+				G_COUT << "Performing fitting step " << iFitStep+1
+						<< ": " << strStep << std::endl;
 
-		minis.push_back(mini);
+			// one character for each parameter
+			for(unsigned int iStepParam = 0; iStepParam<strStep.length(); ++iStepParam)
+			{
+				t_char cOp = strStep[iStepParam];
+				const t_string& strParam = vecParamNames[iStepParam];
+
+				switch(cOp)
+				{
+					case 'f':			// fix param
+						params.Fix(WSTR_TO_STR(strParam));
+						break;
+					case 'r': 			// release param
+						params.Release(WSTR_TO_STR(strParam));
+						break;
+					case 'u': 			// remove limits
+						params.RemoveLimits(WSTR_TO_STR(strParam));
+						break;
+					case 'x': 			// release param and remove limits
+						params.Release(WSTR_TO_STR(strParam));
+						params.RemoveLimits(WSTR_TO_STR(strParam));
+						break;
+					case 'n':			// nop
+						break;
+					default:
+						G_CERR << "Error: Unknow fitting step operation \'"
+								<< cOp << "\'." << std::endl;
+						break;
+				}
+			} // ops
+
+
+			ROOT::Minuit2::MnMigrad migrad(chi2fkt, params, 2);
+			ROOT::Minuit2::FunctionMinimum mini = migrad();
+			bValidFit = mini.IsValid() && mini.HasValidParameters();
+
+			for(unsigned int iStepParam = 0; iStepParam<strStep.length(); ++iStepParam)
+			{
+				char cOp = strStep[iStepParam];
+				const t_string& strParam = vecParamNames[iStepParam];
+				std::string _strSym = WSTR_TO_STR(strParam);
+
+				// copy fitted values only for non-fixed params
+				if(cOp != 'f')
+				{
+					params.SetValue(_strSym, mini.UserState().Value(_strSym));
+					params.SetError(_strSym, mini.UserState().Error(_strSym));
+				}
+			}
+
+			minis.push_back(mini);
+			++iFitStep;
+		} // steps
 	}
+
+
 
 
 	const ROOT::Minuit2::FunctionMinimum& lastmini = *minis.rbegin();
@@ -418,7 +503,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		pSymMap->m_map.insert(SymbolMap::t_map::value_type(strSym, pArr));
 	}
 
-	bool bFitterDebug = (iDebug>0);
+
 	if(bFitterDebug)
 	{
 		G_CERR << "--------------------------------------------------------------------------------" << std::endl;
