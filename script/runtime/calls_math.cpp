@@ -252,6 +252,44 @@ static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
 }
 
 
+
+
+template<bool (*FKT)(double)>
+static Symbol* fkt_math_1arg_bret(const std::vector<Symbol*>& vecSyms,
+				ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size() != 1)
+	{
+		G_CERR << linenr(T_STR"Error", info) << "fkt_math_1arg_bret takes exactly one argument." << std::endl;
+		return 0;
+	}
+
+	if(vecSyms[0]->GetType() == SYMBOL_ARRAY)
+	{
+		SymbolArray* pArrRet = new SymbolArray();
+
+		SymbolArray* pSymArr = (SymbolArray*)vecSyms[0];
+		for(Symbol* pArrElem : pSymArr->m_arr)
+		{
+			std::vector<Symbol*> vecDummy;
+			vecDummy.push_back(pArrElem);
+
+			pArrRet->m_arr.push_back(fkt_math_1arg_bret<FKT>(vecDummy, info, pSymTab));
+		}
+
+		pArrRet->UpdateIndices();
+		return pArrRet;
+	}
+	else
+	{
+		int iResult = FKT(vecSyms[0]->GetValDouble());
+		return new SymbolInt(iResult);
+	}
+
+	return 0;
+}
+
+
 // --------------------------------------------------------------------------------
 // FFT
 
@@ -638,53 +676,53 @@ extern void init_ext_math_calls()
 	t_mapFkts mapFkts =
 	{
 		// math stuff
-		t_mapFkts::value_type(T_STR"sqrt", fkt_math_1arg< ::sqrt >),
-		t_mapFkts::value_type(T_STR"cbrt", fkt_math_1arg< ::cbrt >),
-		t_mapFkts::value_type(T_STR"exp", fkt_math_1arg< ::exp >),
-		t_mapFkts::value_type(T_STR"exp2", fkt_math_1arg< ::exp2 >),
-		t_mapFkts::value_type(T_STR"expm1", fkt_math_1arg< ::expm1 >),
-		t_mapFkts::value_type(T_STR"log", fkt_math_1arg< ::log >),
-		t_mapFkts::value_type(T_STR"log1p", fkt_math_1arg< ::log1p >),
-		t_mapFkts::value_type(T_STR"log10", fkt_math_1arg< ::log10 >),
-		t_mapFkts::value_type(T_STR"log2", fkt_math_1arg< ::log2 >),
-		t_mapFkts::value_type(T_STR"logb", fkt_math_1arg< ::logb >),
-		t_mapFkts::value_type(T_STR"pow", fkt_math_2args< ::pow >),
+		t_mapFkts::value_type(T_STR"sqrt", fkt_math_1arg< std::sqrt >),
+		t_mapFkts::value_type(T_STR"cbrt", fkt_math_1arg< std::cbrt >),
+		t_mapFkts::value_type(T_STR"exp", fkt_math_1arg< std::exp >),
+		t_mapFkts::value_type(T_STR"exp2", fkt_math_1arg< std::exp2 >),
+		t_mapFkts::value_type(T_STR"expm1", fkt_math_1arg< std::expm1 >),
+		t_mapFkts::value_type(T_STR"log", fkt_math_1arg< std::log >),
+		t_mapFkts::value_type(T_STR"log1p", fkt_math_1arg< std::log1p >),
+		t_mapFkts::value_type(T_STR"log10", fkt_math_1arg< std::log10 >),
+		t_mapFkts::value_type(T_STR"log2", fkt_math_1arg< std::log2 >),
+		t_mapFkts::value_type(T_STR"logb", fkt_math_1arg< std::logb >),
+		t_mapFkts::value_type(T_STR"pow", fkt_math_2args< std::pow >),
 
-		t_mapFkts::value_type(T_STR"sin", fkt_math_1arg< ::sin >),
-		t_mapFkts::value_type(T_STR"cos", fkt_math_1arg< ::cos >),
-		t_mapFkts::value_type(T_STR"tan", fkt_math_1arg< ::tan >),
-		t_mapFkts::value_type(T_STR"asin", fkt_math_1arg< ::asin >),
-		t_mapFkts::value_type(T_STR"acos", fkt_math_1arg< ::acos >),
-		t_mapFkts::value_type(T_STR"atan", fkt_math_1arg< ::atan >),
-		t_mapFkts::value_type(T_STR"atan2", fkt_math_2args< ::atan2 >),
-		t_mapFkts::value_type(T_STR"hypot", fkt_math_2args< ::hypot >),
+		t_mapFkts::value_type(T_STR"sin", fkt_math_1arg< std::sin >),
+		t_mapFkts::value_type(T_STR"cos", fkt_math_1arg< std::cos >),
+		t_mapFkts::value_type(T_STR"tan", fkt_math_1arg< std::tan >),
+		t_mapFkts::value_type(T_STR"asin", fkt_math_1arg< std::asin >),
+		t_mapFkts::value_type(T_STR"acos", fkt_math_1arg< std::acos >),
+		t_mapFkts::value_type(T_STR"atan", fkt_math_1arg< std::atan >),
+		t_mapFkts::value_type(T_STR"atan2", fkt_math_2args< std::atan2 >),
+		t_mapFkts::value_type(T_STR"hypot", fkt_math_2args< std::hypot >),
 
-		t_mapFkts::value_type(T_STR"sinh", fkt_math_1arg< ::sinh >),
-		t_mapFkts::value_type(T_STR"cosh", fkt_math_1arg< ::cosh >),
-		t_mapFkts::value_type(T_STR"tanh", fkt_math_1arg< ::tanh >),
-		t_mapFkts::value_type(T_STR"asinh", fkt_math_1arg< ::asinh >),
-		t_mapFkts::value_type(T_STR"acosh", fkt_math_1arg< ::acosh >),
-		t_mapFkts::value_type(T_STR"atanh", fkt_math_1arg< ::atanh >),
+		t_mapFkts::value_type(T_STR"sinh", fkt_math_1arg< std::sinh >),
+		t_mapFkts::value_type(T_STR"cosh", fkt_math_1arg< std::cosh >),
+		t_mapFkts::value_type(T_STR"tanh", fkt_math_1arg< std::tanh >),
+		t_mapFkts::value_type(T_STR"asinh", fkt_math_1arg< std::asinh >),
+		t_mapFkts::value_type(T_STR"acosh", fkt_math_1arg< std::acosh >),
+		t_mapFkts::value_type(T_STR"atanh", fkt_math_1arg< std::atanh >),
 
-		t_mapFkts::value_type(T_STR"erf", fkt_math_1arg< ::erf >),
-		t_mapFkts::value_type(T_STR"erfc", fkt_math_1arg< ::erfc >),
-		t_mapFkts::value_type(T_STR"tgamma", fkt_math_1arg< ::tgamma >),
-		t_mapFkts::value_type(T_STR"lgamma", fkt_math_1arg< ::lgamma >),
+		t_mapFkts::value_type(T_STR"erf", fkt_math_1arg< std::erf >),
+		t_mapFkts::value_type(T_STR"erfc", fkt_math_1arg< std::erfc >),
+		t_mapFkts::value_type(T_STR"tgamma", fkt_math_1arg< std::tgamma >),
+		t_mapFkts::value_type(T_STR"lgamma", fkt_math_1arg< std::lgamma >),
 
-		t_mapFkts::value_type(T_STR"round", fkt_math_1arg< ::round >),
-		t_mapFkts::value_type(T_STR"trunc", fkt_math_1arg< ::trunc >),
-		t_mapFkts::value_type(T_STR"rint", fkt_math_1arg< ::rint >),
-		t_mapFkts::value_type(T_STR"nearbyint", fkt_math_1arg< ::nearbyint >),
-		t_mapFkts::value_type(T_STR"fmod", fkt_math_2args< ::fmod >),
-		t_mapFkts::value_type(T_STR"nextafter", fkt_math_2args< ::nextafter >),
-		//t_mapFkts::value_type(T_STR"nexttoward", fkt_math_2args< ::nexttoward >),
-		t_mapFkts::value_type(T_STR"ceil", fkt_math_1arg< ::ceil >),
-		t_mapFkts::value_type(T_STR"floor", fkt_math_1arg< ::floor >),
+		t_mapFkts::value_type(T_STR"round", fkt_math_1arg< std::round >),
+		t_mapFkts::value_type(T_STR"trunc", fkt_math_1arg< std::trunc >),
+		t_mapFkts::value_type(T_STR"rint", fkt_math_1arg< std::rint >),
+		t_mapFkts::value_type(T_STR"nearbyint", fkt_math_1arg< std::nearbyint >),
+		t_mapFkts::value_type(T_STR"fmod", fkt_math_2args< std::fmod >),
+		t_mapFkts::value_type(T_STR"nextafter", fkt_math_2args< std::nextafter >),
+		//t_mapFkts::value_type(T_STR"nexttoward", fkt_math_2args< std::nexttoward >),
+		t_mapFkts::value_type(T_STR"ceil", fkt_math_1arg< std::ceil >),
+		t_mapFkts::value_type(T_STR"floor", fkt_math_1arg< std::floor >),
 		t_mapFkts::value_type(T_STR"abs", fkt_math_abs),
 		t_mapFkts::value_type(T_STR"max", fkt_math_for_every<MATH_MAX>),
 		t_mapFkts::value_type(T_STR"min", fkt_math_for_every<MATH_MIN>),
-		t_mapFkts::value_type(T_STR"fdim", fkt_math_2args< ::fdim >),
-		t_mapFkts::value_type(T_STR"remainder", fkt_math_2args< ::remainder >),
+		t_mapFkts::value_type(T_STR"fdim", fkt_math_2args< std::fdim >),
+		t_mapFkts::value_type(T_STR"remainder", fkt_math_2args< std::remainder >),
 
 		// fft
 		t_mapFkts::value_type(T_STR"fft", fkt_fft),
@@ -715,6 +753,11 @@ extern void init_ext_math_calls()
 		t_mapFkts::value_type(T_STR"rand_real", fkt_rand_real),
 		t_mapFkts::value_type(T_STR"rand_int", fkt_rand_int),
 		t_mapFkts::value_type(T_STR"rand_norm", fkt_rand_norm),
+
+		// float classification
+		t_mapFkts::value_type(T_STR"isnan", fkt_math_1arg_bret<std::isnan>),
+		t_mapFkts::value_type(T_STR"isinf", fkt_math_1arg_bret<std::isinf>),
+		t_mapFkts::value_type(T_STR"isfinite", fkt_math_1arg_bret<std::isfinite>),
 	};
 
 	add_ext_calls(mapFkts);
