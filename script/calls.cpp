@@ -184,21 +184,50 @@ static Symbol* fkt_register_var(const std::vector<Symbol*>& vecSyms,
 {
 	bool bUseGlobal = 0;
 
-	if(vecSyms.size()!=2)
+	if(vecSyms.size()<1 || vecSyms.size()>2)
 	{
 		G_CERR << linenr(T_STR"Error", info)
-			<< "Need a symbol name and a symbol for register_var."
+			<< "Need either a symbol name and a symbol or a map for register_var."
 			<< std::endl;
 		return 0;
 	}
 
-	const t_string strVar = vecSyms[0]->print();
-	Symbol* pVar = vecSyms[1]->clone();
+	if(vecSyms.size() == 2)
+	{
+		const t_string strVar = vecSyms[0]->print();
+		Symbol* pVar = vecSyms[1]->clone();
 
-	SymbolTable *pThisSymTab = pSymTab;
-	if(bUseGlobal)
-		pThisSymTab = info.pGlobalSyms;
-	pThisSymTab->InsertSymbol(strVar, pVar);
+		SymbolTable *pThisSymTab = pSymTab;
+		if(bUseGlobal)
+			pThisSymTab = info.pGlobalSyms;
+		pThisSymTab->InsertSymbol(strVar, pVar);
+	}
+	else if(vecSyms.size() == 1)
+	{
+		if(vecSyms[0]==0 || vecSyms[0]->GetType() != SYMBOL_MAP)
+		{
+			G_CERR << linenr(T_STR"Error", info)
+				<< "register_var needs a map."
+				<< std::endl;
+			return 0;
+		}
+
+
+		SymbolMap::t_map& varmap = ((SymbolMap*)vecSyms[0])->m_map;
+		for(SymbolMap::t_map::value_type& val : varmap)
+		{
+			SymbolString symKey(val.first);
+			Symbol *pSymVal = val.second;
+
+			std::vector<Symbol*> vecDummy;
+			vecDummy.resize(2);
+
+			vecDummy[0] = &symKey;
+			vecDummy[1] = pSymVal;
+
+			fkt_register_var(vecDummy, info, pSymTab);
+		}
+	}
 
 	return 0;
 }
