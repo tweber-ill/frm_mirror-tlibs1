@@ -21,7 +21,7 @@ Symbol* SymbolDouble::ToType(SymbolType stype) const
 	{
 		SymbolInt *pNewSymI = new SymbolInt();
 		pNewSymI->m_strName = this->m_strName;
-		pNewSymI->m_iVal = int(this->m_dVal);
+		pNewSymI->m_iVal = t_int(this->m_dVal);
 
 		pNewSym = pNewSymI;
 	}

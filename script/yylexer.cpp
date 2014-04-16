@@ -29,7 +29,7 @@ extern "C" int yylex(void* _yylval, void* _pParseObj)
 	ParseObj* pParseObj = (ParseObj*)_pParseObj;
 	Lexer* pLexer = pParseObj->pLexer;
 	//pLexer->print();
-	
+
 	const Token& tok = pLexer->lex();
 	pParseObj->iCurLine = tok.iLine;
 

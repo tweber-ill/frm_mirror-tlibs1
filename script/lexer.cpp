@@ -172,7 +172,7 @@ void Lexer::load(const t_string& _strInput)
 
 	typedef boost::char_separator<t_char> t_sep;
 	typedef boost::tokenizer<t_sep, t_string::const_iterator, t_string> t_tok;
-	
+
 	t_sep sep(m_strWhitespace.c_str(), m_strSep.c_str());
 	t_tok tok(strInput, sep);
 
@@ -334,7 +334,7 @@ void Lexer::print()
 }
 
 const Token& Lexer::lex()
-{	
+{
 	if(m_iLexPos >= m_vecToks.size())
 		return m_tokEnd;
 

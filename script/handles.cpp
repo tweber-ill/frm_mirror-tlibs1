@@ -57,23 +57,23 @@ HandleManager::~HandleManager()
 	m_vecHandles.clear();
 }
 
-Handle* HandleManager::GetHandle(unsigned int iIdx)
+Handle* HandleManager::GetHandle(t_int iIdx)
 {
-	if(iIdx >= m_vecHandles.size())
+	if(iIdx >= m_vecHandles.size() || iIdx<0)
 		return 0;
 
 	return m_vecHandles[iIdx];
 }
 
-unsigned int HandleManager::AddHandle(Handle* pHandle)
+t_int HandleManager::AddHandle(Handle* pHandle)
 {
 	m_vecHandles.push_back(pHandle);
 	return m_vecHandles.size()-1;
 }
 
-void HandleManager::CloseHandle(unsigned int iIdx)
+void HandleManager::CloseHandle(t_int iIdx)
 {
-	if(iIdx >= m_vecHandles.size())
+	if(iIdx >= m_vecHandles.size() || iIdx<0)
 		return;
 
 	if(m_vecHandles[iIdx])

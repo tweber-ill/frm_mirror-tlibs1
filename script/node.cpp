@@ -65,9 +65,9 @@ template<typename T> bool log_geq_op(T a, T b) { return a>=b; }
 template<typename T> bool log_less_op(T a, T b) { return a<b; }
 template<typename T> bool log_greater_op(T a, T b) { return a>b; }
 
-static int pow_int(int a, int b)
+static t_int pow_int(t_int a, t_int b)
 {
-	return int(pow(a,b));
+	return t_int(pow(a,b));
 }
 
 std::map<NodeType, t_real (*)(t_real, t_real)> g_mapBinOps_d = 
@@ -80,14 +80,14 @@ std::map<NodeType, t_real (*)(t_real, t_real)> g_mapBinOps_d =
 	std::pair<NodeType, t_real (*)(t_real, t_real)>(NODE_POW, pow),
 };
 
-std::map<NodeType, int (*)(int,int)> g_mapBinOps_i =
+std::map<NodeType, t_int (*)(t_int, t_int)> g_mapBinOps_i =
 {
-	std::pair<NodeType, int (*)(int,int)>(NODE_PLUS, plus_op),
-	std::pair<NodeType, int (*)(int,int)>(NODE_MINUS, minus_op),
-	std::pair<NodeType, int (*)(int,int)>(NODE_MULT, mult_op),
-	std::pair<NodeType, int (*)(int,int)>(NODE_DIV, div_op),
-	std::pair<NodeType, int (*)(int,int)>(NODE_MOD, mod_op),
-	std::pair<NodeType, int (*)(int,int)>(NODE_POW, pow_int)
+	std::pair<NodeType, t_int (*)(t_int, t_int)>(NODE_PLUS, plus_op),
+	std::pair<NodeType, t_int (*)(t_int, t_int)>(NODE_MINUS, minus_op),
+	std::pair<NodeType, t_int (*)(t_int, t_int)>(NODE_MULT, mult_op),
+	std::pair<NodeType, t_int (*)(t_int, t_int)>(NODE_DIV, div_op),
+	std::pair<NodeType, t_int (*)(t_int, t_int)>(NODE_MOD, mod_op),
+	std::pair<NodeType, t_int (*)(t_int, t_int)>(NODE_POW, pow_int)
 };
 
 std::map<NodeType, t_string (*)(t_string, t_string)> g_mapBinOps_s =
@@ -108,16 +108,16 @@ std::map<NodeType, bool (*)(t_real, t_real)> g_mapBinLogOps_d =
 	std::pair<NodeType, bool (*)(t_real, t_real)>(NODE_LOG_GREATER, log_greater_op)
 };
 
-std::map<NodeType, bool (*)(int,int)> g_mapBinLogOps_i =
+std::map<NodeType, bool (*)(t_int, t_int)> g_mapBinLogOps_i =
 {
-	std::pair<NodeType, bool (*)(int,int)>(NODE_LOG_OR, log_or_op),
-	std::pair<NodeType, bool (*)(int,int)>(NODE_LOG_AND, log_and_op),
-	std::pair<NodeType, bool (*)(int,int)>(NODE_LOG_EQ, log_eq_op),
-	std::pair<NodeType, bool (*)(int,int)>(NODE_LOG_NEQ, log_neq_op),
-	std::pair<NodeType, bool (*)(int,int)>(NODE_LOG_LEQ, log_leq_op),
-	std::pair<NodeType, bool (*)(int,int)>(NODE_LOG_GEQ, log_geq_op),
-	std::pair<NodeType, bool (*)(int,int)>(NODE_LOG_LESS, log_less_op),
-	std::pair<NodeType, bool (*)(int,int)>(NODE_LOG_GREATER, log_greater_op)
+	std::pair<NodeType, bool (*)(t_int, t_int)>(NODE_LOG_OR, log_or_op),
+	std::pair<NodeType, bool (*)(t_int, t_int)>(NODE_LOG_AND, log_and_op),
+	std::pair<NodeType, bool (*)(t_int, t_int)>(NODE_LOG_EQ, log_eq_op),
+	std::pair<NodeType, bool (*)(t_int, t_int)>(NODE_LOG_NEQ, log_neq_op),
+	std::pair<NodeType, bool (*)(t_int, t_int)>(NODE_LOG_LEQ, log_leq_op),
+	std::pair<NodeType, bool (*)(t_int, t_int)>(NODE_LOG_GEQ, log_geq_op),
+	std::pair<NodeType, bool (*)(t_int, t_int)>(NODE_LOG_LESS, log_less_op),
+	std::pair<NodeType, bool (*)(t_int, t_int)>(NODE_LOG_GREATER, log_greater_op)
 };
 
 std::map<NodeType, bool (*)(t_string,t_string)> g_mapBinLogOps_s =
@@ -243,7 +243,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 		//int * string
 		if(op==NODE_MULT && (pSymLeft->GetType()==SYMBOL_STRING||pSymRight->GetType()==SYMBOL_STRING))
 		{
-			int iVal = 0;
+			t_int iVal = 0;
 			t_string strVal;
 			bool bValidIntStr = 0;
 
@@ -263,7 +263,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			if(bValidIntStr)
 			{
 				SymbolString *pSymStrRet = new SymbolString();
-				for(int iCopy=0; iCopy<iVal; ++iCopy)
+				for(t_int iCopy=0; iCopy<iVal; ++iCopy)
 					pSymStrRet->m_strVal += strVal;
 				return pSymStrRet;
 			}
@@ -470,7 +470,7 @@ NodeDouble::NodeDouble(t_real dVal)
 	m_pSymbol->m_strName = T_STR"<const>";
 }
 
-NodeInt::NodeInt(int iVal)
+NodeInt::NodeInt(t_int iVal)
 	: Node(NODE_INT), m_iVal(iVal)
 {
 	m_pSymbol = new SymbolInt;

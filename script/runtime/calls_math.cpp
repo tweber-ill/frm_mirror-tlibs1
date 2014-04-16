@@ -22,13 +22,13 @@ static inline Symbol* _fkt_linlogspace(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 
-	int iNum = vecSyms[2]->GetValInt();
+	t_int iNum = vecSyms[2]->GetValInt();
 	t_real dmin = vecSyms[0]->GetValDouble();
 	t_real dmax = vecSyms[1]->GetValDouble();
 
 	SymbolArray* pSymRet = new SymbolArray;
 	pSymRet->m_arr.reserve(iNum);
-	for(int i=0; i<iNum; ++i)
+	for(t_int i=0; i<iNum; ++i)
 	{
 		SymbolDouble *pSymD = new SymbolDouble();
 		t_real dDiv = (iNum!=1 ? t_real(iNum-1) : 1);
@@ -92,7 +92,7 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 	}
 
 	t_real dRes;
-	int iRes;
+	t_int iRes;
 
 	bool bHadInt = 0,
 		bHadDouble = 0;
@@ -115,7 +115,7 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 			if(!bHadInt)
 				iRes = ((SymbolInt*)pThisSym)->m_iVal;
 			else
-				iRes = math_fkt<fkt, int>(iRes, ((SymbolInt*)pThisSym)->m_iVal);
+				iRes = math_fkt<fkt, t_int>(iRes, ((SymbolInt*)pThisSym)->m_iVal);
 
 			bHadInt = 1;
 		}
@@ -282,7 +282,7 @@ static Symbol* fkt_math_1arg_bret(const std::vector<Symbol*>& vecSyms,
 	}
 	else
 	{
-		int iResult = FKT(vecSyms[0]->GetValDouble());
+		t_int iResult = FKT(vecSyms[0]->GetValDouble());
 		return new SymbolInt(iResult);
 	}
 
@@ -440,8 +440,8 @@ static Symbol* fkt_matrix(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 		return 0;
 	}
 
-	unsigned int iRows = vecSyms[0]->GetValInt();
-	unsigned int iCols = iRows;
+	t_int iRows = vecSyms[0]->GetValInt();
+	t_int iCols = iRows;
 
 	// cols also given
 	if(vecSyms.size() >= 2)
@@ -527,7 +527,7 @@ static Symbol* fkt_unitmatrix(const std::vector<Symbol*>& vecSyms, ParseInfo& in
 		return 0;
 	}
 
-	int iSize = vecSyms[0]->GetValInt();
+	t_int iSize = vecSyms[0]->GetValInt();
 	t_mat<t_real> mat = unit_matrix<t_real>(iSize);
 
 	return mat_to_sym<t_mat>(mat);
@@ -639,10 +639,10 @@ static Symbol* fkt_rand_int(const std::vector<Symbol*>& vecSyms, ParseInfo& info
 		return 0;
 	}
 
-	int iMin = vecSyms[0]->GetValInt();
-	int iMax = vecSyms[1]->GetValInt();
+	t_int iMin = vecSyms[0]->GetValInt();
+	t_int iMax = vecSyms[1]->GetValInt();
 
-	int iRand = rand_int<int>(iMin, iMax);
+	t_int iRand = rand_int<t_int>(iMin, iMax);
 	return new SymbolInt(iRand);
 }
 

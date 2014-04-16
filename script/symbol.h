@@ -54,7 +54,7 @@ struct Symbol
 	virtual bool IsNotZero() const = 0;
 
 	// cast value without converting or cloning symbol
-	virtual int GetValInt() const { return 0; }
+	virtual t_int GetValInt() const { return 0; }
 	virtual t_real GetValDouble() const { return 0.; }
 
 	virtual bool IsScalar() const { return 0; }
@@ -78,7 +78,7 @@ struct SymbolDouble : public Symbol
 
 	virtual bool IsNotZero() const { return m_dVal != 0.; }
 
-	virtual int GetValInt() const { return int(m_dVal); }
+	virtual t_int GetValInt() const { return t_int(m_dVal); }
 	virtual t_real GetValDouble() const { return m_dVal; }
 
 	virtual bool IsScalar() const { return 1; }
@@ -86,10 +86,10 @@ struct SymbolDouble : public Symbol
 
 struct SymbolInt : public Symbol
 {
-	int m_iVal;
+	t_int m_iVal;
 
 	SymbolInt() : Symbol(), m_iVal(0) {}
-	SymbolInt(int iVal) : m_iVal(iVal) {}
+	SymbolInt(t_int iVal) : m_iVal(iVal) {}
 
 	virtual SymbolType GetType() const { return SYMBOL_INT; }
 	virtual t_string GetTypeName() const { return T_STR"int"; }
@@ -101,7 +101,7 @@ struct SymbolInt : public Symbol
 
 	virtual bool IsNotZero() const { return m_iVal != 0; }
 
-	virtual int GetValInt() const { return m_iVal; }
+	virtual t_int GetValInt() const { return m_iVal; }
 	virtual t_real GetValDouble() const { return t_real(m_iVal); }
 
 	virtual bool IsScalar() const { return 1; }
@@ -218,7 +218,7 @@ template<> t_string convert_symbol<t_string>(const Symbol* pSym)
 { return pSym->print(); }
 template<>  t_real convert_symbol<t_real>(const Symbol* pSym)
 { return pSym->GetValDouble(); }
-template<> int convert_symbol<int>(const Symbol* pSym)
+template<> t_int convert_symbol<t_int>(const Symbol* pSym)
 { return pSym->GetValInt(); }
 
 
@@ -227,7 +227,7 @@ template<typename T> static Symbol* create_symbol(const T& t)
 
 template<> Symbol* create_symbol<t_real>(const t_real& t)
 { return new SymbolDouble(t); }
-template<> Symbol* create_symbol<int>(const int& t)
+template<> Symbol* create_symbol<t_int>(const t_int& t)
 { return new SymbolInt(t); }
 template<> Symbol* create_symbol<t_string>(const t_string& t)
 { return new SymbolString(t); }

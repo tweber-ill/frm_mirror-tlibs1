@@ -148,7 +148,7 @@ static Symbol* fkt_thread(const std::vector<Symbol*>& vecSyms,
 
 	std::vector<Symbol*>* vecThreadSymsClone = clone_symbols(&vecSyms, 1);
 	std::thread* pThread = new std::thread(::thread_proc, pFunc, &info, vecThreadSymsClone);
-	unsigned int iHandle = info.phandles->AddHandle(new HandleThread(pThread));
+	t_int iHandle = info.phandles->AddHandle(new HandleThread(pThread));
 
 	return new SymbolInt(iHandle);
 }
@@ -160,7 +160,7 @@ static Symbol* fkt_thread_hwcount(const std::vector<Symbol*>& vecSyms,
 	if(iNumThreads == 0)
 		iNumThreads = 1;
 
-	return new SymbolInt(iNumThreads);
+	return new SymbolInt(t_int(iNumThreads));
 }
 
 static Symbol* fkt_begin_critical(const std::vector<Symbol*>& vecSyms,
@@ -202,7 +202,7 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 			continue;
 		}
 
-		int iHandle = ((SymbolInt*)pSym)->m_iVal;
+		t_int iHandle = ((SymbolInt*)pSym)->m_iVal;
 		Handle *pHandle = info.phandles->GetHandle(iHandle);
 
 		if(pHandle==0 || pHandle->GetType()!=HANDLE_THREAD)
@@ -242,7 +242,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 	}
 
 	SymbolInt *pSymN = (SymbolInt*)_pSymN;
-	int iNumThreads = pSymN->m_iVal;
+	t_int iNumThreads = pSymN->m_iVal;
 
 
 
@@ -293,7 +293,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 	std::vector<SymbolArray*> vecSymArrays;
 	vecSymArrays.resize(iNumThreads);
 
-	int iCurTh = 0;
+	t_int iCurTh = 0;
 	for(Symbol* pThisSym : vecArr)
 	{
 		if(!vecSymArrays[iCurTh])
@@ -340,7 +340,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 	for(iCurTh=0; iCurTh<iNumThreads; ++iCurTh)
 	{
 		std::thread* pCurThread = vecThreads[iCurTh];
-		unsigned int iHandle = info.phandles->AddHandle(new HandleThread(pCurThread));
+		t_int iHandle = info.phandles->AddHandle(new HandleThread(pCurThread));
 		SymbolInt *pSymThreadHandle = new SymbolInt(iHandle);
 
 		pArrThreads->m_arr.push_back(pSymThreadHandle);

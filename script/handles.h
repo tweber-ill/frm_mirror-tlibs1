@@ -71,9 +71,9 @@ public:
 	HandleManager();
 	virtual ~HandleManager();
 
-	Handle* GetHandle(unsigned int iIdx);
-	unsigned int AddHandle(Handle* pHandle);
-	void CloseHandle(unsigned int iIdx);
+	Handle* GetHandle(t_int iIdx);
+	t_int AddHandle(Handle* pHandle);
+	void CloseHandle(t_int iIdx);
 };
 
 

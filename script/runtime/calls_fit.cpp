@@ -664,7 +664,7 @@ static Symbol* fkt_map_vec_to_val(const std::vector<Symbol*>& vecSyms,
 
 
 	// index parameter
-	int iIdx = 0;
+	t_int iIdx = 0;
 	if(vecSyms.size()>1)
 	{
 		iIdx = vecSyms[1]->GetValInt();

@@ -332,7 +332,7 @@ Symbol* NodeRange::eval(ParseInfo &info, SymbolTable *pSym) const
 }
 
 void NodeRange::GetRangeIndices(ParseInfo &info, SymbolTable *pSym,
-					int iMaxLen, int& iBeginIdx, int& iEndIdx)
+					t_int iMaxLen, t_int& iBeginIdx, t_int& iEndIdx)
 {
 	/*if(!pArr)
 	{
@@ -517,11 +517,11 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 			if(pIndices->m_type == NODE_RANGE)	// range index
 			{
 				NodeRange *pRange = (NodeRange*)pIndices;
-				int iBeginIdx = 0, iEndIdx = 0;
+				t_int iBeginIdx = 0, iEndIdx = 0;
 				pRange->GetRangeIndices(info, pSym, pArr->m_arr.size(), iBeginIdx, iEndIdx);
 
-				int iStep = 1;
-				int iSize = iEndIdx - iBeginIdx;
+				t_int iStep = 1;
+				t_int iSize = iEndIdx - iBeginIdx;
 				if(iEndIdx < iBeginIdx)
 				{
 					iSize = -iSize;
@@ -531,7 +531,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 				SymbolArray *pSubArr = new SymbolArray();
 				pSubArr->m_arr.reserve(iSize);
 
-				for(int iIdx=iBeginIdx, iNewIdx=0; iIdx!=iEndIdx && iNewIdx<iSize; iIdx+=iStep, ++iNewIdx)
+				for(t_int iIdx=iBeginIdx, iNewIdx=0; iIdx!=iEndIdx && iNewIdx<iSize; iIdx+=iStep, ++iNewIdx)
 				{
 					Symbol *pElemClone = pArr->m_arr[iIdx]->clone();
 					pSubArr->m_arr.push_back(pElemClone);
@@ -569,7 +569,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 					return 0;
 				}
 
-				int iIdx = pSymExpr->GetValInt();
+				t_int iIdx = pSymExpr->GetValInt();
 				safe_delete(pSymExpr, pSym, info.pGlobalSyms);
 
 				// convert negative indices
@@ -653,7 +653,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 	else if(pSymbol->GetType() == SYMBOL_STRING)
 	{
 		SymbolString *pStr = (SymbolString*)pSymbol;
-		int iStrLen = pStr->m_strVal.length();
+		t_int iStrLen = pStr->m_strVal.length();
 
 		if(m_vecIndices.size()!=1)
 		{
@@ -668,11 +668,11 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 		if(pIndices->m_type == NODE_RANGE)	// range index
 		{
 			NodeRange *pRange = (NodeRange*)pIndices;
-			int iBeginIdx = 0, iEndIdx = 0;
+			t_int iBeginIdx = 0, iEndIdx = 0;
 			pRange->GetRangeIndices(info, pSym, iStrLen, iBeginIdx, iEndIdx);
 
-			int iStep = 1;
-			int iSize = iEndIdx - iBeginIdx;
+			t_int iStep = 1;
+			t_int iSize = iEndIdx - iBeginIdx;
 			if(iEndIdx < iBeginIdx)
 			{
 				iSize = -iSize;
@@ -682,7 +682,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 			t_string strNew;
 			strNew.resize(iSize);
 
-			for(int iIdx=iBeginIdx, iNewIdx=0; iIdx!=iEndIdx && iNewIdx<iSize; iIdx+=iStep, ++iNewIdx)
+			for(t_int iIdx=iBeginIdx, iNewIdx=0; iIdx!=iEndIdx && iNewIdx<iSize; iIdx+=iStep, ++iNewIdx)
 				strNew[iNewIdx] = pStr->m_strVal[iIdx];
 
 			SymbolString *pSubStr = new SymbolString(strNew);
@@ -700,7 +700,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 				return 0;
 			}
 
-			int iIdx = pSymExpr->GetValInt();
+			t_int iIdx = pSymExpr->GetValInt();
 			safe_delete(pSymExpr, pSym, info.pGlobalSyms);
 
 			// convert negative indices
@@ -882,7 +882,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym) const
 		}
 		else if(pSymLeft->m_pArr)		// array
 		{
-			int iArrIdx = pSymLeft->m_iArrIdx;
+			t_int iArrIdx = pSymLeft->m_iArrIdx;
 			SymbolArray* pArr = pSymLeft->m_pArr;
 
 			//G_COUT << "Array: " << (void*) pArr << ", Index: " << iArrIdx << std::endl;

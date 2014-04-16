@@ -332,9 +332,9 @@ protected:
 
 struct NodeInt : public Node
 {
-	int m_iVal;
+	t_int m_iVal;
 
-	NodeInt(int iVal);
+	NodeInt(t_int iVal);
 	virtual ~NodeInt()
 	{
 		if(m_pSymbol) delete m_pSymbol;
@@ -444,7 +444,7 @@ struct NodeRange : public Node
 	}
 
 	void GetRangeIndices(ParseInfo &info, SymbolTable *pSym,
-				int iMaxLen, int& iBeginIdx, int& iEndIdx);
+				t_int iMaxLen, t_int& iBeginIdx, t_int& iEndIdx);
 
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 	virtual Node* clone() const;

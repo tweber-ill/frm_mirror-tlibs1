@@ -51,7 +51,7 @@ struct Token
 	TokenType type;
 
 	t_char cOp;
-	int iVal;
+	t_int iVal;
 	t_real dVal;
 	t_string strVal;
 

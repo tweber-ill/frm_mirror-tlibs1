@@ -259,7 +259,7 @@ static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 
-	int iVal = ((SymbolInt*)pSymSize)->m_iVal;
+	t_int iVal = ((SymbolInt*)pSymSize)->m_iVal;
 	if(iVal < 0) iVal = 0;
 
 
@@ -279,7 +279,7 @@ static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
 
 	SymbolArray* pSymRet = new SymbolArray;
 	pSymRet->m_arr.reserve(iVal);
-	for(int i=0; i<iVal; ++i)
+	for(t_int i=0; i<iVal; ++i)
 		pSymRet->m_arr.push_back(pSymVal->clone());
 
 	pSymRet->UpdateIndices();
