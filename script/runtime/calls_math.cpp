@@ -23,19 +23,19 @@ static inline Symbol* _fkt_linlogspace(const std::vector<Symbol*>& vecSyms,
 	}
 
 	int iNum = vecSyms[2]->GetValInt();
-	double dmin = vecSyms[0]->GetValDouble();
-	double dmax = vecSyms[1]->GetValDouble();
+	t_real dmin = vecSyms[0]->GetValDouble();
+	t_real dmax = vecSyms[1]->GetValDouble();
 
 	SymbolArray* pSymRet = new SymbolArray;
 	pSymRet->m_arr.reserve(iNum);
 	for(int i=0; i<iNum; ++i)
 	{
 		SymbolDouble *pSymD = new SymbolDouble();
-		double dDiv = (iNum!=1 ? double(iNum-1) : 1);
-		pSymD->m_dVal = double(i)*(dmax-dmin)/dDiv + dmin;
+		t_real dDiv = (iNum!=1 ? t_real(iNum-1) : 1);
+		pSymD->m_dVal = t_real(i)*(dmax-dmin)/dDiv + dmin;
 		if(bLog)
 		{
-			const double dBase = 10.;
+			const t_real dBase = 10.;
 			pSymD->m_dVal = std::pow(dBase, pSymD->m_dVal);
 		}
 		pSymRet->m_arr.push_back(pSymD);
@@ -91,7 +91,7 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 
-	double dRes;
+	t_real dRes;
 	int iRes;
 
 	bool bHadInt = 0,
@@ -124,7 +124,7 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 			if(!bHadDouble)
 				dRes = ((SymbolDouble*)pThisSym)->m_dVal;
 			else
-				dRes = math_fkt<fkt, double>(dRes, ((SymbolDouble*)pThisSym)->m_dVal);
+				dRes = math_fkt<fkt, t_real>(dRes, ((SymbolDouble*)pThisSym)->m_dVal);
 
 			bHadDouble = 1;
 		}
@@ -137,7 +137,7 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 		return new SymbolInt(iRes);
 	else if(bHadInt && bHadDouble)
 	{
-		dRes = math_fkt<fkt, double>(dRes, double(iRes));
+		dRes = math_fkt<fkt, t_real>(dRes, t_real(iRes));
 		return new SymbolDouble(dRes);
 	}
 	else if(!bHadInt && bHadDouble)
@@ -148,7 +148,7 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 }
 
 
-template<double (*FKT)(double)>
+template<t_real (*FKT)(t_real)>
 static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
@@ -176,7 +176,7 @@ static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 	}
 	else
 	{
-		double dResult = FKT(vecSyms[0]->GetValDouble());
+		t_real dResult = FKT(vecSyms[0]->GetValDouble());
 		return new SymbolDouble(dResult);
 	}
 
@@ -184,7 +184,7 @@ static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 }
 
 // TODO: for arrays
-template<double (*FKT)(double, double)>
+template<t_real (*FKT)(t_real, t_real)>
 static Symbol* fkt_math_2args(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
@@ -194,7 +194,7 @@ static Symbol* fkt_math_2args(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 
-	double dResult = FKT(vecSyms[0]->GetValDouble(), vecSyms[1]->GetValDouble());
+	t_real dResult = FKT(vecSyms[0]->GetValDouble(), vecSyms[1]->GetValDouble());
 	return new SymbolDouble(dResult);
 }
 
@@ -206,7 +206,7 @@ template<typename T> T myabs(T t)
 	return t;
 }
 
-template<> double myabs(double t) { return ::fabs(t); }
+template<> t_real myabs(t_real t) { return ::fabs(t); }
 
 
 // TODO: integrate with fkt_math_1arg
@@ -254,7 +254,7 @@ static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
 
 
 
-template<bool (*FKT)(double)>
+template<bool (*FKT)(t_real)>
 static Symbol* fkt_math_1arg_bret(const std::vector<Symbol*>& vecSyms,
 				ParseInfo& info, SymbolTable* pSymTab)
 {
@@ -297,11 +297,11 @@ static Symbol* _fkt_fft(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab,
 						bool bInv)
 {
-	bool (Fourier::*pFkt)(const double*, const double*, double*, double*)
-								= (bInv ? &Fourier::ifft : &Fourier::fft);
+	bool (Fourier::*pFkt)(const t_real*, const t_real*, t_real*, t_real*)
+						= (bInv ? &Fourier::ifft : &Fourier::fft);
 
 	bool bArgsOk=1;
-	std::vector<double> vecRealIn, vecImagIn;
+	std::vector<t_real> vecRealIn, vecImagIn;
 
 	// real and imag part as separate arguments
 	if(vecSyms.size()==2 && vecSyms[0]->GetType()==SYMBOL_ARRAY
@@ -343,7 +343,7 @@ static Symbol* _fkt_fft(const std::vector<Symbol*>& vecSyms,
 		vecImagIn.resize(iSize);
 	}
 
-	std::vector<double> vecRealOut, vecImagOut;
+	std::vector<t_real> vecRealOut, vecImagOut;
 	vecRealOut.resize(vecRealIn.size());
 	vecImagOut.resize(vecImagIn.size());
 
@@ -375,8 +375,8 @@ static Symbol* fkt_ifft(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Sy
 // --------------------------------------------------------------------------------
 // linalg stuff
 
-template<typename T=double> using t_vec = ublas::vector<T>;
-template<typename T=double> using t_mat = ublas::matrix<T>;
+template<typename T=t_real> using t_vec = ublas::vector<T>;
+template<typename T=t_real> using t_mat = ublas::matrix<T>;
 
 
 static Symbol* fkt_length(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
@@ -395,8 +395,8 @@ static Symbol* fkt_length(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 		return 0;
 	}
 
-	t_vec<double> vec = sym_to_vec<t_vec>(vecSyms[0]);
-	double dLen = std::sqrt(ublas::inner_prod(vec, vec));
+	t_vec<t_real> vec = sym_to_vec<t_vec>(vecSyms[0]);
+	t_real dLen = std::sqrt(ublas::inner_prod(vec, vec));
 	return new SymbolDouble(dLen);
 }
 
@@ -416,8 +416,8 @@ static Symbol* fkt_cross(const std::vector<Symbol*>& vecSyms, ParseInfo& info, S
 		return 0;
 	}
 
-	t_vec<double> vecLeft = sym_to_vec<t_vec>(vecSyms[0]);
-	t_vec<double> vecRight = sym_to_vec<t_vec>(vecSyms[1]);
+	t_vec<t_real> vecLeft = sym_to_vec<t_vec>(vecSyms[0]);
+	t_vec<t_real> vecRight = sym_to_vec<t_vec>(vecSyms[1]);
 
 	if(vecLeft.size()!=3 || vecRight.size()!=3)
 	{
@@ -426,7 +426,7 @@ static Symbol* fkt_cross(const std::vector<Symbol*>& vecSyms, ParseInfo& info, S
 		return 0;
 	}
 
-	t_vec<double> vecCross = cross_3(vecLeft, vecRight);
+	t_vec<t_real> vecCross = cross_3(vecLeft, vecRight);
 	return vec_to_sym<t_vec>(vecCross);
 }
 
@@ -447,7 +447,7 @@ static Symbol* fkt_matrix(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 	if(vecSyms.size() >= 2)
 		iCols = vecSyms[1]->GetValInt();
 
-	t_mat<double> mat = ublas::zero_matrix<double>(iRows, iCols);
+	t_mat<t_real> mat = ublas::zero_matrix<t_real>(iRows, iCols);
 	return mat_to_sym<t_mat>(mat);
 }
 
@@ -461,14 +461,14 @@ static Symbol* fkt_transpose(const std::vector<Symbol*>& vecSyms,
 	}
 
 	bool bIsMat = 0;
-	t_mat<double> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0], &bIsMat);
+	t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0], &bIsMat);
 	if(!bIsMat)
 	{
 		G_CERR << linenr(T_STR"Error", info) << "Transpose needs a matrix." << std::endl;
 		return 0;
 	}
 
-	t_mat<double> mat_trans = ublas::trans(mat);
+	t_mat<t_real> mat_trans = ublas::trans(mat);
 	return mat_to_sym<t_mat>(mat_trans);
 }
 
@@ -482,14 +482,14 @@ static Symbol* fkt_inverse(const std::vector<Symbol*>& vecSyms,
 	}
 
 	bool bIsMat = 0;
-	t_mat<double> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0], &bIsMat);
+	t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0], &bIsMat);
 	if(!bIsMat)
 	{
 		G_CERR << linenr(T_STR"Error", info) << "Inverse needs a matrix." << std::endl;
 		return 0;
 	}
 
-	t_mat<double> mat_inv;
+	t_mat<t_real> mat_inv;
 	if(!inverse(mat, mat_inv))
 		G_CERR << linenr(T_STR"Warning", info) << "Matrix inversion failed." << std::endl;
 
@@ -506,7 +506,7 @@ static Symbol* fkt_determinant(const std::vector<Symbol*>& vecSyms,
 	}
 
 	bool bIsMat = 0;
-	t_mat<double> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0], &bIsMat);
+	t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0], &bIsMat);
 	if(!bIsMat || mat.size1()!=mat.size2())
 	{
 		G_CERR << linenr(T_STR"Error", info)
@@ -515,7 +515,7 @@ static Symbol* fkt_determinant(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 
-	double dDet = determinant(mat);
+	t_real dDet = determinant(mat);
 	return new SymbolDouble(dDet);
 }
 
@@ -528,7 +528,7 @@ static Symbol* fkt_unitmatrix(const std::vector<Symbol*>& vecSyms, ParseInfo& in
 	}
 
 	int iSize = vecSyms[0]->GetValInt();
-	t_mat<double> mat = unit_matrix<double>(iSize);
+	t_mat<t_real> mat = unit_matrix<t_real>(iSize);
 
 	return mat_to_sym<t_mat>(mat);
 }
@@ -549,8 +549,8 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 	// dot product
 	if(bFirstIsVec && bSecondIsVec)
 	{
-		t_vec<double> vec1 = sym_to_vec<t_vec>(vecSyms[0]);
-		t_vec<double> vec2 = sym_to_vec<t_vec>(vecSyms[1]);
+		t_vec<t_real> vec1 = sym_to_vec<t_vec>(vecSyms[0]);
+		t_vec<t_real> vec2 = sym_to_vec<t_vec>(vecSyms[1]);
 
 		pRet = new SymbolDouble(ublas::inner_prod(vec1, vec2));
 	}
@@ -571,26 +571,26 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 				return 0;
 			}
 
-			t_mat<double> mat1 = sym_to_mat<t_mat, t_vec>(vecSyms[0]);
-			t_mat<double> mat2 = sym_to_mat<t_mat, t_vec>(vecSyms[1]);
+			t_mat<t_real> mat1 = sym_to_mat<t_mat, t_vec>(vecSyms[0]);
+			t_mat<t_real> mat2 = sym_to_mat<t_mat, t_vec>(vecSyms[1]);
 
-			t_mat<double> matProd = ublas::prod(mat1, mat2);
+			t_mat<t_real> matProd = ublas::prod(mat1, mat2);
 			pRet = mat_to_sym<t_mat>(matProd);
 		}
 		else if(bFirstIsMat && bSecondIsVec)
 		{
-			t_mat<double> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0]);
-			t_vec<double> vec = sym_to_vec<t_vec>(vecSyms[1]);
+			t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0]);
+			t_vec<t_real> vec = sym_to_vec<t_vec>(vecSyms[1]);
 
-			t_vec<double> vecProd = ublas::prod(mat, vec);
+			t_vec<t_real> vecProd = ublas::prod(mat, vec);
 			pRet = vec_to_sym<t_vec>(vecProd);
 		}
 		else if(bFirstIsVec && bSecondIsMat)
 		{
-			t_vec<double> vec = sym_to_vec<t_vec>(vecSyms[0]);
-			t_mat<double> mat = sym_to_mat<t_mat, t_vec>(vecSyms[1]);
+			t_vec<t_real> vec = sym_to_vec<t_vec>(vecSyms[0]);
+			t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[1]);
 
-			t_vec<double> vecProd = ublas::prod(vec, mat);
+			t_vec<t_real> vecProd = ublas::prod(vec, mat);
 			pRet = vec_to_sym<t_vec>(vecProd);
 		}
 	}
@@ -612,7 +612,7 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 
 static Symbol* fkt_rand01(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
 {
-	double dRand = rand01();
+	t_real dRand = rand01<t_real>();
 	return new SymbolDouble(dRand);
 }
 
@@ -624,10 +624,10 @@ static Symbol* fkt_rand_real(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 		return 0;
 	}
 
-	double dMin = vecSyms[0]->GetValDouble();
-	double dMax = vecSyms[1]->GetValDouble();
+	t_real dMin = vecSyms[0]->GetValDouble();
+	t_real dMax = vecSyms[1]->GetValDouble();
 
-	double dRand = rand_double(dMin, dMax);
+	t_real dRand = rand_real<t_real>(dMin, dMax);
 	return new SymbolDouble(dRand);
 }
 
@@ -642,7 +642,7 @@ static Symbol* fkt_rand_int(const std::vector<Symbol*>& vecSyms, ParseInfo& info
 	int iMin = vecSyms[0]->GetValInt();
 	int iMax = vecSyms[1]->GetValInt();
 
-	int iRand = rand_int(iMin, iMax);
+	int iRand = rand_int<int>(iMin, iMax);
 	return new SymbolInt(iRand);
 }
 
@@ -654,15 +654,15 @@ static Symbol* fkt_rand_norm(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 		return 0;
 	}
 
-	double dMu = 0.;
-	double dSigma = 1.;
+	t_real dMu = 0.;
+	t_real dSigma = 1.;
 
 	if(vecSyms.size() >= 1)
 		dMu = vecSyms[0]->GetValDouble();
 	if(vecSyms.size() >= 2)
 		dSigma = vecSyms[1]->GetValDouble();
 
-	double dRand = rand_norm(dMu, dSigma);
+	t_real dRand = rand_norm<t_real>(dMu, dSigma);
 	return new SymbolDouble(dRand);
 }
 // --------------------------------------------------------------------------------

@@ -12,6 +12,11 @@
 #include <fstream>
 #include <sstream>
 
+
+typedef double t_real;
+typedef int t_int;
+
+
 //#define USE_WCHAR
 
 

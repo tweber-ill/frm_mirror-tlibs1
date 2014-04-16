@@ -298,10 +298,10 @@ static Symbol* fkt_array_size(const std::vector<Symbol*>& vecSyms,
 		G_CERR << linenr(T_STR"Error", info) << "vec_size needs one argument." << std::endl;
 		return 0;
 	}
-	
+
 	Symbol *pSymArr = vecSyms[0];
 	SymbolInt *pSymRet = new SymbolInt(0);
-	
+
 	if(pSymArr->GetType() == SYMBOL_ARRAY)
 		pSymRet->m_iVal = ((SymbolArray*)pSymArr)->m_arr.size();
 	else if(pSymArr->GetType() == SYMBOL_STRING)

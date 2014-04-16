@@ -132,7 +132,7 @@ enum NodeType
 };
 
 
-extern std::map<NodeType, double (*)(double,double)> g_mapBinOps_d;
+extern std::map<NodeType, t_real (*)(t_real, t_real)> g_mapBinOps_d;
 extern Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op);
 extern void safe_delete(Symbol *&pSym, const SymbolTable* pSymTab, const SymbolTable* pGlobalSymTab);
 
@@ -315,9 +315,9 @@ struct NodeRangedFor : public Node
 
 struct NodeDouble : public Node
 {
-	double m_dVal;
+	t_real m_dVal;
 
-	NodeDouble(double dVal);
+	NodeDouble(t_real dVal);
 	virtual ~NodeDouble()
 	{
 		if(m_pSymbol) delete m_pSymbol;
@@ -332,7 +332,7 @@ protected:
 
 struct NodeInt : public Node
 {
-	double m_iVal;
+	int m_iVal;
 
 	NodeInt(int iVal);
 	virtual ~NodeInt()

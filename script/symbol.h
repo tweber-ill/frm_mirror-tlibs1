@@ -55,17 +55,17 @@ struct Symbol
 
 	// cast value without converting or cloning symbol
 	virtual int GetValInt() const { return 0; }
-	virtual double GetValDouble() const { return 0.; }
+	virtual t_real GetValDouble() const { return 0.; }
 
 	virtual bool IsScalar() const { return 0; }
 };
 
 struct SymbolDouble : public Symbol
 {
-	double m_dVal;
+	t_real m_dVal;
 
 	SymbolDouble() : Symbol(), m_dVal(0.) {}
-	SymbolDouble(double dVal) : m_dVal(dVal) {}
+	SymbolDouble(t_real dVal) : m_dVal(dVal) {}
 	SymbolDouble(const t_string&) { throw Err("Invalid SymbolDouble constructor."); }
 
 	virtual SymbolType GetType() const { return SYMBOL_DOUBLE; }
@@ -79,7 +79,7 @@ struct SymbolDouble : public Symbol
 	virtual bool IsNotZero() const { return m_dVal != 0.; }
 
 	virtual int GetValInt() const { return int(m_dVal); }
-	virtual double GetValDouble() const { return m_dVal; }
+	virtual t_real GetValDouble() const { return m_dVal; }
 
 	virtual bool IsScalar() const { return 1; }
 };
@@ -102,7 +102,7 @@ struct SymbolInt : public Symbol
 	virtual bool IsNotZero() const { return m_iVal != 0; }
 
 	virtual int GetValInt() const { return m_iVal; }
-	virtual double GetValDouble() const { return double(m_iVal); }
+	virtual t_real GetValDouble() const { return t_real(m_iVal); }
 
 	virtual bool IsScalar() const { return 1; }
 };
@@ -114,7 +114,7 @@ struct SymbolString : public Symbol
 	SymbolString() : Symbol() {}
 	SymbolString(const t_char* pcStr) : m_strVal(pcStr) {}
 	SymbolString(const t_string& str) : m_strVal(str) {}
-	SymbolString(double dVal) { throw Err("Invalid SymbolString constructor."); }
+	SymbolString(t_real dVal) { throw Err("Invalid SymbolString constructor."); }
 
 	virtual SymbolType GetType() const { return SYMBOL_STRING; }
 	virtual t_string GetTypeName() const { return T_STR"string"; }
@@ -140,8 +140,8 @@ struct SymbolArray : public Symbol
 	virtual t_string GetTypeName() const { return T_STR"vector"; }
 	virtual Symbol* ToType(SymbolType stype) const;
 
-	std::vector<double> ToDoubleArray() const;
-	void FromDoubleArray(const std::vector<double>& vec);
+	std::vector<t_real> ToDoubleArray() const;
+	void FromDoubleArray(const std::vector<t_real>& vec);
 
 	virtual t_string print() const;
 	virtual Symbol* clone() const;
@@ -216,7 +216,7 @@ template<typename T> static T convert_symbol(const Symbol* pSym)
 
 template<> t_string convert_symbol<t_string>(const Symbol* pSym)
 { return pSym->print(); }
-template<>  double convert_symbol<double>(const Symbol* pSym)
+template<>  t_real convert_symbol<t_real>(const Symbol* pSym)
 { return pSym->GetValDouble(); }
 template<> int convert_symbol<int>(const Symbol* pSym)
 { return pSym->GetValInt(); }
@@ -225,7 +225,7 @@ template<> int convert_symbol<int>(const Symbol* pSym)
 template<typename T> static Symbol* create_symbol(const T& t)
 { G_CERR << "Error: Invalid symbol creation." << std::endl; return 0; }
 
-template<> Symbol* create_symbol<double>(const double& t)
+template<> Symbol* create_symbol<t_real>(const t_real& t)
 { return new SymbolDouble(t); }
 template<> Symbol* create_symbol<int>(const int& t)
 { return new SymbolInt(t); }
@@ -233,7 +233,7 @@ template<> Symbol* create_symbol<t_string>(const t_string& t)
 { return new SymbolString(t); }
 
 
-template<typename T1=t_string, typename T2=double>
+template<typename T1=t_string, typename T2=t_real>
 static std::map<T1, T2> sym_to_map(const Symbol* pSym)
 {
 	if(pSym->GetType() != SYMBOL_MAP)
@@ -252,7 +252,7 @@ static std::map<T1, T2> sym_to_map(const Symbol* pSym)
 extern bool is_vec(const Symbol* pSym);
 extern bool is_mat(const Symbol* pSym, unsigned int *piNumCols=0, unsigned int *piNumRows=0);
 
-template<template<class> class t_vec, typename T=double>
+template<template<class> class t_vec, typename T=t_real>
 static t_vec<T> sym_to_vec(const Symbol* pSym)
 {
 	if(!pSym || pSym->GetType() != SYMBOL_ARRAY)
@@ -271,7 +271,7 @@ static t_vec<T> sym_to_vec(const Symbol* pSym)
 	return vec;
 }
 
-template<template<class> class t_vec, typename T=double>
+template<template<class> class t_vec, typename T=t_real>
 static Symbol* vec_to_sym(const t_vec<T>& vec)
 {
 	SymbolArray* pSym = new SymbolArray();
@@ -283,7 +283,7 @@ static Symbol* vec_to_sym(const t_vec<T>& vec)
 	return pSym;
 }
 
-template<template<class> class t_mat, template<class> class t_vec, typename T=double>
+template<template<class> class t_mat, template<class> class t_vec, typename T=t_real>
 static t_mat<T> sym_to_mat(const Symbol* pSym, bool* pbIsMat=0)
 {
 	unsigned int iNumCols=0, iNumRows=0;
@@ -316,7 +316,7 @@ static t_mat<T> sym_to_mat(const Symbol* pSym, bool* pbIsMat=0)
 	return mat;
 }
 
-template<template<class> class t_mat, typename T=double>
+template<template<class> class t_mat, typename T=t_real>
 static Symbol* mat_to_sym(const t_mat<T>& mat)
 {
 	unsigned int iNumRows = mat.size1();

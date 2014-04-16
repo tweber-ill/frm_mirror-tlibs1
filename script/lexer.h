@@ -17,7 +17,7 @@ enum TokenType
 {
 	LEX_TOKEN_INVALID,
 	LEX_TOKEN_END,
-	
+
 	LEX_TOKEN_DOUBLE,
 	LEX_TOKEN_INT,
 	LEX_TOKEN_STRING,
@@ -49,12 +49,12 @@ enum TokenType
 struct Token
 {
 	TokenType type;
-	
+
 	t_char cOp;
 	int iVal;
-	double dVal;
+	t_real dVal;
 	t_string strVal;
-	
+
 	unsigned int iLine;
 
 	Token() : type(LEX_TOKEN_INVALID), cOp(0), dVal(0), iLine(0)

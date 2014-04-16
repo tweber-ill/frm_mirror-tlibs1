@@ -11,6 +11,7 @@
 #include "../loader/loadtxt.h"
 #include <sstream>
 #include <fstream>
+#include <iomanip>
 
 // --------------------------------------------------------------------------------
 // loading and saving of .dat files
@@ -48,7 +49,7 @@ static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
 	for(unsigned int iCol=0; iCol<dat.GetColCnt(); ++iCol)
 	{
 		const unsigned int iColLen = dat.GetColLen();
-		const double *pCol = dat.GetColumn(iCol);
+		const t_real *pCol = dat.GetColumn(iCol);
 
 		SymbolArray *pArrCol = new SymbolArray;
 		pArrCol->m_arr.reserve(iColLen);
@@ -115,12 +116,12 @@ static void get_2darr_size(const SymbolArray* pArr,
 	iColLen -= iNonArray;
 }
 
-static double get_2darr_val(const SymbolArray* pArr,
+static std::string get_2darr_strval(const SymbolArray* pArr,
 				unsigned int iCol, unsigned int iRow)
 {
 	unsigned int iColLen = pArr->m_arr.size();
 	if(iCol >= iColLen)
-		return 0.;
+		return "0";
 
 	bool bFoundCol = 0;
 	unsigned int iColRealArray = 0;
@@ -143,7 +144,7 @@ static double get_2darr_val(const SymbolArray* pArr,
 	if(!bFoundCol)
 	{
 		G_CERR << "Error: Invalid column index: " << iCol << "." << std::endl;
-		return 0.;
+		return "0";
 	}
 
 
@@ -151,9 +152,9 @@ static double get_2darr_val(const SymbolArray* pArr,
 
 	const std::vector<Symbol*>& veccol = ((SymbolArray*)pSym)->m_arr;
 	if(iRow >= veccol.size())
-		return 0.;
+		return "0";
 
-	return veccol[iRow]->GetValDouble();
+	return veccol[iRow]->print();
 }
 
 static Symbol* fkt_savetxt(const std::vector<Symbol*>& vecSyms,
@@ -200,7 +201,7 @@ static Symbol* fkt_savetxt(const std::vector<Symbol*>& vecSyms,
 	for(unsigned int iRow=0; iRow<iRowLen; ++iRow)
 	{
 		for(unsigned int iCol=0; iCol<iColLen; ++iCol)
-			ofstr << get_2darr_val(pArr, iCol, iRow) << " ";
+			ofstr << std::setw(20) << std::left << get_2darr_strval(pArr, iCol, iRow) << " ";
 		ofstr << "\n";
 	}
 

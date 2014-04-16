@@ -54,7 +54,7 @@ template<typename T> T minus_op(T a, T b) { return a-b; }
 template<typename T> T mult_op(T a, T b) { return a*b; }
 template<typename T> T div_op(T a, T b) { return a/b; }
 template<typename T> T mod_op(T a, T b) { return a%b; }
-template<> double mod_op(double a, double b) { return ::fmod(a,b); }
+template<> t_real mod_op(t_real a, t_real b) { return ::fmod(a,b); }
 
 template<typename T> bool log_or_op(T a, T b) { return a||b; }
 template<typename T> bool log_and_op(T a, T b) { return a&&b; }
@@ -70,14 +70,14 @@ static int pow_int(int a, int b)
 	return int(pow(a,b));
 }
 
-std::map<NodeType, double (*)(double,double)> g_mapBinOps_d = 
+std::map<NodeType, t_real (*)(t_real, t_real)> g_mapBinOps_d = 
 {
-	std::pair<NodeType, double (*)(double,double)>(NODE_PLUS, plus_op),
-	std::pair<NodeType, double (*)(double,double)>(NODE_MINUS, minus_op),
-	std::pair<NodeType, double (*)(double,double)>(NODE_MULT, mult_op),
-	std::pair<NodeType, double (*)(double,double)>(NODE_DIV, div_op),
-	std::pair<NodeType, double (*)(double,double)>(NODE_MOD, mod_op),
-	std::pair<NodeType, double (*)(double,double)>(NODE_POW, pow),
+	std::pair<NodeType, t_real (*)(t_real, t_real)>(NODE_PLUS, plus_op),
+	std::pair<NodeType, t_real (*)(t_real, t_real)>(NODE_MINUS, minus_op),
+	std::pair<NodeType, t_real (*)(t_real, t_real)>(NODE_MULT, mult_op),
+	std::pair<NodeType, t_real (*)(t_real, t_real)>(NODE_DIV, div_op),
+	std::pair<NodeType, t_real (*)(t_real, t_real)>(NODE_MOD, mod_op),
+	std::pair<NodeType, t_real (*)(t_real, t_real)>(NODE_POW, pow),
 };
 
 std::map<NodeType, int (*)(int,int)> g_mapBinOps_i =
@@ -96,16 +96,16 @@ std::map<NodeType, t_string (*)(t_string, t_string)> g_mapBinOps_s =
 };
 
 
-std::map<NodeType, bool (*)(double,double)> g_mapBinLogOps_d =
+std::map<NodeType, bool (*)(t_real, t_real)> g_mapBinLogOps_d =
 {
-	std::pair<NodeType, bool (*)(double,double)>(NODE_LOG_OR, log_or_op),
-	std::pair<NodeType, bool (*)(double,double)>(NODE_LOG_AND, log_and_op),
-	std::pair<NodeType, bool (*)(double,double)>(NODE_LOG_EQ, log_eq_op),
-	std::pair<NodeType, bool (*)(double,double)>(NODE_LOG_NEQ, log_neq_op),
-	std::pair<NodeType, bool (*)(double,double)>(NODE_LOG_LEQ, log_leq_op),
-	std::pair<NodeType, bool (*)(double,double)>(NODE_LOG_GEQ, log_geq_op),
-	std::pair<NodeType, bool (*)(double,double)>(NODE_LOG_LESS, log_less_op),
-	std::pair<NodeType, bool (*)(double,double)>(NODE_LOG_GREATER, log_greater_op)
+	std::pair<NodeType, bool (*)(t_real, t_real)>(NODE_LOG_OR, log_or_op),
+	std::pair<NodeType, bool (*)(t_real, t_real)>(NODE_LOG_AND, log_and_op),
+	std::pair<NodeType, bool (*)(t_real, t_real)>(NODE_LOG_EQ, log_eq_op),
+	std::pair<NodeType, bool (*)(t_real, t_real)>(NODE_LOG_NEQ, log_neq_op),
+	std::pair<NodeType, bool (*)(t_real, t_real)>(NODE_LOG_LEQ, log_leq_op),
+	std::pair<NodeType, bool (*)(t_real, t_real)>(NODE_LOG_GEQ, log_geq_op),
+	std::pair<NodeType, bool (*)(t_real, t_real)>(NODE_LOG_LESS, log_less_op),
+	std::pair<NodeType, bool (*)(t_real, t_real)>(NODE_LOG_GREATER, log_greater_op)
 };
 
 std::map<NodeType, bool (*)(int,int)> g_mapBinLogOps_i =
@@ -309,7 +309,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			}
 			else
 			{
-				G_CERR << "Error: Operator \"" << op << "\" not defined for double type."
+				G_CERR << "Error: Operator \"" << op << "\" not defined for real type."
 						 << std::endl;
 				pResult->m_iVal = 0;
 			}
@@ -326,7 +326,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			}
 			else
 			{
-				G_CERR << "Error: Operator \"" << op << "\" not defined for double type."
+				G_CERR << "Error: Operator \"" << op << "\" not defined for real type."
 						 << std::endl;
 			}
 			pRes = pResult;
@@ -462,7 +462,7 @@ t_string Node::linenr(const t_string& strErr, const ParseInfo &info) const
 
 //--------------------------------------------------------------------------------
 
-NodeDouble::NodeDouble(double dVal)
+NodeDouble::NodeDouble(t_real dVal)
 	: Node(NODE_DOUBLE), m_dVal(dVal)
 {
 	m_pSymbol = new SymbolDouble;

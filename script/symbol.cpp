@@ -6,6 +6,7 @@
 
 #include "symbol.h"
 #include <set>
+#include <limits>
 
 
 Symbol* SymbolDouble::ToType(SymbolType stype) const
@@ -39,6 +40,8 @@ Symbol* SymbolDouble::ToType(SymbolType stype) const
 t_string SymbolDouble::print() const
 {
 	t_ostringstream ostr;
+	ostr.precision(std::numeric_limits<t_real>::digits10);
+
 	ostr << m_dVal;
 	return ostr.str();
 }
@@ -72,7 +75,7 @@ Symbol* SymbolInt::ToType(SymbolType stype) const
 	{
 		SymbolDouble *pNewSymD = new SymbolDouble();
 		pNewSymD->m_strName = this->m_strName;
-		pNewSymD->m_dVal = double(this->m_iVal);
+		pNewSymD->m_dVal = t_real(this->m_iVal);
 
 		pNewSym = pNewSymD;
 	}
@@ -248,25 +251,25 @@ void SymbolArray::UpdateIndices()
 		UpdateIndex(iIdx);
 }
 
-std::vector<double> SymbolArray::ToDoubleArray() const
+std::vector<t_real> SymbolArray::ToDoubleArray() const
 {
-	std::vector<double> vec;
+	std::vector<t_real> vec;
 	vec.reserve(m_arr.size());
 
 	for(const Symbol *pSym : m_arr)
 	{
-		double dVal = ((SymbolDouble*)pSym->ToType(SYMBOL_DOUBLE))->m_dVal;
+		t_real dVal = ((SymbolDouble*)pSym->ToType(SYMBOL_DOUBLE))->m_dVal;
 		vec.push_back(dVal);
 	}
 
 	return vec;
 }
 
-void SymbolArray::FromDoubleArray(const std::vector<double>& vec)
+void SymbolArray::FromDoubleArray(const std::vector<t_real>& vec)
 {
 	m_arr.reserve(m_arr.size() + vec.size());
 
-	for(double d : vec)
+	for(t_real d : vec)
 	{
 		SymbolDouble *pSym = new SymbolDouble;
 		pSym->m_dVal = d;
@@ -423,16 +426,7 @@ void SymbolTable::print() const
 		t_string strSym;
 		if(pSym)
 		{
-			t_string strType;
-			if(pSym->GetType() == SYMBOL_DOUBLE)
-				strType = T_STR"double";
-			else if(pSym->GetType() == SYMBOL_INT)
-				strType = T_STR"int";
-			else if(pSym->GetType() == SYMBOL_STRING)
-				strType = T_STR"string";
-			else
-				strType = T_STR"<unknown>";
-
+			t_string strType = pSym->GetTypeName();
 			strSym = pSym->print() + T_STR" (" + strType + T_STR")";
 		}
 		else

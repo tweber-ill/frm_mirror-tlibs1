@@ -269,7 +269,7 @@ void Lexer::load(const t_string& _strInput)
 
 		m_vecToks.push_back(tok);
 	}
-	
+
 	FixTokens();
 	//print();
 }
@@ -280,7 +280,7 @@ void Lexer::FixTokens()
 	{
 		Token& tok = m_vecToks[i];
 		t_string strFullDouble = tok.strVal;
-		
+
 		if(tok.type==LEX_TOKEN_DOUBLE)
 		{
 			if(tok.strVal[tok.strVal.length()-1]=='e' ||
@@ -324,7 +324,7 @@ void Lexer::print()
 		const Token& tok = lex();
 		if(tok.type == LEX_TOKEN_END) 
 			break;
-		
+
 		G_COUT << "type: " << tok.type
 					<< ", cOp: " << tok.cOp 
 					<< ", dVal: " << tok.dVal 

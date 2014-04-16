@@ -113,7 +113,7 @@ public:
 		if(m_pTable) { delete m_pTable; m_pTable=0; }
 	}
 
-	virtual bool SetParams(const std::vector<double>& vecParams)
+	virtual bool SetParams(const std::vector<t_real>& vecParams)
 	{
 		if(vecParams.size() != m_vecParamNames.size())
 		{
@@ -125,13 +125,13 @@ public:
 		for(unsigned int iParam=0; iParam<vecParams.size(); ++iParam)
 		{
 			//const std::string& strName = m_vecParamNames[iParam];
-			double dVal = vecParams[iParam];
+			t_real dVal = vecParams[iParam];
 
 			((SymbolDouble*)m_vecSyms[iParam+1])->m_dVal = dVal;
 		}
 	}
 
-	virtual double operator()(double x) const
+	virtual t_real operator()(t_real x) const
 	{
 		((SymbolDouble*)m_vecSyms[0])->m_dVal = x;
 
@@ -145,7 +145,7 @@ public:
 		m_pinfo->bWantReturn = 0;
 		m_pTable->RemoveSymbolNoDelete(T_STR"<args>");
 
-		double dRetVal = 0.;
+		t_real dRetVal = 0.;
 		if(pSymRet)
 		{
 			dRetVal = pSymRet->GetValDouble();
@@ -172,16 +172,16 @@ public:
 	virtual std::vector<std::string> GetParamNames() const
 	{ return m_vecParamNames; }
 
-	virtual std::vector<double> GetParamValues() const
+	virtual std::vector<t_real> GetParamValues() const
 	{ throw Err("Called invalid function in generic fitter model"); }
-	virtual std::vector<double> GetParamErrors() const
+	virtual std::vector<t_real> GetParamErrors() const
 	{ throw Err("Called invalid function in generic fitter model"); }
 };
 
 
 static void get_values(const std::vector<t_string>& vecParamNames,
 						const Symbol* pSym,
-						std::vector<double>& vec, std::vector<bool>& vecActive)
+						std::vector<t_real>& vec, std::vector<bool>& vecActive)
 {
 	vecActive.resize(vecParamNames.size());
 
@@ -195,13 +195,13 @@ static void get_values(const std::vector<t_string>& vecParamNames,
 	else if(pSym->GetType() == SYMBOL_MAP)
 	{
 		vec.resize(vecParamNames.size());
-		std::map<t_string, double> mymap = sym_to_map<t_string, double>(pSym);
+		std::map<t_string, t_real> mymap = sym_to_map<t_string, t_real>(pSym);
 
 		for(unsigned int iParam=0; iParam<vecParamNames.size(); ++iParam)
 		{
 			const t_string& strKey = vecParamNames[iParam];
 
-			std::map<t_string, double>::iterator iter = mymap.find(strKey);
+			std::map<t_string, t_real>::iterator iter = mymap.find(strKey);
 			if(iter == mymap.end())
 			{
 				vecActive[iParam] = 0;
@@ -253,10 +253,10 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	const unsigned int iParamSize = vecParamNames.size();
 
 
-	std::vector<double> vecHints, vecHintsErr;
+	std::vector<t_real> vecHints, vecHintsErr;
 	std::vector<bool> vecHintsActive, vecHintsErrActive;
 
-	std::vector<double> vecLimMin, vecLimMax;
+	std::vector<t_real> vecLimMin, vecLimMax;
 	std::vector<bool> vecLimMinActive, vecLimMaxActive;
 
 	std::vector<t_string> vecFittingSteps;
@@ -309,9 +309,9 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	bool bFitterDebug = (iDebug>0);
 
 
-	std::vector<double> vecX = sym_to_vec<t_stdvec>(vecSyms[1]);
-	std::vector<double> vecY = sym_to_vec<t_stdvec>(vecSyms[2]);
-	std::vector<double> vecYErr = sym_to_vec<t_stdvec>(vecSyms[3]);
+	std::vector<t_real> vecX = sym_to_vec<t_stdvec>(vecSyms[1]);
+	std::vector<t_real> vecY = sym_to_vec<t_stdvec>(vecSyms[2]);
+	std::vector<t_real> vecYErr = sym_to_vec<t_stdvec>(vecSyms[3]);
 
 	unsigned int iSize = std::min<unsigned int>(vecX.size(), vecY.size());
 	iSize = std::min<unsigned int>(iSize, vecYErr.size());
@@ -325,8 +325,8 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		const t_string& wstrParam = vecParamNames[iParam];
 		std::string strParam = WSTR_TO_STR(wstrParam);
 
-		double dHint = 0.;
-		double dErr = 0.;
+		t_real dHint = 0.;
+		t_real dErr = 0.;
 
 		if(iParam < vecHints.size())
 			dHint = vecHints[iParam];
@@ -339,8 +339,8 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 
 
 
-		double dLimMin = 0.;
-		double dLimMax = 0.;
+		t_real dLimMin = 0.;
+		t_real dLimMax = 0.;
 
 		if(iParam < vecLimMin.size())
 			dLimMin = vecLimMin[iParam];
@@ -492,8 +492,8 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	{
 		std::string _strSym = WSTR_TO_STR(strSym);
 
-		double dVal = lastmini.UserState().Value(_strSym);
-		double dErr = lastmini.UserState().Error(_strSym);
+		t_real dVal = lastmini.UserState().Value(_strSym);
+		t_real dErr = lastmini.UserState().Error(_strSym);
 		dErr = fabs(dErr);
 
 		SymbolArray* pArr = new SymbolArray();
@@ -562,8 +562,8 @@ static Symbol* _fkt_param(FktParam whichfkt, const std::vector<Symbol*>& vecSyms
 	if(vecSyms.size() > 3)
 		ideg = vecSyms[3]->GetValInt();
 
-	std::vector<double> vecX = sym_to_vec<t_stdvec>(vecSyms[0]);
-	std::vector<double> vecY = sym_to_vec<t_stdvec>(vecSyms[1]);
+	std::vector<t_real> vecX = sym_to_vec<t_stdvec>(vecSyms[0]);
+	std::vector<t_real> vecY = sym_to_vec<t_stdvec>(vecSyms[1]);
 
 	unsigned int iSize = std::min(vecX.size(), vecY.size());
 
@@ -586,8 +586,8 @@ static Symbol* _fkt_param(FktParam whichfkt, const std::vector<Symbol*>& vecSyms
 
 	for(unsigned int i=0; i<N; ++i)
 	{
-		double t = double(i)/double(N-1);
-		ublas::vector<double> vecSpl = (*pfkt)(t);
+		t_real t = t_real(i)/t_real(N-1);
+		ublas::vector<t_real> vecSpl = (*pfkt)(t);
 
 		if(vecSpl.size() < 2)
 			continue;
@@ -628,12 +628,12 @@ static Symbol* fkt_find_peaks(const std::vector<Symbol*>& vecSyms,
 
 	const unsigned int iOrder = 5;
 
-	std::vector<double> vecX = sym_to_vec<t_stdvec>(vecSyms[0]);
-	std::vector<double> vecY = sym_to_vec<t_stdvec>(vecSyms[1]);
+	std::vector<t_real> vecX = sym_to_vec<t_stdvec>(vecSyms[0]);
+	std::vector<t_real> vecY = sym_to_vec<t_stdvec>(vecSyms[1]);
 	const unsigned int iLen = std::min(vecX.size(), vecY.size());
 
-	std::vector<double> vecMaximaX, vecMaximaSize, vecMaximaWidth;
-	::find_peaks<double>(iLen, vecX.data(), vecY.data(), iOrder,
+	std::vector<t_real> vecMaximaX, vecMaximaSize, vecMaximaWidth;
+	::find_peaks<t_real>(iLen, vecX.data(), vecY.data(), iOrder,
 						vecMaximaX, vecMaximaSize, vecMaximaWidth);
 
 	SymbolArray* pArrX = (SymbolArray*)vec_to_sym<t_stdvec>(vecMaximaX);

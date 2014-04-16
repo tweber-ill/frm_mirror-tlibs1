@@ -45,9 +45,9 @@ static inline bool is_array_of_array_of_arrays(const Symbol* pSym)
 struct XYLimits
 {
 	bool bHasX, bHasY, bHasCB, bCBCyclic;
-	double dMinX, dMaxX;
-	double dMinY, dMaxY;
-	double dMinCB, dMaxCB;
+	t_real dMinX, dMaxX;
+	t_real dMinY, dMaxY;
+	t_real dMinCB, dMaxCB;
 
 	XYLimits() : bHasX(0), bHasY(0), bHasCB(0), bCBCyclic(0)
 	{}
@@ -188,9 +188,9 @@ static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 	// plot(x, y, yerr, xerr, mapParams)
 	else if(iNumSyms >= 2 && vecSyms[0]->GetType()==SYMBOL_ARRAY && vecSyms[1]->GetType()==SYMBOL_ARRAY)
 	{
-		std::vector<double> vecX = ((SymbolArray*)vecSyms[0])->ToDoubleArray();
-		std::vector<double> vecY = ((SymbolArray*)vecSyms[1])->ToDoubleArray();
-		std::vector<double> vecYErr, vecXErr;
+		std::vector<t_real> vecX = ((SymbolArray*)vecSyms[0])->ToDoubleArray();
+		std::vector<t_real> vecY = ((SymbolArray*)vecSyms[1])->ToDoubleArray();
+		std::vector<t_real> vecYErr, vecXErr;
 
 		if(iNumSyms >= 3 && vecSyms[2]->GetType()==SYMBOL_ARRAY)
 			vecYErr = ((SymbolArray*)vecSyms[2])->ToDoubleArray();
@@ -238,18 +238,18 @@ static Symbol* fkt_plot2d(const std::vector<Symbol*>& vecSyms,
 		if(iNumSyms == 2 && vecSyms[1]->GetType()==SYMBOL_MAP)
 			pMapParam = (SymbolMap*)vecSyms[1];
 
-		std::vector<std::vector<double> > vecXY;
+		std::vector<std::vector<t_real> > vecXY;
 		vecXY.reserve(pArr->m_arr.size());
 
 		for(const Symbol* _pX : pArr->m_arr)
 		{
 			SymbolArray* pX = (SymbolArray*)_pX;
-			std::vector<double> vecX = pX->ToDoubleArray();
+			std::vector<t_real> vecX = pX->ToDoubleArray();
 
 			vecXY.push_back(vecX);
 		}
 
-		double dRMinX=1., dRMaxX=-1., dRMinY=1., dRMaxY=-1.;
+		t_real dRMinX=1., dRMaxX=-1., dRMinY=1., dRMaxY=-1.;
 		if(pMapParam)
 		{
 			XYLimits lim;
