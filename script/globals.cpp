@@ -13,7 +13,7 @@
 #include "helper/neutrons.hpp"
 #include <boost/units/systems/si/codata/electron_constants.hpp>
 
-const t_char* g_pcVersion = T_STR"Hermelin script interpreter, version 0.4";
+const t_char* g_pcVersion = T_STR"Hermelin script interpreter, version 0.5";
 
 static inline void init_funcs()
 {
@@ -25,8 +25,10 @@ static inline void init_funcs()
 }
 
 
-static inline void init_physics_const(SymbolTable *pSymTab)
+static inline void init_constants(SymbolTable *pSymTab)
 {
+	pSymTab->InsertSymbol(T_STR"pi", new SymbolDouble(M_PI));
+
 	// hbar in eVs
 	pSymTab->InsertSymbol(T_STR"hbar_eVs", new SymbolDouble(co::hbar / one_eV / units::si::second));
 	// hbar in Js
@@ -52,7 +54,5 @@ static inline void init_physics_const(SymbolTable *pSymTab)
 extern void init_global_syms(SymbolTable *pSymTab)
 {
 	init_funcs();
-	init_physics_const(pSymTab);
-
-	pSymTab->InsertSymbol(T_STR"pi", new SymbolDouble(M_PI));
+	init_constants(pSymTab);
 }

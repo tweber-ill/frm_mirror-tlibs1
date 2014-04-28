@@ -120,6 +120,7 @@ enum NodeType
 
 	NODE_IF,
 	NODE_WHILE,
+	NODE_FOR,
 	NODE_RANGED_FOR,
 
 	NODE_RETURN,
@@ -279,6 +280,35 @@ struct NodeWhile : public Node
 	virtual ~NodeWhile()
 	{
 		if(m_pExpr) delete m_pExpr;
+		if(m_pStmt) delete m_pStmt;
+	}
+
+	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Node* clone() const;
+};
+
+struct NodeFor : public Node
+{
+	Node *m_pExprInit;
+	Node *m_pExprCond;
+	Node *m_pExprEnd;
+	Node *m_pStmt;
+
+	NodeFor(Node* pExprInit, Node* pExprCond, Node* pExprEnd, Node* pStmt)
+		: Node(NODE_FOR), m_pExprInit(pExprInit),
+			m_pExprCond(pExprCond), m_pExprEnd(pExprEnd),
+			m_pStmt(pStmt)
+	{}
+
+	NodeFor(void* pExprInit, void* pExprCond, void* pExprEnd, void* pStmt)
+		: NodeFor((Node*)pExprInit, (Node*)pExprCond, (Node*)pExprEnd, (Node*)pStmt)
+	{}
+
+	virtual ~NodeFor()
+	{
+		if(m_pExprInit) delete m_pExprInit;
+		if(m_pExprCond) delete m_pExprCond;
+		if(m_pExprEnd) delete m_pExprEnd;
 		if(m_pStmt) delete m_pStmt;
 	}
 
@@ -497,6 +527,7 @@ struct NodeUnaryOp : public Node
 struct NodeBinaryOp : public Node
 {
 	Node *m_pLeft, *m_pRight;
+	bool m_bOwnsLeft = 1;
 	bool m_bGlobal;
 	std::vector<Node*> m_vecNodesFlat;
 
@@ -507,7 +538,7 @@ struct NodeBinaryOp : public Node
 
 	virtual ~NodeBinaryOp()
 	{
-		if(m_pLeft) delete m_pLeft;
+		if(m_pLeft && m_bOwnsLeft) delete m_pLeft;
 		if(m_pRight && ((void*)m_pRight)!=((void*)m_pLeft)) delete m_pRight;
 	}
 

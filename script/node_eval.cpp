@@ -1214,6 +1214,59 @@ Symbol* NodeWhile::eval(ParseInfo &info, SymbolTable *pSym) const
 	return 0;
 }
 
+Symbol* NodeFor::eval(ParseInfo &info, SymbolTable *pSym) const
+{
+	if(info.IsExecDisabled()) return 0;
+
+	std::vector<NodeFunction*>& vecFuncs = info.vecFuncs;
+
+	if(!m_pExprCond) return 0;
+	if(!m_pStmt) return 0;
+
+	info.pCurLoop = this;
+	
+	Symbol *pSymInit = 0;
+	if(m_pExprInit) 
+	{
+		pSymInit = m_pExprInit->eval(info, pSym);
+		safe_delete(pSymInit, pSym, info.pGlobalSyms);
+	}
+	
+	while(1)
+	{
+		Symbol *pSymRet = 0;
+		Symbol *pSymExpr = m_pExprCond->eval(info, pSym);
+
+		if(pSymExpr && pSymExpr->IsNotZero())
+			pSymRet = m_pStmt->eval(info, pSym);
+		else
+			break;
+
+		safe_delete(pSymRet, pSym, info.pGlobalSyms);
+		safe_delete(pSymExpr, pSym, info.pGlobalSyms);
+
+		if(info.bWantBreak)
+		{
+			info.bWantBreak = 0;
+			break;
+		}
+		if(info.bWantContinue)
+		{
+			info.bWantContinue = 0;
+			continue;
+		}
+		
+		if(m_pExprEnd)
+		{
+			Symbol *pSymEnd = m_pExprEnd->eval(info, pSym);
+			safe_delete(pSymEnd, pSym, info.pGlobalSyms);
+		}
+	}
+	info.pCurLoop = 0;
+
+	return 0;
+}
+
 Symbol* NodeRangedFor::eval(ParseInfo &info, SymbolTable *pSym) const
 {
 	if(info.IsExecDisabled()) return 0;

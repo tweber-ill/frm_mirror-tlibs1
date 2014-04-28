@@ -1,5 +1,9 @@
 main()
 {
+	for(iter=5; iter<=15; iter=iter+1)
+		print("For loop: " + iter);
+	print("="*80);
+
 	a = [1, 2, 3];
 
 	for(b : a)

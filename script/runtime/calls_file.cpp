@@ -6,12 +6,97 @@
 
 #include "../types.h"
 #include "../helper/string.h"
+#include "../helper/file.h"
 #include "calls_file.h"
 #include "../calls.h"
 #include "../loader/loadtxt.h"
 #include <sstream>
 #include <fstream>
 #include <iomanip>
+#include <algorithm>
+
+// --------------------------------------------------------------------------------
+// file operations
+
+static Symbol* fkt_read_file(const std::vector<Symbol*>& vecSyms,
+							ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size() != 1)
+	{
+		G_CERR << linenr(T_STR"Error", info) << "read_file takes exactly one argument." 
+				<< std::endl;
+		return 0;
+	}
+
+	if(vecSyms[0]->GetType() != SYMBOL_STRING)
+	{
+		G_CERR << linenr(T_STR"Error", info) 
+				<< "read_file needs a string argument as file name." 
+				<< std::endl;
+		return 0;
+	}
+	
+	const t_string& strFile = ((SymbolString*)vecSyms[0])->m_strVal;
+	
+	t_ifstream ifstr(strFile);
+	if(!ifstr.is_open())
+		return new SymbolString("");
+
+	//std::streampos iFileSize = get_file_size<t_char>(ifstr);	
+	t_ostringstream ostr;
+	
+	std::copy(std::istreambuf_iterator<t_char>(ifstr),
+				std::istreambuf_iterator<t_char>(),
+				std::ostreambuf_iterator<t_char>(ostr));
+	
+	return new SymbolString(ostr.str());
+}
+
+static Symbol* fkt_write_file(const std::vector<Symbol*>& vecSyms,
+							ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size() != 2)
+	{
+		G_CERR << linenr(T_STR"Error", info) << "write_file takes exactly two arguments." 
+				<< std::endl;
+		return 0;
+	}
+
+	if(vecSyms[0]->GetType() != SYMBOL_STRING)
+	{
+		G_CERR << linenr(T_STR"Error", info) 
+				<< "write_file needs a string argument as file name." 
+				<< std::endl;
+		return 0;
+	}
+	
+	const t_string& strFile = ((SymbolString*)vecSyms[0])->m_strVal;
+	t_ofstream ofstr(strFile);
+	if(!ofstr.is_open())
+		return new SymbolInt(0);
+
+
+	t_string* pStr = 0;
+	bool bAllocatedStr = 0;
+	if(vecSyms[1]->GetType() == SYMBOL_STRING)
+		pStr = &((SymbolString*)vecSyms[1])->m_strVal;
+	else
+	{
+		pStr = new std::string;
+		bAllocatedStr = 1;
+		*pStr = vecSyms[1]->print();
+	}
+
+	std::copy(pStr->begin(), pStr->end(),
+				std::ostreambuf_iterator<t_char>(ofstr));
+
+	if(bAllocatedStr)
+		delete pStr;
+	return new SymbolInt(1);
+}
+// --------------------------------------------------------------------------------
+
+
 
 // --------------------------------------------------------------------------------
 // loading and saving of .dat files
@@ -218,9 +303,16 @@ extern void init_ext_file_calls()
 {
 	t_mapFkts mapFkts =
 	{
-			// dat files
-			t_mapFkts::value_type(T_STR"loadtxt", fkt_loadtxt),
-			t_mapFkts::value_type(T_STR"savetxt", fkt_savetxt),
+		// general files	
+		//t_mapFkts::value_type(T_STR"file_in", fkt_file_in),
+		//t_mapFkts::value_type(T_STR"file_out", fkt_file_out),
+		//t_mapFkts::value_type(T_STR"file_close", fkt_file_close),
+		t_mapFkts::value_type(T_STR"read_file", fkt_read_file),
+		t_mapFkts::value_type(T_STR"write_file", fkt_write_file),
+		
+		// dat files
+		t_mapFkts::value_type(T_STR"loadtxt", fkt_loadtxt),
+		t_mapFkts::value_type(T_STR"savetxt", fkt_savetxt),
 	};
 
 	add_ext_calls(mapFkts);

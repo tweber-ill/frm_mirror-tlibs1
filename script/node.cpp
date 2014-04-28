@@ -618,6 +618,16 @@ Node* NodeWhile::clone() const
 	return pNode;
 }
 
+Node* NodeFor::clone() const
+{
+	NodeFor* pNode = new NodeFor(m_pExprInit?m_pExprInit->clone():0,
+								 m_pExprCond?m_pExprCond->clone():0,
+								 m_pExprEnd?m_pExprEnd->clone():0,
+								m_pStmt?m_pStmt->clone():0);
+	*((Node*)pNode) = *((Node*)this);
+	return pNode;
+}
+
 Node* NodeRangedFor::clone() const
 {
 	NodeRangedFor* pNode = new NodeRangedFor(m_pIdent?m_pIdent->clone():0,

@@ -519,6 +519,28 @@ static Symbol* fkt_tokens(const std::vector<Symbol*>& vecSyms,
 
 	return pArr;
 }
+
+
+static Symbol* fkt_replace(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size()!= 3 || vecSyms[0]->GetType()!=SYMBOL_STRING
+						|| vecSyms[1]->GetType()!=SYMBOL_STRING
+						|| vecSyms[2]->GetType()!=SYMBOL_STRING)
+	{
+		G_CERR << linenr(T_STR"Error", info)
+				<< "Replace needs three string arguments." << std::endl;
+		return 0;
+	}
+
+	std::string str = ((SymbolString*)vecSyms[0])->m_strVal;
+	const std::string& strOld = ((SymbolString*)vecSyms[1])->m_strVal;
+	const std::string& strNew = ((SymbolString*)vecSyms[2])->m_strVal;
+
+	find_all_and_replace(str, strOld, strNew);
+
+	return new SymbolString(str);
+}
 // --------------------------------------------------------------------------------
 
 
@@ -554,6 +576,7 @@ static t_mapFkts g_mapFkts =
 	t_mapFkts::value_type(T_STR"trim", fkt_trim),
 	t_mapFkts::value_type(T_STR"split", fkt_split),
 	t_mapFkts::value_type(T_STR"tokens", fkt_tokens),
+	t_mapFkts::value_type(T_STR"replace", fkt_replace),
 	t_mapFkts::value_type(T_STR"length", fkt_array_size),
 
 	// array operations

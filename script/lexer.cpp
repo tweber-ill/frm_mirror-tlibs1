@@ -12,8 +12,8 @@
 #include "helper/string.h"
 #include "helper/spec_char.h"
 
-Lexer::Lexer() : m_bOk(1), 
-		m_strWhitespace(T_STR" \t\r"), m_strSep(T_STR"=+-*/\%^{}[]();,\":\n"),
+Lexer::Lexer() : m_bOk(1),
+		m_strWhitespace(T_STR" \t\r"), m_strSep(T_STR"=+-*/\%^{}[]();,\":\n!<>&|"),
 		m_iLexPos(0), m_iNumToks(0)
 {
 	m_tokEnd.type = LEX_TOKEN_END;
@@ -50,13 +50,72 @@ t_string Lexer::RemoveComments(const t_string& strInput)
 	return strRet;
 }
 
-static unsigned char ctoi(unsigned char c)
+static unsigned char ctoi(t_char c)
 {
-	return c-'0';
+	switch(c)
+	{
+		case T_STR'0': return 0;
+		case T_STR'1': return 1;
+		case T_STR'2': return 2;
+		case T_STR'3': return 3;
+		case T_STR'4': return 4;
+		case T_STR'5': return 5;
+		case T_STR'6': return 6;
+		case T_STR'7': return 7;
+		case T_STR'8': return 8;
+		case T_STR'9': return 9;
+		case T_STR'a': return 0xa;
+		case T_STR'A': return 0xa;
+		case T_STR'b': return 0xb;
+		case T_STR'B': return 0xb;
+		case T_STR'c': return 0xc;
+		case T_STR'C': return 0xc;
+		case T_STR'd': return 0xd;
+		case T_STR'D': return 0xd;
+		case T_STR'e': return 0xe;
+		case T_STR'E': return 0xe;
+		case T_STR'f': return 0xf;
+		case T_STR'F': return 0xf;
+	}
+
+	return 0;
+}
+
+static bool isoctdigit(t_char c)
+{
+	static const t_char chs[] = {T_STR'0',T_STR'1',T_STR'2',T_STR'3',T_STR'4',
+					T_STR'5',T_STR'6',T_STR'7'};
+
+	for(t_char ch : chs)
+	{
+		if(c == ch)
+			return 1;
+	}
+
+	return 0;
+}
+
+static bool ishexdigit(t_char c)
+{
+	static const t_char chs[] = {T_STR'0',T_STR'1',T_STR'2',T_STR'3',T_STR'4',
+					T_STR'5',T_STR'6',T_STR'7',T_STR'8',T_STR'9',
+					T_STR'a',T_STR'A',T_STR'b',T_STR'B',T_STR'c',T_STR'C',
+					T_STR'd',T_STR'D',T_STR'e',T_STR'E',T_STR'f',T_STR'F'};
+
+	for(t_char ch : chs)
+	{
+		if(c == ch)
+			return 1;
+	}
+
+	return 0;
 }
 
 void Lexer::ReplaceEscapes(t_string& str)
 {
+	if(str.length() == 0)
+		return;
+
 	const t_mapSpecChars& mapSpec = get_spec_chars();
 
 	static bool s_bEscapesInited = 0;
@@ -103,29 +162,32 @@ void Lexer::ReplaceEscapes(t_string& str)
 		t_uchar c1 = str[i+2];
 		t_uchar c2 = str[i+3];
 
-		if(str[i]=='\\' && isdigit(c0) && isdigit(c1) && isdigit(c2))
+		if(str[i]=='\\' && isoctdigit(c0) && isoctdigit(c1) && isoctdigit(c2))
 		{
 			//std::cout << "Found: " << str.substr(i, 4) << std::endl;
 			t_char c[2];
 			c[0] = ctoi(c0)*8*8 + ctoi(c1)*8 + ctoi(c2);
 			c[1] = 0;
 			str.replace(i, 4, c);
+			i-=3;
 		}
 	}
 
 	// hex numbers
 	if(str.length()>=4) for(int i=0; i<str.length()-3; ++i)
 	{
+		//std::cout << str << std::endl;
 		t_uchar c0 = str[i+2];
 		t_uchar c1 = str[i+3];
 
-		if(str[i]=='\\' && tolower(str[i+1])=='x' && isdigit(c0) && isdigit(c1))
+		if(str[i]=='\\' && tolower(str[i+1])=='x' && ishexdigit(c0) && ishexdigit(c1))
 		{
 			//std::cout << "Found: " << str.substr(i, 4) << std::endl;
 			t_char c[2];
 			c[0] = ctoi(c0)*16 + ctoi(c1);
 			c[1] = 0;
 			str.replace(i, 4, c);
+			i-=3;
 		}
 	}
 }
@@ -281,6 +343,10 @@ void Lexer::FixTokens()
 		Token& tok = m_vecToks[i];
 		t_string strFullDouble = tok.strVal;
 
+		Token *pTokNext = 0;
+		if(i<m_vecToks.size()-1)
+			pTokNext = &m_vecToks[i+1];
+
 		if(tok.type==LEX_TOKEN_DOUBLE)
 		{
 			if(tok.strVal[tok.strVal.length()-1]=='e' ||
@@ -314,6 +380,69 @@ void Lexer::FixTokens()
 
 			tok.strVal = T_STR"";
 		}
+		
+		// two-char ops, e.g. "<="
+		else if(tok.type == LEX_TOKEN_CHAROP)
+		{
+			t_char c = tok.cOp;
+			t_char cNext = 0;
+			if(pTokNext && pTokNext->type == LEX_TOKEN_CHAROP)
+				cNext = pTokNext->cOp;
+
+			if(c == '!')
+			{
+				if(cNext == '=')
+				{
+					tok.type = LEX_TOKEN_LOG_NEQ;
+					m_vecToks.erase(m_vecToks.begin()+i+1);
+				}
+				else
+				{
+					tok.type = LEX_TOKEN_LOG_NOT;
+				}
+			}
+			else if(c=='=' && cNext=='=')
+			{
+				tok.type = LEX_TOKEN_LOG_EQ;
+				m_vecToks.erase(m_vecToks.begin()+i+1);
+			}
+			else if(c=='&' && cNext=='&')
+			{
+				tok.type = LEX_TOKEN_LOG_AND;
+				m_vecToks.erase(m_vecToks.begin()+i+1);
+			}
+			else if(c=='|' && cNext=='|')
+			{
+				tok.type = LEX_TOKEN_LOG_OR;
+				m_vecToks.erase(m_vecToks.begin()+i+1);
+			}
+			else if(c=='<')
+			{
+				if(cNext == '=')
+				{
+						tok.type = LEX_TOKEN_LOG_LEQ;
+						m_vecToks.erase(m_vecToks.begin()+i+1);
+				}
+				else
+				{
+						tok.type = LEX_TOKEN_LOG_LESS;
+				}
+
+			}
+			else if(c=='>')
+			{
+				if(cNext == '=')
+				{
+						tok.type = LEX_TOKEN_LOG_GEQ;
+						m_vecToks.erase(m_vecToks.begin()+i+1);
+				}
+				else
+				{
+						tok.type = LEX_TOKEN_LOG_GREATER;
+				}
+
+			}
+		}
 	}
 }
 
@@ -322,12 +451,12 @@ void Lexer::print()
 	while(1)
 	{
 		const Token& tok = lex();
-		if(tok.type == LEX_TOKEN_END) 
+		if(tok.type == LEX_TOKEN_END)
 			break;
 
 		G_COUT << "type: " << tok.type
-					<< ", cOp: " << tok.cOp 
-					<< ", dVal: " << tok.dVal 
+					<< ", cOp: " << tok.cOp
+					<< ", dVal: " << tok.dVal
 					<< ", strVal: " << tok.strVal
 					<< std::endl;
 	}

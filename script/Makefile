@@ -1,6 +1,6 @@
 CC = gcc
-OPT_FLAGS = -O2 -march=native
-#OPT_FLAGS = -ggdb -DDEBUG
+#OPT_FLAGS = -O2 -march=native
+OPT_FLAGS = -ggdb -DDEBUG
 DEFINES = -DNO_QT -DNO_COMP
 FLAGS = -std=c++11 -fopenmp ${OPT_FLAGS} ${DEFINES}
 LIBS = -lboost_iostreams-mt -L/usr/local/lib -lMinuit2 -lstdc++ -lm

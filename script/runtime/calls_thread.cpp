@@ -163,17 +163,93 @@ static Symbol* fkt_thread_hwcount(const std::vector<Symbol*>& vecSyms,
 	return new SymbolInt(t_int(iNumThreads));
 }
 
+static Symbol* fkt_mutex(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info,
+						SymbolTable* pSymTab)
+{
+	std::mutex* pMutex = new std::mutex;
+	t_int iHandle = info.phandles->AddHandle(new HandleMutex(pMutex));
+
+	return new SymbolInt(iHandle);
+}
+
 static Symbol* fkt_begin_critical(const std::vector<Symbol*>& vecSyms,
 								ParseInfo& info, SymbolTable* pSymTab)
 {
-	info.pmutexGlobal->lock();
+	// no argument given: lock global mutex
+	if(vecSyms.size() == 0)
+	{
+		info.pmutexGlobal->lock();
+	}
+	else
+	{
+		for(Symbol* pSym : vecSyms)
+		{
+			if(pSym->GetType() == SYMBOL_ARRAY)
+				fkt_begin_critical(((SymbolArray*)pSym)->m_arr, info, pSymTab);
+			else if(pSym->GetType() == SYMBOL_INT)
+			{
+				int iHandle = pSym->GetValInt();
+				Handle *pHandle = info.phandles->GetHandle(iHandle);
+
+				if(pHandle==0 || pHandle->GetType()!=HANDLE_MUTEX)
+				{
+					G_CERR << linenr(T_STR"Error", info) << "Handle (" << iHandle << ") does not exist"
+							 << " or is not a mutex handle." << std::endl;
+					continue;
+				}
+
+				std::mutex *pMutex = ((HandleMutex*)pHandle)->GetInternalHandle();
+				pMutex->lock();
+			}
+			else
+			{
+				G_CERR << linenr(T_STR"Error", info) << "Invalid mutex handle: "
+						<< pSym->print() << std::endl;
+			}
+		}
+	}
+
 	return 0;
 }
 
 static Symbol* fkt_end_critical(const std::vector<Symbol*>& vecSyms,
 								ParseInfo& info, SymbolTable* pSymTab)
 {
-	info.pmutexGlobal->unlock();
+	// no argument given: unlock global mutex
+	if(vecSyms.size() == 0)
+	{
+		info.pmutexGlobal->unlock();
+	}
+	else
+	{
+		for(Symbol* pSym : vecSyms)
+		{
+			if(pSym->GetType() == SYMBOL_ARRAY)
+				fkt_begin_critical(((SymbolArray*)pSym)->m_arr, info, pSymTab);
+			else if(pSym->GetType() == SYMBOL_INT)
+			{
+				int iHandle = pSym->GetValInt();
+				Handle *pHandle = info.phandles->GetHandle(iHandle);
+
+				if(pHandle==0 || pHandle->GetType()!=HANDLE_MUTEX)
+				{
+					G_CERR << linenr(T_STR"Error", info) << "Handle (" << iHandle << ") does not exist"
+							 << " or is not a mutex handle." << std::endl;
+					continue;
+				}
+
+				std::mutex *pMutex = ((HandleMutex*)pHandle)->GetInternalHandle();
+				pMutex->unlock();
+			}
+			else
+			{
+				G_CERR << linenr(T_STR"Error", info) << "Invalid mutex handle: "
+						<< pSym->print() << std::endl;
+			}
+		}
+	}
+
 	return 0;
 }
 
@@ -361,6 +437,7 @@ extern void init_ext_thread_calls()
 		t_mapFkts::value_type(T_STR"nthread", fkt_nthread),
 		t_mapFkts::value_type(T_STR"thread_hwcount", fkt_thread_hwcount),
 		t_mapFkts::value_type(T_STR"join", fkt_thread_join),
+		t_mapFkts::value_type(T_STR"mutex", fkt_mutex),
 		t_mapFkts::value_type(T_STR"begin_critical", fkt_begin_critical),
 		t_mapFkts::value_type(T_STR"end_critical", fkt_end_critical),
 

@@ -21,23 +21,6 @@ HandleFile::~HandleFile()
 
 
 
-
-HandleThread::HandleThread(std::thread* pThread) : m_pThread(pThread)
-{}
-
-HandleThread::~HandleThread()
-{
-	if(m_pThread)
-	{
-		delete m_pThread;
-		m_pThread = 0;
-	}
-}
-
-
-
-
-
 HandleManager::HandleManager()
 {
 	m_vecHandles.reserve(64);

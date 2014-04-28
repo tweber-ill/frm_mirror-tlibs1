@@ -11,6 +11,7 @@
 
 #include <vector>
 #include <thread>
+#include <mutex>
 #include <stdio.h>
 
 
@@ -47,18 +48,32 @@ public:
 };
 
 
-class HandleThread : public Handle
+template<class HANDLE, HandleType HANDLE_TYPE>
+class GenericHandle : public Handle
 {
 protected:
-	std::thread* m_pThread;
+	HANDLE* m_pHandle;
 
 public:
-	HandleThread(std::thread* pThread);
-	virtual ~HandleThread();
+	GenericHandle(HANDLE* pHandle) : m_pHandle(pHandle)
+	{}
+	virtual ~GenericHandle()
+	{
+		if(m_pHandle)
+		{
+			delete m_pHandle;
+			m_pHandle = 0;
+		}
+	}
 
-	virtual HandleType GetType() { return HANDLE_THREAD; }
-	std::thread* GetInternalHandle() { return m_pThread; }
+
+	virtual HandleType GetType() { return HANDLE_TYPE; }
+	HANDLE* GetInternalHandle() { return m_pHandle; }
 };
+
+
+using HandleThread = GenericHandle<std::thread, HANDLE_THREAD>;
+using HandleMutex = GenericHandle<std::mutex, HANDLE_MUTEX>;
 
 
 
