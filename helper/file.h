@@ -10,8 +10,27 @@
 #include <iostream>
 #include <string>
 
-extern unsigned int get_file_size(std::istream& istr);
-extern unsigned int get_file_pos(std::istream& istr);
+template<typename t_char=char>
+std::streampos get_file_size(std::basic_istream<t_char>& istr)
+{
+        std::streampos iPos = istr.tellg();
+
+        istr.seekg(0, std::ios_base::end);
+        std::streampos iSize = istr.tellg();
+        istr.seekg(iPos, std::ios_base::beg);
+
+        return iSize;
+}
+
+template<typename t_char=char>
+std::streampos get_file_pos(std::basic_istream<t_char>& istr)
+{
+        std::streampos iPos = istr.tellg();
+
+        if(iPos < 0) return 0;
+        return iPos;
+}
+
 
 extern bool dir_exists(const char* pcDir);
 
