@@ -27,5 +27,5 @@ main()
 	fitx = linspace(min(x), max(x), 128);
 #	fity = line_model(fitx, params["a"][0], params["b"][0]);
 	fity = parab_model(fitx, *params_vals);
-	plot([x,y,yerr], [fitx, fity, ["style":"line"]]);
+	plot([x,y,yerr], [fitx, fity, ["style":"line", "term":"x11"]]);
 }

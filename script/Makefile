@@ -2,8 +2,9 @@ CC = gcc
 #OPT_FLAGS = -O2 -march=native
 OPT_FLAGS = -ggdb -DDEBUG
 DEFINES = -DNO_QT -DNO_COMP
-FLAGS = -std=c++11 -fopenmp ${OPT_FLAGS} ${DEFINES}
-LIBS = -lboost_iostreams-mt -L/usr/local/lib -lMinuit2 -lstdc++ -lm
+INCS = -I/usr/include/root
+FLAGS = -std=c++11 -fopenmp ${OPT_FLAGS} ${DEFINES} ${INCS}
+LIBS = -lboost_iostreams -L/usr/local/lib -L/usr/lib64/root -lMinuit2 -lstdc++ -lm
 
 hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/node.o \
 		obj/node_eval.o obj/calls.o obj/handles.o obj/gnuplot.o obj/file.o \
