@@ -1,6 +1,6 @@
 CC = gcc
-#OPT_FLAGS = -O2 -march=native
-OPT_FLAGS = -ggdb -DDEBUG
+OPT_FLAGS = -O2 -march=native
+#OPT_FLAGS = -ggdb -DDEBUG
 DEFINES = -DNO_QT -DNO_COMP
 INCS = -I/usr/include/root
 FLAGS = -std=c++11 -fopenmp ${OPT_FLAGS} ${DEFINES} ${INCS}
@@ -20,6 +20,7 @@ hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/nod
 		obj/flags.o obj/fitter.o obj/chi2.o obj/interpolation.o \
 		obj/spec_char.o \
 			${LIBS}
+	strip hermelin
 
 obj/script.o: script.yy
 	bison --defines=tokens.h script.yy
