@@ -543,7 +543,9 @@ struct NodeBinaryOp : public Node
 	}
 
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
-	virtual Symbol* eval_assign(ParseInfo &info, SymbolTable *pSym=0) const;
+	virtual Symbol* eval_assign(ParseInfo &info, SymbolTable *pSym=0, 
+					Node* pLeft=0, Node *pRight=0, Symbol* pSymRightAlt=0, 
+					const bool *pbGlob=0) const;
 	virtual Symbol* eval_funcinit(ParseInfo &info, SymbolTable *pSym=0) const;
 
 	virtual Symbol* eval_recursive(ParseInfo &info, SymbolTable *pSym=0) const;

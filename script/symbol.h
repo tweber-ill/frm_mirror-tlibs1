@@ -33,12 +33,13 @@ struct Symbol
 	t_string m_strIdent;			// last seen identifier
 
 	unsigned int m_iArrIdx;			// if symbol is contained in an array
+	bool m_bHasIdx;
 	SymbolArray *m_pArr;
 
 	t_string m_strMapKey;		// if symbol is contained in a map
 	SymbolMap *m_pMap;
 
-	Symbol() : m_iArrIdx(0), m_pArr(0), m_pMap(0) {}
+	Symbol() : m_iArrIdx(0), m_bHasIdx(0), m_pArr(0), m_pMap(0) {}
 	virtual ~Symbol() {}
 
 	virtual SymbolType GetType() const = 0;

@@ -242,6 +242,7 @@ void SymbolArray::assign(Symbol *pSym)
 void SymbolArray::UpdateIndex(unsigned int iIdx)
 {
 	m_arr[iIdx]->m_pArr = this;
+	m_arr[iIdx]->m_bHasIdx = 1;
 	m_arr[iIdx]->m_iArrIdx = iIdx;
 }
 

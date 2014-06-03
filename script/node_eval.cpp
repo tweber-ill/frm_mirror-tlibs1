@@ -815,15 +815,27 @@ Symbol* NodeUnaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 	return 0;
 }
 
-Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
+ 				Node *pLeft, Node *pRight, Symbol *pSymRightAlt,
+				const bool *pbGlob) const
 {
-	if(m_pLeft==0 || m_pRight==0)
+	if(pLeft==0) pLeft = m_pLeft;
+	if(pRight==0) pRight = m_pRight;
+	if(pbGlob==0) pbGlob = &m_bGlobal;
+
+	if(pLeft==0 || pRight==0)
 	{
 		G_CERR << linenr(T_STR"Error", info) << "NULL assignment." << std::endl;
 		return 0;
 	}
 
-	Symbol *pSymbolOrg = m_pRight->eval(info, pSym);
+//	std::cout << pLeft->m_type << std::endl;
+
+	Symbol *pSymbolOrg = 0;
+	if(pSymRightAlt)	// use RHS symbol if given instead of RHS node
+		pSymbolOrg = pSymRightAlt;
+	else
+		pSymbolOrg = pRight->eval(info, pSym);
 	if(!pSymbolOrg)
 	{
 		G_CERR << linenr(T_STR"Error", info)
@@ -835,13 +847,13 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym) const
 	Symbol *pSymbol = pSymbolOrg->clone();
 	safe_delete(pSymbolOrg, pSym, info.pGlobalSyms);
 
-	if(m_pLeft->m_type == NODE_IDENT)		// single variable
+	if(pLeft->m_type == NODE_IDENT)		// single variable
 	{
-		const t_string& strIdent = ((NodeIdent*)m_pLeft)->m_strIdent;
+		const t_string& strIdent = ((NodeIdent*)pLeft)->m_strIdent;
 
 		Symbol* pSymGlob = info.pGlobalSyms->GetSymbol(strIdent);
 		Symbol* pSymLoc = 0;
-		if(!m_bGlobal)
+		if(!*pbGlob)
 			pSymLoc = pSym->GetSymbol(strIdent);
 
 		if(pSymLoc && pSymGlob)
@@ -850,7 +862,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym) const
 					  << "\" exists in local and global scope, using local one." << std::endl;
 		}
 
-		if(pSymGlob && !pSymLoc && !m_bGlobal)
+		if(pSymGlob && !pSymLoc && !*pbGlob)
 		{
 			G_CERR << linenr(T_STR"Warning", info) << "Overwriting global symbol \""
 					<< strIdent << "\"." << std::endl;
@@ -858,7 +870,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym) const
 		}
 		else
 		{
-			if(m_bGlobal)
+			if(*pbGlob)
 				info.pGlobalSyms->InsertSymbol(strIdent, pSymbol);
 			else
 				pSym->InsertSymbol(strIdent, pSymbol);
@@ -866,9 +878,41 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym) const
 
 		return pSymbol;
 	}
+	else if(pLeft->m_type == NODE_ARRAY)				// e.g. [a,b] = [1,2];
+	{	// TODO: check that LHS does not want eval!
+		if(pSymbol->GetType() != SYMBOL_ARRAY)
+		{
+			G_CERR << linenr(T_STR"Error", info)
+				<< "Assignment needs an array on the right-hand side."
+				<< std::endl;
+			return pSymbol;
+		}
+		SymbolArray *pArrRight = (SymbolArray*)pSymbol;
+
+		std::vector<Node*> vecLeftArgs = ((NodeBinaryOp*)((NodeArray*)pLeft)->m_pArr)->flatten(NODE_ARGS);
+		if(vecLeftArgs.size() != pArrRight->m_arr.size())
+		{
+                        G_CERR << linenr(T_STR"Warning", info)
+				<< "Size mismatch between returned and assigned array: "
+				<< vecLeftArgs.size() << " != " << pArrRight->m_arr.size() << "."
+				<< std::endl;
+		}
+
+		for(unsigned int iArr=0; iArr<vecLeftArgs.size(); ++iArr)
+		{
+			Node *pNodeLeft = vecLeftArgs[iArr];
+			Symbol *pSymRight = pArrRight->m_arr[iArr];
+
+			//std::cout << ((NodeIdent*)pNode)->m_strIdent << std::endl;
+			eval_assign(info, pSym, pNodeLeft, 0, pSymRight, pbGlob);
+		}
+
+		return pSymbol;
+	}
 	else								// array or map
 	{
-		Symbol *pSymLeft = m_pLeft->eval(info, pSym);
+		//std::cout << "in assign -> else" << std::endl;
+		Symbol *pSymLeft = pLeft->eval(info, pSym);
 		if(!pSymLeft)
 		{
 			G_CERR << linenr(T_STR"Error", info)
