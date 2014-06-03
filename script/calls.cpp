@@ -552,7 +552,7 @@ static Symbol* fkt_replace(const std::vector<Symbol*>& vecSyms,
 static t_mapFkts g_mapFkts =
 {
 	// basic stuff
-	t_mapFkts::value_type(T_STR"ver", fkt_version),
+	t_mapFkts::value_type(T_STR"interp_ver", fkt_version),
 	t_mapFkts::value_type(T_STR"register_var", fkt_register_var),
 
 	// input/output

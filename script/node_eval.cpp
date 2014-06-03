@@ -894,7 +894,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 		if(vecLeftArgs.size() != pArrRight->m_arr.size())
 		{
                         G_CERR << linenr(T_STR"Warning", info)
-				<< "Size mismatch between returned and assigned array: "
+				<< "Size mismatch between assigned and returned array: "
 				<< vecLeftArgs.size() << " != " << pArrRight->m_arr.size() << "."
 				<< std::endl;
 

@@ -45,7 +45,7 @@ fib2(N)
 
 main()
 {
-	print("Running on " + ver() + ".\n\n");
+	print("Running on " + interp_ver() + ".\n\n");
 
 	print("Beispielprogramm Fakultät");
 	print("=========================\n");
