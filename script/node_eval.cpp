@@ -890,12 +890,15 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 		SymbolArray *pArrRight = (SymbolArray*)pSymbol;
 
 		std::vector<Node*> vecLeftArgs = ((NodeBinaryOp*)((NodeArray*)pLeft)->m_pArr)->flatten(NODE_ARGS);
+		unsigned int iArrSize = vecLeftArgs.size();
 		if(vecLeftArgs.size() != pArrRight->m_arr.size())
 		{
                         G_CERR << linenr(T_STR"Warning", info)
 				<< "Size mismatch between returned and assigned array: "
 				<< vecLeftArgs.size() << " != " << pArrRight->m_arr.size() << "."
 				<< std::endl;
+
+			iArrSize = std::min(vecLeftArgs.size(), pArrRight->m_arr.size());
 		}
 
 		for(unsigned int iArr=0; iArr<vecLeftArgs.size(); ++iArr)
