@@ -400,6 +400,50 @@ static Symbol* fkt_length(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 	return new SymbolDouble(dLen);
 }
 
+static Symbol* fkt_mean(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size() != 1)
+	{
+		G_CERR << linenr(T_STR"Error", info) << "Mean value needs one arguments."
+			<< std::endl;
+		return 0;
+	}
+
+	if(!is_vec(vecSyms[0]))
+	{
+		G_CERR << linenr(T_STR"Error", info) << "Mean value needs vector arguments."
+			<< std::endl;
+		return 0;
+	}
+
+	t_vec<t_real> vecLeft = sym_to_vec<t_vec>(vecSyms[0]);
+	t_real dMean = mean_value(vecLeft);
+
+	return new SymbolDouble(dMean);
+}
+
+static Symbol* fkt_stddev(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size() != 1)
+	{
+		G_CERR << linenr(T_STR"Error", info) << "Standard deviation needs one arguments."
+			<< std::endl;
+		return 0;
+	}
+
+	if(!is_vec(vecSyms[0]))
+	{
+		G_CERR << linenr(T_STR"Error", info) << "Standard deviation needs vector arguments."
+			<< std::endl;
+		return 0;
+	}
+
+	t_vec<t_real> vecLeft = sym_to_vec<t_vec>(vecSyms[0]);
+	t_real dStd = std_dev(vecLeft);
+
+	return new SymbolDouble(dStd);
+}
+
 static Symbol* fkt_cross(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
 {
 	if(vecSyms.size() != 2)
@@ -515,7 +559,7 @@ static Symbol* fkt_determinant(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 
-	t_real dDet = determinant(mat);
+	t_real dDet = determinant<t_mat<t_real>, t_real>(mat);
 	return new SymbolDouble(dDet);
 }
 
@@ -723,6 +767,11 @@ extern void init_ext_math_calls()
 		t_mapFkts::value_type(T_STR"min", fkt_math_for_every<MATH_MIN>),
 		t_mapFkts::value_type(T_STR"fdim", fkt_math_2args< std::fdim >),
 		t_mapFkts::value_type(T_STR"remainder", fkt_math_2args< std::remainder >),
+
+		// statistical stuff
+		t_mapFkts::value_type(T_STR"mean", fkt_mean),
+		t_mapFkts::value_type(T_STR"stddev", fkt_stddev),
+
 
 		// fft
 		t_mapFkts::value_type(T_STR"fft", fkt_fft),

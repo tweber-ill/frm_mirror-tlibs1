@@ -1,0 +1,160 @@
+#
+# Fitting routines
+# Author: tw
+#
+
+__init__()
+{
+	global hwhm2sigma = 1./(sqrt(2.*log(2.)));
+}
+
+doublegauss_model(x, x0_0, sigma_0, amp_0, x0_1, sigma_1, amp_1, offs)
+{
+	return amp_0 * exp(-0.5 * ((x-x0_0) / sigma_0)^2.) 
+		+ amp_1 * exp(-0.5 * ((x-x0_1) / sigma_1)^2.) 
+		+ offs;
+}
+
+fit_doublegauss_manual2(x, y, yerr, E0, peaks_x, peaks_size, peaks_width)
+{
+	has_left = 0;
+	has_right = 0;
+	idx_lt = 0;
+	idx_rt = 1;
+	for(px : peaks_x)
+	{
+		if(has_left eq 0 and px less E0)
+		{
+			idx_lt = cur_iter(px);
+			has_left = 1;
+		}
+
+		if(has_right eq 0 and px greater E0)
+		{
+			idx_rt = cur_iter(px);
+			has_right = 1;
+		}
+	}
+
+
+	# Minuit doesn't handle errors == 0
+	yrange = max(y)-min(y);
+	for(thisyerr : yerr)
+	{
+		if(thisyerr eq 0.)
+			thisyerr = yrange*0.001;
+	}
+
+	hints = [peaks_x[idx_lt], peaks_width[idx_lt], peaks_size[idx_lt], 
+		peaks_x[idx_rt], peaks_width[idx_rt], peaks_size[idx_rt],
+		min(y)];
+
+	hints_err = [peaks_x[idx_lt]/10., peaks_width[idx_lt]/10., peaks_size[idx_lt]/10., 
+		peaks_x[idx_rt]/10., peaks_width[idx_rt]/10., peaks_size[idx_rt]/10.,
+		yrange/10.];
+
+	#x_ = linspace(0., 10., 64);
+	#y_ = doublegauss_model(x_, peaks_x[idx_lt], peaks_width[idx_lt], peaks_size[idx_lt], peaks_x[idx_rt], peaks_width[idx_rt], peaks_size[idx_rt], 0.);
+	#plot(x_, y_, ["style":"line"]);
+
+	#print("Hints: " + str(hints));
+
+#	lowerlims = ["x0_0":peaks_x[idx_lt]*0.8., "x0_1":peaks_x[idx_rt]*0.8., "amp_0":peaks_size[idx_lt]*0.8, "amp_1":peaks_size[idx_rt]*0.8., "sigma_0":peaks_width[idx_lt]*0.8, "sigma_1":peaks_width[idx_rt]*0.8, "offs":min(y)];
+#	upperlims = ["x0_0":peaks_x[idx_lt]*1.2, "x0_1":peaks_x[idx_rt]*1.2., "amp_0":peaks_size[idx_lt]*1.2., "amp_1":peaks_size[idx_rt]*1.2., "sigma_0":peaks_width[idx_lt]*1.2, "sigma_1":peaks_width[idx_rt]*1.2, "offs":max(y)];
+
+	lowerlims = ["amp_0":min(y), "amp_1":min(y), "sigma_0":0., "sigma_1":0., "offs":min(y)];
+	upperlims = ["amp_0":max(y), "amp_1":max(y), "offs":max(y)];
+
+	fitparams = fit("doublegauss_model", x, y, yerr, 
+			[
+				"hints":hints, "hints_errors":hints_err,
+				"lower_limits":lowerlims, "upper_limits":upperlims,
+				"fixed":["offs"], "debug":1,
+				"steps":["frrffff", "ffffrrf", "rfffffr", "fffrffr", "xxxxxxx", "xxxxxxx"]
+			]
+			);
+
+	return fitparams;
+}
+
+fit_doublegauss_manual(x, y, yerr, peaks_x, peaks_size, peaks_width)
+{
+	x0 = min([peaks_x[0], peaks_x[1]]);
+	x1 = max([peaks_x[0], peaks_x[1]]);
+	E0 = x0 + (x1-x0)/2.;
+	return fit_doublegauss_manual2(x, y, yerr, E0, peaks_x, peaks_size, peaks_width);
+}
+
+# two peaks left and right of E0
+fit_doublegauss(x, y, yerr, E0)
+{
+	peaks = find_peaks(x, y);
+	#print("Peaks: " + str(peaks));
+
+	peaks_x = peaks[0];
+	peaks_size = peaks[1];
+	peaks_width = peaks[2] * hwhm2sigma;
+
+	if(length(peaks_x) less 2 or length(peaks_size) less 2 or length(peaks_width) less 2)
+	{
+		print("Error: Prefitter didn't find enough peaks.");
+		return 0;
+	}
+	
+	return fit_doublegauss_manual(x, y, yerr, E0, peaks_x, peaks_size, peaks_width);
+}
+
+
+
+
+
+gauss_model(x, x0, sigma, amp, offs)
+{
+	return amp * exp(-0.5 * ((x-x0) / sigma)^2.) + offs;
+}
+
+fit_gauss_manual(x, y, yerr, peak_x, peak_size, peak_width)
+{
+	# Minuit doesn't handle errors == 0
+	yrange = max(y)-min(y);
+	for(thisyerr : yerr)
+	{
+		if(thisyerr eq 0.)
+			thisyerr = yrange*0.001;
+	}
+
+	hints = [peak_x, peak_width, peak_size, min(y)];
+	hints_err = [peak_x/10., peak_width/10., peak_size/10., yrange/10.];
+
+	lowerlims = ["amp":min(y), "sigma":0., "offs":min(y)];
+	upperlims = ["amp":max(y), "offs":max(y)];
+
+	fitparams = fit("gauss_model", x, y, yerr, 
+			[
+				"hints":hints, "hints_errors":hints_err,
+				"lower_limits":lowerlims, "upper_limits":upperlims,
+				"fixed":["offs"], "debug":1,
+				"steps":["frrf", "rffr", "xxxx", "xxxx"]
+			]
+			);
+
+	return fitparams;
+}
+
+fit_gauss(x, y, yerr)
+{
+	peaks = find_peaks(x, y);
+	#print("Peaks: " + str(peaks));
+
+	peaks_x = peaks[0];
+	peaks_size = peaks[1];
+	peaks_width = peaks[2] * hwhm2sigma;
+
+	if(length(peaks_x) less 1 or length(peaks_size) less 1 or length(peaks_width) less 1)
+	{
+		print("Error: Prefitter didn't find enough peaks.");
+		return 0;
+	}
+
+	return fit_gauss_manual(x, y, yerr, peaks_x[0], peaks_size[0], peaks_width[0]);
+}

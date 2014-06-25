@@ -51,6 +51,7 @@ struct Symbol
 	virtual t_string print() const = 0;
 	virtual Symbol* clone() const = 0;
 	virtual void assign(Symbol *pSym) = 0;
+	//virtual bool equals(Symbol *pSym) const = 0;
 
 	virtual bool IsNotZero() const = 0;
 
@@ -76,6 +77,7 @@ struct SymbolDouble : public Symbol
 	virtual t_string print() const;
 	virtual Symbol* clone() const;
 	virtual void assign(Symbol *pSym);
+	//virtual bool equals(Symbol *pSym) const;
 
 	virtual bool IsNotZero() const { return m_dVal != 0.; }
 
@@ -99,6 +101,7 @@ struct SymbolInt : public Symbol
 	virtual t_string print() const;
 	virtual Symbol* clone() const;
 	virtual void assign(Symbol *pSym);
+	//virtual bool equals(Symbol *pSym) const;
 
 	virtual bool IsNotZero() const { return m_iVal != 0; }
 
@@ -120,6 +123,7 @@ struct SymbolString : public Symbol
 	virtual SymbolType GetType() const { return SYMBOL_STRING; }
 	virtual t_string GetTypeName() const { return T_STR"string"; }
 	virtual Symbol* ToType(SymbolType stype) const;
+	//virtual bool equals(Symbol *pSym) const;
 
 	virtual t_string print() const;
 	virtual Symbol* clone() const;
@@ -147,6 +151,7 @@ struct SymbolArray : public Symbol
 	virtual t_string print() const;
 	virtual Symbol* clone() const;
 	virtual void assign(Symbol *pSym);
+	//virtual bool equals(Symbol *pSym) const;
 
 	virtual bool IsNotZero() const { return 0; }
 
@@ -171,6 +176,7 @@ struct SymbolMap : public Symbol
 	virtual t_string print() const;
 	virtual Symbol* clone() const;
 	virtual void assign(Symbol *pSym);
+	//virtual bool equals(Symbol *pSym) const;
 
 	virtual bool IsNotZero() const { return 0; }
 
@@ -178,6 +184,7 @@ struct SymbolMap : public Symbol
 	void UpdateIndices();
 
 	t_string GetStringVal(const t_string& strKey, bool *pbHasVal=0) const;
+	t_int GetIntVal(const t_string& strKey, bool *pbHasVal=0) const;
 
 	virtual bool IsScalar() const { return 0; }
 };

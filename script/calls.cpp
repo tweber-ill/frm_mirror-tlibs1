@@ -48,6 +48,41 @@ static Symbol* fkt_double(const std::vector<Symbol*>& vecSyms,
 	return vecSyms[0]->ToType(SYMBOL_DOUBLE);
 }
 
+static Symbol* fkt_double_vec(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size() == 0)
+		return 0;
+
+	SymbolArray* pSymRet = new SymbolArray();
+	pSymRet->m_arr.reserve(vecSyms.size());
+
+	if(vecSyms[0]->GetType() != SYMBOL_ARRAY)
+	{
+		G_CERR << linenr(T_STR"Error", info) 
+			<< "Vector needed as argument for real_vec." << std::endl;
+		return 0;
+	}
+
+	for(Symbol *pSym : ((SymbolArray*)vecSyms[0])->m_arr)
+	{
+		Symbol *pSymCast = 0;
+
+		if(pSym->GetType() == SYMBOL_ARRAY)
+			pSymCast = fkt_double_vec(((SymbolArray*)pSym)->m_arr, info, pSymTab);
+		else
+		{
+			std::vector<Symbol*> vecSymTmp{pSym};
+			pSymCast = fkt_double(vecSymTmp, info, pSymTab);
+		}
+
+		if(pSymCast)
+			pSymRet->m_arr.push_back(pSymCast);
+	}
+
+	return pSymRet;
+}
+
 static Symbol* fkt_str(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
@@ -335,10 +370,118 @@ static Symbol* fkt_array_size(const std::vector<Symbol*>& vecSyms,
 		pSymRet->m_iVal = ((SymbolArray*)pSymArr)->m_arr.size();
 	else if(pSymArr->GetType() == SYMBOL_STRING)
 		pSymRet->m_iVal = ((SymbolString*)pSymArr)->m_strVal.length();
+	else if(pSymArr->GetType() == SYMBOL_MAP)
+		pSymRet->m_iVal = ((SymbolMap*)pSymArr)->m_map.size();
 	else
 		G_CERR << linenr(T_STR"Error", info) << "vec_size needs a vector type argument." << std::endl;
 
 	return pSymRet;
+}
+
+static int pos_in_string(const SymbolString* pSymStr, const SymbolString *pSym)
+{
+	const std::string& str = pSymStr->m_strVal;
+	const std::string& strToFind = pSym->m_strVal;
+
+	std::size_t pos = str.find(strToFind);
+	if(pos == std::string::npos)
+		return -1;
+
+	return int(pos);
+}
+
+static int pos_in_array(const SymbolArray* pSymArr, const Symbol *pSym)
+{
+	unsigned int iPos;
+	bool bFound = 0;
+
+	for(iPos=0; iPos<pSymArr->m_arr.size(); ++iPos)
+	{
+		const Symbol& sym = *pSymArr->m_arr[iPos];
+		bool bSym0Scalar = sym.IsScalar() || sym.GetType()==SYMBOL_STRING;
+		bool bSym1Scalar = pSym->IsScalar() || pSym->GetType()==SYMBOL_STRING;
+
+		if(bSym0Scalar != bSym1Scalar)
+			continue;
+		else if(bSym0Scalar && bSym1Scalar)
+		{
+			Symbol *pEqu = Node::Op(&sym, pSym, NODE_LOG_EQ);
+			if(!pEqu) continue;
+			int iEqu = pEqu->GetValInt();
+			delete pEqu;
+
+			if(iEqu)
+			{
+				bFound = 1;
+				break;
+			}
+		}
+		else
+		{
+			G_CERR << "Error: Array compare not yet implemented." << std::endl;
+			continue;
+
+			// TODO: array/map compare
+		}
+	}
+
+	if(!bFound) return -1;
+	return int(iPos);
+}
+
+static Symbol* fkt_find(const std::vector<Symbol*>& vecSyms,
+							ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size()<2)
+	{
+		G_CERR << linenr(T_STR"Error", info) 
+			<< "Find needs two arguments." << std::endl;
+		return 0;
+	}
+
+	const Symbol *pContainer = vecSyms[0];
+	const Symbol *pContainee = vecSyms[1];
+
+	if(pContainer->GetType() == SYMBOL_ARRAY)
+	{
+		int iPos = pos_in_array((SymbolArray*)pContainer, pContainee);
+		return new SymbolInt(iPos);
+	}
+	else if(pContainer->GetType() == SYMBOL_MAP)
+	{
+		G_CERR << linenr(T_STR"Error", info) 
+			<< "Find not yet implemented for map." << std::endl;
+
+		// TODO: Implement and also adapt fkt_contains
+	}
+	else if(pContainer->GetType() == SYMBOL_STRING)
+	{
+		if(pContainee->GetType() != SYMBOL_STRING)
+		{
+			G_CERR << linenr(T_STR"Error", info)
+				<< "Second argument to find has to be of string type."
+				<< std::endl;
+		}
+
+		int iPos = pos_in_string((SymbolString*)pContainer, (SymbolString*)pContainee);
+		return new SymbolInt(iPos);
+	}
+
+	return 0;
+}
+
+static Symbol* fkt_contains(const std::vector<Symbol*>& vecSyms,
+							ParseInfo& info, SymbolTable* pSymTab)
+{
+	int iIdx = -1;
+	Symbol *pFind = fkt_find(vecSyms, info, pSymTab);
+	if(pFind)
+	{
+		iIdx = pFind->GetValInt();
+		delete pFind;
+	}
+
+	return new SymbolInt(iIdx>=0);
 }
 
 static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
@@ -524,7 +667,7 @@ static Symbol* fkt_tokens(const std::vector<Symbol*>& vecSyms,
 static Symbol* fkt_replace(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size()!= 3 || vecSyms[0]->GetType()!=SYMBOL_STRING
+	if(vecSyms.size()!=3 || vecSyms[0]->GetType()!=SYMBOL_STRING
 						|| vecSyms[1]->GetType()!=SYMBOL_STRING
 						|| vecSyms[2]->GetType()!=SYMBOL_STRING)
 	{
@@ -541,6 +684,33 @@ static Symbol* fkt_replace(const std::vector<Symbol*>& vecSyms,
 
 	return new SymbolString(str);
 }
+// --------------------------------------------------------------------------------
+
+
+
+
+// --------------------------------------------------------------------------------
+// map operations
+
+static Symbol* fkt_has_key(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size()!=2 || vecSyms[0]->GetType()!=SYMBOL_MAP
+				|| vecSyms[1]->GetType()!=SYMBOL_STRING)
+	{
+		G_CERR << linenr(T_STR"Error", info)
+			<< "Has_key needs a map and a string argument."
+			<< std::endl;
+		return 0;
+	}
+
+	const SymbolMap* pMap = (SymbolMap*)vecSyms[0];
+	const std::string& strKey = ((SymbolString*)vecSyms[1])->m_strVal;
+
+	int bHasKey = (pMap->m_map.find(strKey) != pMap->m_map.end());
+	return new SymbolInt(bHasKey);
+}
+
 // --------------------------------------------------------------------------------
 
 
@@ -566,6 +736,7 @@ static t_mapFkts g_mapFkts =
 	// symbols & casts
 	t_mapFkts::value_type(T_STR"int", fkt_int),
 	t_mapFkts::value_type(T_STR"real", fkt_double),
+	t_mapFkts::value_type(T_STR"real_vec", fkt_double_vec),
 	t_mapFkts::value_type(T_STR"str", fkt_str),
 	t_mapFkts::value_type(T_STR"map", fkt_map),
 	t_mapFkts::value_type(T_STR"vec", fkt_array),
@@ -583,6 +754,11 @@ static t_mapFkts g_mapFkts =
 	t_mapFkts::value_type(T_STR"vec_size", fkt_array_size),	// deprecated, use "length" instead
 	t_mapFkts::value_type(T_STR"cur_iter", fkt_cur_iter),
 	t_mapFkts::value_type(T_STR"zip", fkt_zip),
+
+	// map/array operations
+	t_mapFkts::value_type(T_STR"contains", fkt_contains),
+	t_mapFkts::value_type(T_STR"has_key", fkt_has_key),
+	t_mapFkts::value_type(T_STR"find", fkt_find),
 };
 
 // --------------------------------------------------------------------------------

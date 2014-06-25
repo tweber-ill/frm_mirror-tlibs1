@@ -12,6 +12,9 @@ main()
 	a["array value"] = [1,2,3,4,5];
 	a["map value"] = othermap;
 
+	print("Has_key: " + has_key(a, "map value"));
+	print("Has_key: " + has_key(a, "map Value"));
+
 	print("Map: " + a);
 	print("Map Element: " + str(a["array value"]));
 	print("Test: " + a["map value"]["x"]);

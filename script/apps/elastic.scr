@@ -1,0 +1,157 @@
+#!./hermelin
+
+B_matrix(a,b,c, alpha, beta, gamma)
+{
+	dSG = sin(gamma);
+	dCG = cos(gamma);
+	dCA = cos(alpha);
+	dCB = cos(beta);
+
+	dCA2 = dCA*dCA;
+	dCB2 = dCB*dCB;
+	dCG2 = dCG*dCG;
+
+	dVol = a*b*c*sqrt(1.- dCA2 - dCB2 - dCG2 + 2.*dCA*dCB*dCG);
+
+	veca = [a, 0., 0.];
+        vecb = [b*dCG, b*dSG, 0.];
+        vecc = [c*dCB, c*(dCA - dCB*dCG) / dSG, dVol / (a*b*dSG)];
+
+	matreal = [veca, vecb, vecc];
+	matrecip = 2.*pi * inv(matreal);
+
+	return matrecip;
+}
+
+usage(app)
+{
+        print("\nElastic peak calculation for single crystal");
+	print("\nUsage: e.g. " + app + " h=1 k=0 l=0 a=1 ki=1.5 a=5 b=5 c=5 alpha=90 beta=90 gamma=90 orient1=1,0,0 orient2=0,1,0");
+        print();
+	print("\th,k,l                 Miller indices in rlu");
+        print("\ta,b,c                 lattice constants in A");
+        print("\talpha,beta,gamma      lattice angles in deg");
+        print("\tki                    elastic ki (ki=kf) in 1/A");
+	print("\torient1               crystal orientation");
+	print("\torient2               crystal orientation");
+	print();
+}
+
+main(args)
+{
+	orient1 = [1,1,0];
+	orient2 = [0,0,1];
+
+	h = 1.;
+	k = 1.;
+	l = 1.;
+	ki = 1.4;
+	a = 6.07;
+	b = a;
+	c = a;
+	alpha = 90.;
+	beta = alpha;
+	gamma = alpha;
+
+	had_b = 0;
+	had_c = 0;
+
+	if(length(args) > 1)
+        for(arg : args[1:length(args)])
+        {
+                if(trim(arg) == "--help")
+                {
+			usage(args[0]);
+                        return 0;
+                }
+
+                arg_split = trim(split(arg, "="));
+		arg_val = real(arg_split[1]);
+
+		if(arg_split[0] == "orient1" || arg_split[0] == "orient2")
+		{
+			arg_vec = tokens(arg_split[1], ",");
+			if(length(arg_vec) != 3)
+			{
+				print("Error: Invalid 3-vector entered for " + arg_split[0] + ".");
+				exit(-1);
+			}
+
+			arg_val = real_vec(arg_vec);
+		}
+
+		if(arg_split[0] == "b")
+			had_b = 1;
+		if(arg_split[0] == "c")
+			had_c = 1;
+
+		register_var(arg_split[0], arg_val);
+	}
+
+	if(!had_b) b = a;
+	if(!had_c) c = a;
+
+
+
+        orientup = cross(orient1, orient2);
+        orient2 = cross(orientup, orient1);
+
+        orient1 /= len(orient1);
+        orient2 /= len(orient2);
+        orientup /= len(orientup);
+
+        hkl = [h,k,l];
+
+	
+	print("-"*80);
+	print("a = " + a + " A");
+	print("b = " + b + " A");
+	print("c = " + c + " A");
+	print("alpha = " + alpha + " deg");
+	print("beta = " + beta + " deg");
+	print("gamma = " + gamma + " deg");
+	
+	print("-"*80);
+	print("hkl = " + str(hkl));
+	print("ki = kf = " + ki + " 1/A");
+	print("orient1 = " + str(orient1));
+	print("orient2 = " + str(orient2));
+	#print("orientup = " + str(orientup));
+
+
+
+	print("-"*80);
+
+	U = [orient1, orient2, orientup];
+	B = B_matrix(a,b,c, alpha/180.*pi,beta/180.*pi,gamma/180.*pi);
+	#UB = prod(U, B);
+
+        #print("B = " + str(B));
+        #print("U = " + str(U));
+
+	Q_vec = prod(B, hkl);
+	#Q_vec_in_U = prod(UB, hkl);
+	Q_vec_in_U = prod(U, Q_vec);
+
+	print("Q = " + str(Q_vec) + " 1/A");
+	print("Q_plane = " + str(Q_vec_in_U) + " 1/A");
+
+	if(abs(Q_vec_in_U[2]) > 1e-6)
+	{
+		print("Error: Reflex not in scattering plane.");
+		exit(-1);
+	}
+
+	Q = len(Q_vec_in_U);
+	print("|Q| = " + Q + " 1/A");
+
+
+
+	# Q * lam = 4*pi*sin(theta)
+	# Q * 2*pi/k = 4*pi*sin(theta)
+	# Q/(2*k) = sin(theta)
+	theta = asin(Q/(2.*ki)) / pi * 180.;
+	print("theta = " + theta + " deg");
+	print("2theta = " + 2.*theta + " deg");
+	print("-"*80);
+}

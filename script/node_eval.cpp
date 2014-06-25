@@ -810,6 +810,11 @@ Symbol* NodeUnaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 			if(m_pChild)
 				return m_pChild->eval(info, pSym);
 		}
+		default:
+			G_CERR << linenr(T_STR"Warning", info)
+					<< "Unknown node type: " << m_type
+					<< std::endl;
+			break;
 	}
 
 	return 0;
@@ -1129,11 +1134,27 @@ Symbol* NodeBinaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 
 			// should only be called once per module
 			case NODE_FUNCS: return eval_funcinit(info, pSym);
+
+			default:
+				break;
 		};
 
 		Symbol *pSymbolLeft = m_pLeft->eval(info, pSym);
-		Symbol *pSymbolRight = m_pRight->eval(info, pSym);
-		Symbol *pSymbol = Op(pSymbolLeft, pSymbolRight, m_type);
+		Symbol *pSymbolRight = 0;
+		Symbol *pSymbol = 0;
+
+		// optimisation: 0 && x == 0
+		if(m_type == NODE_LOG_AND && pSymbolLeft->GetValInt()==0)
+			pSymbol = new SymbolInt(0);
+		// optimisation: 1 || x == 1
+		else if(m_type == NODE_LOG_OR && pSymbolLeft->GetValInt()==1)
+			pSymbol = new SymbolInt(1);
+		else
+		{
+			pSymbolRight = m_pRight->eval(info, pSym);
+			pSymbol = Op(pSymbolLeft, pSymbolRight, m_type);
+		}
+
 		safe_delete(pSymbolLeft, pSym, info.pGlobalSyms);
 		safe_delete(pSymbolRight, pSym, info.pGlobalSyms);
 

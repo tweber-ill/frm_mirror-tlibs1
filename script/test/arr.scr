@@ -6,10 +6,12 @@ tst(a)
 
 main()
 {
-	a = [5, 4, 3, 2, 1];
+	a = [5, 4, 3, 2, 1, [2,3]];
 	a[-2] = "Test";
 	a[-1] = "xyz";
+
 	print(str(a));
+
 #	print(a[-10]);
 
 #	print(linspace(0,14,15));

@@ -84,6 +84,7 @@ extern "C" int yylex(void* _yylval, void* _pParseObj)
 			case LEX_TOKEN_LOG_LEQ:	return TOK_LOG_LEQ;
 			case LEX_TOKEN_LOG_GEQ:	return TOK_LOG_GEQ;
 			case LEX_TOKEN_GLOBAL:	return TOK_GLOBAL;
+			default: break;
 		}
 	}
 

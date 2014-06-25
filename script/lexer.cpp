@@ -314,6 +314,7 @@ void Lexer::load(const t_string& _strInput)
 		}
 		else if(isdigit(str[0]))
 		{
+			//std::cout << "num: " << str << std::endl;
 			tok.type = LEX_TOKEN_DOUBLE;
 			tok.strVal = str;
 		}
@@ -347,23 +348,31 @@ void Lexer::FixTokens()
 		if(i<m_vecToks.size()-1)
 			pTokNext = &m_vecToks[i+1];
 
+		Token *pTokNextNext = 0;
+		if(i<m_vecToks.size()-2)
+			pTokNextNext = &m_vecToks[i+2];
+
 		if(tok.type==LEX_TOKEN_DOUBLE)
 		{
-			if(tok.strVal[tok.strVal.length()-1]=='e' ||
-					tok.strVal[tok.strVal.length()-1]=='E')		// 12.3e
+			if(pTokNext && (tok.strVal[tok.strVal.length()-1]=='e' ||
+					tok.strVal[tok.strVal.length()-1]=='E'))	// 12.3e
 			{
-				if(m_vecToks[i+1].type==LEX_TOKEN_CHAROP) 						// 12.3e-4
+				if(m_vecToks[i+1].type == LEX_TOKEN_CHAROP && pTokNextNext) 						// 12.3e-4
 				{
-					strFullDouble += m_vecToks[i+1].cOp + m_vecToks[i+2].strVal;
+					strFullDouble += pTokNext->cOp + pTokNextNext->strVal;
 					m_vecToks.erase(m_vecToks.begin()+i+2);
 					m_vecToks.erase(m_vecToks.begin()+i+1);
 				}
-				else if(m_vecToks[i+1].type==LEX_TOKEN_DOUBLE)					// 12.3e3
+				else if(m_vecToks[i+1].type == LEX_TOKEN_DOUBLE)					// 12.3e3
 				{
-					strFullDouble += m_vecToks[i+1].strVal;
+					strFullDouble += pTokNext->strVal;
 					m_vecToks.erase(m_vecToks.begin()+i+1);
 				}
 			}
+
+			bool bIsHex = 0;
+			if(tok.strVal.substr(0,2) == "0x" )				// hex
+				bIsHex = 1;
 
 			// value is actually an int
 			if(strFullDouble.find_first_of(T_STR".eE") == t_string::npos)
@@ -371,16 +380,20 @@ void Lexer::FixTokens()
 
 			t_istringstream istr(strFullDouble);
 
+			if(bIsHex)
+				istr >> std::hex;
+			else
+				istr >> std::dec;
+
 			if(tok.type == LEX_TOKEN_DOUBLE)
 				istr >> tok.dVal;
 			else if(tok.type == LEX_TOKEN_INT)
 				istr >> tok.iVal;
-
 			//std::cout << "val " << tok.type << ": " << strFullDouble << std::endl;
 
 			tok.strVal = T_STR"";
 		}
-		
+
 		// two-char ops, e.g. "<="
 		else if(tok.type == LEX_TOKEN_CHAROP)
 		{

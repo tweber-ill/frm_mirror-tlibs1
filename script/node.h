@@ -134,7 +134,7 @@ enum NodeType
 
 
 extern std::map<NodeType, t_real (*)(t_real, t_real)> g_mapBinOps_d;
-extern Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op);
+//extern Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op);
 extern void safe_delete(Symbol *&pSym, const SymbolTable* pSymTab, const SymbolTable* pGlobalSymTab);
 
 

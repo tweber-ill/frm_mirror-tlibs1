@@ -6,6 +6,7 @@
 
 #include "node.h"
 #include "calls.h"
+#include "helper/math.h"
 
 ParseInfo::ParseInfo() : pmapModules(0), phandles(0),
 			pmutexGlobal(0), pmutexInterpreter(0),
@@ -59,7 +60,8 @@ template<> t_real mod_op(t_real a, t_real b) { return ::fmod(a,b); }
 template<typename T> bool log_or_op(T a, T b) { return a||b; }
 template<typename T> bool log_and_op(T a, T b) { return a&&b; }
 template<typename T> bool log_eq_op(T a, T b) { return a==b; }
-template<typename T> bool log_neq_op(T a, T b) { return a!=b; }
+template<> bool log_eq_op(t_real a, t_real b) { return ::float_equal(a,b); }
+template<typename T> bool log_neq_op(T a, T b) { return !log_eq_op(a,b); }
 template<typename T> bool log_leq_op(T a, T b) { return a<=b; }
 template<typename T> bool log_geq_op(T a, T b) { return a>=b; }
 template<typename T> bool log_less_op(T a, T b) { return a<b; }
@@ -305,12 +307,13 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			if(g_mapBinLogOps_d.find(op) != g_mapBinLogOps_d.end())
 			{
 				pResult->m_iVal = g_mapBinLogOps_d[op](((SymbolDouble*)pLeft)->m_dVal,
-													((SymbolDouble*)pRight)->m_dVal);
+								((SymbolDouble*)pRight)->m_dVal);
 			}
 			else
 			{
-				G_CERR << "Error: Operator \"" << op << "\" not defined for real type."
-						 << std::endl;
+				G_CERR << "Error: Operator \"" << op 
+						<< "\" not defined for real type."
+						<< std::endl;
 				pResult->m_iVal = 0;
 			}
 			pRes = pResult;
@@ -326,8 +329,9 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			}
 			else
 			{
-				G_CERR << "Error: Operator \"" << op << "\" not defined for real type."
-						 << std::endl;
+				G_CERR << "Error: Operator \"" << op 
+						<< "\" not defined for real type."
+						<< std::endl;
 			}
 			pRes = pResult;
 		}
@@ -345,8 +349,9 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			}
 			else
 			{
-				G_CERR << "Error: Operator \"" << op << "\" not defined for int type."
-						 << std::endl;
+				G_CERR << "Error: Operator \"" << op 
+						<< "\" not defined for int type."
+						<< std::endl;
 			}
 			pRes = pResult;
 		}
@@ -361,8 +366,9 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			}
 			else
 			{
-				G_CERR << "Error: Operator \"" << op << "\" not defined for int type."
-						 << std::endl;
+				G_CERR << "Error: Operator \"" << op 
+						<< "\" not defined for int type."
+						<< std::endl;
 			}
 			pRes = pResult;
 		}
@@ -380,8 +386,9 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			}
 			else
 			{
-				G_CERR << "Error: Operator \"" << op << "\" not defined for string type."
-						 << std::endl;
+				G_CERR << "Error: Operator \"" << op 
+						<< "\" not defined for string type."
+						<< std::endl;
 			}
 			pRes = pResult;
 		}
@@ -396,8 +403,9 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			}
 			else
 			{
-				G_CERR << "Error: Operator \"" << op << "\" not defined for string type."
-						 << std::endl;
+				G_CERR << "Error: Operator \"" << op 
+						<< "\" not defined for string type."
+						<< std::endl;
 			}
 			pRes = pResult;
 		}

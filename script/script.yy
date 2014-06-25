@@ -180,7 +180,6 @@ idents_noeps : ident ',' idents	{ $$ = new NodeBinaryOp($1, $3, NODE_IDENTS); se
 
 assign: TOK_GLOBAL expr '=' expr	{ $$ = new NodeBinaryOp($2, $4, NODE_ASSIGN); ((NodeBinaryOp*)$$)->m_bGlobal = 1; set_linenr($$, pParseObj); }
 	| expr '=' expr			{ $$ = new NodeBinaryOp($1, $3, NODE_ASSIGN); set_linenr($$, pParseObj); }
-//	| '{' exprs '}' '=' expr	{ $$ = new NodeBinaryOp($2, $5, NODE_ASSIGN); set_linenr($$, pParseObj); }
 	;
 
 expr:	'(' expr ')'			{ $$ = $2; }

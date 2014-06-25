@@ -9,7 +9,7 @@ main()
 	opt2 = ["style":"line", "legend":"erf^2(2x)"];
 	opt3 = ["style":"line", "legend":"tanh^2(x)"];
 
-	plot([[x,y,opt], [x,y2,opt2], [x,y3, opt3]]);
+	plot([[x,y,opt], [x,y2,opt2], [x,y3, opt3]], ["term":"x11"]);
 }
 
 

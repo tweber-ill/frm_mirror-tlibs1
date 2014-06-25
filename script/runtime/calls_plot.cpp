@@ -14,8 +14,8 @@
 // --------------------------------------------------------------------------------
 // plotting
 
-#define DEFAULT_TERM T_STR"qt";
-//#define DEFAULT_TERM T_STR"x11";
+//#define DEFAULT_TERM T_STR"qt";
+#define DEFAULT_TERM T_STR"x11";
 static GnuPlot g_plot;
 
 static inline bool is_array_of_arrays(const Symbol* pSym)
@@ -105,7 +105,8 @@ static XYLimits get_plot_limits(SymbolMap* pParamMap)
 }
 
 
-static void set_plot_params(GnuPlot& plot, SymbolMap* pParamMap, PlotObj* pCurPlotObj=0, XYLimits* pLimits=0)
+static void set_plot_params(GnuPlot& plot, SymbolMap* pParamMap, 
+				PlotObj* pCurPlotObj=0, XYLimits* pLimits=0)
 {
 	bool bHasVal = 0;
 	t_string strTitle = pParamMap->GetStringVal(T_STR"title", &bHasVal);
@@ -120,7 +121,15 @@ static void set_plot_params(GnuPlot& plot, SymbolMap* pParamMap, PlotObj* pCurPl
 	if(pCurPlotObj)
 	{
 		t_string strStyle = pParamMap->GetStringVal(T_STR"style", &bHasVal);
-		if(bHasVal) pCurPlotObj->bConnectLines = (strStyle==T_STR"line");
+		if(bHasVal)
+		{
+			if(strStyle == T_STR"line" || strStyle == T_STR"lines")
+				pCurPlotObj->linestyle = STYLE_LINES_SOLID;
+			else if(strStyle == T_STR"line_dashed" || strStyle == T_STR"lines_dashed")
+				pCurPlotObj->linestyle = STYLE_LINES_DASHED;
+			else if(strStyle == T_STR"point" || strStyle == T_STR"points")
+				pCurPlotObj->linestyle = STYLE_POINTS;
+		}
 
 		t_string strLegend = pParamMap->GetStringVal(T_STR"legend", &bHasVal);
 		if(bHasVal) pCurPlotObj->strLegend = WSTR_TO_STR(strLegend);
@@ -131,6 +140,8 @@ static void set_plot_params(GnuPlot& plot, SymbolMap* pParamMap, PlotObj* pCurPl
 			t_istringstream istrSize(strSize);
 			istrSize >> pCurPlotObj->dSize;
 		}
+
+		pCurPlotObj->iColor = pParamMap->GetIntVal(T_STR"color", &pCurPlotObj->bHasColor);
 	}
 
 	XYLimits lim = get_plot_limits(pParamMap);

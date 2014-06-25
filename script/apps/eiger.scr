@@ -1,0 +1,315 @@
+#!./hermelin
+
+__init__()
+{
+	import("apps/fit.scr");
+}
+
+
+#
+# Load data files used at EIGER
+#
+load_eiger(filename)
+{
+	dat_raw = read_file(filename);
+	dat_lines = tokens(dat_raw, "\n");
+
+	databegin = -1;
+	has_labels = 0;
+	curline = 0;
+
+	labels = [];
+	lines_vals = [];
+	params = map();
+
+	for(line : dat_lines)
+	{
+		if(length(line) == 0)
+			continue;
+		#print(line);
+
+		if(databegin == -1)
+		{
+			keyval = split(line, ":");
+			if(length(keyval[0]) == 0)
+				continue;
+
+			# print("key: " + str(keyval[0]) + ", val: " + str(keyval[1]));
+
+			if(keyval[0]=="DATA_")
+			{
+				databegin = cur_iter(line);
+				continue;
+			}
+			else if(length(keyval[1])>0)
+			{
+				if(has_key(params, keyval[0]))
+					params[keyval[0]] = params[keyval[0]] + "\n" + keyval[1];
+				else
+					params[keyval[0]] = keyval[1];
+			}
+		}
+		else if(databegin >= 0)
+		{
+			words = tokens(line, " \t");
+
+			if(!has_labels)
+			{
+				has_labels = 1;
+				labels = words;
+				continue;
+			}
+
+			lines_vals[curline] = real_vec(words);
+			curline += 1;
+		}
+	}
+
+	lines_vals = trans(lines_vals);
+
+	# print("params: " + str(params));
+	# print("column labels: " + str(labels));
+	# print("data: " + str(lines_vals));
+
+	return [labels, lines_vals, params];
+}
+
+scanned_var(cmd)
+{
+	cmd_toks = tokens(cmd, " \t");
+	idx_dqh = find(cmd_toks, "dqh");
+	if(idx_dqh < 0)
+	{
+		print("Error: No q or E scan.");
+		exit(-1);
+	}
+
+	dqh = cmd_toks[idx_dqh+1];
+	dqk = cmd_toks[idx_dqh+2];
+	dql = cmd_toks[idx_dqh+3];
+	dE = cmd_toks[idx_dqh+4];
+
+	if(dqh != 0.) return "QH";
+	else if(dqk != 0.) return "QK";
+	else if(dql != 0.) return "QL";
+	else if(dE != 0.) return "EN";
+}
+
+
+mergedata(data0, data1)
+{
+	#print("\nbefore: " + str(data0));
+
+	for(col1 : data1)
+	{
+		curcol = cur_iter(col1);
+
+		for(row1 : col1)
+			data0[curcol][length(data0[curcol])] = row1;
+	}
+
+	#print("\nafter: " + str(data0));
+
+	return data0;
+}
+
+
+plot_eiger(filenames, peaks_x, peaks_size, peaks_width, title, outfile)
+{
+	norm_to_monitor = 1;
+	num_peaks = length(peaks_x);
+
+
+	for(filename : filenames)
+	{
+		[curlabs, curdata, curparams] = load_eiger(filename);
+		
+		if(cur_iter(filename) == 0)
+		{
+			labs = curlabs;
+			data = curdata;
+			params = curparams;
+
+			print("Columns: " + str(labs));
+		}
+		else
+		{
+			print("Merging " + filename + " to " + filenames[0]);
+			for(curlab : curlabs)
+			{
+				if(curlab != labs[cur_iter(curlab)])
+				{
+					print("Error: Incompatible data sets.");
+					return -1;
+				}
+			}
+
+			data = mergedata(data, curdata);
+		}
+	}
+
+
+	cmd = params["COMND"];
+
+	idx_x = find(labs, scvar = scanned_var(cmd));
+	idx_y = find(labs, "CNTS");
+	idx_mon = find(labs, "M1");
+
+	if(idx_x<0 || idx_y<0)
+	{
+		print("Error: Suitable indices not found.");
+		return -1;
+	}
+
+
+	print("Scan over " + scvar);
+	print("Using indices (" + idx_x + ", " + idx_y + ")");
+
+
+	idx_temp = find(labs, "TT");
+	if(idx_temp>=0)
+	{
+		temp_mean = mean(data[idx_temp]);
+		temp_err = stddev(data[idx_temp]);
+
+		params["temp_mean"] = temp_mean;
+		params["temp_err"] = temp_err;
+
+		print("Temperature: " + temp_mean + " +- " + temp_err);
+	}
+
+	
+	xlab = "x";
+	ylab = "Counts";
+	if(norm_to_monitor)
+		ylab = "Counts / monitor";
+
+	if(scvar == "EN")
+		xlab = "E (meV)";
+	else if(scvar=="QH" || scvar=="QK" || scvar=="QL")
+		xlab = "q (1/A)";
+
+	if(typeof(data[0])!="vector" || length(data[0]) == 0)
+	{
+		print("Error: Empty data file.");
+		return -1;
+	}
+
+
+	dat_x = data[idx_x];
+	dat_y = data[idx_y];
+	dat_yerr = sqrt(data[idx_y]);
+
+	if(norm_to_monitor)
+	{
+		dat_mon = data[idx_mon];
+		dat_monerr = sqrt(dat_mon);
+
+		for(i=0; i<length(dat_y); i+=1)
+		{
+			a = dat_y[i];
+			da = dat_yerr[i];
+			b = dat_mon[i];
+			db = dat_monerr[i];
+
+			dat_y[i] = a/b;
+			dat_yerr[i] = sqrt((1./b * da)^2. + (a/b^2. * db)^2.);
+		}
+	}
+
+	minx = min(dat_x);
+	maxx = max(dat_x);
+	xrange = (maxx-minx)/20.;
+	xlims = (minx-xrange) + " " + (maxx+xrange);	
+	
+	miny = min(dat_y);
+	maxy = max(dat_y);
+	yrange = (maxy-miny)/20.;
+	ylims = (miny-yrange) + " " + (maxy+yrange);
+
+	# Fit
+	if(num_peaks == 1)
+	{
+		fitres = fit_gauss(dat_x, dat_y, dat_yerr);
+
+		params_vals = map_vec_to_val(fitres);
+		params_errs = map_vec_to_val(fitres, 1);
+
+		print("Fit values: " + str(params_vals));
+		print("Fit errors: " + str(params_errs));
+
+		fitx = linspace(min(dat_x)-xrange, max(dat_x)+xrange, 512);
+		fity = gauss_model(fitx, *params_vals);
+	}
+	else if(num_peaks == 2)
+	{
+		fitres = fit_doublegauss_manual(dat_x, dat_y, dat_yerr, peaks_x, peaks_size, peaks_width);
+
+		params_vals = map_vec_to_val(fitres);
+		params_errs = map_vec_to_val(fitres, 1);
+
+		params_vals_gauss1 = ["x0":params_vals["x0_0"], "sigma":params_vals["sigma_0"], "amp":params_vals["amp_0"], "offs":params_vals["offs"]];
+		params_errs_gauss1 = ["x0":params_errs["x0_0"], "sigma":params_errs["sigma_0"], "amp":params_errs["amp_0"], "offs":params_errs["offs"]];
+
+		params_vals_gauss2 = ["x0":params_vals["x0_1"], "sigma":params_vals["sigma_1"], "amp":params_vals["amp_1"], "offs":params_vals["offs"]];
+		params_errs_gauss2 = ["x0":params_errs["x0_1"], "sigma":params_errs["sigma_1"], "amp":params_errs["amp_1"], "offs":params_errs["offs"]];
+
+		#params_vals_offs = ["offs":params_vals["offs"]];
+		#params_errs_offs = ["offs":params_errs["offs"]];
+
+		fitx = linspace(min(dat_x)-xrange, max(dat_x)+xrange, 512);
+		fity = doublegauss_model(fitx, *params_vals);
+
+		fity_gauss1 = gauss_model(fitx, *params_vals_gauss1);
+		fity_gauss2 = gauss_model(fitx, *params_vals_gauss2);
+	}
+	else
+	{
+		print("Error: Invalid number of peaks.");
+		return -1;
+	}
+
+
+	plotobjs = [[dat_x, dat_y, dat_yerr]];
+	if(num_peaks == 2)
+	{
+		plotobjs[1] = [fitx, fity_gauss1, ["style":"lines_dashed", "size":1.]];
+		plotobjs[2] = [fitx, fity_gauss2, ["style":"lines_dashed", "size":1.]];
+	}
+	plotobjs[length(plotobjs)] = [fitx, fity, ["style":"lines", "size":2.]];
+
+	plot(plotobjs, 
+		["xlimits" : xlims,
+		"ylimits" : ylims,
+		"xlabel" : xlab,
+		"ylabel" : ylab,
+		"title" : title,
+		"term" : "wxt"]);
+
+	if(length(outfile) != 0)
+	{
+		fileplot(outfile, plotobjs,
+			["xlimits" : xlims,
+			"ylimits" : ylims,
+			"xlabel" : xlab,
+			"ylabel" : ylab,
+			"title" : title,
+			"term" : "wxt"]);
+	}
+
+	return [params, fitres];
+}
+
+
+
+main(args)
+{
+	if(length(args) < 2)
+		return -1;
+
+	peaks_x = [-0.2, 0.2];
+	peaks_size = [1.8e-4, 2e-4];
+	peaks_width = [0.1, 0.1];
+
+	return plot_eiger([args[1]], peaks_x, peaks_size, peaks_width, "", "");
+}

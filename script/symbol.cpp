@@ -393,6 +393,24 @@ t_string SymbolMap::GetStringVal(const t_string& strKey, bool *pbHasVal) const
 	return pSym->print();
 }
 
+t_int SymbolMap::GetIntVal(const t_string& strKey, bool *pbHasVal) const
+{
+	if(pbHasVal) *pbHasVal = 0;
+
+	t_map::const_iterator iter = m_map.find(strKey);
+	if(iter == m_map.end())
+		return 0;
+
+	if(pbHasVal) *pbHasVal = 1;
+
+	const Symbol *pSym = iter->second;
+	if(!pSym)
+		return 0;
+
+	if(pbHasVal) *pbHasVal = 1;
+		return pSym->GetValInt();
+}
+
 
 //--------------------------------------------------------------------------------
 

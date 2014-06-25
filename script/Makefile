@@ -1,4 +1,5 @@
 CC = gcc
+#CC = clang
 OPT_FLAGS = -O2 -march=native
 #OPT_FLAGS = -ggdb -DDEBUG
 DEFINES = -DNO_QT -DNO_COMP
