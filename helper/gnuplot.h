@@ -13,6 +13,13 @@
 #include <string>
 #include <vector>
 
+enum LineStyle
+{
+	STYLE_POINTS,
+	STYLE_LINES_SOLID,
+	STYLE_LINES_DASHED
+};
+
 struct PlotObj
 {
 	std::vector<double> vecX, vecY;
@@ -20,11 +27,15 @@ struct PlotObj
 
 	std::string strLegend;
 
-	bool bConnectLines;
+	LineStyle linestyle;
+
 	bool bHasSize;
 	double dSize;
 
-	PlotObj() : bConnectLines(0), bHasSize(0)
+	bool bHasColor;
+	unsigned int iColor;
+
+	PlotObj() : linestyle(STYLE_POINTS), bHasSize(0), bHasColor(0)
 	{}
 };
 

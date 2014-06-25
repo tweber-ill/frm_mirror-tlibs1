@@ -10,6 +10,7 @@
 #include "string.h"
 #include <cstdio>
 #include <sstream>
+#include <iomanip>
 namespace ios = boost::iostreams;
 
 
@@ -55,6 +56,7 @@ void GnuPlot::Init()
 	//(*m_postr) << "set noborder\n";
 	(*m_postr) << "set size 1,1\n";
 	(*m_postr) << "set palette rgbformulae 33,13,10\n";
+	//(*m_postr) << "set termopt dashed\n";
 	//(*m_postr) << "set palette defined (0 \"blue\", 0.3333 \"cyan\", 0.6666 \"yellow\", 1 \"red\")\n";
 }
 
@@ -71,6 +73,7 @@ void GnuPlot::SetTerminal(int iWnd, const char* pcBackend)
 			<< "font 'Helvetica,10' "
 //			<< "title \"" << "Plot " << (iWnd+1) << "\" " 
 			<< "persist "
+			<< "dashed "
 			<<  "\n";
 }
 
@@ -236,6 +239,7 @@ std::string GnuPlot::BuildCmd()
 
 	for(const PlotObj& obj : m_vecObjs)
 	{
+		const bool bConnectLines = (obj.linestyle != STYLE_POINTS);
 		const bool bHasXErr = (obj.vecErrX.size() != 0);
 		const bool bHasYErr = (obj.vecErrY.size() != 0);
 		const bool bHasSize = obj.bHasSize;
@@ -243,7 +247,7 @@ std::string GnuPlot::BuildCmd()
 
 		if(!bHasSize)
 		{
-			if(obj.bConnectLines)
+			if(bConnectLines)
 				dSize = 1.25;
 			else
 				dSize = 1.5;
@@ -264,10 +268,32 @@ std::string GnuPlot::BuildCmd()
 		}
 
 		ostr << "'-' ";
-		if(obj.bConnectLines)
-			ostr << "with lines lw " << dSize;
-		else
-			ostr << strPointStyle;
+		switch(obj.linestyle)
+		{
+			case STYLE_LINES_SOLID:
+				ostr << "with lines lt 1 lw " << dSize;
+				break;
+			case STYLE_LINES_DASHED:
+				ostr << "with lines lt 2 lw " << dSize;
+				break;
+			default:
+				std::cerr << "Warning: Unknown line style." << std::endl;
+			case STYLE_POINTS:
+				ostr << strPointStyle;
+				break;
+		}
+
+		if(obj.bHasColor)
+		{
+			char chFill = ostr.fill();
+			ostr << std::setfill('0');
+			ostr << "lc rgb \"#" << std::hex
+				<< std::setw(2) << ((obj.iColor & 0xff0000) >> 16)
+				<< std::setw(2) << ((obj.iColor & 0x00ff00) >> 8)
+				<< std::setw(2) << ((obj.iColor & 0x0000ff))
+				<< "\" " << std::dec;
+			ostr << std::setfill(chFill);
+		}
 
 		if(obj.strLegend != "")
 		{
