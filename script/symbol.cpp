@@ -8,6 +8,8 @@
 #include <set>
 #include <limits>
 
+const int SymbolDouble::m_defprec = std::numeric_limits<t_real>::digits10;
+int SymbolDouble::m_prec = m_defprec;
 
 Symbol* SymbolDouble::ToType(SymbolType stype) const
 {
@@ -40,7 +42,7 @@ Symbol* SymbolDouble::ToType(SymbolType stype) const
 t_string SymbolDouble::print() const
 {
 	t_ostringstream ostr;
-	ostr.precision(std::numeric_limits<t_real>::digits10);
+	ostr.precision(m_prec);
 
 	ostr << m_dVal;
 	return ostr.str();

@@ -65,6 +65,8 @@ struct Symbol
 struct SymbolDouble : public Symbol
 {
 	t_real m_dVal;
+	static const int m_defprec;
+	static int m_prec;
 
 	SymbolDouble() : Symbol(), m_dVal(0.) {}
 	SymbolDouble(t_real dVal) : m_dVal(dVal) {}

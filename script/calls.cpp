@@ -279,12 +279,38 @@ static Symbol* fkt_typeof(const std::vector<Symbol*>& vecSyms,
 	Symbol *pSymbol = vecSyms[0];
 	if(!pSymbol)
 	{
-		G_CERR << linenr(T_STR"Error", info) << "Invalid argument for typename." << std::endl;
+		G_CERR << linenr(T_STR"Error", info) << "Invalid argument for typeof." << std::endl;
 		return 0;
 	}
 
 	SymbolString *pType = new SymbolString(pSymbol->GetTypeName().c_str());
 	return pType;
+}
+
+static Symbol* fkt_setprec(const std::vector<Symbol*>& vecSyms,
+			ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size()!=1)
+	{
+		G_CERR << linenr(T_STR"Error", info) << "set_prec takes exactly one argument." << std::endl;
+		return 0;
+	}
+
+	Symbol *pSymbol = vecSyms[0];
+	if(!pSymbol)
+	{
+		G_CERR << linenr(T_STR"Error", info) << "Invalid argument for set_prec." << std::endl;
+		return 0;
+	}
+
+	int iPrec = pSymbol->GetValInt();
+
+	if(iPrec >= 0)
+		SymbolDouble::m_prec = iPrec;
+	else
+		SymbolDouble::m_prec = SymbolDouble::m_defprec;
+
+	return 0;
 }
 
 
@@ -742,6 +768,7 @@ static t_mapFkts g_mapFkts =
 	t_mapFkts::value_type(T_STR"vec", fkt_array),
 	t_mapFkts::value_type(T_STR"has_var", fkt_has_var),
 	t_mapFkts::value_type(T_STR"typeof", fkt_typeof),
+	t_mapFkts::value_type(T_STR"set_prec", fkt_setprec),
 
 	// string operations
 	t_mapFkts::value_type(T_STR"trim", fkt_trim),
