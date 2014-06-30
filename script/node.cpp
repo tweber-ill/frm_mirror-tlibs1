@@ -166,9 +166,9 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 		{
 			SymbolMap *pSymMap = new SymbolMap();
 
-			const SymbolMap::t_map& mapLeft = ((SymbolMap*)pSymLeft)->m_map;
-			const SymbolMap::t_map& mapRight = ((SymbolMap*)pSymRight)->m_map;
-			SymbolMap::t_map& mapRes = pSymMap->m_map;
+			const SymbolMap::t_map& mapLeft = ((SymbolMap*)pSymLeft)->GetMap();
+			const SymbolMap::t_map& mapRight = ((SymbolMap*)pSymRight)->GetMap();
+			SymbolMap::t_map& mapRes = pSymMap->GetMap();
 
 			for(const SymbolMap::t_map::value_type& pair : mapLeft)
 			{
@@ -195,45 +195,45 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 		// (vector op vector) piecewise operation
 		if(pSymLeft->GetType()==SYMBOL_ARRAY && pSymRight->GetType()==SYMBOL_ARRAY)
 		{
-			const std::vector<Symbol*>& vecLeft = ((SymbolArray*)pSymLeft)->m_arr;
-			const std::vector<Symbol*>& vecRight = ((SymbolArray*)pSymRight)->m_arr;
+			const std::vector<Symbol*>& vecLeft = ((SymbolArray*)pSymLeft)->GetArr();
+			const std::vector<Symbol*>& vecRight = ((SymbolArray*)pSymRight)->GetArr();
 
 			unsigned int iArrSize = std::min(vecLeft.size(), vecRight.size());
-			pSymResult->m_arr.reserve(iArrSize);
+			pSymResult->GetArr().reserve(iArrSize);
 
 			for(unsigned int iElem=0; iElem<iArrSize; ++iElem)
 			{
 				Symbol *pOpResult = Op(vecLeft[iElem], vecRight[iElem], op);
-				pSymResult->m_arr.push_back(pOpResult);
+				pSymResult->GetArr().push_back(pOpResult);
 			}
 		}
 		// (vector op scalar) operation
 		else if(pSymLeft->GetType()==SYMBOL_ARRAY && pSymRight->GetType()!=SYMBOL_ARRAY)
 		{
-			const std::vector<Symbol*>& vecLeft = ((SymbolArray*)pSymLeft)->m_arr;
+			const std::vector<Symbol*>& vecLeft = ((SymbolArray*)pSymLeft)->GetArr();
 
 			unsigned int iArrSize = vecLeft.size();
-			pSymResult->m_arr.reserve(iArrSize);
+			pSymResult->GetArr().reserve(iArrSize);
 
 			for(unsigned int iElem=0; iElem<iArrSize; ++iElem)
 			{
 				Symbol *pOpResult = Op(vecLeft[iElem], pSymRight, op);
-				pSymResult->m_arr.push_back(pOpResult);
+				pSymResult->GetArr().push_back(pOpResult);
 			}
 
 		}
 		// (scalar op vector) operation
 		else if(pSymLeft->GetType()!=SYMBOL_ARRAY && pSymRight->GetType()==SYMBOL_ARRAY)
 		{
-			const std::vector<Symbol*>& vecRight = ((SymbolArray*)pSymRight)->m_arr;
+			const std::vector<Symbol*>& vecRight = ((SymbolArray*)pSymRight)->GetArr();
 
 			unsigned int iArrSize = vecRight.size();
-			pSymResult->m_arr.reserve(iArrSize);
+			pSymResult->GetArr().reserve(iArrSize);
 
 			for(unsigned int iElem=0; iElem<iArrSize; ++iElem)
 			{
 				Symbol *pOpResult = Op(pSymLeft, vecRight[iElem], op);
-				pSymResult->m_arr.push_back(pOpResult);
+				pSymResult->GetArr().push_back(pOpResult);
 			}
 		}
 		return pSymResult;
@@ -251,14 +251,14 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 
 			if(pSymLeft->GetType()==SYMBOL_STRING && pSymRight->GetType()==SYMBOL_INT)
 			{
-				iVal = ((SymbolInt*)pSymRight)->m_iVal;
-				strVal = ((SymbolString*)pSymLeft)->m_strVal;
+				iVal = ((SymbolInt*)pSymRight)->GetVal();
+				strVal = ((SymbolString*)pSymLeft)->GetVal();
 				bValidIntStr = 1;
 			}
 			else if(pSymRight->GetType()==SYMBOL_STRING && pSymLeft->GetType()==SYMBOL_INT)
 			{
-				iVal = ((SymbolInt*)pSymLeft)->m_iVal;
-				strVal = ((SymbolString*)pSymRight)->m_strVal;
+				iVal = ((SymbolInt*)pSymLeft)->GetVal();
+				strVal = ((SymbolString*)pSymRight)->GetVal();
 				bValidIntStr = 1;
 			}
 
@@ -266,7 +266,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			{
 				SymbolString *pSymStrRet = new SymbolString();
 				for(t_int iCopy=0; iCopy<iVal; ++iCopy)
-					pSymStrRet->m_strVal += strVal;
+					pSymStrRet->GetVal() += strVal;
 				return pSymStrRet;
 			}
 		}
@@ -302,30 +302,30 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 		if(IsLogicalOp(op))
 		{
 			SymbolInt *pResult = new SymbolInt();
-			pResult->m_strName = T_STR"<op_logical_result>";
+			pResult->SetName(T_STR"<op_logical_result>");
 
 			if(g_mapBinLogOps_d.find(op) != g_mapBinLogOps_d.end())
 			{
-				pResult->m_iVal = g_mapBinLogOps_d[op](((SymbolDouble*)pLeft)->m_dVal,
-								((SymbolDouble*)pRight)->m_dVal);
+				pResult->SetVal(g_mapBinLogOps_d[op](((SymbolDouble*)pLeft)->GetVal(),
+								((SymbolDouble*)pRight)->GetVal()));
 			}
 			else
 			{
 				G_CERR << "Error: Operator \"" << op 
 						<< "\" not defined for real type."
 						<< std::endl;
-				pResult->m_iVal = 0;
+				pResult->SetVal(0);
 			}
 			pRes = pResult;
 		}
 		else
 		{
 			SymbolDouble *pResult = new SymbolDouble();
-			pResult->m_strName = T_STR"<op_result>";
+			pResult->SetName(T_STR"<op_result>");
 			if(g_mapBinOps_d.find(op) != g_mapBinOps_d.end())
 			{
-				pResult->m_dVal = g_mapBinOps_d[op](((SymbolDouble*)pLeft)->m_dVal,
-												((SymbolDouble*)pRight)->m_dVal);
+				pResult->SetVal(g_mapBinOps_d[op](((SymbolDouble*)pLeft)->GetVal(),
+						((SymbolDouble*)pRight)->GetVal()));
 			}
 			else
 			{
@@ -341,11 +341,11 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 		if(IsLogicalOp(op))
 		{
 			SymbolInt *pResult = new SymbolInt();
-			pResult->m_strName = T_STR"<op_logical_result>";
+			pResult->SetName(T_STR"<op_logical_result>");
 			if(g_mapBinLogOps_i.find(op) != g_mapBinLogOps_i.end())
 			{
-				pResult->m_iVal = g_mapBinLogOps_i[op](((SymbolInt*)pLeft)->m_iVal,
-													((SymbolInt*)pRight)->m_iVal);
+				pResult->SetVal(g_mapBinLogOps_i[op](((SymbolInt*)pLeft)->GetVal(),
+								((SymbolInt*)pRight)->GetVal()));
 			}
 			else
 			{
@@ -358,11 +358,11 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 		else
 		{
 			SymbolInt *pResult = new SymbolInt();
-			pResult->m_strName = T_STR"<op_result>";
+			pResult->SetName(T_STR"<op_result>");
 			if(g_mapBinOps_i.find(op) != g_mapBinOps_i.end())
 			{
-				pResult->m_iVal = g_mapBinOps_i[op](((SymbolInt*)pLeft)->m_iVal,
-												((SymbolInt*)pRight)->m_iVal);
+				pResult->SetVal(g_mapBinOps_i[op](((SymbolInt*)pLeft)->GetVal(),
+								((SymbolInt*)pRight)->GetVal()));
 			}
 			else
 			{
@@ -378,11 +378,11 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 		if(IsLogicalOp(op))
 		{
 			SymbolInt *pResult = new SymbolInt();
-			pResult->m_strName = T_STR"<op_logical_result>";
+			pResult->SetName(T_STR"<op_logical_result>");
 			if(g_mapBinLogOps_s.find(op) != g_mapBinLogOps_s.end())
 			{
-				pResult->m_iVal = g_mapBinLogOps_s[op](((SymbolString*)pLeft)->m_strVal,
-													((SymbolString*)pRight)->m_strVal);
+				pResult->SetVal(g_mapBinLogOps_s[op](((SymbolString*)pLeft)->GetVal(),
+									((SymbolString*)pRight)->GetVal()));
 			}
 			else
 			{
@@ -395,11 +395,11 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 		else
 		{
 			SymbolString *pResult = new SymbolString();
-			pResult->m_strName = T_STR"<op_result>";
+			pResult->SetName(T_STR"<op_result>");
 			if(g_mapBinOps_s.find(op) != g_mapBinOps_s.end())
 			{
-				pResult->m_strVal = g_mapBinOps_s[op](((SymbolString*)pLeft)->m_strVal,
-												((SymbolString*)pRight)->m_strVal);
+				pResult->SetVal(g_mapBinOps_s[op](((SymbolString*)pLeft)->GetVal(),
+									((SymbolString*)pRight)->GetVal()));
 			}
 			else
 			{
@@ -474,24 +474,24 @@ NodeDouble::NodeDouble(t_real dVal)
 	: Node(NODE_DOUBLE), m_dVal(dVal)
 {
 	m_pSymbol = new SymbolDouble;
-	m_pSymbol->m_dVal = m_dVal;
-	m_pSymbol->m_strName = T_STR"<const>";
+	m_pSymbol->SetVal(m_dVal);
+	m_pSymbol->SetName(T_STR"<const>");
 }
 
 NodeInt::NodeInt(t_int iVal)
 	: Node(NODE_INT), m_iVal(iVal)
 {
 	m_pSymbol = new SymbolInt;
-	m_pSymbol->m_iVal = m_iVal;
-	m_pSymbol->m_strName = T_STR"<const>";
+	m_pSymbol->SetVal(m_iVal);
+	m_pSymbol->SetName(T_STR"<const>");
 }
 
 NodeString::NodeString(t_string strVal)
 	: Node(NODE_STRING), m_strVal(strVal)
 {
 	m_pSymbol = new SymbolString;
-	m_pSymbol->m_strVal = m_strVal;
-	m_pSymbol->m_strName = T_STR"<const>";
+	m_pSymbol->SetVal(m_strVal);
+	m_pSymbol->SetName(T_STR"<const>");
 }
 
 NodeArray::NodeArray(NodeArray* pArr)

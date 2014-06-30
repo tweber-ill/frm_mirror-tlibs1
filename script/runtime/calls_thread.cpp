@@ -98,13 +98,13 @@ static void thread_proc(NodeFunction* pFunc, ParseInfo* pinfo, std::vector<Symbo
 
 	SymbolTable *pTable = new SymbolTable();
 	SymbolArray arrArgs;
-	arrArgs.m_bDontDel = 1;
+	arrArgs.SetDontDel(1);
 
 	pinfo->pmutexInterpreter->lock();
 		const NodeFunction* pThreadFunc = (NodeFunction*)pFunc/*->clone()*/;
 		ParseInfo *pinfo2 = new ParseInfo(*pinfo);	// threads cannot share the same bWantReturn etc.
 		pinfo2->bDestroyParseInfo = 0;
-		if(pvecSyms) arrArgs.m_arr = *pvecSyms;
+		if(pvecSyms) arrArgs.GetArr() = *pvecSyms;
 	pinfo->pmutexInterpreter->unlock();
 
 	pTable->InsertSymbol(T_STR"<args>", &arrArgs);
@@ -136,7 +136,7 @@ static Symbol* fkt_thread(const std::vector<Symbol*>& vecSyms,
 	}
 
 	SymbolString *pSymIdent = (SymbolString*)_pSymIdent;
-	const t_string& strIdent = pSymIdent->m_strVal;
+	const t_string& strIdent = pSymIdent->GetVal();
 
 
 	NodeFunction* pFunc = info.GetFunction(strIdent);
@@ -186,7 +186,7 @@ static Symbol* fkt_begin_critical(const std::vector<Symbol*>& vecSyms,
 		for(Symbol* pSym : vecSyms)
 		{
 			if(pSym->GetType() == SYMBOL_ARRAY)
-				fkt_begin_critical(((SymbolArray*)pSym)->m_arr, info, pSymTab);
+				fkt_begin_critical(((SymbolArray*)pSym)->GetArr(), info, pSymTab);
 			else if(pSym->GetType() == SYMBOL_INT)
 			{
 				int iHandle = pSym->GetValInt();
@@ -226,7 +226,7 @@ static Symbol* fkt_end_critical(const std::vector<Symbol*>& vecSyms,
 		for(Symbol* pSym : vecSyms)
 		{
 			if(pSym->GetType() == SYMBOL_ARRAY)
-				fkt_begin_critical(((SymbolArray*)pSym)->m_arr, info, pSymTab);
+				fkt_begin_critical(((SymbolArray*)pSym)->GetArr(), info, pSymTab);
 			else if(pSym->GetType() == SYMBOL_INT)
 			{
 				int iHandle = pSym->GetValInt();
@@ -269,7 +269,7 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 
 		if(pSym->GetType() == SYMBOL_ARRAY)
 		{
-			return fkt_thread_join(((SymbolArray*)pSym)->m_arr, info, pSymTab);
+			return fkt_thread_join(((SymbolArray*)pSym)->GetArr(), info, pSymTab);
 		}
 
 		if(pSym->GetType() != SYMBOL_INT)
@@ -278,7 +278,7 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 			continue;
 		}
 
-		t_int iHandle = ((SymbolInt*)pSym)->m_iVal;
+		t_int iHandle = ((SymbolInt*)pSym)->GetVal();
 		Handle *pHandle = info.phandles->GetHandle(iHandle);
 
 		if(pHandle==0 || pHandle->GetType()!=HANDLE_THREAD)
@@ -318,7 +318,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 	}
 
 	SymbolInt *pSymN = (SymbolInt*)_pSymN;
-	t_int iNumThreads = pSymN->m_iVal;
+	t_int iNumThreads = pSymN->GetVal();
 
 
 
@@ -330,7 +330,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 	}
 
 	SymbolString *pSymIdent = (SymbolString*)_pSymIdent;
-	const t_string& strIdent = pSymIdent->m_strVal;
+	const t_string& strIdent = pSymIdent->GetVal();
 
 
 
@@ -342,7 +342,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 	}
 
 	SymbolArray *pSymArr = (SymbolArray*)_pSymArr;
-	const std::vector<Symbol*>& vecArr = pSymArr->m_arr;
+	const std::vector<Symbol*>& vecArr = pSymArr->GetArr();
 
 
 
@@ -375,7 +375,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 		if(!vecSymArrays[iCurTh])
 			vecSymArrays[iCurTh] = new SymbolArray();
 
-		vecSymArrays[iCurTh]->m_arr.push_back(pThisSym->clone());
+		vecSymArrays[iCurTh]->GetArr().push_back(pThisSym->clone());
 
 		++iCurTh;
 		if(iCurTh == iNumThreads)
@@ -419,7 +419,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 		t_int iHandle = info.phandles->AddHandle(new HandleThread(pCurThread));
 		SymbolInt *pSymThreadHandle = new SymbolInt(iHandle);
 
-		pArrThreads->m_arr.push_back(pSymThreadHandle);
+		pArrThreads->GetArr().push_back(pSymThreadHandle);
 	}
 
 	return pArrThreads;

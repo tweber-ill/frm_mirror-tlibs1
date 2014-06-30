@@ -24,9 +24,9 @@ static inline bool is_array_of_arrays(const Symbol* pSym)
 	if(pSym->GetType()!=SYMBOL_ARRAY) return 0;
 
 	SymbolArray* pSymArr = (SymbolArray*)pSym;
-	if(pSymArr->m_arr.size()==0) return 0;
+	if(pSymArr->GetArr().size()==0) return 0;
 
-	Symbol* pSymInArr = pSymArr->m_arr[0];
+	Symbol* pSymInArr = pSymArr->GetArr()[0];
 	return (pSymInArr->GetType()==SYMBOL_ARRAY);
 }
 
@@ -36,10 +36,10 @@ static inline bool is_array_of_array_of_arrays(const Symbol* pSym)
 	if(pSym->GetType() != SYMBOL_ARRAY)
 		return 0;
 
-	if(((SymbolArray*)pSym)->m_arr.size() == 0)
+	if(((SymbolArray*)pSym)->GetArr().size() == 0)
 		return 0;
 
-	return is_array_of_arrays(((SymbolArray*)pSym)->m_arr[0]);
+	return is_array_of_arrays(((SymbolArray*)pSym)->GetArr()[0]);
 }
 
 struct XYLimits
@@ -179,7 +179,7 @@ static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 
 	// plot([[x, y, yerr, xerr, mapParams], ...]);
 	if(iNumSyms==1 && is_array_of_array_of_arrays(vecSyms[0]))
-		return fkt_plot(((SymbolArray*)vecSyms[0])->m_arr, info, pSymTab);
+		return fkt_plot(((SymbolArray*)vecSyms[0])->GetArr(), info, pSymTab);
 	// plot([x, y, yerr, xerr, mapParams], [x2, y2, yerr2, xerr2, mapParams2], ...)
 	else if(iNumSyms>=1 && is_array_of_arrays(vecSyms[0]))
 	{
@@ -190,7 +190,7 @@ static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 
 			// ignore non-array arguments
 			if(symType == SYMBOL_ARRAY)
-				fkt_plot(((SymbolArray*)pArr)->m_arr, info, pSymTab);
+				fkt_plot(((SymbolArray*)pArr)->GetArr(), info, pSymTab);
 			else if(symType == SYMBOL_MAP)
 				set_plot_params(g_plot, (SymbolMap*)pArr);
 		}
@@ -250,9 +250,9 @@ static Symbol* fkt_plot2d(const std::vector<Symbol*>& vecSyms,
 			pMapParam = (SymbolMap*)vecSyms[1];
 
 		std::vector<std::vector<t_real> > vecXY;
-		vecXY.reserve(pArr->m_arr.size());
+		vecXY.reserve(pArr->GetArr().size());
 
-		for(const Symbol* _pX : pArr->m_arr)
+		for(const Symbol* _pX : pArr->GetArr())
 		{
 			SymbolArray* pX = (SymbolArray*)_pX;
 			std::vector<t_real> vecX = pX->ToDoubleArray();
@@ -293,7 +293,7 @@ static Symbol* _fkt_fileplot(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 
-	const t_string& strFile = ((SymbolString*)vecSyms[0])->m_strVal;
+	const t_string& strFile = ((SymbolString*)vecSyms[0])->GetVal();
 	g_plot.SetFileTerminal(WSTR_TO_STR(strFile).c_str());
 	g_plot.LockTerminal();
 

@@ -127,17 +127,17 @@ public:
 			//const std::string& strName = m_vecParamNames[iParam];
 			t_real dVal = vecParams[iParam];
 
-			((SymbolDouble*)m_vecSyms[iParam+1])->m_dVal = dVal;
+			((SymbolDouble*)m_vecSyms[iParam+1])->SetVal(dVal);
 		}
 	}
 
 	virtual t_real operator()(t_real x) const
 	{
-		((SymbolDouble*)m_vecSyms[0])->m_dVal = x;
+		((SymbolDouble*)m_vecSyms[0])->SetVal(x);
 
 		SymbolArray arrArgs;
-		arrArgs.m_bDontDel = 1;
-		arrArgs.m_arr = m_vecSyms;
+		arrArgs.SetDontDel(1);
+		arrArgs.GetArr() = m_vecSyms;
 		//m_pFkt->SetArgSyms(&m_vecSyms);
 
 		m_pTable->InsertSymbol(T_STR"<args>", &arrArgs);
@@ -237,7 +237,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 
-	const t_string& strFkt = ((SymbolString*)vecSyms[0])->m_strVal;
+	const t_string& strFkt = ((SymbolString*)vecSyms[0])->GetVal();
 	NodeFunction *pFkt = info.GetFunction(strFkt);
 	if(!pFkt)
 	{
@@ -268,7 +268,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	// parameter map
 	if(vecSyms.size()==5 && vecSyms[4]->GetType()==SYMBOL_MAP)
 	{
-		SymbolMap::t_map& mapSym = ((SymbolMap*)vecSyms[4])->m_map;
+		SymbolMap::t_map& mapSym = ((SymbolMap*)vecSyms[4])->GetMap();
 
 		SymbolMap::t_map::iterator iterHints = mapSym.find(T_STR"hints");
 		SymbolMap::t_map::iterator iterHintsErr = mapSym.find(T_STR"hints_errors");
@@ -497,10 +497,10 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		dErr = fabs(dErr);
 
 		SymbolArray* pArr = new SymbolArray();
-		pArr->m_arr.push_back(new SymbolDouble(dVal));
-		pArr->m_arr.push_back(new SymbolDouble(dErr));
+		pArr->GetArr().push_back(new SymbolDouble(dVal));
+		pArr->GetArr().push_back(new SymbolDouble(dErr));
 
-		pSymMap->m_map.insert(SymbolMap::t_map::value_type(strSym, pArr));
+		pSymMap->GetMap().insert(SymbolMap::t_map::value_type(strSym, pArr));
 	}
 
 
@@ -520,8 +520,10 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		G_CERR << "--------------------------------------------------------------------------------" << std::endl;
 	}
 
-	if(!bValidFit)
-		G_CERR << "Error: Fit invalid!" << std::endl;
+	SymbolInt *pSymFitValid = new SymbolInt(bValidFit);
+	pSymMap->GetMap()["<valid>"] = pSymFitValid;
+	//if(!bValidFit)
+	//	G_CERR << "Error: Fit invalid!" << std::endl;
 	return pSymMap;
 }
 // --------------------------------------------------------------------------------
@@ -581,8 +583,8 @@ static Symbol* _fkt_param(FktParam whichfkt, const std::vector<Symbol*>& vecSyms
 
 	SymbolArray* pArrX = new SymbolArray();
 	SymbolArray* pArrY = new SymbolArray();
-	pArrX->m_arr.reserve(N);
-	pArrY->m_arr.reserve(N);
+	pArrX->GetArr().reserve(N);
+	pArrY->GetArr().reserve(N);
 
 	for(unsigned int i=0; i<N; ++i)
 	{
@@ -592,15 +594,15 @@ static Symbol* _fkt_param(FktParam whichfkt, const std::vector<Symbol*>& vecSyms
 		if(vecSpl.size() < 2)
 			continue;
 
-		pArrX->m_arr.push_back(new SymbolDouble(vecSpl[0]));
-		pArrY->m_arr.push_back(new SymbolDouble(vecSpl[1]));
+		pArrX->GetArr().push_back(new SymbolDouble(vecSpl[0]));
+		pArrY->GetArr().push_back(new SymbolDouble(vecSpl[1]));
 	}
 
 	delete pfkt;
 
 	SymbolArray *pArr = new SymbolArray();
-	pArr->m_arr.push_back(pArrX);
-	pArr->m_arr.push_back(pArrY);
+	pArr->GetArr().push_back(pArrX);
+	pArr->GetArr().push_back(pArrY);
 	return pArr;
 }
 
@@ -641,9 +643,9 @@ static Symbol* fkt_find_peaks(const std::vector<Symbol*>& vecSyms,
 	SymbolArray* pArrWidths = (SymbolArray*)vec_to_sym<t_stdvec>(vecMaximaWidth);
 
 	SymbolArray *pArr = new SymbolArray();
-	pArr->m_arr.push_back(pArrX);
-	pArr->m_arr.push_back(pArrSizes);
-	pArr->m_arr.push_back(pArrWidths);
+	pArr->GetArr().push_back(pArrX);
+	pArr->GetArr().push_back(pArrSizes);
+	pArr->GetArr().push_back(pArrWidths);
 	return pArr;
 }
 // --------------------------------------------------------------------------------
@@ -680,20 +682,23 @@ static Symbol* fkt_map_vec_to_val(const std::vector<Symbol*>& vecSyms,
 
 	SymbolMap* pMapRet = new SymbolMap();
 
-	for(const SymbolMap::t_map::value_type& pair : ((SymbolMap*)vecSyms[0])->m_map)
+	for(const SymbolMap::t_map::value_type& pair : ((SymbolMap*)vecSyms[0])->GetMap())
 	{
 		const t_string& strKey = pair.first;
 		const Symbol* pSym = pair.second;
 
 		if(pSym->GetType() != SYMBOL_ARRAY)
 		{
-			G_CERR << linenr(T_STR"Warning", info)
-						<< "Ignoring non-vector variable in map."
-						<< std::endl;
+			// this also ignores the "<valid>" fit variable automatically
+
+			//G_CERR << linenr(T_STR"Warning", info)
+			//			<< "Ignoring non-vector variable " 
+			//			<< "\"" << strKey << "\""
+			//			<< " in map." << std::endl;
 			continue;
 		}
 
-		const std::vector<Symbol*>& arr = ((SymbolArray*)pSym)->m_arr;
+		const std::vector<Symbol*>& arr = ((SymbolArray*)pSym)->GetArr();
 		if(iIdx >= arr.size())
 		{
 			G_CERR << linenr(T_STR"Warning", info)
@@ -704,7 +709,7 @@ static Symbol* fkt_map_vec_to_val(const std::vector<Symbol*>& vecSyms,
 
 		const Symbol* pElem = arr[iIdx];
 
-		pMapRet->m_map.insert(SymbolMap::t_map::value_type(strKey, pElem->clone()));
+		pMapRet->GetMap().insert(SymbolMap::t_map::value_type(strKey, pElem->clone()));
 	}
 
 	return pMapRet;

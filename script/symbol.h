@@ -4,8 +4,8 @@
  * @date 2013
  */
 
-#ifndef __MIEZE_SYM__
-#define __MIEZE_SYM__
+#ifndef __HERMELIN_SYM__
+#define __HERMELIN_SYM__
 
 #include "types.h"
 #include <map>
@@ -29,21 +29,27 @@ struct SymbolArray;
 struct SymbolMap;
 struct Symbol
 {
+protected:
 	t_string m_strName;
 	t_string m_strIdent;			// last seen identifier
 
 	unsigned int m_iArrIdx;			// if symbol is contained in an array
-	bool m_bHasIdx;
 	SymbolArray *m_pArr;
 
-	t_string m_strMapKey;		// if symbol is contained in a map
+	t_string m_strMapKey;			// if symbol is contained in a map
 	SymbolMap *m_pMap;
 
-	Symbol() : m_iArrIdx(0), m_bHasIdx(0), m_pArr(0), m_pMap(0) {}
+public:
+	Symbol() : m_iArrIdx(0), m_pArr(0), m_pMap(0) {}
 	virtual ~Symbol() {}
 
 	virtual SymbolType GetType() const = 0;
 	virtual t_string GetTypeName() const = 0;
+
+	virtual const t_string& GetName() const { return m_strName; }
+	virtual const t_string& GetIdent() const { return m_strIdent; }
+	virtual void SetName(const t_string& strName) { m_strName = strName; }
+	virtual void SetIdent(const t_string& strIdent) { m_strIdent = strIdent; }
 
 	// cast and clone symbol
 	virtual Symbol* ToType(SymbolType stype) const = 0;
@@ -60,14 +66,30 @@ struct Symbol
 	virtual t_real GetValDouble() const { return 0.; }
 
 	virtual bool IsScalar() const { return 0; }
+
+public:
+	SymbolMap* GetMapPtr() { return m_pMap; }
+	void SetMapPtr(SymbolMap* pMap) { m_pMap = pMap; }
+
+	const t_string& GetMapKey() const { return m_strMapKey; }
+	void SetMapKey(const t_string& str) { m_strMapKey = str; }
+
+
+	SymbolArray* GetArrPtr() const { return m_pArr; }
+	void SetArrPtr(SymbolArray* pArr) { m_pArr = pArr; }
+
+	unsigned int GetArrIdx() const { return m_iArrIdx; }
+	void SetArrIdx(unsigned int iIdx) { m_iArrIdx = iIdx; }
 };
 
 struct SymbolDouble : public Symbol
 {
+protected:
 	t_real m_dVal;
 	static const int m_defprec;
 	static int m_prec;
 
+public:
 	SymbolDouble() : Symbol(), m_dVal(0.) {}
 	SymbolDouble(t_real dVal) : m_dVal(dVal) {}
 	SymbolDouble(const t_string&) { throw Err("Invalid SymbolDouble constructor."); }
@@ -86,13 +108,23 @@ struct SymbolDouble : public Symbol
 	virtual t_int GetValInt() const { return t_int(m_dVal); }
 	virtual t_real GetValDouble() const { return m_dVal; }
 
+	static const int GetDefPrec() { return m_defprec; }
+	static const int GetPrec() { return m_prec; }
+	static void SetPrec(int iPrec) { m_prec = iPrec; }
+
+	void SetVal(double dVal) { m_dVal = dVal; }
+	const t_real& GetVal() const { return m_dVal; }
+	t_real& GetVal() { return m_dVal; }
+
 	virtual bool IsScalar() const { return 1; }
 };
 
 struct SymbolInt : public Symbol
 {
+protected:
 	t_int m_iVal;
 
+public:
 	SymbolInt() : Symbol(), m_iVal(0) {}
 	SymbolInt(t_int iVal) : m_iVal(iVal) {}
 
@@ -110,13 +142,19 @@ struct SymbolInt : public Symbol
 	virtual t_int GetValInt() const { return m_iVal; }
 	virtual t_real GetValDouble() const { return t_real(m_iVal); }
 
+	void SetVal(int iVal) { m_iVal = iVal; }
+	const t_int& GetVal() const { return m_iVal; }
+	t_int& GetVal() { return m_iVal; }
+
 	virtual bool IsScalar() const { return 1; }
 };
 
 struct SymbolString : public Symbol
 {
+protected:
 	t_string m_strVal;
 
+public:
 	SymbolString() : Symbol() {}
 	SymbolString(const t_char* pcStr) : m_strVal(pcStr) {}
 	SymbolString(const t_string& str) : m_strVal(str) {}
@@ -132,15 +170,21 @@ struct SymbolString : public Symbol
 	virtual Symbol* clone() const;
 	virtual void assign(Symbol *pSym);
 
+	void SetVal(const t_string& str) { m_strVal = str; }
+	const t_string& GetVal() const { return m_strVal; }
+	t_string& GetVal() { return m_strVal; }
+
 	virtual bool IsNotZero() const { return 0; }
 };
 
 
 struct SymbolArray : public Symbol
 {
+protected:
 	bool m_bDontDel;
 	std::vector<Symbol*> m_arr;
 
+public:
 	SymbolArray() : Symbol(), m_bDontDel(0) { /*std::cout << "symarr -> new" << std::endl;*/ }
 	virtual ~SymbolArray();
 
@@ -161,14 +205,24 @@ struct SymbolArray : public Symbol
 	void UpdateIndex(unsigned int);
 	void UpdateIndices();
 
+	const std::vector<Symbol*>& GetArr() const { return m_arr; }
+	std::vector<Symbol*>& GetArr() { return m_arr; }
+
 	virtual bool IsScalar() const { return 0; }
+
+
+	bool GetDontDel() const { return m_bDontDel; }
+	void SetDontDel(bool b) { m_bDontDel = b; }
 };
 
 struct SymbolMap : public Symbol
 {
+public:
 	typedef std::map<t_string, Symbol*> t_map;
+protected:
 	t_map m_map;
 
+public:
 	SymbolMap() : Symbol() {}
 	virtual ~SymbolMap();
 
@@ -190,6 +244,9 @@ struct SymbolMap : public Symbol
 	t_int GetIntVal(const t_string& strKey, bool *pbHasVal=0) const;
 
 	virtual bool IsScalar() const { return 0; }
+
+	const t_map& GetMap() const { return m_map; }
+	t_map& GetMap() { return m_map; }
 };
 
 
@@ -254,7 +311,7 @@ static std::map<T1, T2> sym_to_map(const Symbol* pSym)
 	std::map<T1, T2> _map;
 
 	unsigned int iIdx = 0;
-	for(const typename SymbolMap::t_map::value_type& pair : pSymMap->m_map)
+	for(const typename SymbolMap::t_map::value_type& pair : pSymMap->GetMap())
 		_map[pair.first] = convert_symbol<T2>(pair.second);
 
 	return _map;
@@ -270,10 +327,10 @@ static t_vec<T> sym_to_vec(const Symbol* pSym)
 		return t_vec<T>();
 
 	SymbolArray* pSymArr = (SymbolArray*)pSym;
-	t_vec<T> vec(pSymArr->m_arr.size());
+	t_vec<T> vec(pSymArr->GetArr().size());
 
 	unsigned int iIdx = 0;
-	for(const Symbol* pSymInArr : pSymArr->m_arr)
+	for(const Symbol* pSymInArr : pSymArr->GetArr())
 	{
 		vec[iIdx] = convert_symbol<T>(pSymInArr);
 		++iIdx;
@@ -286,10 +343,10 @@ template<template<class> class t_vec, typename T=t_real>
 static Symbol* vec_to_sym(const t_vec<T>& vec)
 {
 	SymbolArray* pSym = new SymbolArray();
-	pSym->m_arr.reserve(vec.size());
+	pSym->GetArr().reserve(vec.size());
 
 	for(const T& t : vec)
-		pSym->m_arr.push_back(create_symbol<T>(t));
+		pSym->GetArr().push_back(create_symbol<T>(t));
 
 	return pSym;
 }
@@ -309,7 +366,7 @@ static t_mat<T> sym_to_mat(const Symbol* pSym, bool* pbIsMat=0)
 	const SymbolArray* pSymArr = (SymbolArray*)pSym;
 
 	unsigned int iRow=0;
-	for(const Symbol* pSymInArr : pSymArr->m_arr)
+	for(const Symbol* pSymInArr : pSymArr->GetArr())
 	{
 		t_vec<T> vecRow = sym_to_vec<t_vec>(pSymInArr);
 		unsigned int iNumActCols = std::min<unsigned int>(vecRow.size(), iNumCols);
@@ -334,20 +391,20 @@ static Symbol* mat_to_sym(const t_mat<T>& mat)
 	unsigned int iNumCols = mat.size2();
 
 	SymbolArray* pSym = new SymbolArray();
-	pSym->m_arr.reserve(iNumRows);
+	pSym->GetArr().reserve(iNumRows);
 
 	for(unsigned int iRow=0; iRow<iNumRows; ++iRow)
 	{
 		SymbolArray* pRow = new SymbolArray();
-		pRow->m_arr.reserve(iNumCols);
+		pRow->GetArr().reserve(iNumCols);
 
 		for(unsigned int iCol=0; iCol<iNumCols; ++iCol)
 		{
 			Symbol *pSymVal = create_symbol<T>(mat(iRow, iCol));
-			pRow->m_arr.push_back(pSymVal);
+			pRow->GetArr().push_back(pSymVal);
 		}
 
-		pSym->m_arr.push_back(pRow);
+		pSym->GetArr().push_back(pRow);
 	}
 
 	return pSym;

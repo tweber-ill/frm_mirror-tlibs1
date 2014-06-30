@@ -14,11 +14,11 @@ void safe_delete(Symbol *&pSym, const SymbolTable* pSymTab, const SymbolTable* p
 	if(!pSym) return;
 
 	// don't delete constants
-	if(pSym->m_strName == T_STR"<const>")
+	if(pSym->GetName() == T_STR"<const>")
 		return;
 
 	// don't delete array or map members
-	if(pSym->m_pArr || pSym->m_pMap)
+	if(pSym->GetArrPtr() || pSym->GetMapPtr())
 		return;
 
 	// don't delete symbols in table
@@ -109,8 +109,8 @@ Symbol* NodeIdent::eval(ParseInfo &info, SymbolTable *pSym) const
 		return 0;
 	}
 
-	if(pSymbol->m_strIdent.size()==0)
-		pSymbol->m_strIdent = m_strIdent;
+	if(pSymbol->GetIdent().size()==0)
+		pSymbol->SetIdent(m_strIdent);
 	return pSymbol;
 }
 
@@ -144,8 +144,8 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 
 
 	SymbolArray arrArgs;
-	arrArgs.m_bDontDel = 1;
-	std::vector<Symbol*> &vecArgSyms = arrArgs.m_arr;
+	arrArgs.SetDontDel(1);
+	std::vector<Symbol*> &vecArgSyms = arrArgs.GetArr();
 	for(Node* pNode : m_vecArgs)
 	{
 		// TODO: Unpack operation for vector.
@@ -166,7 +166,7 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 				continue;
 			}
 
-			SymbolMap::t_map& mapSyms = ((SymbolMap*)pSymChild)->m_map;
+			SymbolMap::t_map& mapSyms = ((SymbolMap*)pSymChild)->GetMap();
 
 			std::vector<t_string> vecParamNames = pFkt->GetParamNames();
 			for(unsigned int iParam=vecArgSyms.size(); iParam<vecParamNames.size(); ++iParam)
@@ -283,9 +283,9 @@ Symbol* NodeMap::eval(ParseInfo &info, SymbolTable *pSym) const
 				continue; 
 			}
 
-			const t_string& strKey = ((SymbolString*)pSymFirst)->m_strVal;
+			const t_string& strKey = ((SymbolString*)pSymFirst)->GetVal();
 
-			pSymMap->m_map.insert(
+			pSymMap->GetMap().insert(
 				SymbolMap::t_map::value_type(strKey, pSymSecond->clone()));
 		}
 
@@ -305,14 +305,14 @@ Symbol* NodeArray::eval(ParseInfo &info, SymbolTable *pSym) const
 	if(pArr) vecNodes = pArr->flatten(NODE_ARGS);
 
 	SymbolArray *pSymArr = new SymbolArray;
-	pSymArr->m_arr.reserve(vecNodes.size());
+	pSymArr->GetArr().reserve(vecNodes.size());
 
 	for(Node* pNode : vecNodes)
 	{
 		if(!pNode) continue;
 
 		Symbol *pSymbol = pNode->eval(info, pSym);
-		pSymArr->m_arr.push_back(pSymbol->clone());
+		pSymArr->GetArr().push_back(pSymbol->clone());
 		pSymArr->UpdateIndices();
 
 		safe_delete(pSymbol, pSym, info.pGlobalSyms);
@@ -401,7 +401,7 @@ void NodeRange::GetRangeIndices(ParseInfo &info, SymbolTable *pSym,
 unsigned int get_max_cols(SymbolArray* pArr, std::vector<unsigned int>* pvecCols=0)
 {
 	unsigned int iCols = 0;
-	for(Symbol* pSym : pArr->m_arr)
+	for(Symbol* pSym : pArr->GetArr())
 	{
 		if(!pSym)
 		{
@@ -409,7 +409,7 @@ unsigned int get_max_cols(SymbolArray* pArr, std::vector<unsigned int>* pvecCols
 			continue;
 		}
 		if(pSym->GetType() == SYMBOL_ARRAY)
-			iCols = std::max<unsigned int>(iCols, ((SymbolArray*)pSym)->m_arr.size());
+			iCols = std::max<unsigned int>(iCols, ((SymbolArray*)pSym)->GetArr().size());
 		else
 			iCols = std::max<unsigned int>(iCols, 1);
 
@@ -421,17 +421,17 @@ unsigned int get_max_cols(SymbolArray* pArr, std::vector<unsigned int>* pvecCols
 
 Symbol* get_mat_elem(SymbolArray* pArr, unsigned int iLine, unsigned int iCol)
 {
-	if(iLine >= pArr->m_arr.size())
+	if(iLine >= pArr->GetArr().size())
 		return 0;
 
-	Symbol* pLine = pArr->m_arr[iLine];
+	Symbol* pLine = pArr->GetArr()[iLine];
 	if(pLine->GetType() == SYMBOL_ARRAY)
 	{
 		SymbolArray* pArrLine = (SymbolArray*)pLine;
-		if(iCol >= pArrLine->m_arr.size())
+		if(iCol >= pArrLine->GetArr().size())
 			return 0;
 
-		return pArrLine->m_arr[iCol]->clone();
+		return pArrLine->GetArr()[iCol]->clone();
 	}
 	else	// single scalar element
 	{
@@ -444,26 +444,26 @@ Symbol* get_mat_elem(SymbolArray* pArr, unsigned int iLine, unsigned int iCol)
 
 SymbolArray* transpose(SymbolArray* pArr, std::vector<unsigned int>* pvecCols=0)
 {
-	unsigned int iLines = pArr->m_arr.size();
+	unsigned int iLines = pArr->GetArr().size();
 	unsigned int iCols = get_max_cols(pArr, pvecCols);
 
 	SymbolArray *pArrNew = new SymbolArray();
-	pArrNew->m_arr.reserve(iCols);
+	pArrNew->GetArr().reserve(iCols);
 
 	for(unsigned int iCol=0; iCol<iCols; ++iCol)
 	{
 		SymbolArray* pArrCol = new SymbolArray();
-		pArrCol->m_arr.reserve(iLines);
+		pArrCol->GetArr().reserve(iLines);
 
 		for(unsigned int iLine=0; iLine<iLines; ++iLine)
 		{
 			Symbol *pElem = get_mat_elem(pArr, iLine, iCol);
 			if(!pElem) pElem = new SymbolInt(0);
-			pArrCol->m_arr.push_back(pElem);
+			pArrCol->GetArr().push_back(pElem);
 		}
 
 		pArrCol->UpdateIndices();
-		pArrNew->m_arr.push_back(pArrCol);
+		pArrNew->GetArr().push_back(pArrCol);
 	}
 
 	pArrNew->UpdateIndices();
@@ -483,7 +483,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 	t_string strIdent;
 	Symbol* pSymbol = m_pIdent->eval(info, pSym);
 	if(m_pIdent->m_type == NODE_IDENT)
-		strIdent = pSymbol->m_strIdent;
+		strIdent = pSymbol->GetIdent();
 	else
 		strIdent = T_STR"<tmp_sym>";
 
@@ -518,7 +518,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 			{
 				NodeRange *pRange = (NodeRange*)pIndices;
 				t_int iBeginIdx = 0, iEndIdx = 0;
-				pRange->GetRangeIndices(info, pSym, pArr->m_arr.size(), iBeginIdx, iEndIdx);
+				pRange->GetRangeIndices(info, pSym, pArr->GetArr().size(), iBeginIdx, iEndIdx);
 
 				t_int iStep = 1;
 				t_int iSize = iEndIdx - iBeginIdx;
@@ -529,12 +529,12 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 				}
 
 				SymbolArray *pSubArr = new SymbolArray();
-				pSubArr->m_arr.reserve(iSize);
+				pSubArr->GetArr().reserve(iSize);
 
 				for(t_int iIdx=iBeginIdx, iNewIdx=0; iIdx!=iEndIdx && iNewIdx<iSize; iIdx+=iStep, ++iNewIdx)
 				{
-					Symbol *pElemClone = pArr->m_arr[iIdx]->clone();
-					pSubArr->m_arr.push_back(pElemClone);
+					Symbol *pElemClone = pArr->GetArr()[iIdx]->clone();
+					pSubArr->GetArr().push_back(pElemClone);
 					pSubArr->UpdateIndex(iNewIdx);
 				}
 
@@ -574,7 +574,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 
 				// convert negative indices
 				if(iIdx < 0)
-					iIdx = pArr->m_arr.size()  + iIdx;
+					iIdx = pArr->GetArr().size()  + iIdx;
 
 				if(iIdx < 0)
 				{
@@ -586,14 +586,14 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 				}
 
 				// index too high -> fill up with zeroes
-				if(iIdx>=pArr->m_arr.size())
+				if(iIdx>=pArr->GetArr().size())
 				{
-					unsigned int iOldSize = pArr->m_arr.size();
+					unsigned int iOldSize = pArr->GetArr().size();
 					for(unsigned int iRem=0; iRem<iIdx+1-iOldSize; ++iRem)
 					{
 						SymbolDouble *pNewSym = new SymbolDouble(0.);
-						pNewSym->m_strName = T_STR"<const>";
-						pArr->m_arr.push_back(pNewSym);
+						pNewSym->SetName(T_STR"<const>");
+						pArr->GetArr().push_back(pNewSym);
 						//G_COUT << "Inserting: " << iRem << std::endl;
 					}
 				}
@@ -601,7 +601,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 				if((void*)pSymbol != (void*)pArr)
 					safe_delete(pSymbol, pSym, info.pGlobalSyms);
 
-				pSymbol = pArr->m_arr[iIdx];
+				pSymbol = pArr->GetArr()[iIdx];
 				pArr->UpdateIndex(iIdx);
 			}
 
@@ -630,17 +630,17 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 			return 0;
 		}
 
-		const t_string& strKey = ((SymbolString*)pSymExpr)->m_strVal;
+		const t_string& strKey = ((SymbolString*)pSymExpr)->GetVal();
 
 		SymbolMap *pMap = (SymbolMap*)pSymbol;
-		SymbolMap::t_map::iterator iterMap = pMap->m_map.find(strKey);
+		SymbolMap::t_map::iterator iterMap = pMap->GetMap().find(strKey);
 
 		// key not yet in map -> insert it
-		if(iterMap == pMap->m_map.end())
+		if(iterMap == pMap->GetMap().end())
 		{
 			SymbolString *pNewSym = new SymbolString();
-			pNewSym->m_strName = T_STR"<const>";
-			iterMap = pMap->m_map.insert(SymbolMap::t_map::value_type(strKey, pNewSym)).first;
+			pNewSym->SetName(T_STR"<const>");
+			iterMap = pMap->GetMap().insert(SymbolMap::t_map::value_type(strKey, pNewSym)).first;
 		}
 
 		if((void*)pSymbol != (void*)iterMap->second)
@@ -653,7 +653,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 	else if(pSymbol->GetType() == SYMBOL_STRING)
 	{
 		SymbolString *pStr = (SymbolString*)pSymbol;
-		t_int iStrLen = pStr->m_strVal.length();
+		t_int iStrLen = pStr->GetVal().length();
 
 		if(m_vecIndices.size()!=1)
 		{
@@ -683,7 +683,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 			strNew.resize(iSize);
 
 			for(t_int iIdx=iBeginIdx, iNewIdx=0; iIdx!=iEndIdx && iNewIdx<iSize; iIdx+=iStep, ++iNewIdx)
-				strNew[iNewIdx] = pStr->m_strVal[iIdx];
+				strNew[iNewIdx] = pStr->GetVal()[iIdx];
 
 			SymbolString *pSubStr = new SymbolString(strNew);
 			safe_delete(pSymbol, pSym, info.pGlobalSyms);
@@ -717,7 +717,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 			}
 
 			t_string strNew;
-			strNew += pStr->m_strVal[iIdx];
+			strNew += pStr->GetVal()[iIdx];
 			safe_delete(pSymbol, pSym, info.pGlobalSyms);
 			pSymbol = new SymbolString(strNew);
 		}
@@ -737,17 +737,17 @@ static void uminus_inplace(Symbol* pSym, ParseInfo& info)
 	if(!pSym) return;
 
 	if(pSym->GetType() == SYMBOL_DOUBLE)
-		((SymbolDouble*)pSym)->m_dVal = -((SymbolDouble*)pSym)->m_dVal;
+		((SymbolDouble*)pSym)->SetVal(-((SymbolDouble*)pSym)->GetVal());
 	else if(pSym->GetType() == SYMBOL_INT)
-		((SymbolInt*)pSym)->m_iVal = -((SymbolInt*)pSym)->m_iVal;
+		((SymbolInt*)pSym)->SetVal(-((SymbolInt*)pSym)->GetVal());
 	else if(pSym->GetType() == SYMBOL_ARRAY)
 	{
-		for(Symbol* pElem : ((SymbolArray*)pSym)->m_arr)
+		for(Symbol* pElem : ((SymbolArray*)pSym)->GetArr())
 			uminus_inplace(pElem, info);
 	}
 	/*else if(pSym->GetType() == SYMBOL_MAP)
 	{
-		for(SymbolMap::t_map::value_type& pair : ((SymbolMap*)pSym)->m_map)
+		for(SymbolMap::t_map::value_type& pair : ((SymbolMap*)pSym)->GetMap())
 			uminus_inplace(pair.second);
 	}*/
 	else
@@ -783,9 +783,9 @@ Symbol* NodeUnaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 			SymbolInt *pSymbolInt = new SymbolInt();
 
 			if(pSymbolEval->GetType() == SYMBOL_DOUBLE)
-				pSymbolInt->m_iVal = !((SymbolDouble*)pSymbolEval)->m_dVal;
+				pSymbolInt->SetVal(!((SymbolDouble*)pSymbolEval)->GetVal());
 			else if(pSymbolEval->GetType() == SYMBOL_INT)
-				pSymbolInt->m_iVal = !((SymbolInt*)pSymbolEval)->m_iVal;
+				pSymbolInt->SetVal(!((SymbolInt*)pSymbolEval)->GetVal());
 
 			safe_delete(pSymbolEval, pSym, info.pGlobalSyms);
 			return pSymbolInt;
@@ -896,20 +896,20 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 
 		std::vector<Node*> vecLeftArgs = ((NodeBinaryOp*)((NodeArray*)pLeft)->m_pArr)->flatten(NODE_ARGS);
 		unsigned int iArrSize = vecLeftArgs.size();
-		if(vecLeftArgs.size() != pArrRight->m_arr.size())
+		if(vecLeftArgs.size() != pArrRight->GetArr().size())
 		{
                         G_CERR << linenr(T_STR"Warning", info)
 				<< "Size mismatch between assigned and returned array: "
-				<< vecLeftArgs.size() << " != " << pArrRight->m_arr.size() << "."
+				<< vecLeftArgs.size() << " != " << pArrRight->GetArr().size() << "."
 				<< std::endl;
 
-			iArrSize = std::min(vecLeftArgs.size(), pArrRight->m_arr.size());
+			iArrSize = std::min(vecLeftArgs.size(), pArrRight->GetArr().size());
 		}
 
 		for(unsigned int iArr=0; iArr<vecLeftArgs.size(); ++iArr)
 		{
 			Node *pNodeLeft = vecLeftArgs[iArr];
-			Symbol *pSymRight = pArrRight->m_arr[iArr];
+			Symbol *pSymRight = pArrRight->GetArr()[iArr];
 
 			//std::cout << ((NodeIdent*)pNode)->m_strIdent << std::endl;
 			eval_assign(info, pSym, pNodeLeft, 0, pSymRight, pbGlob);
@@ -932,32 +932,32 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 		{
 			pSymLeft->assign(pSymbol);
 		}
-		else if(pSymLeft->m_pArr)		// array
+		else if(pSymLeft->GetArrPtr())		// array
 		{
-			t_int iArrIdx = pSymLeft->m_iArrIdx;
-			SymbolArray* pArr = pSymLeft->m_pArr;
+			t_int iArrIdx = pSymLeft->GetArrIdx();
+			SymbolArray* pArr = pSymLeft->GetArrPtr();
 
 			//G_COUT << "Array: " << (void*) pArr << ", Index: " << iArrIdx << std::endl;
 
-			if(pArr->m_arr.size() <= iArrIdx)
+			if(pArr->GetArr().size() <= iArrIdx)
 			{
 /*						G_CERR << "Warning: Array index (" << iArrIdx
 						<< ") out of bounds (array size: "
-						<< pArr->m_arr.size() << ")."
+						<< pArr->GetArr().size() << ")."
 						<< " Resizing."<< std::endl;
 */
 
-				unsigned int iOldSize = pArr->m_arr.size();
+				unsigned int iOldSize = pArr->GetArr().size();
 				for(unsigned int iRem=0; iRem<iArrIdx+1-iOldSize; ++iRem)
 				{
 					SymbolDouble *pNewSym = new SymbolDouble(0.);
-					pNewSym->m_strName = T_STR"<const>";
-					pArr->m_arr.push_back(pNewSym);
+					pNewSym->SetName(T_STR"<const>");
+					pArr->GetArr().push_back(pNewSym);
 				}
 			}
 
 
-			Symbol* pSymOld = pArr->m_arr[iArrIdx];
+			Symbol* pSymOld = pArr->GetArr()[iArrIdx];
 			if((void*)pSymOld != (void*)pSymLeft)
 			{
 				G_CERR << linenr(T_STR"Error", info)
@@ -967,26 +967,26 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 
 
 			//G_COUT << pSymbol->GetType() << std::endl;
-			pArr->m_arr[iArrIdx] = pSymbol;
-			pSymbol->m_pArr = pArr;
-			pSymbol->m_iArrIdx = iArrIdx;
+			pArr->GetArr()[iArrIdx] = pSymbol;
+			pSymbol->SetArrPtr(pArr);
+			pSymbol->SetArrIdx(iArrIdx);
 
-			pSymOld->m_pArr = 0;
+			pSymOld->SetArrPtr(0);
 			safe_delete(pSymOld, pSym, info.pGlobalSyms);
 		}
-		else if(pSymLeft->m_pMap)		// map
+		else if(pSymLeft->GetMapPtr())		// map
 		{
-			const t_string& strMapKey = pSymLeft->m_strMapKey;
-			SymbolMap* pMap = pSymLeft->m_pMap;
+			const t_string& strMapKey = pSymLeft->GetMapKey();
+			SymbolMap* pMap = pSymLeft->GetMapPtr();
 
-			SymbolMap::t_map::iterator iterMap = pMap->m_map.find(strMapKey);
+			SymbolMap::t_map::iterator iterMap = pMap->GetMap().find(strMapKey);
 
 			// symbol not in map -> insert a zero
-			if(iterMap == pMap->m_map.end())
+			if(iterMap == pMap->GetMap().end())
 			{
 				SymbolDouble *pNewSym = new SymbolDouble(0.);
-				pNewSym->m_strName = T_STR"<const>";
-				iterMap = pMap->m_map.insert(SymbolMap::t_map::value_type(strMapKey, pNewSym)).first;
+				pNewSym->SetName(T_STR"<const>");
+				iterMap = pMap->GetMap().insert(SymbolMap::t_map::value_type(strMapKey, pNewSym)).first;
 			}
 
 			Symbol* pSymOld = iterMap->second;
@@ -997,11 +997,11 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 				return 0;
 			}
 
-			pSymbol->m_pMap = pMap;
-			pSymbol->m_strMapKey = strMapKey;
+			pSymbol->SetMapPtr(pMap);
+			pSymbol->SetMapKey(strMapKey);
 			iterMap->second = pSymbol;
 
-			pSymOld->m_pMap = 0;
+			pSymOld->SetMapPtr(0);
 			safe_delete(pSymOld, pSym, info.pGlobalSyms);
 		}
 		else
@@ -1179,7 +1179,7 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 		pArgs = (SymbolArray*)pTableSup->GetSymbol(T_STR"<args>");
 	if(pArgs)
 	{
-		const std::vector<Symbol*> *pVecArgSyms = &pArgs->m_arr;
+		const std::vector<Symbol*> *pVecArgSyms = &pArgs->GetArr();
 
 		if(m_vecArgs.size() != pVecArgSyms->size())
 		{
@@ -1376,9 +1376,9 @@ Symbol* NodeRangedFor::eval(ParseInfo &info, SymbolTable *pSym) const
 	pSym->InsertSymbol(strIter, pSymIter);
 
 	info.pCurLoop = this;
-	for(unsigned int iArr=0; iArr<pArr->m_arr.size(); ++iArr)
+	for(unsigned int iArr=0; iArr<pArr->GetArr().size(); ++iArr)
 	{
-		Symbol *pSymInArr = pArr->m_arr[iArr];
+		Symbol *pSymInArr = pArr->GetArr()[iArr];
 		pSym->InsertSymbol(strIdent, pSymInArr);
 
 		Symbol *pBodyRet = m_pStmt->eval(info, pSym);
@@ -1389,14 +1389,14 @@ Symbol* NodeRangedFor::eval(ParseInfo &info, SymbolTable *pSym) const
 		Symbol *pNewSym = pSym->GetSymbol(strIdent);
 		if(pSymInArr != pNewSym)
 		{
-			pArr->m_arr[iArr] = pNewSym;
+			pArr->GetArr()[iArr] = pNewSym;
 			//delete pSymInArr;
 			pSymInArr = pNewSym;
 		}
 		pSym->RemoveSymbolNoDelete(strIdent);
 
 
-		++pSymIter->m_iVal;
+		++pSymIter->GetVal();
 
 		if(info.bWantBreak)
 		{
@@ -1413,7 +1413,7 @@ Symbol* NodeRangedFor::eval(ParseInfo &info, SymbolTable *pSym) const
 
 	pSym->RemoveSymbol(strIter);
 
-	//G_COUT << "ranged for:" << pArr->m_strName << ", " << pArr->m_strIdent << std::endl;
+	//G_COUT << "ranged for:" << pArr->GetName() << ", " << pArr->m_strIdent << std::endl;
 	safe_delete(_pArr, pSym, info.pGlobalSyms);
 	return 0;
 }

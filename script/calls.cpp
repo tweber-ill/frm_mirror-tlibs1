@@ -56,7 +56,7 @@ static Symbol* fkt_double_vec(const std::vector<Symbol*>& vecSyms,
 		return 0;
 
 	SymbolArray* pSymRet = new SymbolArray();
-	pSymRet->m_arr.reserve(vecSyms.size());
+	pSymRet->GetArr().reserve(vecSyms.size());
 
 	if(vecSyms[0]->GetType() != SYMBOL_ARRAY)
 	{
@@ -65,12 +65,12 @@ static Symbol* fkt_double_vec(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 
-	for(Symbol *pSym : ((SymbolArray*)vecSyms[0])->m_arr)
+	for(Symbol *pSym : ((SymbolArray*)vecSyms[0])->GetArr())
 	{
 		Symbol *pSymCast = 0;
 
 		if(pSym->GetType() == SYMBOL_ARRAY)
-			pSymCast = fkt_double_vec(((SymbolArray*)pSym)->m_arr, info, pSymTab);
+			pSymCast = fkt_double_vec(((SymbolArray*)pSym)->GetArr(), info, pSymTab);
 		else
 		{
 			std::vector<Symbol*> vecSymTmp{pSym};
@@ -78,7 +78,7 @@ static Symbol* fkt_double_vec(const std::vector<Symbol*>& vecSyms,
 		}
 
 		if(pSymCast)
-			pSymRet->m_arr.push_back(pSymCast);
+			pSymRet->GetArr().push_back(pSymCast);
 	}
 
 	return pSymRet;
@@ -92,7 +92,7 @@ static Symbol* fkt_str(const std::vector<Symbol*>& vecSyms,
 	{
 		if(!pSym)
 			continue;
-		pSymRet->m_strVal += pSym->print();
+		pSymRet->GetVal() += pSym->print();
 	}
 	return pSymRet;
 }
@@ -124,7 +124,7 @@ static Symbol* fkt_input(const std::vector<Symbol*>& vecSyms,
 	fkt_output(vecSyms, info, pSymTab);
 
 	SymbolString* pSymStr = new SymbolString();
-	std::getline(G_CIN, pSymStr->m_strVal);
+	std::getline(G_CIN, pSymStr->GetVal());
 	return pSymStr;
 }
 
@@ -182,7 +182,7 @@ static Symbol* fkt_import(const std::vector<Symbol*>& vecSyms,
 	for(Symbol *pSym : vecSyms)
 		if(pSym && pSym->GetType()==SYMBOL_STRING)
 		{
-			const t_string& strFile = ((SymbolString*)pSym)->m_strVal;
+			const t_string& strFile = ((SymbolString*)pSym)->GetVal();
 			bool bOk = _import_file(strFile, info, pSymTab);
 		}
 
@@ -249,7 +249,7 @@ static Symbol* fkt_register_var(const std::vector<Symbol*>& vecSyms,
 		}
 
 
-		SymbolMap::t_map& varmap = ((SymbolMap*)vecSyms[0])->m_map;
+		SymbolMap::t_map& varmap = ((SymbolMap*)vecSyms[0])->GetMap();
 		for(SymbolMap::t_map::value_type& val : varmap)
 		{
 			SymbolString symKey(val.first);
@@ -307,9 +307,9 @@ static Symbol* fkt_setprec(const std::vector<Symbol*>& vecSyms,
 	int iPrec = pSymbol->GetValInt();
 
 	if(iPrec >= 0)
-		SymbolDouble::m_prec = iPrec;
+		SymbolDouble::SetPrec(iPrec);
 	else
-		SymbolDouble::m_prec = SymbolDouble::m_defprec;
+		SymbolDouble::SetPrec(SymbolDouble::GetDefPrec());
 
 	return 0;
 }
@@ -350,7 +350,7 @@ static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 
-	t_int iVal = ((SymbolInt*)pSymSize)->m_iVal;
+	t_int iVal = ((SymbolInt*)pSymSize)->GetVal();
 	if(iVal < 0) iVal = 0;
 
 
@@ -369,9 +369,9 @@ static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
 
 
 	SymbolArray* pSymRet = new SymbolArray;
-	pSymRet->m_arr.reserve(iVal);
+	pSymRet->GetArr().reserve(iVal);
 	for(t_int i=0; i<iVal; ++i)
-		pSymRet->m_arr.push_back(pSymVal->clone());
+		pSymRet->GetArr().push_back(pSymVal->clone());
 
 	pSymRet->UpdateIndices();
 
@@ -394,11 +394,11 @@ static Symbol* fkt_array_size(const std::vector<Symbol*>& vecSyms,
 	SymbolInt *pSymRet = new SymbolInt(0);
 
 	if(pSymArr->GetType() == SYMBOL_ARRAY)
-		pSymRet->m_iVal = ((SymbolArray*)pSymArr)->m_arr.size();
+		pSymRet->SetVal(((SymbolArray*)pSymArr)->GetArr().size());
 	else if(pSymArr->GetType() == SYMBOL_STRING)
-		pSymRet->m_iVal = ((SymbolString*)pSymArr)->m_strVal.length();
+		pSymRet->SetVal(((SymbolString*)pSymArr)->GetVal().length());
 	else if(pSymArr->GetType() == SYMBOL_MAP)
-		pSymRet->m_iVal = ((SymbolMap*)pSymArr)->m_map.size();
+		pSymRet->SetVal(((SymbolMap*)pSymArr)->GetMap().size());
 	else
 		G_CERR << linenr(T_STR"Error", info) << "vec_size needs a vector type argument." << std::endl;
 
@@ -407,8 +407,8 @@ static Symbol* fkt_array_size(const std::vector<Symbol*>& vecSyms,
 
 static int pos_in_string(const SymbolString* pSymStr, const SymbolString *pSym)
 {
-	const std::string& str = pSymStr->m_strVal;
-	const std::string& strToFind = pSym->m_strVal;
+	const std::string& str = pSymStr->GetVal();
+	const std::string& strToFind = pSym->GetVal();
 
 	std::size_t pos = str.find(strToFind);
 	if(pos == std::string::npos)
@@ -422,9 +422,9 @@ static int pos_in_array(const SymbolArray* pSymArr, const Symbol *pSym)
 	unsigned int iPos;
 	bool bFound = 0;
 
-	for(iPos=0; iPos<pSymArr->m_arr.size(); ++iPos)
+	for(iPos=0; iPos<pSymArr->GetArr().size(); ++iPos)
 	{
-		const Symbol& sym = *pSymArr->m_arr[iPos];
+		const Symbol& sym = *pSymArr->GetArr()[iPos];
 		bool bSym0Scalar = sym.IsScalar() || sym.GetType()==SYMBOL_STRING;
 		bool bSym1Scalar = pSym->IsScalar() || pSym->GetType()==SYMBOL_STRING;
 
@@ -520,7 +520,7 @@ static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 
-	const t_string& strIdent = vecSyms[0]->m_strIdent;
+	const t_string& strIdent = vecSyms[0]->GetIdent();
 	if(strIdent == T_STR"")
 	{
 		G_CERR << linenr(T_STR"Error", info) << "No identifier given for cur_iter." << std::endl;
@@ -577,24 +577,24 @@ static Symbol* fkt_sort(const std::vector<Symbol*>& vecSyms,
 	}
 
 	const SymbolArray* pArr = (SymbolArray*)vecSyms[0];
-	const unsigned int iArrSize = pArr->m_arr.size();
+	const unsigned int iArrSize = pArr->GetArr().size();
 
 	std::vector<t_symtup> vecTups;
 	vecTups.reserve(iArrSize);
 	for(unsigned int iElem=0; iElem<iArrSize; ++iElem)
-		vecTups.push_back(t_symtup(pArr->m_arr[iElem], iElem));
+		vecTups.push_back(t_symtup(pArr->GetArr()[iElem], iElem));
 
 	_sortarr(vecTups);
 
 	SymbolArray* pArrRet = new SymbolArray();
-	pArrRet->m_arr.reserve(iArrSize);
+	pArrRet->GetArr().reserve(iArrSize);
 
 	std::vector<unsigned int> vecSortedIndices;
 	vecSortedIndices.reserve(iArrSize);
 
 	for(unsigned int iElem=0; iElem<iArrSize; ++iElem)
 	{
-		pArrRet->m_arr.push_back(std::get<0>(vecTups[iElem])->clone());
+		pArrRet->GetArr().push_back(std::get<0>(vecTups[iElem])->clone());
 		vecSortedIndices.push_back(std::get<1>(vecTups[iElem]));
 	}
 
@@ -606,8 +606,8 @@ static Symbol* fkt_sort(const std::vector<Symbol*>& vecSyms,
 
 	// sort other arrays in the same way
 	SymbolArray *pArrArr = new SymbolArray();
-	pArrArr->m_arr.reserve(vecSyms.size());
-	pArrArr->m_arr.push_back(pArrRet);
+	pArrArr->GetArr().reserve(vecSyms.size());
+	pArrArr->GetArr().push_back(pArrRet);
 
 	for(unsigned int iElem=1; iElem<vecSyms.size(); ++iElem)
 	{
@@ -620,7 +620,7 @@ static Symbol* fkt_sort(const std::vector<Symbol*>& vecSyms,
 			continue;
 		}
 
-		if(((SymbolArray*)pSym)->m_arr.size() != vecSortedIndices.size())
+		if(((SymbolArray*)pSym)->GetArr().size() != vecSortedIndices.size())
 		{
 			G_CERR << linenr(T_STR"Error", info)
 				<< "Array size mismatch in sort."
@@ -629,9 +629,9 @@ static Symbol* fkt_sort(const std::vector<Symbol*>& vecSyms,
 		}
 
 		SymbolArray *pNextArr = (SymbolArray*)pSym->clone();
-		_rearrangearr(pNextArr->m_arr, vecSortedIndices);
+		_rearrangearr(pNextArr->GetArr(), vecSortedIndices);
 
-		pArrArr->m_arr.push_back(pNextArr);
+		pArrArr->GetArr().push_back(pNextArr);
 	}
 
 	return pArrArr;
@@ -642,7 +642,7 @@ static Symbol* fkt_zip(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
 	SymbolArray* pArrRet = new SymbolArray();
-	std::vector<Symbol*>* pVec = &pArrRet->m_arr;
+	std::vector<Symbol*>* pVec = &pArrRet->GetArr();
 
 	bool bFirst = 1;
 	unsigned int iSize = 0;
@@ -650,13 +650,13 @@ static Symbol* fkt_zip(const std::vector<Symbol*>& vecSyms,
 	{
 		if(pSym->GetType() != SYMBOL_ARRAY)
 		{
-			G_CERR << linenr(T_STR"Error", info) << "Symbol \"" << pSym->m_strName
+			G_CERR << linenr(T_STR"Error", info) << "Symbol \"" << pSym->GetName()
 					<< "\" is of type " << pSym->GetTypeName()
 					<< ", but zip needs vectors." << std::endl;
 			continue;
 		}
 
-		std::vector<Symbol*>& curSym = ((SymbolArray*)pSym)->m_arr;
+		std::vector<Symbol*>& curSym = ((SymbolArray*)pSym)->GetArr();
 		if(bFirst)
 		{
 			iSize = curSym.size();
@@ -679,7 +679,7 @@ static Symbol* fkt_zip(const std::vector<Symbol*>& vecSyms,
 		}
 
 		for(unsigned int i=0; i<iSize; ++i)
-			((SymbolArray*)(*pVec)[i])->m_arr.push_back(curSym[i]->clone());
+			((SymbolArray*)(*pVec)[i])->GetArr().push_back(curSym[i]->clone());
 	}
 
 	return pArrRet;
@@ -703,19 +703,19 @@ static Symbol* fkt_trim(const std::vector<Symbol*>& vecSyms,
 	if(vecSyms[0]->GetType() == SYMBOL_ARRAY)
 	{
 		SymbolArray *pArr = new SymbolArray();
-		pArr->m_arr.reserve(((SymbolArray*)vecSyms[0])->m_arr.size());
+		pArr->GetArr().reserve(((SymbolArray*)vecSyms[0])->GetArr().size());
 
-		for(Symbol* pSymArr : ((SymbolArray*)vecSyms[0])->m_arr)
+		for(Symbol* pSymArr : ((SymbolArray*)vecSyms[0])->GetArr())
 		{
 			std::vector<Symbol*> vecDummy = { pSymArr };
-			pArr->m_arr.push_back(fkt_trim(vecDummy, info, pSymTab));
+			pArr->GetArr().push_back(fkt_trim(vecDummy, info, pSymTab));
 		}
 
 		return pArr;
 	}
 	else if(vecSyms[0]->GetType() == SYMBOL_STRING)
 	{
-		t_string str = ((SymbolString*)vecSyms[0])->m_strVal;
+		t_string str = ((SymbolString*)vecSyms[0])->GetVal();
 		::trim(str);
 		return new SymbolString(str);
 	}
@@ -737,8 +737,8 @@ static Symbol* fkt_split(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 
-	const t_string& str = ((SymbolString*)vecSyms[0])->m_strVal;
-	const t_string& strDelim = ((SymbolString*)vecSyms[1])->m_strVal;
+	const t_string& str = ((SymbolString*)vecSyms[0])->GetVal();
+	const t_string& strDelim = ((SymbolString*)vecSyms[1])->GetVal();
 	std::size_t iPos = str.find(strDelim);
 
 	t_string str0 = str.substr(0, iPos);
@@ -748,8 +748,8 @@ static Symbol* fkt_split(const std::vector<Symbol*>& vecSyms,
 		str1 = str.substr(iPos + strDelim.length(), t_string::npos);
 
 	SymbolArray* pSymRet = new SymbolArray();
-	pSymRet->m_arr.push_back(new SymbolString(str0));
-	pSymRet->m_arr.push_back(new SymbolString(str1));
+	pSymRet->GetArr().push_back(new SymbolString(str0));
+	pSymRet->GetArr().push_back(new SymbolString(str1));
 	return pSymRet;
 }
 
@@ -762,11 +762,11 @@ static Symbol* fkt_tokens(const std::vector<Symbol*>& vecSyms,
 
 	// split("Test 123")
 	if(vecSyms.size() >= 1 && vecSyms[0]->GetType()==SYMBOL_STRING)
-		pstrInput = &((SymbolString*)vecSyms[0])->m_strVal;
+		pstrInput = &((SymbolString*)vecSyms[0])->GetVal();
 
 	// split("Test 123", " \t\n")
 	if(vecSyms.size() >= 2 && vecSyms[1]->GetType()==SYMBOL_STRING)
-		strDelim = ((SymbolString*)vecSyms[1])->m_strVal;
+		strDelim = ((SymbolString*)vecSyms[1])->GetVal();
 
 	if(!pstrInput)
 	{
@@ -780,7 +780,7 @@ static Symbol* fkt_tokens(const std::vector<Symbol*>& vecSyms,
 
 	SymbolArray* pArr = new SymbolArray;
 	for(const t_string& strTok : vecTokens)
-		pArr->m_arr.push_back(new SymbolString(strTok));
+		pArr->GetArr().push_back(new SymbolString(strTok));
 
 	return pArr;
 }
@@ -798,9 +798,9 @@ static Symbol* fkt_replace(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 
-	std::string str = ((SymbolString*)vecSyms[0])->m_strVal;
-	const std::string& strOld = ((SymbolString*)vecSyms[1])->m_strVal;
-	const std::string& strNew = ((SymbolString*)vecSyms[2])->m_strVal;
+	std::string str = ((SymbolString*)vecSyms[0])->GetVal();
+	const std::string& strOld = ((SymbolString*)vecSyms[1])->GetVal();
+	const std::string& strNew = ((SymbolString*)vecSyms[2])->GetVal();
 
 	find_all_and_replace(str, strOld, strNew);
 
@@ -827,9 +827,9 @@ static Symbol* fkt_has_key(const std::vector<Symbol*>& vecSyms,
 	}
 
 	const SymbolMap* pMap = (SymbolMap*)vecSyms[0];
-	const std::string& strKey = ((SymbolString*)vecSyms[1])->m_strVal;
+	const std::string& strKey = ((SymbolString*)vecSyms[1])->GetVal();
 
-	int bHasKey = (pMap->m_map.find(strKey) != pMap->m_map.end());
+	int bHasKey = (pMap->GetMap().find(strKey) != pMap->GetMap().end());
 	return new SymbolInt(bHasKey);
 }
 

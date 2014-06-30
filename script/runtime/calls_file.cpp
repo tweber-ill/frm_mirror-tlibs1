@@ -35,20 +35,20 @@ static Symbol* fkt_read_file(const std::vector<Symbol*>& vecSyms,
 				<< std::endl;
 		return 0;
 	}
-	
-	const t_string& strFile = ((SymbolString*)vecSyms[0])->m_strVal;
-	
+
+	const t_string& strFile = ((SymbolString*)vecSyms[0])->GetVal();
+
 	t_ifstream ifstr(strFile);
 	if(!ifstr.is_open())
 		return new SymbolString("");
 
-	//std::streampos iFileSize = get_file_size<t_char>(ifstr);	
+	//std::streampos iFileSize = get_file_size<t_char>(ifstr);
 	t_ostringstream ostr;
-	
+
 	std::copy(std::istreambuf_iterator<t_char>(ifstr),
 				std::istreambuf_iterator<t_char>(),
 				std::ostreambuf_iterator<t_char>(ostr));
-	
+
 	return new SymbolString(ostr.str());
 }
 
@@ -70,7 +70,7 @@ static Symbol* fkt_write_file(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 	
-	const t_string& strFile = ((SymbolString*)vecSyms[0])->m_strVal;
+	const t_string& strFile = ((SymbolString*)vecSyms[0])->GetVal();
 	t_ofstream ofstr(strFile);
 	if(!ofstr.is_open())
 		return new SymbolInt(0);
@@ -79,7 +79,7 @@ static Symbol* fkt_write_file(const std::vector<Symbol*>& vecSyms,
 	t_string* pStr = 0;
 	bool bAllocatedStr = 0;
 	if(vecSyms[1]->GetType() == SYMBOL_STRING)
-		pStr = &((SymbolString*)vecSyms[1])->m_strVal;
+		pStr = &((SymbolString*)vecSyms[1])->GetVal();
 	else
 	{
 		pStr = new std::string;
@@ -116,7 +116,7 @@ static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 
-	const t_string& strFile = ((SymbolString*)vecSyms[0])->m_strVal;
+	const t_string& strFile = ((SymbolString*)vecSyms[0])->GetVal();
 
 
 	SymbolArray *pArr = new SymbolArray();
@@ -130,24 +130,24 @@ static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
 		return pArr;
 	}
 
-	pArr->m_arr.reserve(dat.GetColCnt());
+	pArr->GetArr().reserve(dat.GetColCnt());
 	for(unsigned int iCol=0; iCol<dat.GetColCnt(); ++iCol)
 	{
 		const unsigned int iColLen = dat.GetColLen();
 		const t_real *pCol = dat.GetColumn(iCol);
 
 		SymbolArray *pArrCol = new SymbolArray;
-		pArrCol->m_arr.reserve(iColLen);
+		pArrCol->GetArr().reserve(iColLen);
 
 		for(unsigned int iRow=0; iRow<iColLen; ++iRow)
 		{
 			SymbolDouble* pSymD = new SymbolDouble();
-			pSymD->m_dVal = pCol[iRow];
+			pSymD->SetVal(pCol[iRow]);
 
-			pArrCol->m_arr.push_back(pSymD);
+			pArrCol->GetArr().push_back(pSymD);
 		}
 
-		pArr->m_arr.push_back(pArrCol);
+		pArr->GetArr().push_back(pArrCol);
 	}
 
 	// load the parameter map
@@ -160,11 +160,11 @@ static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
 		t_string strKey = STR_TO_WSTR(val.first);
 
 		SymbolString *pSymStrVal = new SymbolString;
-		pSymStrVal->m_strVal = STR_TO_WSTR(val.second);
+		pSymStrVal->SetVal(STR_TO_WSTR(val.second));
 
-		pSymMap->m_map.insert(SymbolMap::t_map::value_type(strKey, pSymStrVal));
+		pSymMap->GetMap().insert(SymbolMap::t_map::value_type(strKey, pSymStrVal));
 	}
-	pArr->m_arr.push_back(pSymMap);
+	pArr->GetArr().push_back(pSymMap);
 
 	return pArr;
 }
@@ -172,7 +172,7 @@ static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
 static void get_2darr_size(const SymbolArray* pArr,
 				unsigned int& iColLen, unsigned int& iRowLen)
 {
-	iColLen = pArr->m_arr.size();
+	iColLen = pArr->GetArr().size();
 	iRowLen = 0;
 
 	if(iColLen)
@@ -180,10 +180,10 @@ static void get_2darr_size(const SymbolArray* pArr,
 		// look for first real array (not the parameter map)
 		for(unsigned int iCol=0; iCol<iColLen; ++iCol)
 		{
-			Symbol* pSym = pArr->m_arr[iCol];
+			Symbol* pSym = pArr->GetArr()[iCol];
 			if(pSym->GetType() == SYMBOL_ARRAY)
 			{
-				iRowLen = ((SymbolArray*)pSym)->m_arr.size();
+				iRowLen = ((SymbolArray*)pSym)->GetArr().size();
 				break;
 			}
 		}
@@ -193,7 +193,7 @@ static void get_2darr_size(const SymbolArray* pArr,
 	// don't count the parameter map
 	for(unsigned int iCol=0; iCol<iColLen; ++iCol)
 	{
-		Symbol* pSym = pArr->m_arr[iCol];
+		Symbol* pSym = pArr->GetArr()[iCol];
 		if(pSym->GetType() != SYMBOL_ARRAY)
 			++iNonArray;
 	}
@@ -204,7 +204,7 @@ static void get_2darr_size(const SymbolArray* pArr,
 static std::string get_2darr_strval(const SymbolArray* pArr,
 				unsigned int iCol, unsigned int iRow)
 {
-	unsigned int iColLen = pArr->m_arr.size();
+	unsigned int iColLen = pArr->GetArr().size();
 	if(iCol >= iColLen)
 		return "0";
 
@@ -212,7 +212,7 @@ static std::string get_2darr_strval(const SymbolArray* pArr,
 	unsigned int iColRealArray = 0;
 	for(unsigned int iCurCol=0; iCurCol<iColLen; ++iCurCol)
 	{
-		Symbol *pSym = pArr->m_arr[iCurCol];
+		Symbol *pSym = pArr->GetArr()[iCurCol];
 		if(pSym->GetType() == SYMBOL_ARRAY)
 		{
 			if(iColRealArray == iCol)
@@ -233,9 +233,9 @@ static std::string get_2darr_strval(const SymbolArray* pArr,
 	}
 
 
-	Symbol *pSym = pArr->m_arr[iCol];
+	Symbol *pSym = pArr->GetArr()[iCol];
 
-	const std::vector<Symbol*>& veccol = ((SymbolArray*)pSym)->m_arr;
+	const std::vector<Symbol*>& veccol = ((SymbolArray*)pSym)->GetArr();
 	if(iRow >= veccol.size())
 		return "0";
 
@@ -252,7 +252,7 @@ static Symbol* fkt_savetxt(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 
-	const t_string& strFile = ((SymbolString*)vecSyms[0])->m_strVal;
+	const t_string& strFile = ((SymbolString*)vecSyms[0])->GetVal();
 	SymbolArray* pArr = (SymbolArray*)vecSyms[1];
 
 
@@ -264,14 +264,14 @@ static Symbol* fkt_savetxt(const std::vector<Symbol*>& vecSyms,
 	}
 
 	// save parameter map
-	for(unsigned int iCol=0; iCol<pArr->m_arr.size(); ++iCol)
+	for(unsigned int iCol=0; iCol<pArr->GetArr().size(); ++iCol)
 	{
-		Symbol *_pSymMap = pArr->m_arr[iCol];
+		Symbol *_pSymMap = pArr->GetArr()[iCol];
 		if(_pSymMap && _pSymMap->GetType() == SYMBOL_MAP)
 		{
 			SymbolMap *pSymMap = (SymbolMap*)_pSymMap;
 
-			for(const SymbolMap::t_map::value_type& val : pSymMap->m_map)
+			for(const SymbolMap::t_map::value_type& val : pSymMap->GetMap())
 			{
 				ofstr << "# " << val.first << " : "
 						<< (val.second?val.second->print():T_STR"") << "\n";

@@ -22,16 +22,16 @@ Symbol* SymbolDouble::ToType(SymbolType stype) const
 	else if(stype == SYMBOL_INT)
 	{
 		SymbolInt *pNewSymI = new SymbolInt();
-		pNewSymI->m_strName = this->m_strName;
-		pNewSymI->m_iVal = t_int(this->m_dVal);
+		pNewSymI->SetName(this->GetName());
+		pNewSymI->SetVal(t_int(this->GetVal()));
 
 		pNewSym = pNewSymI;
 	}
 	else if(stype == SYMBOL_STRING)
 	{
 		SymbolString *pNewSymS = new SymbolString();
-		pNewSymS->m_strName = this->m_strName;
-		pNewSymS->m_strVal = print();
+		pNewSymS->SetName(this->GetName());
+		pNewSymS->SetVal(print());
 
 		pNewSym = pNewSymS;
 	}
@@ -44,7 +44,7 @@ t_string SymbolDouble::print() const
 	t_ostringstream ostr;
 	ostr.precision(m_prec);
 
-	ostr << m_dVal;
+	ostr << GetVal();
 	return ostr.str();
 }
 
@@ -58,7 +58,7 @@ Symbol* SymbolDouble::clone() const
 void SymbolDouble::assign(Symbol *pSym)
 {
 	SymbolDouble *pOther = (SymbolDouble*)pSym->ToType(GetType());
-	this->m_dVal = pOther->m_dVal;
+	this->SetVal(pOther->GetVal());
 }
 
 bool SymbolDouble::IsLessThan(const Symbol& sym) const
@@ -81,16 +81,16 @@ Symbol* SymbolInt::ToType(SymbolType stype) const
 	else if(stype == SYMBOL_DOUBLE)
 	{
 		SymbolDouble *pNewSymD = new SymbolDouble();
-		pNewSymD->m_strName = this->m_strName;
-		pNewSymD->m_dVal = t_real(this->m_iVal);
+		pNewSymD->SetName(this->GetName());
+		pNewSymD->SetVal(t_real(this->GetVal()));
 
 		pNewSym = pNewSymD;
 	}
 	else if(stype == SYMBOL_STRING)
 	{
 		SymbolString *pNewSymS = new SymbolString();
-		pNewSymS->m_strName = this->m_strName;
-		pNewSymS->m_strVal = print();
+		pNewSymS->SetName(this->GetName());
+		pNewSymS->SetVal(print());
 
 		pNewSym = pNewSymS;
 	}
@@ -101,7 +101,7 @@ Symbol* SymbolInt::ToType(SymbolType stype) const
 t_string SymbolInt::print() const
 {
 	t_ostringstream ostr;
-	ostr << m_iVal;
+	ostr << GetVal();
 	return ostr.str();
 }
 
@@ -115,7 +115,7 @@ Symbol* SymbolInt::clone() const
 void SymbolInt::assign(Symbol *pSym)
 {
 	SymbolInt *pOther = (SymbolInt*)pSym->ToType(GetType());
-	this->m_iVal = pOther->m_iVal;
+	this->SetVal(pOther->GetVal());
 }
 
 bool SymbolInt::IsLessThan(const Symbol& sym) const
@@ -137,21 +137,26 @@ Symbol* SymbolString::ToType(SymbolType stype) const
 	}
 	else if(stype == SYMBOL_INT)
 	{
-		t_istringstream istr(m_strVal);
+		t_istringstream istr(GetVal());
 
 		SymbolInt *pNewSymI = new SymbolInt();
-		pNewSymI->m_strName = this->m_strName;
-		istr >> pNewSymI->m_iVal;
+		pNewSymI->SetName(this->GetName());
+
+		t_int iVal;
+		istr >> iVal;
+		pNewSymI->SetVal(iVal);
 
 		pNewSym = pNewSymI;
 	}
 	else if(stype == SYMBOL_DOUBLE)
 	{
-		t_istringstream istr(m_strVal);
+		t_istringstream istr(GetVal());
 
 		SymbolDouble *pNewSymD = new SymbolDouble();
-		pNewSymD->m_strName = this->m_strName;
-		istr >> pNewSymD->m_dVal;
+		pNewSymD->SetName(this->GetName());
+		t_real dVal;
+		istr >> dVal;
+		pNewSymD->SetVal(dVal);
 
 		pNewSym = pNewSymD;
 	}
@@ -162,7 +167,7 @@ Symbol* SymbolString::ToType(SymbolType stype) const
 t_string SymbolString::print() const
 {
 	t_ostringstream ostr;
-	ostr << m_strVal;
+	ostr << GetVal();
 	return ostr.str();
 }
 
@@ -176,12 +181,12 @@ Symbol* SymbolString::clone() const
 void SymbolString::assign(Symbol *pSym)
 {
 	SymbolString *pOther = (SymbolString*)pSym->ToType(GetType());
-	this->m_strVal = pOther->m_strVal;
+	this->SetVal(pOther->GetVal());
 }
 
 bool SymbolString::IsLessThan(const Symbol& sym) const
 {
-       	return m_strVal < sym.print();
+       	return GetVal() < sym.print();
 }
 
 
@@ -208,8 +213,8 @@ Symbol* SymbolArray::ToType(SymbolType stype) const
 	else if(stype == SYMBOL_STRING)
 	{
 		SymbolString *pNewSymS = new SymbolString();
-		pNewSymS->m_strName = this->m_strName;
-		pNewSymS->m_strVal = print();
+		pNewSymS->SetName(this->GetName());
+		pNewSymS->SetVal(print());
 
 		pNewSym = pNewSymS;
 	}
@@ -242,10 +247,10 @@ Symbol* SymbolArray::clone() const
 {
 	SymbolArray *pSym = new SymbolArray;
 
-	pSym->m_arr.reserve(m_arr.size());
+	pSym->GetArr().reserve(m_arr.size());
 
 	for(Symbol *pArrSym : m_arr)
-		pSym->m_arr.push_back(pArrSym->clone());
+		pSym->GetArr().push_back(pArrSym->clone());
 
 	pSym->UpdateIndices();
 	return pSym;
@@ -254,14 +259,13 @@ Symbol* SymbolArray::clone() const
 void SymbolArray::assign(Symbol *pSym)
 {
 	SymbolArray *pOther = (SymbolArray*)pSym->ToType(GetType());
-	this->m_arr = pOther->m_arr;
+	this->m_arr = pOther->GetArr();
 }
 
 void SymbolArray::UpdateIndex(unsigned int iIdx)
 {
-	m_arr[iIdx]->m_pArr = this;
-	m_arr[iIdx]->m_bHasIdx = 1;
-	m_arr[iIdx]->m_iArrIdx = iIdx;
+	m_arr[iIdx]->SetArrPtr(this);
+	m_arr[iIdx]->SetArrIdx(iIdx);
 }
 
 void SymbolArray::UpdateIndices()
@@ -277,7 +281,7 @@ std::vector<t_real> SymbolArray::ToDoubleArray() const
 
 	for(const Symbol *pSym : m_arr)
 	{
-		t_real dVal = ((SymbolDouble*)pSym->ToType(SYMBOL_DOUBLE))->m_dVal;
+		t_real dVal = ((SymbolDouble*)pSym->ToType(SYMBOL_DOUBLE))->GetVal();
 		vec.push_back(dVal);
 	}
 
@@ -291,7 +295,7 @@ void SymbolArray::FromDoubleArray(const std::vector<t_real>& vec)
 	for(t_real d : vec)
 	{
 		SymbolDouble *pSym = new SymbolDouble;
-		pSym->m_dVal = d;
+		pSym->SetVal(d);
 		m_arr.push_back(pSym);
 	}
 }
@@ -317,8 +321,8 @@ Symbol* SymbolMap::ToType(SymbolType stype) const
 	if(stype == SYMBOL_STRING)
 	{
 		SymbolString *pNewSymS = new SymbolString();
-		pNewSymS->m_strName = this->m_strName;
-		pNewSymS->m_strVal = print();
+		pNewSymS->SetName(this->GetName());
+		pNewSymS->SetVal(print());
 
 		pNewSym = pNewSymS;
 	}
@@ -377,8 +381,8 @@ void SymbolMap::UpdateIndex(const t_map::key_type& strKey)
 	{
 		//G_COUT << "updating index for " << strKey << std::endl;
 
-		iter->second->m_pMap = this;
-		iter->second->m_strMapKey = iter->first;
+		iter->second->SetMapPtr(this);
+		iter->second->SetMapKey(iter->first);
 	}
 }
 
@@ -388,8 +392,8 @@ void SymbolMap::UpdateIndices()
 	{
 		//G_COUT << "updating index for " << val.first << std::endl;
 
-		val.second->m_pMap = this;
-		val.second->m_strMapKey = val.first;
+		val.second->SetMapPtr(this);
+		val.second->SetMapKey(val.first);
 	}
 }
 
@@ -526,7 +530,7 @@ bool is_vec(const Symbol* pSym)
 		return false;
 
 	const SymbolArray* pSymArr = (SymbolArray*)pSym;
-	for(const Symbol* pSymInArr : pSymArr->m_arr)
+	for(const Symbol* pSymInArr : pSymArr->GetArr())
 	{
 		if(!pSymInArr->IsScalar())
 			return false;
@@ -542,16 +546,16 @@ bool is_mat(const Symbol* pSym, unsigned int *piNumCols, unsigned int *piNumRows
 		return false;
 
 	const SymbolArray* pSymArr = (SymbolArray*)pSym;
-	if(piNumRows) *piNumRows = pSymArr->m_arr.size();
+	if(piNumRows) *piNumRows = pSymArr->GetArr().size();
 
 	unsigned int iVecSize = 0;
 	bool bHasSize = 0;
-	for(const Symbol* pSymInArr : pSymArr->m_arr)
+	for(const Symbol* pSymInArr : pSymArr->GetArr())
 	{
 		if(!is_vec(pSymInArr))
 			return false;
 
-		unsigned int iSize = ((SymbolArray*)pSymInArr)->m_arr.size();
+		unsigned int iSize = ((SymbolArray*)pSymInArr)->GetArr().size();
 		if(!bHasSize)
 		{
 			iVecSize = iSize;

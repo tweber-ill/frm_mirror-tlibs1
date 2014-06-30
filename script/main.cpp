@@ -70,8 +70,8 @@ static inline int script_main(int argc, char** argv)
 	for(int iArg=1; iArg<argc; ++iArg)
 	{
 		SymbolString *pSymArg = new SymbolString();
-		pSymArg->m_strVal = STR_TO_WSTR(argv[iArg]);
-		parrMainArgs->m_arr.push_back(pSymArg);
+		pSymArg->SetVal(STR_TO_WSTR(argv[iArg]));
+		parrMainArgs->GetArr().push_back(pSymArg);
 	}
 	//std::vector<Symbol*> vecMainArgs = { &arrMainArgs };
 
@@ -83,7 +83,7 @@ static inline int script_main(int argc, char** argv)
 	info.strInitScrFile = strFile;
 
 	SymbolArray arrMainArgs;
-	arrMainArgs.m_arr.push_back(parrMainArgs);
+	arrMainArgs.GetArr().push_back(parrMainArgs);
 	pTableSup->InsertSymbol(T_STR"<args>", &arrMainArgs);
 	par.pRoot->eval(info, pTableSup);
 	pTableSup->RemoveSymbolNoDelete(T_STR"<args>");

@@ -27,18 +27,18 @@ static inline Symbol* _fkt_linlogspace(const std::vector<Symbol*>& vecSyms,
 	t_real dmax = vecSyms[1]->GetValDouble();
 
 	SymbolArray* pSymRet = new SymbolArray;
-	pSymRet->m_arr.reserve(iNum);
+	pSymRet->GetArr().reserve(iNum);
 	for(t_int i=0; i<iNum; ++i)
 	{
 		SymbolDouble *pSymD = new SymbolDouble();
 		t_real dDiv = (iNum!=1 ? t_real(iNum-1) : 1);
-		pSymD->m_dVal = t_real(i)*(dmax-dmin)/dDiv + dmin;
+		pSymD->SetVal(t_real(i)*(dmax-dmin)/dDiv + dmin);
 		if(bLog)
 		{
 			const t_real dBase = 10.;
-			pSymD->m_dVal = std::pow(dBase, pSymD->m_dVal);
+			pSymD->SetVal(std::pow(dBase, pSymD->GetVal()));
 		}
-		pSymRet->m_arr.push_back(pSymD);
+		pSymRet->GetArr().push_back(pSymD);
 	}
 
 	pSymRet->UpdateIndices();
@@ -104,7 +104,7 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 		if(pSym->GetType() == SYMBOL_ARRAY)
 		{
 			pThisSym = fkt_math_for_every<fkt>(
-					((SymbolArray*)pSym)->m_arr,
+					((SymbolArray*)pSym)->GetArr(),
 					info, pSymTab);
 
 			bCleanSym = 1;
@@ -113,18 +113,18 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 		if(pThisSym->GetType() == SYMBOL_INT)
 		{
 			if(!bHadInt)
-				iRes = ((SymbolInt*)pThisSym)->m_iVal;
+				iRes = ((SymbolInt*)pThisSym)->GetVal();
 			else
-				iRes = math_fkt<fkt, t_int>(iRes, ((SymbolInt*)pThisSym)->m_iVal);
+				iRes = math_fkt<fkt, t_int>(iRes, ((SymbolInt*)pThisSym)->GetVal());
 
 			bHadInt = 1;
 		}
 		else if(pThisSym->GetType() == SYMBOL_DOUBLE)
 		{
 			if(!bHadDouble)
-				dRes = ((SymbolDouble*)pThisSym)->m_dVal;
+				dRes = ((SymbolDouble*)pThisSym)->GetVal();
 			else
-				dRes = math_fkt<fkt, t_real>(dRes, ((SymbolDouble*)pThisSym)->m_dVal);
+				dRes = math_fkt<fkt, t_real>(dRes, ((SymbolDouble*)pThisSym)->GetVal());
 
 			bHadDouble = 1;
 		}
@@ -163,12 +163,12 @@ static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 		SymbolArray* pArrRet = new SymbolArray();
 
 		SymbolArray* pSymArr = (SymbolArray*)vecSyms[0];
-		for(Symbol* pArrElem : pSymArr->m_arr)
+		for(Symbol* pArrElem : pSymArr->GetArr())
 		{
 			std::vector<Symbol*> vecDummy;
 			vecDummy.push_back(pArrElem);
 
-			pArrRet->m_arr.push_back(fkt_math_1arg<FKT>(vecDummy, info, pSymTab));
+			pArrRet->GetArr().push_back(fkt_math_1arg<FKT>(vecDummy, info, pSymTab));
 		}
 
 		pArrRet->UpdateIndices();
@@ -224,12 +224,12 @@ static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
 		SymbolArray* pArrRet = new SymbolArray();
 
 		SymbolArray* pSymArr = (SymbolArray*)vecSyms[0];
-		for(Symbol* pArrElem : pSymArr->m_arr)
+		for(Symbol* pArrElem : pSymArr->GetArr())
 		{
 			std::vector<Symbol*> vecDummy;
 			vecDummy.push_back(pArrElem);
 
-			pArrRet->m_arr.push_back(fkt_math_abs(vecDummy, info, pSymTab));
+			pArrRet->GetArr().push_back(fkt_math_abs(vecDummy, info, pSymTab));
 		}
 
 		pArrRet->UpdateIndices();
@@ -238,12 +238,12 @@ static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
 	else if(vecSyms[0]->GetType() == SYMBOL_INT)
 	{
 		SymbolInt* pSymInt = (SymbolInt*)vecSyms[0];
-		return new SymbolInt(myabs(pSymInt->m_iVal));
+		return new SymbolInt(myabs(pSymInt->GetVal()));
 	}
 	else if(vecSyms[0]->GetType() == SYMBOL_DOUBLE)
 	{
 		SymbolDouble* pSymD = (SymbolDouble*)vecSyms[0];
-		return new SymbolDouble(myabs(pSymD->m_dVal));
+		return new SymbolDouble(myabs(pSymD->GetVal()));
 	}
 
 
@@ -269,12 +269,12 @@ static Symbol* fkt_math_1arg_bret(const std::vector<Symbol*>& vecSyms,
 		SymbolArray* pArrRet = new SymbolArray();
 
 		SymbolArray* pSymArr = (SymbolArray*)vecSyms[0];
-		for(Symbol* pArrElem : pSymArr->m_arr)
+		for(Symbol* pArrElem : pSymArr->GetArr())
 		{
 			std::vector<Symbol*> vecDummy;
 			vecDummy.push_back(pArrElem);
 
-			pArrRet->m_arr.push_back(fkt_math_1arg_bret<FKT>(vecDummy, info, pSymTab));
+			pArrRet->GetArr().push_back(fkt_math_1arg_bret<FKT>(vecDummy, info, pSymTab));
 		}
 
 		pArrRet->UpdateIndices();
@@ -314,17 +314,17 @@ static Symbol* _fkt_fft(const std::vector<Symbol*>& vecSyms,
 	else if(vecSyms.size()==1 && vecSyms[0]->GetType()==SYMBOL_ARRAY)
 	{
 		SymbolArray* pSymArr = (SymbolArray*)vecSyms[0];
-		unsigned int iSymArrSize = pSymArr->m_arr.size();
+		unsigned int iSymArrSize = pSymArr->GetArr().size();
 
 		if(iSymArrSize==0)
 			bArgsOk = 0;
-		if(iSymArrSize>=1 && pSymArr->m_arr[0]->GetType()==SYMBOL_ARRAY)
-			vecRealIn = ((SymbolArray*)pSymArr->m_arr[0])->ToDoubleArray();
-		if(iSymArrSize>=2 && pSymArr->m_arr[1]->GetType()==SYMBOL_ARRAY)
-			vecImagIn = ((SymbolArray*)pSymArr->m_arr[1])->ToDoubleArray();
+		if(iSymArrSize>=1 && pSymArr->GetArr()[0]->GetType()==SYMBOL_ARRAY)
+			vecRealIn = ((SymbolArray*)pSymArr->GetArr()[0])->ToDoubleArray();
+		if(iSymArrSize>=2 && pSymArr->GetArr()[1]->GetType()==SYMBOL_ARRAY)
+			vecImagIn = ((SymbolArray*)pSymArr->GetArr()[1])->ToDoubleArray();
 
 		// simple array containing real data
-		if(pSymArr->m_arr[0]->GetType()!=SYMBOL_ARRAY)
+		if(pSymArr->GetArr()[0]->GetType()!=SYMBOL_ARRAY)
 			vecRealIn = pSymArr->ToDoubleArray();
 	}
 
@@ -358,8 +358,8 @@ static Symbol* _fkt_fft(const std::vector<Symbol*>& vecSyms,
 	pArrImag->FromDoubleArray(vecImagOut);
 
 	SymbolArray* pRet = new SymbolArray();
-	pRet->m_arr.push_back(pArrReal);
-	pRet->m_arr.push_back(pArrImag);
+	pRet->GetArr().push_back(pArrReal);
+	pRet->GetArr().push_back(pArrImag);
 
 	return pRet;
 }
@@ -593,6 +593,22 @@ static Symbol* fkt_outerproduct(const std::vector<Symbol*>& vecSyms, ParseInfo& 
 	return mat_to_sym<t_mat>(mat);
 }
 
+static Symbol* fkt_dot(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size()!=2 || !is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
+	{
+		G_CERR << linenr(T_STR"Error", info) 
+			<< "Inner product needs two vector arguments." 
+			<< std::endl;
+		return 0;
+	}
+
+	t_vec<t_real> vec1 = sym_to_vec<t_vec>(vecSyms[0]);
+	t_vec<t_real> vec2 = sym_to_vec<t_vec>(vecSyms[1]);
+
+	return new SymbolDouble(ublas::inner_prod(vec1, vec2));
+}
+
 static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
 {
 	if(vecSyms.size() != 2)
@@ -609,10 +625,7 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 	// dot product
 	if(bFirstIsVec && bSecondIsVec)
 	{
-		t_vec<t_real> vec1 = sym_to_vec<t_vec>(vecSyms[0]);
-		t_vec<t_real> vec2 = sym_to_vec<t_vec>(vecSyms[1]);
-
-		pRet = new SymbolDouble(ublas::inner_prod(vec1, vec2));
+		pRet = fkt_dot(vecSyms, info, pSymTab);
 	}
 	else
 	{
@@ -798,8 +811,10 @@ extern void init_ext_math_calls()
 		t_mapFkts::value_type(T_STR"logspace", fkt_logspace),
 
 		// vector operations
-		//t_mapFkts::value_type(T_STR"dot", fkt_dot), -> use prod
+		t_mapFkts::value_type(T_STR"dot", fkt_dot),
 		t_mapFkts::value_type(T_STR"cross", fkt_cross),
+		t_mapFkts::value_type(T_STR"outer_prod", fkt_outerproduct),
+
 		t_mapFkts::value_type(T_STR"len", fkt_length),
 
 		// matrix operations
@@ -811,7 +826,6 @@ extern void init_ext_math_calls()
 
 		// matrix-vector operations
 		t_mapFkts::value_type(T_STR"prod", fkt_product),
-		t_mapFkts::value_type(T_STR"outer_prod", fkt_outerproduct),
 
 
 		// random numbers
