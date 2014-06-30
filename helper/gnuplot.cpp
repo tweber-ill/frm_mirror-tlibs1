@@ -248,24 +248,27 @@ std::string GnuPlot::BuildCmd()
 		if(!bHasSize)
 		{
 			if(bConnectLines)
-				dSize = 1.25;
+				dSize = 1.;
 			else
-				dSize = 1.5;
+				dSize = 1.25;
 		}
 
+		std::ostringstream ostrTmp;
 		std::string strPointStyle;
+
 		if(bHasXErr && bHasYErr)
-			strPointStyle = "with xyerrorbars";
+			ostrTmp << "with xyerrorbars";
 		else if(bHasXErr && !bHasYErr)
-			strPointStyle = "with xerrorbars";
+			ostrTmp << "with xerrorbars";
 		else if(!bHasXErr && bHasYErr)
-			strPointStyle = "with yerrorbars";
+			ostrTmp << "with yerrorbars";
 		else if(!bHasXErr && !bHasYErr)
-		{
-			std::ostringstream ostrTmp;
-			ostrTmp << "with points pt 7 ps " << dSize;
-			strPointStyle = ostrTmp.str();
-		}
+			ostrTmp << "with points";
+
+		ostrTmp << " pt 7 ps " << dSize;
+		//std::cout << "*** point size: " << dSize << std::endl;
+		strPointStyle = ostrTmp.str();
+
 
 		ostr << "'-' ";
 		switch(obj.linestyle)
