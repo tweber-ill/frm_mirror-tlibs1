@@ -3,6 +3,9 @@
 module_init()
 {
 	import("apps/fit.scr");
+
+	global size_pts = 0.75;
+	global size_lines = 1.5;
 }
 
 
@@ -280,16 +283,16 @@ plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile)
 	}
 
 
-	plotobjs = [[dat_x, dat_y, dat_yerr, ["size":1.5]]];
+	plotobjs = [[dat_x, dat_y, dat_yerr, ["size":size_pts]]];
 
 	if(do_fit)
 	{
 		if(num_peaks == 2)
 		{
-			plotobjs[1] = [fitx, fity_gauss1, ["style":"lines_dashed", "size":1.5]];
-			plotobjs[2] = [fitx, fity_gauss2, ["style":"lines_dashed", "size":1.5]];
+			plotobjs[1] = [fitx, fity_gauss1, ["style":"lines_dashed", "size":size_lines]];
+			plotobjs[2] = [fitx, fity_gauss2, ["style":"lines_dashed", "size":size_lines]];
 		}
-		plotobjs[length(plotobjs)] = [fitx, fity, ["style":"lines", "size":2.]];
+		plotobjs[length(plotobjs)] = [fitx, fity, ["style":"lines", "size":size_lines]];
 
 		if(!fitres["<valid>"])
 			title += "  !! FIT INVALID !!  ";
