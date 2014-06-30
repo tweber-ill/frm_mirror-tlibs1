@@ -577,6 +577,22 @@ static Symbol* fkt_unitmatrix(const std::vector<Symbol*>& vecSyms, ParseInfo& in
 	return mat_to_sym<t_mat>(mat);
 }
 
+static Symbol* fkt_outerproduct(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size()!=2 || !is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
+	{
+		G_CERR << linenr(T_STR"Error", info) << "Outer product needs two vector arguments." << std::endl;
+		return 0;
+	}
+
+	Symbol* pRet = 0;
+	t_vec<t_real> vec1 = sym_to_vec<t_vec>(vecSyms[0]);
+	t_vec<t_real> vec2 = sym_to_vec<t_vec>(vecSyms[1]);
+
+	t_mat<t_real> mat = ublas::outer_prod(vec1, vec2);
+	return mat_to_sym<t_mat>(mat);
+}
+
 static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
 {
 	if(vecSyms.size() != 2)
@@ -795,6 +811,7 @@ extern void init_ext_math_calls()
 
 		// matrix-vector operations
 		t_mapFkts::value_type(T_STR"prod", fkt_product),
+		t_mapFkts::value_type(T_STR"outer_prod", fkt_outerproduct),
 
 
 		// random numbers

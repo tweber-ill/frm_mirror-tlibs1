@@ -1,6 +1,6 @@
 #!./hermelin
 
-__init__()
+module_init()
 {
 	import("apps/fit.scr");
 }
@@ -319,7 +319,10 @@ plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile)
 main(args)
 {
 	if(length(args) < 2)
+	{
+		print("Please enter some file names.");
 		return -1;
+	}
 
 	files = args[1:length(args)];
 

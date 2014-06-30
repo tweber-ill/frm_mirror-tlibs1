@@ -61,6 +61,11 @@ void SymbolDouble::assign(Symbol *pSym)
 	this->m_dVal = pOther->m_dVal;
 }
 
+bool SymbolDouble::IsLessThan(const Symbol& sym) const
+{
+	return GetValDouble() < sym.GetValDouble();
+}
+
 
 
 
@@ -111,6 +116,11 @@ void SymbolInt::assign(Symbol *pSym)
 {
 	SymbolInt *pOther = (SymbolInt*)pSym->ToType(GetType());
 	this->m_iVal = pOther->m_iVal;
+}
+
+bool SymbolInt::IsLessThan(const Symbol& sym) const
+{
+       	return GetValInt() < sym.GetValInt();
 }
 
 
@@ -168,6 +178,12 @@ void SymbolString::assign(Symbol *pSym)
 	SymbolString *pOther = (SymbolString*)pSym->ToType(GetType());
 	this->m_strVal = pOther->m_strVal;
 }
+
+bool SymbolString::IsLessThan(const Symbol& sym) const
+{
+       	return m_strVal < sym.print();
+}
+
 
 
 

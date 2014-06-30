@@ -9,6 +9,7 @@
 #include <sstream>
 #include <boost/tokenizer.hpp>
 #include <ctype.h>
+#include <tuple>
 #include "helper/string.h"
 #include "helper/spec_char.h"
 
@@ -115,42 +116,47 @@ void Lexer::ReplaceEscapes(t_string& str)
 {
 	if(str.length() == 0)
 		return;
+	//std::cout << "string: " << str << std::endl;
 
 	const t_mapSpecChars& mapSpec = get_spec_chars();
 
 	static bool s_bEscapesInited = 0;
 	static std::map<t_string, t_string> s_mapstrSpecial;
-	static std::map<t_string, t_string> s_mapstrEscapes
+
+	typedef std::tuple<std::string, std::string> t_tupstr;
+
+	static const std::vector<t_tupstr> s_vecstrEscapes
 	{
-		{ t_string(T_STR"\\n"), t_string(T_STR"\n") },
-		{ t_string(T_STR"\\t"), t_string(T_STR"\t") },
-		{ t_string(T_STR"\\v"), t_string(T_STR"\v") },
-		{ t_string(T_STR"\\f"), t_string(T_STR"\f") },
-		{ t_string(T_STR"\\b"), t_string(T_STR"\b") },
-		{ t_string(T_STR"\\a"), t_string(T_STR"\a") },
-		{ t_string(T_STR"\\r"), t_string(T_STR"\r") },
+		t_tupstr(t_string(T_STR"\\\\"), t_string(T_STR"\\")),
+
+		t_tupstr(t_string(T_STR"\\n"), t_string(T_STR"\n")),
+		t_tupstr(t_string(T_STR"\\t"), t_string(T_STR"\t")),
+		t_tupstr(t_string(T_STR"\\v"), t_string(T_STR"\v")),
+		t_tupstr(t_string(T_STR"\\f"), t_string(T_STR"\f")),
+		t_tupstr(t_string(T_STR"\\b"), t_string(T_STR"\b")),
+		t_tupstr(t_string(T_STR"\\a"), t_string(T_STR"\a")),
+		t_tupstr(t_string(T_STR"\\r"), t_string(T_STR"\r")),
 
 		// TODO: handle "" in string
-		{ t_string(T_STR"\\\""), t_string(T_STR"\"") },
-		{ t_string(T_STR"\\\'"), t_string(T_STR"\'") },
-		{ t_string(T_STR"\\\\"), t_string(T_STR"\\") }
+		t_tupstr(t_string(T_STR"\\\""), t_string(T_STR"\"")),
+		t_tupstr(t_string(T_STR"\\\'"), t_string(T_STR"\'"))
 	};
 
 	if(!s_bEscapesInited)
-	for(const t_mapSpecChars::value_type& pair : mapSpec)
-	{
-		const t_string strKey = T_STR("\\{") + pair.first + T_STR("}");
-		const t_string& strVal = T_STR(pair.second.strUTF8);
+		for(const t_mapSpecChars::value_type& pair : mapSpec)
+		{
+			const t_string strKey = T_STR("\\{") + pair.first + T_STR("}");
+			const t_string& strVal = T_STR(pair.second.strUTF8);
 
-		s_mapstrSpecial.insert(std::pair<t_string, t_string>(strKey, strVal));
-		s_bEscapesInited = 1;
-	}
+			s_mapstrSpecial.insert(std::pair<t_string, t_string>(strKey, strVal));
+			s_bEscapesInited = 1;
+		}
 
 	for(const auto& pair : s_mapstrSpecial)
 		find_all_and_replace(str, pair.first, pair.second);
 
-	for(const auto& pair : s_mapstrEscapes)
-		find_all_and_replace(str, pair.first, pair.second);
+	for(const t_tupstr& tup : s_vecstrEscapes)
+		find_all_and_replace(str, std::get<0>(tup), std::get<1>(tup));
 
 
 

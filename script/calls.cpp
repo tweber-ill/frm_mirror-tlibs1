@@ -15,6 +15,7 @@
 #include <map>
 #include <cstdio>
 #include <cmath>
+#include <algorithm>
 
 extern t_string linenr(const t_string& strErr, const ParseInfo &info)
 {
@@ -542,6 +543,101 @@ static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
 }
 
 
+typedef std::tuple<const Symbol*, unsigned int> t_symtup;
+
+static void _sortarr(std::vector<t_symtup>& vec)
+{
+	auto comp = [](const t_symtup& tup1, const t_symtup& tup2) -> bool
+	{
+		const Symbol* pSym0 = std::get<0>(tup1);
+		const Symbol* pSym1 = std::get<0>(tup2);
+
+		return pSym0->IsLessThan(*pSym1);
+	};
+
+	std::sort(vec.begin(), vec.end(), comp);
+}
+
+static void _rearrangearr(std::vector<Symbol*>& vecSyms, const std::vector<unsigned int>& vecIdx)
+{
+	std::vector<Symbol*> vecTmp = vecSyms;
+	for(unsigned int i=0; i<vecSyms.size(); ++i)
+		vecSyms[i] = vecTmp[vecIdx[i]];
+}
+
+static Symbol* fkt_sort(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size()<1 || vecSyms[0]->GetType()!=SYMBOL_ARRAY)
+	{
+		G_CERR << linenr(T_STR"Error", info) 
+			<< "Arguments to sort have to be arrays." 
+			<< std::endl;
+		return 0;
+	}
+
+	const SymbolArray* pArr = (SymbolArray*)vecSyms[0];
+	const unsigned int iArrSize = pArr->m_arr.size();
+
+	std::vector<t_symtup> vecTups;
+	vecTups.reserve(iArrSize);
+	for(unsigned int iElem=0; iElem<iArrSize; ++iElem)
+		vecTups.push_back(t_symtup(pArr->m_arr[iElem], iElem));
+
+	_sortarr(vecTups);
+
+	SymbolArray* pArrRet = new SymbolArray();
+	pArrRet->m_arr.reserve(iArrSize);
+
+	std::vector<unsigned int> vecSortedIndices;
+	vecSortedIndices.reserve(iArrSize);
+
+	for(unsigned int iElem=0; iElem<iArrSize; ++iElem)
+	{
+		pArrRet->m_arr.push_back(std::get<0>(vecTups[iElem])->clone());
+		vecSortedIndices.push_back(std::get<1>(vecTups[iElem]));
+	}
+
+	// no other arguments to sort
+	if(vecSyms.size() == 1)
+		return pArrRet;
+
+
+
+	// sort other arrays in the same way
+	SymbolArray *pArrArr = new SymbolArray();
+	pArrArr->m_arr.reserve(vecSyms.size());
+	pArrArr->m_arr.push_back(pArrRet);
+
+	for(unsigned int iElem=1; iElem<vecSyms.size(); ++iElem)
+	{
+		const Symbol* pSym = vecSyms[iElem];
+		if(pSym->GetType() != SYMBOL_ARRAY)
+		{
+			G_CERR << linenr(T_STR"Error", info) 
+				<< "Arguments to sort have to be arrays." 
+				<< std::endl;
+			continue;
+		}
+
+		if(((SymbolArray*)pSym)->m_arr.size() != vecSortedIndices.size())
+		{
+			G_CERR << linenr(T_STR"Error", info)
+				<< "Array size mismatch in sort."
+				<< std::endl;
+			continue;
+		}
+
+		SymbolArray *pNextArr = (SymbolArray*)pSym->clone();
+		_rearrangearr(pNextArr->m_arr, vecSortedIndices);
+
+		pArrArr->m_arr.push_back(pNextArr);
+	}
+
+	return pArrArr;
+}
+
+
 static Symbol* fkt_zip(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
@@ -781,6 +877,7 @@ static t_mapFkts g_mapFkts =
 	t_mapFkts::value_type(T_STR"vec_size", fkt_array_size),	// deprecated, use "length" instead
 	t_mapFkts::value_type(T_STR"cur_iter", fkt_cur_iter),
 	t_mapFkts::value_type(T_STR"zip", fkt_zip),
+	t_mapFkts::value_type(T_STR"sort", fkt_sort),
 
 	// map/array operations
 	t_mapFkts::value_type(T_STR"contains", fkt_contains),

@@ -3,7 +3,7 @@
 # Author: tw
 #
 
-__init__()
+module_init()
 {
 	global hwhm2sigma = 1./(sqrt(2.*log(2.)));
 }

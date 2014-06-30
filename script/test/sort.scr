@@ -1,0 +1,12 @@
+main()
+{
+	vec0 = [2,3,1,4];
+	vec1 = ["zwei", "drei", "eins", "vier"];
+	vec2 = ["two", "three", "one", "four"];
+
+	sorted0 = sort(vec0);
+	print(sorted0);
+
+	sorted = sort(vec0, vec1, vec2);
+	print(sorted);
+}

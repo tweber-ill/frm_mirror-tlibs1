@@ -52,8 +52,8 @@ struct Symbol
 	virtual Symbol* clone() const = 0;
 	virtual void assign(Symbol *pSym) = 0;
 	//virtual bool equals(Symbol *pSym) const = 0;
-
 	virtual bool IsNotZero() const = 0;
+	virtual bool IsLessThan(const Symbol&) const { return 0; }
 
 	// cast value without converting or cloning symbol
 	virtual t_int GetValInt() const { return 0; }
@@ -80,7 +80,7 @@ struct SymbolDouble : public Symbol
 	virtual Symbol* clone() const;
 	virtual void assign(Symbol *pSym);
 	//virtual bool equals(Symbol *pSym) const;
-
+	virtual bool IsLessThan(const Symbol&) const;
 	virtual bool IsNotZero() const { return m_dVal != 0.; }
 
 	virtual t_int GetValInt() const { return t_int(m_dVal); }
@@ -104,7 +104,7 @@ struct SymbolInt : public Symbol
 	virtual Symbol* clone() const;
 	virtual void assign(Symbol *pSym);
 	//virtual bool equals(Symbol *pSym) const;
-
+	virtual bool IsLessThan(const Symbol&) const;
 	virtual bool IsNotZero() const { return m_iVal != 0; }
 
 	virtual t_int GetValInt() const { return m_iVal; }
@@ -126,6 +126,7 @@ struct SymbolString : public Symbol
 	virtual t_string GetTypeName() const { return T_STR"string"; }
 	virtual Symbol* ToType(SymbolType stype) const;
 	//virtual bool equals(Symbol *pSym) const;
+	virtual bool IsLessThan(const Symbol&) const;
 
 	virtual t_string print() const;
 	virtual Symbol* clone() const;
