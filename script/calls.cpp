@@ -16,8 +16,11 @@
 #include <cstdio>
 #include <cmath>
 #include <algorithm>
-#include <thread>
+
+#include <ratio>
 #include <chrono>
+#include <thread>
+
 
 extern t_string linenr(const t_string& strErr, const ParseInfo &info)
 {
@@ -136,14 +139,15 @@ static Symbol* fkt_sleep(const std::vector<Symbol*>& vecSyms,
 	if(vecSyms.size()!=1)
 	{
 		G_CERR << linenr(T_STR"Error", info)
-			<< "Sleep needs an integer argument."
+			<< "Sleep needs one argument."
 			<< std::endl;
 		return 0;
 	}
 
-	int iMillis = vecSyms[0]->GetValInt();
+	t_real dMillis = vecSyms[0]->GetValDouble();
 
-	std::chrono::milliseconds delay(iMillis);
+	typedef std::chrono::duration<t_real, std::milli> t_millis;
+	t_millis delay(dMillis);
 	std::this_thread::sleep_for(delay);
 	return 0;
 }
