@@ -119,13 +119,13 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 	if(info.IsExecDisabled()) return 0;
 	info.pCurCaller = this;
 
-	if(m_pIdent->m_type != NODE_IDENT)
+	if(m_pIdent->GetType() != NODE_IDENT)
 		return 0;
-	//if(m_pArgs->m_type != NODE_ARGS)
+	//if(m_pArgs->GetType() != NODE_ARGS)
 	//	return 0;
 
 	NodeIdent* pIdent = (NodeIdent*) m_pIdent;
-	t_string strFkt = pIdent->m_strIdent;
+	const t_string& strFkt = pIdent->GetIdent();
 	//G_COUT << "call to " << strFkt << " with " << m_vecArgs.size() << " arguments." << std::endl;
 
 
@@ -149,9 +149,9 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 	for(Node* pNode : m_vecArgs)
 	{
 		// TODO: Unpack operation for vector.
-		if(pNode->m_type == NODE_UNPACK)
+		if(pNode->GetType() == NODE_UNPACK)
 		{
-			Node *pChild = ((NodeUnaryOp*)pNode)->m_pChild;
+			Node *pChild = ((NodeUnaryOp*)pNode)->GetChild();
 			if(!pChild)
 			{
 				G_CERR << linenr(T_STR"Error", info)
@@ -257,7 +257,7 @@ Symbol* NodeMap::eval(ParseInfo &info, SymbolTable *pSym) const
 	for(Node* pNode : vecNodes)
 	{
 		if(!pNode) continue;
-		if(pNode->m_type != NODE_PAIR)
+		if(pNode->GetType() != NODE_PAIR)
 		{
 			G_CERR << linenr(T_STR"Error", info)
 				<< "Maps have to consist of key-value pairs." 
@@ -268,10 +268,10 @@ Symbol* NodeMap::eval(ParseInfo &info, SymbolTable *pSym) const
 		Symbol* pSymFirst = 0;
 		Symbol* pSymSecond = 0;
 
-		if(((NodePair*)pNode)->m_pFirst)
-			pSymFirst = ((NodePair*)pNode)->m_pFirst->eval(info, pSym);
-		if(((NodePair*)pNode)->m_pSecond)
-			pSymSecond = ((NodePair*)pNode)->m_pSecond->eval(info, pSym);
+		if(((NodePair*)pNode)->GetFirst())
+			pSymFirst = ((NodePair*)pNode)->GetFirst()->eval(info, pSym);
+		if(((NodePair*)pNode)->GetSecond())
+			pSymSecond = ((NodePair*)pNode)->GetSecond()->eval(info, pSym);
 
 		if(pSymFirst && pSymSecond)
 		{
@@ -474,7 +474,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 {
 	if(info.IsExecDisabled()) return 0;
 
-	if(!m_pIdent /*|| m_pIdent->m_type != NODE_IDENT*/)
+	if(!m_pIdent /*|| m_pIdent->GetType() != NODE_IDENT*/)
 	{
 		G_CERR << linenr(T_STR"Error", info) << "Tried to access non-array." << std::endl;
 		return 0;
@@ -482,7 +482,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 
 	t_string strIdent;
 	Symbol* pSymbol = m_pIdent->eval(info, pSym);
-	if(m_pIdent->m_type == NODE_IDENT)
+	if(m_pIdent->GetType() == NODE_IDENT)
 		strIdent = pSymbol->GetIdent();
 	else
 		strIdent = T_STR"<tmp_sym>";
@@ -514,7 +514,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 			}
 
 			// TODO: assigment for ranged access
-			if(pIndices->m_type == NODE_RANGE)	// range index
+			if(pIndices->GetType() == NODE_RANGE)	// range index
 			{
 				NodeRange *pRange = (NodeRange*)pIndices;
 				t_int iBeginIdx = 0, iEndIdx = 0;
@@ -665,7 +665,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 
 		Node *pIndices = m_vecIndices[0];
 
-		if(pIndices->m_type == NODE_RANGE)	// range index
+		if(pIndices->GetType() == NODE_RANGE)	// range index
 		{
 			NodeRange *pRange = (NodeRange*)pIndices;
 			t_int iBeginIdx = 0, iEndIdx = 0;
@@ -765,7 +765,7 @@ Symbol* NodeUnaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 
 	std::vector<NodeFunction*>& vecFuncs = info.vecFuncs;
 
-	switch(m_type)
+	switch(GetType())
 	{
 		case NODE_UMINUS:
 		{
@@ -812,7 +812,7 @@ Symbol* NodeUnaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 		}
 		default:
 			G_CERR << linenr(T_STR"Warning", info)
-					<< "Unknown node type: " << m_type
+					<< "Unknown node type: " << GetType()
 					<< std::endl;
 			break;
 	}
@@ -834,7 +834,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 		return 0;
 	}
 
-//	std::cout << pLeft->m_type << std::endl;
+//	std::cout << pLeft->GetType() << std::endl;
 
 	Symbol *pSymbolOrg = 0;
 	if(pSymRightAlt)	// use RHS symbol if given instead of RHS node
@@ -852,9 +852,9 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 	Symbol *pSymbol = pSymbolOrg->clone();
 	safe_delete(pSymbolOrg, pSym, info.pGlobalSyms);
 
-	if(pLeft->m_type == NODE_IDENT)		// single variable
+	if(pLeft->GetType() == NODE_IDENT)		// single variable
 	{
-		const t_string& strIdent = ((NodeIdent*)pLeft)->m_strIdent;
+		const t_string& strIdent = ((NodeIdent*)pLeft)->GetIdent();
 
 		Symbol* pSymGlob = info.pGlobalSyms->GetSymbol(strIdent);
 		Symbol* pSymLoc = 0;
@@ -883,7 +883,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 
 		return pSymbol;
 	}
-	else if(pLeft->m_type == NODE_ARRAY)				// e.g. [a,b] = [1,2];
+	else if(pLeft->GetType() == NODE_ARRAY)				// e.g. [a,b] = [1,2];
 	{	// TODO: check that LHS does not want eval!
 		if(pSymbol->GetType() != SYMBOL_ARRAY)
 		{
@@ -894,7 +894,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 		}
 		SymbolArray *pArrRight = (SymbolArray*)pSymbol;
 
-		std::vector<Node*> vecLeftArgs = ((NodeBinaryOp*)((NodeArray*)pLeft)->m_pArr)->flatten(NODE_ARGS);
+		std::vector<Node*> vecLeftArgs = ((NodeBinaryOp*)((NodeArray*)pLeft)->GetArr())->flatten(NODE_ARGS);
 		unsigned int iArrSize = vecLeftArgs.size();
 		if(vecLeftArgs.size() != pArrRight->GetArr().size())
 		{
@@ -911,7 +911,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 			Node *pNodeLeft = vecLeftArgs[iArr];
 			Symbol *pSymRight = pArrRight->GetArr()[iArr];
 
-			//std::cout << ((NodeIdent*)pNode)->m_strIdent << std::endl;
+			//std::cout << ((NodeIdent*)pNode)->GetIdent() << std::endl;
 			eval_assign(info, pSym, pNodeLeft, 0, pSymRight, pbGlob);
 		}
 
@@ -1032,7 +1032,7 @@ Symbol* NodeBinaryOp::eval_funcinit(ParseInfo &info, SymbolTable *pSym) const
 			continue;
 
 		NodeFunction *pNodeFunc = (NodeFunction*)_pNodeFunc;
-		pNodeFunc->m_strScrFile = info.strInitScrFile;
+		pNodeFunc->SetScrFile(info.strInitScrFile);
 
 		const t_string& strFktName = pNodeFunc->GetName();
 
@@ -1065,7 +1065,7 @@ Symbol* NodeBinaryOp::eval_funcinit(ParseInfo &info, SymbolTable *pSym) const
 		{
 			if(pFkt->GetName() == info.strExecFkt)
 			{
-				if(pFkt->m_vecArgs.size() == 0)
+				if(pFkt->GetArgVec().size() == 0)
 					pSym->RemoveSymbolNoDelete(T_STR"<args>");
 
 				Symbol *pSymRet = pFkt->eval(info, pSym);
@@ -1085,13 +1085,13 @@ Symbol* NodeBinaryOp::eval_recursive(ParseInfo &info, SymbolTable *pSym) const
 {
 	if(m_pLeft)
 	{
-		//G_COUT << "left: " << m_pLeft->m_type << std::endl;
+		//G_COUT << "left: " << m_pLeft->GetType() << std::endl;
 		Symbol *pSymbol = m_pLeft->eval(info, pSym);
 		safe_delete(pSymbol, pSym, info.pGlobalSyms);
 	}
 	if(m_pRight)
 	{
-		//G_COUT << "right: " << m_pRight->m_type << std::endl;
+		//G_COUT << "right: " << m_pRight->GetType() << std::endl;
 		Symbol *pSymbol = m_pRight->eval(info, pSym);
 		safe_delete(pSymbol, pSym, info.pGlobalSyms);
 	}
@@ -1119,7 +1119,7 @@ Symbol* NodeBinaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 	}
 	else
 	{
-		switch(m_type)
+		switch(GetType())
 		{
 			case NODE_STMTS:
 			//case NODE_ARGS:
@@ -1144,15 +1144,15 @@ Symbol* NodeBinaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 		Symbol *pSymbol = 0;
 
 		// optimisation: 0 && x == 0
-		if(m_type == NODE_LOG_AND && pSymbolLeft->GetValInt()==0)
+		if(GetType() == NODE_LOG_AND && pSymbolLeft->GetValInt()==0)
 			pSymbol = new SymbolInt(0);
 		// optimisation: 1 || x == 1
-		else if(m_type == NODE_LOG_OR && pSymbolLeft->GetValInt()==1)
+		else if(GetType() == NODE_LOG_OR && pSymbolLeft->GetValInt()==1)
 			pSymbol = new SymbolInt(1);
 		else
 		{
 			pSymbolRight = m_pRight->eval(info, pSym);
-			pSymbol = Op(pSymbolLeft, pSymbolRight, m_type);
+			pSymbol = Op(pSymbolLeft, pSymbolRight, GetType());
 		}
 
 		safe_delete(pSymbolLeft, pSym, info.pGlobalSyms);
@@ -1169,7 +1169,7 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 	info.pCurFunction = this;
 
 	std::vector<NodeFunction*>& vecFuncs = info.vecFuncs;
-	t_string strName = GetName();
+	const t_string& strName = GetName();
 	//G_COUT << "in fkt " << strName << std::endl;
 
 	SymbolTable *pLocalSym = new SymbolTable;
@@ -1194,9 +1194,9 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 		{
 			NodeIdent* pIdent = (NodeIdent*)m_vecArgs[iArg];
 			Symbol *pSymbol = (*pVecArgSyms)[iArg];
-			//G_COUT << "arg: " << pIdent->m_strIdent << std::endl;
+			//G_COUT << "arg: " << pIdent->GetIdent() << std::endl;
 
-			pLocalSym->InsertSymbol(pIdent->m_strIdent, pSymbol->clone());
+			pLocalSym->InsertSymbol(pIdent->GetIdent(), pSymbol->clone());
 		}
 	}
 
@@ -1342,7 +1342,7 @@ Symbol* NodeRangedFor::eval(ParseInfo &info, SymbolTable *pSym) const
 	std::vector<NodeFunction*>& vecFuncs = info.vecFuncs;
 	if(!m_pIdent || !m_pExpr || !m_pStmt) return 0;
 
-	if(m_pIdent->m_type != NODE_IDENT)
+	if(m_pIdent->GetType() != NODE_IDENT)
 	{
 		G_CERR << linenr(T_STR"Error", info) << "Range-based for loop needs identifier."
 					<< std::endl;
@@ -1369,7 +1369,7 @@ Symbol* NodeRangedFor::eval(ParseInfo &info, SymbolTable *pSym) const
 	SymbolArray *pArr = (SymbolArray*)_pArr;
 
 
-	const t_string& strIdent = ((NodeIdent*)m_pIdent)->m_strIdent;
+	const t_string& strIdent = ((NodeIdent*)m_pIdent)->GetIdent();
 
 	SymbolInt *pSymIter = new SymbolInt(0);
 	t_string strIter = T_STR"<cur_iter_" + strIdent + T_STR">";
@@ -1413,7 +1413,7 @@ Symbol* NodeRangedFor::eval(ParseInfo &info, SymbolTable *pSym) const
 
 	pSym->RemoveSymbol(strIter);
 
-	//G_COUT << "ranged for:" << pArr->GetName() << ", " << pArr->m_strIdent << std::endl;
+	//G_COUT << "ranged for:" << pArr->GetName() << ", " << pArr->GetIdent() << std::endl;
 	safe_delete(_pArr, pSym, info.pGlobalSyms);
 	return 0;
 }

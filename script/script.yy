@@ -21,7 +21,7 @@
 	static inline void set_linenr(void* dollardollar, void* pParseObj)
 	{
 		if(dollardollar && pParseObj)
-			((Node*)dollardollar)->m_iLine = ((ParseObj*)pParseObj)->iCurLine;
+			((Node*)dollardollar)->SetLine(((ParseObj*)pParseObj)->iCurLine);
 	}
 %}
 
@@ -178,7 +178,7 @@ idents_noeps : ident ',' idents	{ $$ = new NodeBinaryOp($1, $3, NODE_IDENTS); se
 	;
 */
 
-assign: TOK_GLOBAL expr '=' expr	{ $$ = new NodeBinaryOp($2, $4, NODE_ASSIGN); ((NodeBinaryOp*)$$)->m_bGlobal = 1; set_linenr($$, pParseObj); }
+assign: TOK_GLOBAL expr '=' expr	{ $$ = new NodeBinaryOp($2, $4, NODE_ASSIGN); ((NodeBinaryOp*)$$)->SetGlobal(1); set_linenr($$, pParseObj); }
 	| expr '=' expr			{ $$ = new NodeBinaryOp($1, $3, NODE_ASSIGN); set_linenr($$, pParseObj); }
 	;
 
@@ -192,12 +192,12 @@ expr:	'(' expr ')'			{ $$ = $2; }
 	| expr '%' expr			{ $$ = new NodeBinaryOp($1, $3, NODE_MOD); set_linenr($$, pParseObj); }
 	| expr '^' expr			{ $$ = new NodeBinaryOp($1, $3, NODE_POW); set_linenr($$, pParseObj); }
 
-	| expr '+' '=' expr %prec '='	{ $$ = new NodeBinaryOp($1, new NodeBinaryOp($1, $4, NODE_PLUS), NODE_ASSIGN); ((NodeBinaryOp*)$$)->m_bOwnsLeft = 0; set_linenr($$, pParseObj); }
-	| expr '-' '=' expr %prec '='	{ $$ = new NodeBinaryOp($1, new NodeBinaryOp($1, $4, NODE_MINUS), NODE_ASSIGN); ((NodeBinaryOp*)$$)->m_bOwnsLeft = 0; set_linenr($$, pParseObj); }
-	| expr '*' '=' expr %prec '='	{ $$ = new NodeBinaryOp($1, new NodeBinaryOp($1, $4, NODE_MULT), NODE_ASSIGN); ((NodeBinaryOp*)$$)->m_bOwnsLeft = 0; set_linenr($$, pParseObj); }
-	| expr '/' '=' expr %prec '='	{ $$ = new NodeBinaryOp($1, new NodeBinaryOp($1, $4, NODE_DIV), NODE_ASSIGN); ((NodeBinaryOp*)$$)->m_bOwnsLeft = 0; set_linenr($$, pParseObj); }
-	| expr '%' '=' expr %prec '='	{ $$ = new NodeBinaryOp($1, new NodeBinaryOp($1, $4, NODE_MOD), NODE_ASSIGN); ((NodeBinaryOp*)$$)->m_bOwnsLeft = 0; set_linenr($$, pParseObj); }
-	| expr '^' '=' expr %prec '='	{ $$ = new NodeBinaryOp($1, new NodeBinaryOp($1, $4, NODE_POW), NODE_ASSIGN); ((NodeBinaryOp*)$$)->m_bOwnsLeft = 0; set_linenr($$, pParseObj); }
+	| expr '+' '=' expr %prec '='	{ $$ = new NodeBinaryOp($1, new NodeBinaryOp($1, $4, NODE_PLUS), NODE_ASSIGN); ((NodeBinaryOp*)$$)->SetOwnsLeft(0); set_linenr($$, pParseObj); }
+	| expr '-' '=' expr %prec '='	{ $$ = new NodeBinaryOp($1, new NodeBinaryOp($1, $4, NODE_MINUS), NODE_ASSIGN); ((NodeBinaryOp*)$$)->SetOwnsLeft(0); set_linenr($$, pParseObj); }
+	| expr '*' '=' expr %prec '='	{ $$ = new NodeBinaryOp($1, new NodeBinaryOp($1, $4, NODE_MULT), NODE_ASSIGN); ((NodeBinaryOp*)$$)->SetOwnsLeft(0); set_linenr($$, pParseObj); }
+	| expr '/' '=' expr %prec '='	{ $$ = new NodeBinaryOp($1, new NodeBinaryOp($1, $4, NODE_DIV), NODE_ASSIGN); ((NodeBinaryOp*)$$)->SetOwnsLeft(0); set_linenr($$, pParseObj); }
+	| expr '%' '=' expr %prec '='	{ $$ = new NodeBinaryOp($1, new NodeBinaryOp($1, $4, NODE_MOD), NODE_ASSIGN); ((NodeBinaryOp*)$$)->SetOwnsLeft(0); set_linenr($$, pParseObj); }
+	| expr '^' '=' expr %prec '='	{ $$ = new NodeBinaryOp($1, new NodeBinaryOp($1, $4, NODE_POW), NODE_ASSIGN); ((NodeBinaryOp*)$$)->SetOwnsLeft(0); set_linenr($$, pParseObj); }
 
 	| '-' expr %prec UMINUS		{ $$ = new NodeUnaryOp($2, NODE_UMINUS); set_linenr($$, pParseObj); }
 	| '+' expr %prec UPLUS		{ $$ = $2; }

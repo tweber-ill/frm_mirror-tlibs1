@@ -451,8 +451,8 @@ t_string Node::linenr(const t_string& strErr, const ParseInfo &info) const
 		if(bHasLine)
 			ostr << " ";
 
-		const t_string& strFile = info.pCurFunction->m_strScrFile;
-		t_string strFkt = info.pCurFunction->GetName();
+		const t_string& strFile = info.pCurFunction->GetScrFile();
+		const t_string& strFkt = info.pCurFunction->GetName();
 
 		if(strFile == T_STR"")
 			ostr << "in unknown file";
@@ -533,7 +533,7 @@ NodeBinaryOp::NodeBinaryOp(Node* pLeft, Node* pRight, NodeType ntype)
 
 void NodeBinaryOp::FlattenNodes(NodeType ntype)
 {
-	if(m_type == ntype)
+	if(GetType() == ntype)
 	{
 		m_vecNodesFlat = this->flatten(ntype);
 		//G_COUT << "Node type: " << ntype << ", flattened: " << m_vecNodesFlat.size() << std::endl;
@@ -554,7 +554,7 @@ NodeCall::NodeCall(Node* _pIdent, Node* _pArgs)
 NodeFunction::NodeFunction(Node* pLeft, Node* pMiddle, Node* pRight)
 	: Node(NODE_FUNC), m_pIdent(pLeft), m_pArgs(pMiddle), m_pStmts(pRight)
 {
-	if(m_pArgs && (m_pArgs->m_type==NODE_IDENTS || m_pArgs->m_type==NODE_IDENT))
+	if(m_pArgs && (m_pArgs->GetType()==NODE_IDENTS || m_pArgs->GetType()==NODE_IDENT))
 	{
 		NodeBinaryOp* pArgs = (NodeBinaryOp*) m_pArgs;
 		m_vecArgs = pArgs->flatten(NODE_IDENTS);
@@ -566,7 +566,7 @@ std::vector<t_string> NodeFunction::GetParamNames() const
 	std::vector<t_string> vecNames;
 
 	for(Node *pNode : m_vecArgs)
-		vecNames.push_back(((NodeIdent*)pNode)->m_strIdent);
+		vecNames.push_back(((NodeIdent*)pNode)->GetIdent());
 
 	return vecNames;
 }
@@ -707,8 +707,7 @@ Node* NodeArrayAccess::clone() const
 
 Node* NodeUnaryOp::clone() const
 {
-	NodeUnaryOp* pNode = new NodeUnaryOp(m_pChild?m_pChild->clone():0,
-										m_type);
+	NodeUnaryOp* pNode = new NodeUnaryOp(m_pChild?m_pChild->clone():0, GetType());
 	*((Node*)pNode) = *((Node*)this);
 	return pNode;
 }
@@ -717,7 +716,7 @@ Node* NodeBinaryOp::clone() const
 {
 	NodeBinaryOp* pNode = new NodeBinaryOp(m_pLeft?m_pLeft->clone():0,
 							m_pRight?m_pRight->clone():0,
-							m_type);
+							GetType());
 	pNode->m_vecNodesFlat = this->m_vecNodesFlat;
 	*((Node*)pNode) = *((Node*)this);
 	return pNode;
@@ -740,18 +739,18 @@ Node* NodeFunction::clone() const
 // TODO: Fix: Gets called for non casted NodeBinaryOps which are of other type!
 std::vector<Node*> NodeBinaryOp::flatten(NodeType ntype) const
 {
-	//G_COUT << m_type << ", " << ntype << std::endl;
+	//G_COUT << GetType() << ", " << ntype << std::endl;
 
 	std::vector<Node*> vecNodes;
 
-	if(m_type==ntype)
+	if(GetType() == ntype)
 	{
 		NodeBinaryOp *pLeft = (NodeBinaryOp*) m_pLeft;
 		NodeBinaryOp *pRight = (NodeBinaryOp*) m_pRight;
 
 		if(m_pLeft)
 		{
-			if(m_pLeft->m_type==ntype)
+			if(m_pLeft->GetType() == ntype)
 			{
 				std::vector<Node*> vecLeft = pLeft->flatten(ntype);
 				vecNodes.insert(vecNodes.begin(), vecLeft.begin(), vecLeft.end());
@@ -764,7 +763,7 @@ std::vector<Node*> NodeBinaryOp::flatten(NodeType ntype) const
 
 		if(m_pRight)
 		{
-			if(m_pRight->m_type==ntype)
+			if(m_pRight->GetType() == ntype)
 			{
 				std::vector<Node*> vecRight = pRight->flatten(ntype);
 				vecNodes.insert(vecNodes.end(), vecRight.begin(), vecRight.end());
@@ -784,11 +783,12 @@ std::vector<Node*> NodeBinaryOp::flatten(NodeType ntype) const
 }
 
 
-t_string NodeFunction::GetName() const
+const t_string& NodeFunction::GetName() const
 {
-	if(!m_pIdent || m_pIdent->m_type != NODE_IDENT)
-		return T_STR"<null>";
+	static t_string strNull = T_STR"<null>";
+	if(!m_pIdent || m_pIdent->GetType() != NODE_IDENT)
+		return strNull;
 
 	NodeIdent *pIdent = (NodeIdent*)m_pIdent;
-	return pIdent->m_strIdent;
+	return pIdent->GetIdent();
 }
