@@ -340,6 +340,7 @@ plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile)
 			"term" : "wxt"]);
 	}
 
+	#sleep(500);
 	return [params, fitres];
 }
 

@@ -16,6 +16,8 @@
 #include <cstdio>
 #include <cmath>
 #include <algorithm>
+#include <thread>
+#include <chrono>
 
 extern t_string linenr(const t_string& strErr, const ParseInfo &info)
 {
@@ -127,6 +129,25 @@ static Symbol* fkt_input(const std::vector<Symbol*>& vecSyms,
 	std::getline(G_CIN, pSymStr->GetVal());
 	return pSymStr;
 }
+
+static Symbol* fkt_sleep(const std::vector<Symbol*>& vecSyms,
+		ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size()!=1)
+	{
+		G_CERR << linenr(T_STR"Error", info)
+			<< "Sleep needs an integer argument."
+			<< std::endl;
+		return 0;
+	}
+
+	int iMillis = vecSyms[0]->GetValInt();
+
+	std::chrono::milliseconds delay(iMillis);
+	std::this_thread::sleep_for(delay);
+	return 0;
+}
+
 
 extern int yyparse(void*);
 static bool _import_file(const t_string& strFile, ParseInfo& info, SymbolTable* pSymTab)
@@ -851,6 +872,7 @@ static t_mapFkts g_mapFkts =
 	t_mapFkts::value_type(T_STR"output", fkt_output),
 	t_mapFkts::value_type(T_STR"input", fkt_input),
 	t_mapFkts::value_type(T_STR"print", fkt_print),	// output with "\n" at the end
+	t_mapFkts::value_type(T_STR"sleep", fkt_sleep),
 
 	// modules
 	t_mapFkts::value_type(T_STR"import", fkt_import),

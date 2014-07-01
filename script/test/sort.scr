@@ -9,4 +9,7 @@ main()
 
 	sorted = sort(vec0, vec1, vec2);
 	print(sorted);
+
+
+	print(sort(["def", "abc", "123", "ghi"]));
 }
