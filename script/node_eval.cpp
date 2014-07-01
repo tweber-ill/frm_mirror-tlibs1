@@ -1292,14 +1292,14 @@ Symbol* NodeFor::eval(ParseInfo &info, SymbolTable *pSym) const
 	if(!m_pStmt) return 0;
 
 	info.pCurLoop = this;
-	
+
 	Symbol *pSymInit = 0;
-	if(m_pExprInit) 
+	if(m_pExprInit)
 	{
 		pSymInit = m_pExprInit->eval(info, pSym);
 		safe_delete(pSymInit, pSym, info.pGlobalSyms);
 	}
-	
+
 	while(1)
 	{
 		Symbol *pSymRet = 0;
@@ -1323,7 +1323,7 @@ Symbol* NodeFor::eval(ParseInfo &info, SymbolTable *pSym) const
 			info.bWantContinue = 0;
 			continue;
 		}
-		
+
 		if(m_pExprEnd)
 		{
 			Symbol *pSymEnd = m_pExprEnd->eval(info, pSym);

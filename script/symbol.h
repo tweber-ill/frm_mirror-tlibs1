@@ -226,6 +226,10 @@ public:
 	SymbolMap() : Symbol() {}
 	virtual ~SymbolMap();
 
+	// no copy/move constructors -> use clone
+	//SymbolMap(const SymbolMap& map);
+	//SymbolMap(SymbolMap&& map);
+
 	virtual SymbolType GetType() const { return SYMBOL_MAP; }
 	virtual t_string GetTypeName() const { return T_STR"map"; }
 	virtual Symbol* ToType(SymbolType stype) const;

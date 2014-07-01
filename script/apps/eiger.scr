@@ -14,6 +14,7 @@ module_init()
 #
 load_eiger(filename)
 {
+	print("Loading " + filename + ".");
 	dat_raw = read_file(filename);
 	dat_lines = tokens(dat_raw, "\n");
 
@@ -116,17 +117,11 @@ mergedata(data0, data1)
 	return data0;
 }
 
-
-plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile)
+load_eiger_multi(filenames)
 {
-	norm_to_monitor = 1;
-	num_peaks = length(peaks_x);
-
-
 	for(filename : filenames)
 	{
 		[curlabs, curdata, curparams] = load_eiger(filename);
-		print("Loading " + filename + ".");
 		
 		if(cur_iter(filename) == 0)
 		{
@@ -152,6 +147,34 @@ plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile)
 		}
 	}
 
+	return [labs, data, params];
+}
+
+norm_to_mon(dat_y, dat_yerr, dat_mon, dat_monerr)
+{
+	for(i=0; i<length(dat_y); i+=1)
+	{
+		a = dat_y[i];
+		da = dat_yerr[i];
+		b = dat_mon[i];
+		db = dat_monerr[i];
+
+		dat_y[i] = a/b;
+		dat_yerr[i] = sqrt((1./b * da)^2. + (a/b^2. * db)^2.);
+	}
+
+	return [dat_y, dat_yerr];
+}
+
+plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile)
+{
+	norm_to_monitor = 1;
+	num_peaks = length(peaks_x);
+
+	if(typeof(filenames) == "vector")
+		[labs, data, params] = load_eiger_multi(filenames);
+	else
+		[labs, data, params] = load_eiger(filenames);
 
 	cmd = params["COMND"];
 
@@ -211,16 +234,7 @@ plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile)
 		dat_mon = data[idx_mon];
 		dat_monerr = sqrt(dat_mon);
 
-		for(i=0; i<length(dat_y); i+=1)
-		{
-			a = dat_y[i];
-			da = dat_yerr[i];
-			b = dat_mon[i];
-			db = dat_monerr[i];
-
-			dat_y[i] = a/b;
-			dat_yerr[i] = sqrt((1./b * da)^2. + (a/b^2. * db)^2.);
-		}
+		[dat_y, dat_yerr] = norm_to_mon(dat_y, dat_yerr, dat_mon, dat_monerr);
 	}
 
 	minx = min(dat_x);

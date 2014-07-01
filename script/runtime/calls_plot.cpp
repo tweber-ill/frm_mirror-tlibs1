@@ -53,7 +53,7 @@ struct XYLimits
 	{}
 };
 
-static XYLimits get_plot_limits(SymbolMap* pParamMap)
+static XYLimits get_plot_limits(const SymbolMap* pParamMap)
 {
 	XYLimits lim;
 
@@ -105,7 +105,7 @@ static XYLimits get_plot_limits(SymbolMap* pParamMap)
 }
 
 
-static void set_plot_params(GnuPlot& plot, SymbolMap* pParamMap, 
+static void set_plot_params(GnuPlot& plot, const SymbolMap* pParamMap, 
 				PlotObj* pCurPlotObj=0, XYLimits* pLimits=0)
 {
 	bool bHasVal = 0;
@@ -170,12 +170,15 @@ static void set_plot_params(GnuPlot& plot, SymbolMap* pParamMap,
 	plot.SetTerminal(iPlotWnd, WSTR_TO_STR(strTerm).c_str());
 }
 
+static Symbol* fkt_fileplot(const std::vector<Symbol*>& vecSyms,
+                               	ParseInfo& info, SymbolTable* pSymTab);
+
 static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 			ParseInfo& info, SymbolTable* pSymTab)
 {
 	g_plot.Init();
-
 	unsigned int iNumSyms = vecSyms.size();
+	/*const*/ SymbolMap *pPlotParams = 0;
 
 	// plot([[x, y, yerr, xerr, mapParams], ...]);
 	if(iNumSyms==1 && is_array_of_array_of_arrays(vecSyms[0]))
@@ -192,7 +195,10 @@ static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 			if(symType == SYMBOL_ARRAY)
 				fkt_plot(((SymbolArray*)pArr)->GetArr(), info, pSymTab);
 			else if(symType == SYMBOL_MAP)
-				set_plot_params(g_plot, (SymbolMap*)pArr);
+			{
+				pPlotParams = (SymbolMap*)pArr;
+				set_plot_params(g_plot, pPlotParams);
+			}
 		}
 		g_plot.FinishPlot();
 	}
@@ -217,7 +223,10 @@ static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 
 		// parameter map given as last argument
 		if(vecSyms[iNumSyms-1]->GetType()==SYMBOL_MAP)
-			set_plot_params(g_plot, (SymbolMap*)vecSyms[iNumSyms-1], &obj);
+		{
+			pPlotParams = (SymbolMap*)vecSyms[iNumSyms-1];
+			set_plot_params(g_plot, pPlotParams, &obj);
+		}
 
 		g_plot.StartPlot();
 		g_plot.AddLine(obj);
@@ -229,6 +238,27 @@ static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 
+	if(pPlotParams)
+	{
+		// also plot to file
+		if(pPlotParams->GetMap().find("outfile") != pPlotParams->GetMap().end()
+			&& pPlotParams->GetMap().find("<outfile_written>") == pPlotParams->GetMap().end())
+		{
+			// hack to prevent infinite recursion
+			pPlotParams->GetMap().insert(
+				SymbolMap::t_map::value_type("<outfile_written>", new SymbolInt(1)));
+
+			Symbol* pSymFileName = pPlotParams->GetMap()["outfile"];
+			std::vector<Symbol*> vecNewSyms;
+			vecNewSyms.reserve(vecSyms.size()+1);
+			vecNewSyms.push_back(pSymFileName);
+
+			for(unsigned int iSym=0; iSym<vecSyms.size(); ++iSym)
+				vecNewSyms.push_back(vecSyms[iSym]);
+
+			fkt_fileplot(vecNewSyms, info, pSymTab);
+		}
+	}
 	return 0;
 }
 
