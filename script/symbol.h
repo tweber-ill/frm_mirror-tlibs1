@@ -25,9 +25,9 @@ enum SymbolType
 	SYMBOL_MAP
 };
 
-struct SymbolArray;
-struct SymbolMap;
-struct Symbol
+class SymbolArray;
+class SymbolMap;
+class Symbol
 {
 protected:
 	t_string m_strName;
@@ -82,7 +82,7 @@ public:
 	void SetArrIdx(unsigned int iIdx) { m_iArrIdx = iIdx; }
 };
 
-struct SymbolDouble : public Symbol
+class SymbolDouble : public Symbol
 {
 protected:
 	t_real m_dVal;
@@ -119,7 +119,7 @@ public:
 	virtual bool IsScalar() const { return 1; }
 };
 
-struct SymbolInt : public Symbol
+class SymbolInt : public Symbol
 {
 protected:
 	t_int m_iVal;
@@ -149,7 +149,7 @@ public:
 	virtual bool IsScalar() const { return 1; }
 };
 
-struct SymbolString : public Symbol
+class SymbolString : public Symbol
 {
 protected:
 	t_string m_strVal;
@@ -178,7 +178,7 @@ public:
 };
 
 
-struct SymbolArray : public Symbol
+class SymbolArray : public Symbol
 {
 protected:
 	bool m_bDontDel;
@@ -215,7 +215,7 @@ public:
 	void SetDontDel(bool b) { m_bDontDel = b; }
 };
 
-struct SymbolMap : public Symbol
+class SymbolMap : public Symbol
 {
 public:
 	typedef std::map<t_string, Symbol*> t_map;

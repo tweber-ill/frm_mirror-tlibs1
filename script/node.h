@@ -19,9 +19,9 @@
 #include "symbol.h"
 #include "handles.h"
 
-struct Node;
-struct NodeFunction;
-struct NodeCall;
+class Node;
+class NodeFunction;
+class NodeCall;
 
 struct ParseInfo
 {
@@ -138,7 +138,7 @@ extern std::map<NodeType, t_real (*)(t_real, t_real)> g_mapBinOps_d;
 extern void safe_delete(Symbol *&pSym, const SymbolTable* pSymTab, const SymbolTable* pGlobalSymTab);
 
 
-struct Node
+class Node
 {
 protected:
 	NodeType m_type;
@@ -161,7 +161,7 @@ public:
 	static Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op);
 };
 
-struct NodeReturn : public Node
+class NodeReturn : public Node
 {
 protected:
 	Node *m_pExpr;
@@ -186,8 +186,9 @@ public:
 	Node* GetExpr() const { return m_pExpr; }
 };
 
-struct NodeBreak : public Node
+class NodeBreak : public Node
 {
+public:
 	NodeBreak()
 		: Node(NODE_BREAK)
 	{}
@@ -199,8 +200,9 @@ struct NodeBreak : public Node
 	virtual Node* clone() const;
 };
 
-struct NodeContinue : public Node
+class NodeContinue : public Node
 {
+public:
 	NodeContinue()
 		: Node(NODE_CONTINUE)
 	{}
@@ -212,7 +214,7 @@ struct NodeContinue : public Node
 	virtual Node* clone() const;
 };
 
-struct NodeIdent : public Node
+class NodeIdent : public Node
 {
 protected:
 	t_string m_strIdent;
@@ -228,7 +230,7 @@ public:
 	const t_string& GetIdent() const { return m_strIdent; }
 };
 
-struct NodeCall : public Node
+class NodeCall : public Node
 {
 protected:
 	Node *m_pIdent;
@@ -258,7 +260,7 @@ protected:
 	std::vector<Node*> m_vecArgs;
 };
 
-struct NodeIf : public Node
+class NodeIf : public Node
 {
 protected:
 	Node *m_pExpr;
@@ -289,7 +291,7 @@ public:
 	Node* GetElse() const { return m_pElse; }
 };
 
-struct NodeWhile : public Node
+class NodeWhile : public Node
 {
 protected:
 	Node *m_pExpr;
@@ -317,7 +319,7 @@ public:
 	Node* GetStmt() const { return m_pStmt; }
 };
 
-struct NodeFor : public Node
+class NodeFor : public Node
 {
 protected:
 	Node *m_pExprInit;
@@ -353,7 +355,7 @@ public:
 	Node* GetStmt() const { return m_pStmt; }
 };
 
-struct NodeRangedFor : public Node
+class NodeRangedFor : public Node
 {
 protected:
 	Node *m_pIdent;
@@ -386,7 +388,7 @@ public:
 };
 
 
-struct NodeDouble : public Node
+class NodeDouble : public Node
 {
 protected:
 	t_real m_dVal;
@@ -407,7 +409,7 @@ protected:
 	SymbolDouble *m_pSymbol;
 };
 
-struct NodeInt : public Node
+class NodeInt : public Node
 {
 protected:
 	t_int m_iVal;
@@ -428,7 +430,7 @@ protected:
 	SymbolInt *m_pSymbol;
 };
 
-struct NodeString : public Node
+class NodeString : public Node
 {
 protected:
 	t_string m_strVal;
@@ -449,7 +451,7 @@ protected:
 	SymbolString *m_pSymbol;
 };
 
-struct NodeArray : public Node
+class NodeArray : public Node
 {
 protected:
 	Node *m_pArr;
@@ -471,7 +473,7 @@ public:
 	Node* GetArr() const { return m_pArr; }
 };
 
-struct NodeMap : public Node
+class NodeMap : public Node
 {
 protected:
 	Node *m_pMap;
@@ -493,7 +495,7 @@ public:
 	Node* GetMap() const { return m_pMap; }
 };
 
-struct NodePair : public Node
+class NodePair : public Node
 {
 protected:
 	Node *m_pFirst, *m_pSecond;
@@ -523,7 +525,7 @@ enum RangeType
 	RANGE_FULL,
 };
 
-struct NodeRange : public Node
+class NodeRange : public Node
 {
 protected:
 	RangeType m_rangetype;
@@ -554,7 +556,7 @@ public:
 	Node* GetEnd() const { return m_pEnd; }
 };
 
-struct NodeArrayAccess : public Node
+class NodeArrayAccess : public Node
 {
 protected:
 	Node *m_pIdent;
@@ -582,7 +584,7 @@ protected:
 	std::vector<Node*> m_vecIndices;
 };
 
-struct NodeUnaryOp : public Node
+class NodeUnaryOp : public Node
 {
 protected:
 	Node *m_pChild;
@@ -607,7 +609,7 @@ public:
 	Node* GetChild() const { return m_pChild; }
 };
 
-struct NodeBinaryOp : public Node
+class NodeBinaryOp : public Node
 {
 protected:
 	Node *m_pLeft, *m_pRight;
@@ -649,7 +651,7 @@ public:
 	void SetOwnsLeft(bool bOwns) { m_bOwnsLeft = bOwns; }
 };
 
-struct NodeFunction : public Node
+class NodeFunction : public Node
 {
 protected:
 	Node *m_pIdent, *m_pArgs, *m_pStmts;

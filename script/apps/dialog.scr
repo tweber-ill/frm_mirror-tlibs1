@@ -21,7 +21,7 @@ dlg_msg(msg)
 dlg_yesno(msg)
 {
 	w = 20;
-	h = 5;
+	h = 8;
 	result = exec("dialog --yesno \"" + msg + "\" " + h + " " + w);
 	exec("clear");
 	return result;
@@ -29,8 +29,11 @@ dlg_yesno(msg)
 
 dlg_menu(items)
 {
-	w = 25;
-	h = 10;
+	w = 32;
+	h = 7 + length(items);
+	if(h > 24)
+		h = 24;
+
 	numitems = length(items);
 	tmpfile = "/tmp/dlg_menu_result.tmp";
 

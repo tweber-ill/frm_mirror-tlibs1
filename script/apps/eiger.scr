@@ -3,6 +3,7 @@
 module_init()
 {
 	import("apps/fit.scr");
+	import("apps/dialog.scr");
 
 	global size_pts = 0.75;
 	global size_lines = 1.5;
@@ -84,8 +85,8 @@ scanned_var(cmd)
 	idx_dqh = find(cmd_toks, "dqh");
 	if(idx_dqh < 0)
 	{
-		print("Error: No q or E scan.");
-		exit(-1);
+		print("Info: No q or E scan.");
+		return "";
 	}
 
 	dqh = cmd_toks[idx_dqh+1];
@@ -97,6 +98,8 @@ scanned_var(cmd)
 	else if(dqk != 0.) return "QK";
 	else if(dql != 0.) return "QL";
 	else if(dE != 0.) return "EN";
+
+	return "";
 }
 
 
@@ -133,7 +136,7 @@ load_eiger_multi(filenames)
 		}
 		else
 		{
-			print("Merging " + filename + " with " + filenames[0]);
+			print("Merging " + filename + " with " + filenames[0] + ".");
 			for(curlab : curlabs)
 			{
 				if(curlab != labs[cur_iter(curlab)])
@@ -179,6 +182,12 @@ plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile)
 	cmd = params["COMND"];
 
 	idx_x = find(labs, scvar = scanned_var(cmd));
+	if(idx_x < 0)
+	{
+		idx_x = dlg_menu(labs);
+		scvar = labs[idx_x];
+	}
+
 	idx_y = find(labs, "CNTS");
 	idx_mon = find(labs, "M1");
 
@@ -208,7 +217,7 @@ plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile)
 	}
 
 	
-	xlab = "x";
+	xlab = scvar;
 	ylab = "Counts";
 	if(norm_to_monitor)
 		ylab = "Counts / monitor";
@@ -345,10 +354,5 @@ main(args)
 	}
 
 	files = args[1:length(args)];
-
-	peaks_x = [-0.2, 0.2];
-	peaks_size = [1.8e-4, 2e-4];
-	peaks_width = [0.1, 0.1];
-
-	return plot_eiger(files, 0, peaks_x, peaks_size, peaks_width, "", "");
+	plot_eiger(files, 0, [], [], [], "", "");
 }
