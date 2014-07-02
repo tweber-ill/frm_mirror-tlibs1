@@ -36,6 +36,17 @@ static Symbol* fkt_version(const std::vector<Symbol*>& vecSyms,
 	return new SymbolString(g_pcVersion);
 }
 
+static Symbol* fkt_is_valid(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info, SymbolTable* pSymTab)
+{
+	for(const Symbol* pSym : vecSyms)
+	{
+		if(!pSym)
+			return new SymbolInt(0);
+	}
+	return new SymbolInt(1);
+}
+
 static Symbol* fkt_int(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
@@ -871,6 +882,7 @@ static t_mapFkts g_mapFkts =
 	// basic stuff
 	t_mapFkts::value_type(T_STR"interp_ver", fkt_version),
 	t_mapFkts::value_type(T_STR"register_var", fkt_register_var),
+	t_mapFkts::value_type(T_STR"is_valid", fkt_is_valid),
 
 	// input/output
 	t_mapFkts::value_type(T_STR"output", fkt_output),

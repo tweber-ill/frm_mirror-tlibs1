@@ -841,6 +841,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 		pSymbolOrg = pSymRightAlt;
 	else
 		pSymbolOrg = pRight->eval(info, pSym);
+
 	if(!pSymbolOrg)
 	{
 		G_CERR << linenr(T_STR"Error", info)
@@ -849,7 +850,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 		return 0;
 	}
 
-	Symbol *pSymbol = pSymbolOrg->clone();
+	Symbol *pSymbol = pSymbol = pSymbolOrg->clone();
 	safe_delete(pSymbolOrg, pSym, info.pGlobalSyms);
 
 	if(pLeft->GetType() == NODE_IDENT)		// single variable

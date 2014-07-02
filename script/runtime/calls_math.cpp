@@ -742,6 +742,66 @@ static Symbol* fkt_rand_norm(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 
 
 
+
+// --------------------------------------------------------------------------------
+// minmax
+
+static Symbol* fkt_minmax_elem(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size()!=1 || vecSyms[0]->GetType()!=SYMBOL_ARRAY)
+	{
+		G_CERR << linenr(T_STR"Error", info) << "minmax_elem needs one array argument." << std::endl;
+		return 0;
+	}
+
+	const Symbol *pSymMin=0, *pSymMax=0;
+	unsigned int iIdxMin=0, iIdxMax=0;
+	unsigned int iCurIter=0;
+	for(const Symbol* pSym : ((SymbolArray*)vecSyms[0])->GetArr())
+	{
+		if(pSymMin==0) { pSymMin = pSym; iIdxMin=iCurIter; }
+		if(pSymMax==0) { pSymMax = pSym; iIdxMax=iCurIter; }
+
+		if(pSym->IsLessThan(*pSymMin))
+		{
+			iIdxMin = iCurIter;
+			pSymMin = pSym;
+		}
+		if(pSym->IsGreaterThan(*pSymMax))
+		{
+			iIdxMax = iCurIter;
+			pSymMax = pSym;
+		}
+
+		++iCurIter;
+	}
+
+	return new SymbolArray({new SymbolInt(iIdxMin), new SymbolInt(iIdxMax)});
+}
+
+static Symbol* fkt_minmax(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+{
+	SymbolArray* pElem = (SymbolArray*)fkt_minmax_elem(vecSyms, info, pSymTab);
+	if(!pElem || pElem->GetArr().size()!=2)
+	{
+		G_CERR << linenr(T_STR"Error", info) << "Invalid input for minmax." << std::endl;
+		return 0;
+	}
+
+	int iIdxMin = pElem->GetArr()[0]->GetValInt();
+	int iIdxMax = pElem->GetArr()[1]->GetValInt();
+	delete pElem;
+
+	//std::cout << iIdxMin << ", " << iIdxMax << std::endl;
+
+	SymbolArray* pArr = (SymbolArray*)vecSyms[0];
+	return new SymbolArray({pArr->GetArr()[iIdxMin]->clone(), pArr->GetArr()[iIdxMax]->clone()});
+}
+
+// --------------------------------------------------------------------------------
+
+
+
 extern void init_ext_math_calls()
 {
 	init_rand();
@@ -800,6 +860,10 @@ extern void init_ext_math_calls()
 		// statistical stuff
 		t_mapFkts::value_type(T_STR"mean", fkt_mean),
 		t_mapFkts::value_type(T_STR"stddev", fkt_stddev),
+
+		// minmax
+		t_mapFkts::value_type(T_STR"minmax", fkt_minmax),
+		t_mapFkts::value_type(T_STR"minmax_elem", fkt_minmax_elem),
 
 
 		// fft

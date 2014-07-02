@@ -66,6 +66,10 @@ bool SymbolDouble::IsLessThan(const Symbol& sym) const
 	return GetValDouble() < sym.GetValDouble();
 }
 
+bool SymbolDouble::IsGreaterThan(const Symbol& sym) const
+{
+	return GetValDouble() > sym.GetValDouble();
+}
 
 
 
@@ -120,9 +124,19 @@ void SymbolInt::assign(Symbol *pSym)
 
 bool SymbolInt::IsLessThan(const Symbol& sym) const
 {
-       	return GetValInt() < sym.GetValInt();
+	if(sym.GetType() == SYMBOL_DOUBLE)
+       		return GetValDouble() < sym.GetValDouble();
+
+	return GetValInt() < sym.GetValInt();
 }
 
+bool SymbolInt::IsGreaterThan(const Symbol& sym) const
+{
+	if(sym.GetType() == SYMBOL_DOUBLE)
+       		return GetValDouble() > sym.GetValDouble();
+
+	return GetValInt() > sym.GetValInt();
+}
 
 
 
@@ -189,9 +203,20 @@ bool SymbolString::IsLessThan(const Symbol& sym) const
        	return GetVal() < sym.print();
 }
 
+bool SymbolString::IsGreaterThan(const Symbol& sym) const
+{
+       	return GetVal() > sym.print();
+}
 
 
 
+
+SymbolArray::SymbolArray(const std::initializer_list<Symbol*>& lst)
+{
+	m_arr.reserve(lst.size());
+	for(std::initializer_list<Symbol*>::const_iterator iter=lst.begin(); iter!=lst.end(); ++iter)
+		m_arr.push_back(*iter);
+}
 
 SymbolArray::~SymbolArray()
 {

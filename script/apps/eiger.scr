@@ -17,6 +17,12 @@ load_eiger(filename)
 {
 	print("Loading " + filename + ".");
 	dat_raw = read_file(filename);
+	if(!is_valid(dat_raw)) 
+	{
+		print("Error: File not found.");
+		return;
+	}
+
 	dat_lines = tokens(dat_raw, "\n");
 
 	databegin = -1;
@@ -125,6 +131,8 @@ load_eiger_multi(filenames)
 	for(filename : filenames)
 	{
 		[curlabs, curdata, curparams] = load_eiger(filename);
+		if(!is_valid(curlabs, curdata, curparams))
+			continue;
 		
 		if(cur_iter(filename) == 0)
 		{

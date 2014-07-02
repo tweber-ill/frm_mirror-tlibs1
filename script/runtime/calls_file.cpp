@@ -40,7 +40,7 @@ static Symbol* fkt_read_file(const std::vector<Symbol*>& vecSyms,
 
 	t_ifstream ifstr(strFile);
 	if(!ifstr.is_open())
-		return new SymbolString("");
+		return 0;
 
 	//std::streampos iFileSize = get_file_size<t_char>(ifstr);
 	t_ostringstream ostr;

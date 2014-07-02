@@ -13,6 +13,7 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
+#include <initializer_list>
 #include "helper/exception.h"
 
 enum SymbolType
@@ -57,9 +58,11 @@ public:
 	virtual t_string print() const = 0;
 	virtual Symbol* clone() const = 0;
 	virtual void assign(Symbol *pSym) = 0;
+
 	//virtual bool equals(Symbol *pSym) const = 0;
 	virtual bool IsNotZero() const = 0;
 	virtual bool IsLessThan(const Symbol&) const { return 0; }
+	virtual bool IsGreaterThan(const Symbol&) const { return 0; }
 
 	// cast value without converting or cloning symbol
 	virtual t_int GetValInt() const { return 0; }
@@ -101,8 +104,10 @@ public:
 	virtual t_string print() const;
 	virtual Symbol* clone() const;
 	virtual void assign(Symbol *pSym);
+
 	//virtual bool equals(Symbol *pSym) const;
 	virtual bool IsLessThan(const Symbol&) const;
+	virtual bool IsGreaterThan(const Symbol&) const;
 	virtual bool IsNotZero() const { return m_dVal != 0.; }
 
 	virtual t_int GetValInt() const { return t_int(m_dVal); }
@@ -135,8 +140,10 @@ public:
 	virtual t_string print() const;
 	virtual Symbol* clone() const;
 	virtual void assign(Symbol *pSym);
+
 	//virtual bool equals(Symbol *pSym) const;
 	virtual bool IsLessThan(const Symbol&) const;
+	virtual bool IsGreaterThan(const Symbol&) const;
 	virtual bool IsNotZero() const { return m_iVal != 0; }
 
 	virtual t_int GetValInt() const { return m_iVal; }
@@ -163,8 +170,10 @@ public:
 	virtual SymbolType GetType() const { return SYMBOL_STRING; }
 	virtual t_string GetTypeName() const { return T_STR"string"; }
 	virtual Symbol* ToType(SymbolType stype) const;
+
 	//virtual bool equals(Symbol *pSym) const;
 	virtual bool IsLessThan(const Symbol&) const;
+	virtual bool IsGreaterThan(const Symbol&) const;
 
 	virtual t_string print() const;
 	virtual Symbol* clone() const;
@@ -186,6 +195,7 @@ protected:
 
 public:
 	SymbolArray() : Symbol(), m_bDontDel(0) { /*std::cout << "symarr -> new" << std::endl;*/ }
+	SymbolArray(const std::initializer_list<Symbol*>& lst);
 	virtual ~SymbolArray();
 
 	virtual SymbolType GetType() const { return SYMBOL_ARRAY; }
