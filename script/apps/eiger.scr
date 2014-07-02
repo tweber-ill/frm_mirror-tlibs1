@@ -1,5 +1,10 @@
 #!./hermelin
 
+#
+# Eiger data file loading
+# Author: tw
+#
+
 module_init()
 {
 	import("apps/fit.scr");

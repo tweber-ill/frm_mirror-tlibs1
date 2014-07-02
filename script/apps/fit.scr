@@ -8,6 +8,10 @@ module_init()
 	global hwhm2sigma = 1./(sqrt(2.*log(2.)));
 }
 
+
+
+# -----------------------------------------------------------------------------
+# double gaussian
 doublegauss_model(x, x0_0, sigma_0, amp_0, x0_1, sigma_1, amp_1, offs)
 {
 	return amp_0 * exp(-0.5 * ((x-x0_0) / sigma_0)^2.) 
@@ -103,11 +107,14 @@ fit_doublegauss(x, y, yerr, E0)
 	
 	return fit_doublegauss_manual(x, y, yerr, E0, peaks_x, peaks_size, peaks_width);
 }
+# -----------------------------------------------------------------------------
 
 
 
 
 
+# -----------------------------------------------------------------------------
+# gaussian
 gauss_model(x, x0, sigma, amp, offs)
 {
 	return amp * exp(-0.5 * ((x-x0) / sigma)^2.) + offs;
@@ -158,3 +165,31 @@ fit_gauss(x, y, yerr)
 
 	return fit_gauss_manual(x, y, yerr, peaks_x[0], peaks_size[0], peaks_width[0]);
 }
+# -----------------------------------------------------------------------------
+
+
+
+# -----------------------------------------------------------------------------
+# line
+line_model(x, m, b)
+{
+	return m*x + b;
+}
+
+fit_line(x, y, yerr)
+{
+	m_hint = (y[-1]-y[0]) / (x[-1]-x[0]);
+	b_hint = y[0] - m_hint*x[0];
+	m_hint_err = m_hint/10.;
+	b_hint_err = b_hint/10.;
+
+	fitparams = fit("line_model", x, y, yerr,
+			[
+				"hints" : [m_hint, b_hint], "hints_errors" : [m_hint_err, b_hint_err],
+				"debug" : 1,
+				"steps" : ["fr", "rf", "xx", "xx"]
+			]);
+	return fitparams;
+}
+# -----------------------------------------------------------------------------
+
