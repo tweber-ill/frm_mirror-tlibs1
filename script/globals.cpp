@@ -13,6 +13,10 @@
 #include "helper/neutrons.hpp"
 #include <boost/units/systems/si/codata/electron_constants.hpp>
 
+int yydebug = 0;
+bool g_bDebug = 0;
+bool g_bShowTiming = 0;
+
 const t_char* g_pcVersion = T_STR"Hermelin script interpreter, version 0.6";
 
 static inline void init_funcs()
