@@ -96,9 +96,17 @@ static inline int script_main(int argc, char** argv)
 }
 
 
+#include <chrono>
+typedef std::chrono::system_clock::time_point t_tp;
+typedef std::chrono::system_clock::duration t_dur;
+
 int main(int argc, char** argv)
 {
 	int iRet = -99;
+
+#ifdef DEBUG
+	t_tp timeStart = std::chrono::system_clock::now();
+#endif
 
 	try
 	{
@@ -109,6 +117,14 @@ int main(int argc, char** argv)
 	{
 		G_CERR << "Critical error in script interpreter: " << ex.what() << std::endl;
 	}
+
+#ifdef DEBUG
+	t_tp timeStop = std::chrono::system_clock::now();
+	t_dur dur = timeStop-timeStart;
+	double dDur = double(t_dur::period::num)/double(t_dur::period::den) * double(dur.count());
+
+	G_COUT << "Script execution time: " << dDur << " s." << std::endl;
+#endif
 
 	return iRet;
 }
