@@ -559,7 +559,7 @@ static Symbol* fkt_determinant(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 
-	t_real dDet = determinant<t_mat<t_real>, t_real>(mat);
+	t_real dDet = determinant<t_mat<t_real>>(mat);
 	return new SymbolDouble(dDet);
 }
 
