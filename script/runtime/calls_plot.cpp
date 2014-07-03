@@ -163,6 +163,12 @@ static void set_plot_params(GnuPlot& plot, const SymbolMap* pParamMap,
 	t_string strUserTerm = pParamMap->GetStringVal(T_STR"term", &bHasVal);
 	if(bHasVal) strTerm = strUserTerm;
 
+
+	// legend options
+	t_string strLegendOpts = pParamMap->GetStringVal(T_STR"legend_opts", &bHasVal);
+	if(bHasVal) plot.SetLegendOpts(WSTR_TO_STR(strLegendOpts));
+
+
 	int iPlotWnd = 0;
 	int iUserPlotWnd = atoi(WSTR_TO_STR(pParamMap->GetStringVal(T_STR"window", &bHasVal)).c_str());
 	if(bHasVal) iPlotWnd = iUserPlotWnd;
