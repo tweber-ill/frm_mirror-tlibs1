@@ -27,8 +27,8 @@ static inline int script_main(int argc, char** argv)
 					<< " <script file> [arguments to script]" 
 					<< "\n";
 		G_COUT << "\nArguments to hermelin:" << "\n";
-		G_COUT << "\t-timing\t\tShow timing information.\n";
-		//G_COUT << "\t-debug\t\tEnable debug output.\n";
+		G_COUT << "\t-t, --timing\t\tShow timing information.\n";
+		//G_COUT << "\t-d, --debug\t\tEnable debug output.\n";
 		G_COUT << std::endl;
 		return -1;
 	}
@@ -43,9 +43,9 @@ static inline int script_main(int argc, char** argv)
 		if(strArg[0] != T_STR'-')
 			break;
 
-		if(strArg == "-timing")
+		if(strArg=="-t" || strArg == "--timing")
 			g_bShowTiming = 1;
-		else if(strArg == "-debug")
+		else if(strArg=="-d" || strArg == "--debug")
 			g_bDebug = 1;
 	}
 
@@ -98,7 +98,7 @@ static inline int script_main(int argc, char** argv)
 	for(int iArg=iStartArg; iArg<argc; ++iArg)
 	{
 		SymbolString *pSymArg = new SymbolString();
-		pSymArg->SetVal(STR_TO_WSTR(argv[iStartArg]));
+		pSymArg->SetVal(STR_TO_WSTR(argv[iArg]));
 		parrMainArgs->GetArr().push_back(pSymArg);
 	}
 	//std::vector<Symbol*> vecMainArgs = { &arrMainArgs };
