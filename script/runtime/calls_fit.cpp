@@ -129,6 +129,8 @@ public:
 
 			((SymbolDouble*)m_vecSyms[iParam+1])->SetVal(dVal);
 		}
+
+		return 1;
 	}
 
 	virtual t_real operator()(t_real x) const

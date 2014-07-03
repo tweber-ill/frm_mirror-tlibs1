@@ -341,13 +341,13 @@ static Symbol* _fkt_fileplot(const std::vector<Symbol*>& vecSyms,
 static Symbol* fkt_fileplot(const std::vector<Symbol*>& vecSyms,
 				ParseInfo& info, SymbolTable* pSymTab)
 {
-	_fkt_fileplot(vecSyms, info, pSymTab, fkt_plot);
+	return _fkt_fileplot(vecSyms, info, pSymTab, fkt_plot);
 } 
 
 static Symbol* fkt_fileplot2d(const std::vector<Symbol*>& vecSyms,
 				ParseInfo& info, SymbolTable* pSymTab)
 {
-	_fkt_fileplot(vecSyms, info, pSymTab, fkt_plot2d);
+	return _fkt_fileplot(vecSyms, info, pSymTab, fkt_plot2d);
 } 
 
 

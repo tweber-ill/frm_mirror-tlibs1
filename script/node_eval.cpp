@@ -1191,13 +1191,14 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 					<< std::endl;
 		}
 
-		for(unsigned int iArg=0; iArg<m_vecArgs.size(); ++iArg)
+		unsigned int iArgSize = std::min(m_vecArgs.size(), pVecArgSyms->size());
+		for(unsigned int iArg=0; iArg<iArgSize; ++iArg)
 		{
 			NodeIdent* pIdent = (NodeIdent*)m_vecArgs[iArg];
 			Symbol *pSymbol = (*pVecArgSyms)[iArg];
 			//G_COUT << "arg: " << pIdent->GetIdent() << std::endl;
 
-			pLocalSym->InsertSymbol(pIdent->GetIdent(), pSymbol->clone());
+			pLocalSym->InsertSymbol(pIdent->GetIdent(), pSymbol?pSymbol->clone():0);
 		}
 	}
 

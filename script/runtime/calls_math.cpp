@@ -535,7 +535,10 @@ static Symbol* fkt_inverse(const std::vector<Symbol*>& vecSyms,
 
 	t_mat<t_real> mat_inv;
 	if(!inverse(mat, mat_inv))
+	{
 		G_CERR << linenr(T_STR"Warning", info) << "Matrix inversion failed." << std::endl;
+		return 0;
+	}
 
 	return mat_to_sym<t_mat>(mat_inv);
 }

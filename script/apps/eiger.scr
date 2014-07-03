@@ -182,7 +182,7 @@ norm_to_mon(dat_y, dat_yerr, dat_mon, dat_monerr)
 	return [dat_y, dat_yerr];
 }
 
-plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile)
+plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, opts)
 {
 	norm_to_monitor = 1;
 	num_peaks = length(peaks_x);
@@ -191,6 +191,20 @@ plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile)
 		[labs, data, params] = load_eiger_multi(filenames);
 	else
 		[labs, data, params] = load_eiger(filenames);
+
+	if(is_valid(opts))
+	{
+		if(has_key(opts, "remove_front"))
+		{
+			cntremove = opts["remove_front"];
+			print("Removing first " + cntremove + " data points.");
+
+			for(dat : data)
+				dat = dat[cntremove:length(dat)];
+		}
+
+		#print(data);
+	}
 
 	cmd = params["COMND"];
 
@@ -368,5 +382,5 @@ main(args)
 	}
 
 	files = args[1:length(args)];
-	plot_eiger(files, 0, [], [], [], "", "");
+	plot_eiger(files, 0, [], [], [], "", "", map());
 }

@@ -22,7 +22,9 @@ static inline int script_main(int argc, char** argv)
 {
 	if(argc<=1)
 	{
-		G_COUT << "This is the " << g_pcVersion << "." << "\n\n";
+		G_COUT << "This is the " << g_pcVersion << "." << "\n";
+		G_COUT << "Built on " << __DATE__ << ", " << __TIME__;
+		G_COUT << " with CC version " << __VERSION__ << ".\n\n";
 		G_COUT << "Usage: " << argv[0] << " [arguments to hermelin]" 
 					<< " <script file> [arguments to script]" 
 					<< "\n";
