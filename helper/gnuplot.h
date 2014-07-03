@@ -58,6 +58,8 @@ protected:
 	bool m_bTermLocked;
 	bool m_bHasLegend;
 
+	std::string m_strLegendOpts;
+
 	void RefreshVars();
 
 public:
@@ -93,6 +95,8 @@ public:
 
 	void LockTerminal() { m_bTermLocked = 1; }
 	void UnlockTerminal() { m_bTermLocked = 0; }
+
+	void SetLegendOpts(const std::string& strOpts) { m_strLegendOpts = strOpts; }
 };
 
 

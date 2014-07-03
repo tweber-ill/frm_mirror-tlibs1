@@ -109,7 +109,7 @@ void GnuPlot::SetFileTerminal(const char* pcFile)
 void GnuPlot::RefreshVars()
 {
 	if(m_bHasLegend)
-		(*m_postr) << "set key on default\n";
+		(*m_postr) << "set key on default box 0 " << m_strLegendOpts << "\n";
 	else
 		(*m_postr) << "set nokey\n";
 }
