@@ -252,7 +252,7 @@ plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 	if(scvar == "EN")
 		xlab = "E (meV)";
 	else if(scvar=="QH" || scvar=="QK" || scvar=="QL")
-		xlab = "q (1/A)";
+		xlab = "h (rlu)";
 
 	if(typeof(data[0])!="vector" || length(data[0]) == 0)
 	{

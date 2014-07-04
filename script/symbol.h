@@ -165,6 +165,7 @@ public:
 	SymbolString() : Symbol() {}
 	SymbolString(const t_char* pcStr) : m_strVal(pcStr) {}
 	SymbolString(const t_string& str) : m_strVal(str) {}
+	SymbolString(t_string&& str) : m_strVal(str) {}
 	SymbolString(t_real dVal) { throw Err("Invalid SymbolString constructor."); }
 
 	virtual SymbolType GetType() const { return SYMBOL_STRING; }

@@ -16,11 +16,13 @@
 #include <cstdio>
 #include <cmath>
 #include <algorithm>
+#include <utility>
 
 #include <ratio>
 #include <chrono>
 #include <thread>
 
+//#include <regex>
 
 extern t_string linenr(const t_string& strErr, const ParseInfo &info)
 {
@@ -45,6 +47,40 @@ static Symbol* fkt_is_valid(const std::vector<Symbol*>& vecSyms,
 			return new SymbolInt(0);
 	}
 	return new SymbolInt(1);
+}
+
+static Symbol* fkt_call(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size() < 1 || vecSyms[0]->GetType()!=SYMBOL_STRING)
+	{
+		G_CERR << linenr(T_STR"Error", info) 
+			<< "call needs a function name." 
+			<< std::endl;
+		return 0;
+	}
+
+	const t_string& strFkt = ((SymbolString*)vecSyms[0])->GetVal();
+	NodeFunction *pFkt = info.GetFunction(strFkt);
+
+	SymbolArray *pArr = 0;
+	if(vecSyms.size()>=2 && vecSyms[1]->GetType()==SYMBOL_ARRAY)
+		pArr = (SymbolArray*)vecSyms[1];
+
+	Symbol *pSymRet = 0;
+	if(pFkt)	// user function
+	{
+		pSymTab->InsertSymbol(T_STR"<args>", pArr);
+		pSymRet = pFkt->eval(info, pSymTab);
+		info.bWantReturn = 0;
+		pSymTab->RemoveSymbolNoDelete(T_STR"<args>");
+	}
+	else		// system function
+	{
+		pSymRet = ext_call(strFkt, pArr ? pArr->GetArr() : std::vector<Symbol*>(), info, pSymTab);
+	}
+
+	return pSymRet;
 }
 
 static Symbol* fkt_int(const std::vector<Symbol*>& vecSyms,
@@ -174,7 +210,7 @@ static bool _import_file(const t_string& strFile, ParseInfo& info, SymbolTable* 
 		return 0;
 	}
 
-	std::string _strFile = WSTR_TO_STR(strFile);
+	t_string _strFile = WSTR_TO_STR(strFile);
 	t_char* pcInput = load_file(_strFile.c_str());
 	if(!pcInput)
 		return 0;
@@ -443,11 +479,11 @@ static Symbol* fkt_array_size(const std::vector<Symbol*>& vecSyms,
 
 static int pos_in_string(const SymbolString* pSymStr, const SymbolString *pSym)
 {
-	const std::string& str = pSymStr->GetVal();
-	const std::string& strToFind = pSym->GetVal();
+	const t_string& str = pSymStr->GetVal();
+	const t_string& strToFind = pSym->GetVal();
 
 	std::size_t pos = str.find(strToFind);
-	if(pos == std::string::npos)
+	if(pos == t_string::npos)
 		return -1;
 
 	return int(pos);
@@ -834,14 +870,51 @@ static Symbol* fkt_replace(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 
-	std::string str = ((SymbolString*)vecSyms[0])->GetVal();
-	const std::string& strOld = ((SymbolString*)vecSyms[1])->GetVal();
-	const std::string& strNew = ((SymbolString*)vecSyms[2])->GetVal();
+	t_string str = ((SymbolString*)vecSyms[0])->GetVal();
+	const t_string& strOld = ((SymbolString*)vecSyms[1])->GetVal();
+	const t_string& strNew = ((SymbolString*)vecSyms[2])->GetVal();
 
 	find_all_and_replace(str, strOld, strNew);
 
 	return new SymbolString(str);
 }
+
+/*
+// replace_regex(str, regex, repl);
+static Symbol* fkt_replace_regex(const std::vector<Symbol*>& vecSyms,
+				ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size()!=3 || vecSyms[0]->GetType()!=SYMBOL_STRING
+				|| vecSyms[1]->GetType()!=SYMBOL_STRING
+				|| vecSyms[2]->GetType()!=SYMBOL_STRING)
+	{
+		G_CERR << linenr(T_STR"Error", info)
+			<< "Replace needs three string arguments." << std::endl;
+		return 0;
+	}
+
+	t_string str = ((SymbolString*)vecSyms[0])->GetVal();
+	const t_string& strRegex = ((SymbolString*)vecSyms[1])->GetVal();
+	const t_string& strRepl = ((SymbolString*)vecSyms[2])->GetVal();
+
+	std::string strRet;
+	try
+	{
+		//std::cout << "Regex: " << strRegex << std::endl;
+		std::basic_regex<t_char> rex(strRegex, std::regex::ECMAScript);
+		strRet = std::regex_replace(str, rex, strRepl);
+	}
+	catch(const std::exception& ex)
+	{
+		G_CERR << linenr(T_STR"Error", info)
+			<< "Regex evaluation failed with error: " << ex.what() 
+			<< std::endl;
+		return 0;
+	}
+
+	return new SymbolString(std::move(strRet));
+}
+*/
 // --------------------------------------------------------------------------------
 
 
@@ -883,6 +956,7 @@ static t_mapFkts g_mapFkts =
 	t_mapFkts::value_type(T_STR"interp_ver", fkt_version),
 	t_mapFkts::value_type(T_STR"register_var", fkt_register_var),
 	t_mapFkts::value_type(T_STR"is_valid", fkt_is_valid),
+	t_mapFkts::value_type(T_STR"call", fkt_call),
 
 	// input/output
 	t_mapFkts::value_type(T_STR"output", fkt_output),
@@ -910,6 +984,8 @@ static t_mapFkts g_mapFkts =
 	t_mapFkts::value_type(T_STR"tokens", fkt_tokens),
 	t_mapFkts::value_type(T_STR"replace", fkt_replace),
 	t_mapFkts::value_type(T_STR"length", fkt_array_size),
+	//t_mapFkts::value_type(T_STR"replace_regex", fkt_replace_regex),
+
 
 	// array operations
 	t_mapFkts::value_type(T_STR"vec_size", fkt_array_size),	// deprecated, use "length" instead

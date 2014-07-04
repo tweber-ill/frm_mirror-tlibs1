@@ -1,0 +1,15 @@
+sq(x)
+{
+	return x^2.;
+}
+
+main(args)
+{
+	if(length(args)<3)
+		return;
+
+	fkt = args[1];
+	d = real(args[2]);
+
+	print(call(fkt, [d]));
+}

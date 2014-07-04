@@ -176,6 +176,12 @@ line_model(x, m, b)
 	return m*x + b;
 }
 
+line_model_zero(x, m)
+{
+	return m*x;
+}
+
+
 fit_line(x, y, yerr)
 {
 	m_hint = (y[-1]-y[0]) / (x[-1]-x[0]);
@@ -191,5 +197,17 @@ fit_line(x, y, yerr)
 			]);
 	return fitparams;
 }
-# -----------------------------------------------------------------------------
 
+fit_line_zero(x, y, yerr)
+{
+	m_hint = (y[-1]-y[0]) / (x[-1]-x[0]);
+	m_hint_err = m_hint/10.;
+
+	fitparams = fit("line_model_zero", x, y, yerr,
+			[
+				"hints" : [m_hint], "hints_errors" : [m_hint_err],
+				"debug" : 1
+			]);
+	return fitparams;
+}
+# -----------------------------------------------------------------------------
