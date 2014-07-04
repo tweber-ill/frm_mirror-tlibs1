@@ -3,6 +3,16 @@ sq(x)
 	return x^2.;
 }
 
+sq(x)
+{
+	return x;
+}
+
+sqrt(x)
+{
+	return 0;
+}
+
 main(args)
 {
 	if(length(args)<3)

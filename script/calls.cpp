@@ -1031,3 +1031,8 @@ extern void add_ext_calls(t_mapFkts& mapFkt)
 {
 	g_mapFkts.insert(mapFkt.begin(), mapFkt.end());
 }
+
+extern bool has_ext_call(const t_string& strFkt)
+{
+	return g_mapFkts.find(strFkt) != g_mapFkts.end();
+}

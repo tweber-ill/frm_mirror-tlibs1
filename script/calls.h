@@ -25,6 +25,7 @@ typedef std::map<t_string, t_extcall> t_mapFkts;
 extern bool add_ext_call(const t_string& strFkt, t_extcall pExtCall);
 extern void add_ext_calls(t_mapFkts&);
 
+extern bool has_ext_call(const t_string& strFkt);
 
 // calling external functions from interpreter
 extern Symbol* ext_call(const t_string& strFkt,

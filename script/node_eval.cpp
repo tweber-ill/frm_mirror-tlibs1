@@ -1038,14 +1038,28 @@ Symbol* NodeBinaryOp::eval_funcinit(ParseInfo &info, SymbolTable *pSym) const
 		const t_string& strFktName = pNodeFunc->GetName();
 
 		if(strFktName == T_STR"__init__" || strFktName == T_STR"module_init")
+		{
 			pToRun = pNodeFunc;
+		}
 		else if(info.GetFunction(strFktName))
+		{
 			G_CERR << linenr(T_STR"Warning", info)
 					<< "Function \"" << strFktName
 					<< "\" redefined in \"" << info.strInitScrFile << "\"."
 					<< " Ignoring." << std::endl;
+		}
 		else
+		{
+			if(has_ext_call(strFktName))
+			{
+				G_CERR << linenr(T_STR"Warning", info)
+					<< "Function \"" << strFktName
+					<< "\" in \"" << info.strInitScrFile
+					<< "\" overwrites a system function."
+					<< std::endl;
+			}
 			vecFuncs.push_back(pNodeFunc);
+		}
 	}
 
 	// execute general entry point function
