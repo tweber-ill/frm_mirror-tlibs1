@@ -90,7 +90,31 @@ load_eiger(filename)
 	return [labels, lines_vals, params];
 }
 
-scanned_var(cmd)
+scanned_var(steps)
+{
+	step_toks = tokens(steps, ",");
+	print(step_toks);
+	for(step_tok : step_toks)
+	{
+		keyval = trim(tokens(step_tok, "="));
+		if(length(keyval)==0)
+			continue;
+		if(length(keyval[0])==0)
+			continue;
+
+		key = keyval[0][1:length(keyval[0])];
+		val = real(keyval[1]);
+
+		if(val != 0.)
+			return key;
+		
+		print("key: " + key + ", val: " + val);
+	}
+	
+	return "";
+}
+
+scanned_var_from_cmd(cmd)
 {
 	cmd_toks = tokens(cmd, " \t");
 	idx_dqh = find(cmd_toks, "dqh");
@@ -145,6 +169,8 @@ load_eiger_multi(filenames)
 			data = curdata;
 			params = curparams;
 
+			params["FILE_"] = "\x23" + trim(params["FILE_"]);
+
 			print("Columns: " + str(labs));
 		}
 		else
@@ -159,6 +185,7 @@ load_eiger_multi(filenames)
 				}
 			}
 
+			params["FILE_"] += "+" + "\x23" + trim(curparams["FILE_"]);
 			data = mergedata(data, curdata);
 		}
 	}
@@ -186,11 +213,19 @@ plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 {
 	norm_to_monitor = 1;
 	num_peaks = length(peaks_x);
+	title_len = length(title);
 
 	if(typeof(filenames) == "vector")
 		[labs, data, params] = load_eiger_multi(filenames);
 	else
 		[labs, data, params] = load_eiger(filenames);
+
+	if(typeof(data[0])!="vector" || length(data[0]) == 0)
+	{
+		print("Error: Empty data file.");
+		return -1;
+	}
+
 
 	if(is_valid(opts))
 	{
@@ -207,8 +242,12 @@ plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 	}
 
 	cmd = params["COMND"];
+	steps = params["STEPS"];
 
-	idx_x = find(labs, scvar = scanned_var(cmd));
+	idx_x = find(labs, scvar = scanned_var(steps));
+	if(idx_x < 0)
+		idx_x = find(labs, scvar = scanned_var_from_cmd(cmd));
+	
 	if(idx_x < 0)
 	{
 		idx_x = dlg_menu(labs);
@@ -225,8 +264,22 @@ plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 	}
 
 
+
+	numor = trim(params["FILE_"]);
+	if(length(numor))
+	{
+		print("File number: " + numor);
+
+		oldtitle = title;
+		title = "Scan " + numor;
+		if(title_len)
+			title += ", " + oldtitle;
+	}
+
 	print("Scan over " + scvar);
 	print("Using indices (" + idx_x + ", " + idx_y + ")");
+
+
 
 
 	idx_temp = find(labs, "TT");
@@ -238,7 +291,7 @@ plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 		params["temp_mean"] = temp_mean;
 		params["temp_err"] = temp_err;
 
-		if(length(title) > 0)
+		if(title_len > 0)
 			title += ", " + temp_mean + " K " + " +- " + temp_err + " K";
 		print("Temperature: " + temp_mean + " +- " + temp_err);
 	}
@@ -253,12 +306,6 @@ plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 		xlab = "E (meV)";
 	else if(scvar=="QH" || scvar=="QK" || scvar=="QL")
 		xlab = "h (rlu)";
-
-	if(typeof(data[0])!="vector" || length(data[0]) == 0)
-	{
-		print("Error: Empty data file.");
-		return -1;
-	}
 
 
 	dat_x = data[idx_x];
