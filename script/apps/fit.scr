@@ -338,3 +338,39 @@ fit_line_zero(x, y, yerr)
 	return fitparams;
 }
 # -----------------------------------------------------------------------------
+
+
+
+# -----------------------------------------------------------------------------
+# error function
+
+erf_model(x, a, m, b, x0)
+{
+	return a*erf(m*(x-x0)) + b;
+}
+
+fit_erf(x, y, yerr)
+{
+	miny = min(y);
+	maxy = max(y);
+
+	a_hint = (maxy-miny) / 2.;
+	m_hint = y[-1]-y[0];
+	b_hint = miny + a_hint;
+	x0_hint = (x[-1]-x[0]) / 2.;
+
+	a_hint_err = a_hint/10.;
+	m_hint_err = m_hint/10.;
+	b_hint_err = b_hint/10.;
+	x0_hint_err = x0_hint/10.;
+
+	return fit("erf_model", x, y, yerr,
+			[
+				"hints" : [a_hint, m_hint, b_hint, x0_hint],
+				"hints_errors" : [a_hint_err, m_hint_err, b_hint_err, x0_hint_err],
+
+				"debug" : 1
+			]);
+}
+
+# -----------------------------------------------------------------------------

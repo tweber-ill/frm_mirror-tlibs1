@@ -812,6 +812,7 @@ extern void init_ext_math_calls()
 	t_mapFkts mapFkts =
 	{
 		// math stuff
+		t_mapFkts::value_type(T_STR"sign", fkt_math_1arg< sign<t_real> >),
 		t_mapFkts::value_type(T_STR"sqrt", fkt_math_1arg< std::sqrt >),
 		t_mapFkts::value_type(T_STR"cbrt", fkt_math_1arg< std::cbrt >),
 		t_mapFkts::value_type(T_STR"exp", fkt_math_1arg< std::exp >),

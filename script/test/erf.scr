@@ -1,15 +1,13 @@
 main()
 {
 	x = linspace(-3, 3, 128);
-	y = erf(x)^2;
-	y2 = erf(2.*x)^2;
-	y3 = tanh(x)^2;
+	y1 = erf(x);
+	y2 = tanh(x);
 
-	opt = ["style":"line", "legend":"erf^2(x)"];
-	opt2 = ["style":"line", "legend":"erf^2(2x)"];
-	opt3 = ["style":"line", "legend":"tanh^2(x)"];
+	opt = ["style":"line", "legend":"erf(x)"];
+	opt2 = ["style":"line", "legend":"tanh(x)"];
 
-	plot([[x,y,opt], [x,y2,opt2], [x,y3, opt3]], ["term":"x11"]);
+	plot([[x,y1,opt], [x,y2,opt2]], ["term":"x11"]);
 }
 
 
