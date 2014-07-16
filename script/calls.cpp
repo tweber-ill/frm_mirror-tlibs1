@@ -593,6 +593,7 @@ static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
 	}
 
 	const t_string& strIdent = vecSyms[0]->GetIdent();
+	//std::cout << "Ident: " << strIdent << std::endl;
 	if(strIdent == T_STR"")
 	{
 		G_CERR << linenr(T_STR"Error", info) << "No identifier given for cur_iter." << std::endl;

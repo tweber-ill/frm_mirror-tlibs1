@@ -109,7 +109,7 @@ Symbol* NodeIdent::eval(ParseInfo &info, SymbolTable *pSym) const
 		return 0;
 	}
 
-	if(pSymbol->GetIdent().size()==0)
+	//if(pSymbol->GetIdent().size()==0)	// !! cur_iter needs this symbol's identifier !!
 		pSymbol->SetIdent(m_strIdent);
 	return pSymbol;
 }
@@ -1386,6 +1386,7 @@ Symbol* NodeRangedFor::eval(ParseInfo &info, SymbolTable *pSym) const
 
 
 	const t_string& strIdent = ((NodeIdent*)m_pIdent)->GetIdent();
+	//std::cout << "ranged ident: " << strIdent << std::endl;
 
 	SymbolInt *pSymIter = new SymbolInt(0);
 	t_string strIter = T_STR"<cur_iter_" + strIdent + T_STR">";

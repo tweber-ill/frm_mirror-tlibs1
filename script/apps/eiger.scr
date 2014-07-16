@@ -346,32 +346,35 @@ plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 			fitx = linspace(min(dat_x)-xrange, max(dat_x)+xrange, 512);
 			fity = gauss_model(fitx, *params_vals);
 		}
-		else if(num_peaks == 2)
-		{
-			fitres = fit_doublegauss_manual(dat_x, dat_y, dat_yerr, peaks_x, peaks_size, peaks_width);
-
-			params_vals = map_vec_to_val(fitres);
-			params_errs = map_vec_to_val(fitres, 1);
-
-			params_vals_gauss1 = ["x0":params_vals["x0_0"], "sigma":params_vals["sigma_0"], "amp":params_vals["amp_0"], "offs":params_vals["offs"]];
-			params_errs_gauss1 = ["x0":params_errs["x0_0"], "sigma":params_errs["sigma_0"], "amp":params_errs["amp_0"], "offs":params_errs["offs"]];
-
-			params_vals_gauss2 = ["x0":params_vals["x0_1"], "sigma":params_vals["sigma_1"], "amp":params_vals["amp_1"], "offs":params_vals["offs"]];
-			params_errs_gauss2 = ["x0":params_errs["x0_1"], "sigma":params_errs["sigma_1"], "amp":params_errs["amp_1"], "offs":params_errs["offs"]];
-
-			#params_vals_offs = ["offs":params_vals["offs"]];
-			#params_errs_offs = ["offs":params_errs["offs"]];
-
-			fitx = linspace(min(dat_x)-xrange, max(dat_x)+xrange, 512);
-			fity = doublegauss_model(fitx, *params_vals);
-
-			fity_gauss1 = gauss_model(fitx, *params_vals_gauss1);
-			fity_gauss2 = gauss_model(fitx, *params_vals_gauss2);
-		}
 		else
 		{
-			print("Error: Invalid number of peaks.");
-			return -1;
+			if(num_peaks == 2)
+				fitres = fit_doublegauss_manual(dat_x, dat_y, dat_yerr, peaks_x, peaks_size, peaks_width);
+			else			
+				[fitres, param_vec] = fit_multigauss_manual(dat_x, dat_y, dat_yerr, peaks_x, peaks_size, peaks_width);
+
+                        params_vals = map_vec_to_val(fitres);
+			params_errs = map_vec_to_val(fitres, 1);
+
+			fitx = linspace(min(dat_x)-xrange, max(dat_x)+xrange, 512);
+
+			if(num_peaks == 2)
+				fity = doublegauss_model(fitx, *params_vals);
+			else
+				fity = multigauss_model(fitx, map_to_vec(params_vals, param_vec));
+
+			fity_gausses = vec(num_peaks);
+			for(iPeak=0; iPeak<num_peaks; iPeak+=1)
+			{
+				x0 = "x0_" + iPeak;
+				sigma = "sigma_" + iPeak;
+				amp = "amp_" + iPeak;
+
+				params_vals_gauss = ["x0":params_vals[x0], "sigma":params_vals[sigma], "amp":params_vals[amp], "offs":params_vals["offs"]];
+				#params_errs_gauss = ["x0":params_errs[x0], "sigma":params_errs[sigma], "amp":params_errs[amp], "offs":params_errs["offs"]];
+
+				fity_gausses[iPeak] = gauss_model(fitx, *params_vals_gauss);
+			}
 		}
 	}
 	else
@@ -384,11 +387,10 @@ plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 
 	if(do_fit)
 	{
-		if(num_peaks == 2)
-		{
-			plotobjs[1] = [fitx, fity_gauss1, ["style":"lines_dashed", "size":size_lines]];
-			plotobjs[2] = [fitx, fity_gauss2, ["style":"lines_dashed", "size":size_lines]];
-		}
+		if(num_peaks >= 2)
+			for(fity_gauss : fity_gausses)
+				plotobjs[cur_iter(fity_gauss)+1] = [fitx, fity_gauss, ["style":"lines_dashed", "size":size_lines]];
+
 		plotobjs[length(plotobjs)] = [fitx, fity, ["style":"lines", "size":size_lines]];
 
 		if(!fitres["<valid>"])

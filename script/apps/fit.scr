@@ -9,6 +9,133 @@ module_init()
 }
 
 
+# -----------------------------------------------------------------------------
+# multi gaussian
+
+map_to_vec(themap, thekeys)
+{
+	v = vec(length(themap));
+	for(key : thekeys)
+	{
+		#print(cur_iter(key));
+		v[cur_iter(key)] = themap[key];
+	}
+
+	return v;
+}
+
+# params: x0_0, sigma_0, amp_0, x0_1, sigma_1, amp_1, ..., offs
+multigauss_model(x, params)
+{
+	numgauss = (length(params)-1) / 3;
+
+	x0s = vec(numgauss);
+	sigmas = vec(numgauss);
+	amps = vec(numgauss);
+
+	for(igauss=0; igauss<numgauss; igauss+=1)
+	{
+		x0s[igauss] = params[igauss*3 + 0];
+		sigmas[igauss] = params[igauss*3 + 1];
+		amps[igauss] = params[igauss*3 + 2];
+	}
+
+	offs = params[-1];
+
+
+	y = offs;
+
+	for(i=0; i<numgauss; i+=1)
+	{
+		x0 = x0s[i];
+		sigma = sigmas[i];
+		amp = amps[i];
+
+		y += amp * exp(-0.5 * ((x-x0) / sigma)^2.);
+	}
+
+	return y;
+}
+
+fit_multigauss_manual(x, y, yerr, peaks_x, peaks_size, peaks_width)
+{
+	numgauss = length(peaks_x);
+	param_vec = vec(numgauss*3 + 1);
+
+	hints = vec(numgauss*3 + 1);
+	hints_err = vec(numgauss*3 + 1);
+
+	lowerlims = map();
+	upperlims = map();
+
+        yrange = max(y)-min(y);
+
+	for(iGauss=0; iGauss<numgauss; iGauss+=1)
+	{
+		amp_name = "amp_" + str(iGauss);
+		sig_name = "sigma_" + str(iGauss);
+		x0_name = "x0_" + str(iGauss);
+
+		param_vec[iGauss*3 + 0] = x0_name;
+		param_vec[iGauss*3 + 1] = sig_name;
+		param_vec[iGauss*3 + 2] = amp_name;
+
+		hints[iGauss*3 + 0] = peaks_x[iGauss];
+		hints[iGauss*3 + 1] = peaks_width[iGauss];
+		hints[iGauss*3 + 2] = peaks_size[iGauss];
+
+		hints_err[iGauss*3 + 0] = hints[iGauss*3 + 0] / 10.;
+		hints_err[iGauss*3 + 1] = hints[iGauss*3 + 1] / 10.;
+		hints_err[iGauss*3 + 2] = hints[iGauss*3 + 2] / 10.;
+
+		lowerlims[amp_name] = min(y);
+		upperlims[amp_name] = max(y);
+		lowerlims[sig_name] = 0.;
+	}
+	param_vec[-1] = "offs";
+	lowerlims["offs"] = min(y);
+	upperlims["offs"] = max(y);
+	hints[-1] = min(y);
+	hints_err[-1] = yrange/10.;
+
+	#print("Multigauss parameters: " + str(param_vec));
+
+        for(thisyerr : yerr)
+        {
+                if(thisyerr eq 0.)
+                        thisyerr = yrange*0.001;
+        }
+
+	fitsteps = vec();
+	for(iStep=0; iStep<numgauss; iStep+=1)
+	{
+		before = iStep;
+		remaining = numgauss-iStep-1;
+		fitsteps[length(fitsteps)] = "fff"*before + "frr" + "fff"*remaining + "f";
+	}
+
+        for(iStep=0; iStep<numgauss; iStep+=1)
+        {
+                before = iStep;
+                remaining = numgauss-iStep-1;
+                fitsteps[length(fitsteps)] = "fff"*before + "rff" + "fff"*remaining + "r";
+        }
+
+	fitsteps[length(fitsteps)] = "x"*(numgauss*3 + 1);
+
+        fitparams = fit("multigauss_model", x, y, yerr,
+                        [
+				"use_param_vec" : param_vec,
+                                "hints":hints, "hints_errors":hints_err,
+                                "lower_limits":lowerlims, "upper_limits":upperlims,
+                                "debug":1,
+                                "steps":fitsteps
+                        ]
+                        );
+
+        return [fitparams, param_vec];
+}
+
 
 # -----------------------------------------------------------------------------
 # double gaussian
@@ -74,7 +201,7 @@ fit_doublegauss_manual2(x, y, yerr, E0, peaks_x, peaks_size, peaks_width)
 				"hints":hints, "hints_errors":hints_err,
 				"lower_limits":lowerlims, "upper_limits":upperlims,
 				"fixed":["offs"], "debug":1,
-				"steps":["frrffff", "ffffrrf", "rfffffr", "fffrffr", "xxxxxxx", "xxxxxxx"]
+				"steps":["frrffff", "ffffrrf", "rfffffr", "fffrffr", "xxxxxxx"]
 			]
 			);
 
@@ -141,7 +268,7 @@ fit_gauss_manual(x, y, yerr, peak_x, peak_size, peak_width)
 				"hints":hints, "hints_errors":hints_err,
 				"lower_limits":lowerlims, "upper_limits":upperlims,
 				"fixed":["offs"], "debug":1,
-				"steps":["frrf", "rffr", "xxxx", "xxxx"]
+				"steps":["frrf", "rffr", "xxxx"]
 			]
 			);
 
@@ -193,7 +320,7 @@ fit_line(x, y, yerr)
 			[
 				"hints" : [m_hint, b_hint], "hints_errors" : [m_hint_err, b_hint_err],
 				"debug" : 1,
-				"steps" : ["fr", "rf", "xx", "xx"]
+				"steps" : ["fr", "rf", "xx"]
 			]);
 	return fitparams;
 }

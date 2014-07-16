@@ -65,6 +65,8 @@ protected:
 	std::vector<std::string> m_vecParamNames;
 	std::vector<Symbol*> m_vecSyms;
 
+	bool m_bUseVecParams = 0;
+
 public:
 	GenericModel(const GenericModel& mod)
 			: m_pinfo(new ParseInfo(*mod.m_pinfo)),
@@ -75,29 +77,56 @@ public:
 		m_pinfo->bDestroyParseInfo = 0;
 		m_strFreeParam = mod.m_strFreeParam;
 		m_vecParamNames = mod.m_vecParamNames;
+		m_bUseVecParams = mod.m_bUseVecParams;
 
-		m_vecSyms.reserve(m_vecParamNames.size()+1);
-		for(unsigned int i=0; i<m_vecParamNames.size()+1; ++i)
-			m_vecSyms.push_back(new SymbolDouble(mod.m_vecSyms[i]->GetValDouble()));
+		if(m_bUseVecParams)
+		{
+			m_vecSyms.resize(2);
+			m_vecSyms[0] = mod.m_vecSyms[0]->clone();
+			m_vecSyms[1] = mod.m_vecSyms[1]->clone();
+		}
+		else
+		{
+			m_vecSyms.reserve(m_vecParamNames.size()+1);
+			for(unsigned int i=0; i<m_vecParamNames.size()+1; ++i)
+				m_vecSyms.push_back(new SymbolDouble(mod.m_vecSyms[i]->GetValDouble()));
+		}
 	}
 
-	GenericModel(const NodeFunction *pFkt, ParseInfo& info, SymbolTable *pCallerSymTab)
+	GenericModel(const NodeFunction *pFkt, ParseInfo& info, SymbolTable *pCallerSymTab,
+			const std::vector<t_string>* pvecParamNames=0)
 				: m_pinfo(new ParseInfo(info)),
 				  m_pCallerSymTab(pCallerSymTab),
 				  m_pFkt((NodeFunction*)pFkt/*->clone()*/),
 				  m_pTable(new SymbolTable())
 	{
 		m_pinfo->bDestroyParseInfo = 0;
-
 		std::vector<std::string> vecParams = /*convert_string_vector*/(m_pFkt->GetParamNames());
 		m_strFreeParam = vecParams[0];
 
-		m_vecParamNames.resize(vecParams.size()-1);
-		std::copy(vecParams.begin()+1, vecParams.end(), m_vecParamNames.begin());
+		if(pvecParamNames)
+		{
+			m_bUseVecParams = 1;
+			m_vecParamNames = *pvecParamNames;
 
-		m_vecSyms.reserve(m_vecParamNames.size()+1);
-		for(unsigned int i=0; i<m_vecParamNames.size()+1; ++i)
-			m_vecSyms.push_back(new SymbolDouble(0.));
+			SymbolArray* pSymParams = new SymbolArray();
+			for(unsigned int i=0; i<m_vecParamNames.size(); ++i)
+				pSymParams->GetArr().push_back(new SymbolDouble(0.));
+
+			m_vecSyms.resize(2);
+			m_vecSyms[0] = new SymbolDouble(0.);	// free parameter
+			m_vecSyms[1] = pSymParams;		// parameter vector
+		}
+		else
+		{
+			m_bUseVecParams = 0;
+			m_vecParamNames.resize(vecParams.size()-1);
+			std::copy(vecParams.begin()+1, vecParams.end(), m_vecParamNames.begin());
+
+			m_vecSyms.reserve(m_vecParamNames.size()+1);
+			for(unsigned int i=0; i<m_vecParamNames.size()+1; ++i)
+				m_vecSyms.push_back(new SymbolDouble(0.));
+		}
 
 		/*G_COUT << "free param: " << m_strFreeParam << std::endl;
 		G_COUT << "args: ";
@@ -127,7 +156,10 @@ public:
 			//const std::string& strName = m_vecParamNames[iParam];
 			t_real dVal = vecParams[iParam];
 
-			((SymbolDouble*)m_vecSyms[iParam+1])->SetVal(dVal);
+			if(m_bUseVecParams)
+				((SymbolDouble*)((SymbolArray*)m_vecSyms[1])->GetArr()[iParam])->SetVal(dVal);
+			else
+				((SymbolDouble*)m_vecSyms[iParam+1])->SetVal(dVal);
 		}
 
 		return 1;
@@ -250,8 +282,31 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	}
 
 
-	GenericModel mod(pFkt, info, pSymTab);
-	std::vector<t_string> vecParamNames = /*convert_string_vector*/(mod.GetParamNames());
+	std::vector<t_string> vecParamNames;
+
+	bool bUseParamVec = 0;
+	bool bHasParamMap = 0;
+	if(vecSyms.size()==5 && vecSyms[4]->GetType()==SYMBOL_MAP)
+		bHasParamMap = 1;
+
+	if(bHasParamMap)
+	{
+		SymbolMap::t_map& mapSym = ((SymbolMap*)vecSyms[4])->GetMap();
+
+		SymbolMap::t_map::iterator iterParamNames = mapSym.find(T_STR"use_param_vec");
+		if(iterParamNames != mapSym.end())
+		{
+			vecParamNames = sym_to_vec<t_stdvec, t_string>(iterParamNames->second);
+			bUseParamVec = 1;
+
+			//G_COUT << "Using vector parameters" << std::endl;
+		}
+	}
+
+	GenericModel mod(pFkt, info, pSymTab, bUseParamVec?&vecParamNames:0);
+
+	if(!bUseParamVec)
+		vecParamNames = /*convert_string_vector*/(mod.GetParamNames());
 	const unsigned int iParamSize = vecParamNames.size();
 
 
@@ -268,7 +323,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	vecLimMaxActive.resize(iParamSize);
 
 	// parameter map
-	if(vecSyms.size()==5 && vecSyms[4]->GetType()==SYMBOL_MAP)
+	if(bHasParamMap)
 	{
 		SymbolMap::t_map& mapSym = ((SymbolMap*)vecSyms[4])->GetMap();
 
