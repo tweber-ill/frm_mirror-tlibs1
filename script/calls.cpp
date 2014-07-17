@@ -1044,3 +1044,8 @@ extern bool has_ext_call(const t_string& strFkt)
 {
 	return g_mapFkts.find(strFkt) != g_mapFkts.end();
 }
+
+extern const t_mapFkts* get_ext_calls()
+{
+	return &g_mapFkts;
+}

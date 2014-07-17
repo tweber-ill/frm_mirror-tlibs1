@@ -26,6 +26,7 @@ extern bool add_ext_call(const t_string& strFkt, t_extcall pExtCall);
 extern void add_ext_calls(t_mapFkts&);
 
 extern bool has_ext_call(const t_string& strFkt);
+extern const t_mapFkts* get_ext_calls();
 
 // calling external functions from interpreter
 extern Symbol* ext_call(const t_string& strFkt,

@@ -15,8 +15,10 @@
 #include "parseobj.h"
 #include "script_helper.h"
 #include "globals.h"
+#include "calls.h"
 
 extern int yyparse(void*);
+static bool g_bShowTiming = 0;
 
 static inline int script_main(int argc, char** argv)
 {
@@ -30,11 +32,13 @@ static inline int script_main(int argc, char** argv)
 					<< "\n";
 		G_COUT << "\nArguments to hermelin:" << "\n";
 		G_COUT << "\t-t, --timing\t\tShow timing information.\n";
+		G_COUT << "\t-s, --symbols\t\tShow symbol tables.\n";
 		//G_COUT << "\t-d, --debug\t\tEnable debug output.\n";
 		G_COUT << std::endl;
 		return -1;
 	}
 
+	bool bShowSymbols = 0;
 	unsigned int iStartArg = 1;
 	for(iStartArg=1; iStartArg<argc; ++iStartArg)
 	{
@@ -47,6 +51,8 @@ static inline int script_main(int argc, char** argv)
 
 		if(strArg=="-t" || strArg == "--timing")
 			g_bShowTiming = 1;
+		else if(strArg=="-s" || strArg == "--symbols")
+			bShowSymbols = 1;
 		else if(strArg=="-d" || strArg == "--debug")
 			g_bDebug = 1;
 	}
@@ -118,7 +124,32 @@ static inline int script_main(int argc, char** argv)
 	par.pRoot->eval(info, pTableSup);
 	pTableSup->RemoveSymbolNoDelete(T_STR"<args>");
 
-	//info.pGlobalSyms->print();
+	if(bShowSymbols)
+	{
+		G_COUT << "\n";
+		G_COUT << "================================================================================\n";	
+		G_COUT << "Global symbols:\n";
+		info.pGlobalSyms->print();
+
+
+		G_COUT << "\n";
+		G_COUT << "Script functions:\n";
+		for(const NodeFunction* pFunc : info.vecFuncs)
+			G_COUT << pFunc->GetName() << ", ";
+		G_COUT << "\n";
+
+
+		const t_mapFkts* pExtFkts = get_ext_calls();
+
+		G_COUT << "\n";
+		G_COUT << "System functions:\n";
+		for(const auto& fktpair : *pExtFkts)
+			G_COUT << fktpair.first << ", ";
+		G_COUT << "\n";
+
+		G_COUT << "================================================================================";
+		G_COUT << std::endl;
+	}
 
 	delete pTableSup;
 
@@ -162,12 +193,12 @@ int main(int argc, char** argv)
 		std::strftime(cStart, sizeof cStart, "%Y-%b-%d %H:%M:%S", &tmStart);
 		std::strftime(cStop, sizeof cStop, "%Y-%b-%d %H:%M:%S", &tmStop);
 
-		//G_COUT << "\n";
-		G_COUT << "--------------------------------------------------------------------------------\n";	
+		G_COUT << "\n";
+		G_COUT << "================================================================================\n";	
 		G_COUT << "Script start time:     " << cStart << "\n";
 		G_COUT << "Script stop time:      " << cStop << "\n";
 		G_COUT << "Script execution time: " << dDur << " s.\n";
-		G_COUT << "--------------------------------------------------------------------------------";
+		G_COUT << "================================================================================";
 		G_COUT << std::endl;
 	}
 

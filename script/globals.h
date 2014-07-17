@@ -10,7 +10,6 @@
 #include "types.h"
 #include "symbol.h"
 
-extern bool g_bShowTiming;
 extern bool g_bDebug;
 extern "C" int yydebug;
 
