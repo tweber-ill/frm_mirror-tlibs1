@@ -218,14 +218,23 @@ class NodeIdent : public Node
 {
 protected:
 	t_string m_strIdent;
+	Node* m_pDefArg = 0;
 
 public:
 	NodeIdent(const t_string& strIdent)
 		: Node(NODE_IDENT), m_strIdent(strIdent)
 	{}
 
+	virtual ~NodeIdent()
+	{
+		if(m_pDefArg) delete m_pDefArg;
+	}
+
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 	virtual Node* clone() const;
+
+	void SetDefArg(Node *pDefArg) { m_pDefArg = pDefArg; }
+	const Node* GetDefArg() const { return m_pDefArg; }
 
 	const t_string& GetIdent() const { return m_strIdent; }
 };

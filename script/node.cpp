@@ -597,6 +597,7 @@ Node* NodeContinue::clone() const
 Node* NodeIdent::clone() const
 {
 	NodeIdent* pNode = new NodeIdent(m_strIdent);
+	pNode->m_pDefArg = this->m_pDefArg->clone();
 	*((Node*)pNode) = *((Node*)this);
 	return pNode;
 }

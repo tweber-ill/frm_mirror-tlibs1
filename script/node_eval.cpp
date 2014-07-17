@@ -1043,7 +1043,8 @@ Symbol* NodeBinaryOp::eval_funcinit(ParseInfo &info, SymbolTable *pSym) const
 		}
 		else if(info.GetFunction(strFktName))
 		{
-			G_CERR << linenr(T_STR"Warning", info)
+			if(strFktName != "main")
+				G_CERR << linenr(T_STR"Warning", info)
 					<< "Function \"" << strFktName
 					<< "\" redefined in \"" << info.strInitScrFile << "\"."
 					<< " Ignoring." << std::endl;
@@ -1196,22 +1197,36 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 	{
 		const std::vector<Symbol*> *pVecArgSyms = &pArgs->GetArr();
 
-		if(m_vecArgs.size() != pVecArgSyms->size())
+		/*if(m_vecArgs.size() != pVecArgSyms->size())
 		{
 			G_CERR << linenr(T_STR"Error", info) << "Function \""
 					<< strName << "\"" << " takes "
 					<< m_vecArgs.size() << " arguments, but "
 					<< pVecArgSyms->size() << " given."
 					<< std::endl;
-		}
+		}*/
 
-		unsigned int iArgSize = std::min(m_vecArgs.size(), pVecArgSyms->size());
+		unsigned int iArgSize = /*std::min(*/m_vecArgs.size()/*, pVecArgSyms->size())*/;
 		for(unsigned int iArg=0; iArg<iArgSize; ++iArg)
 		{
 			NodeIdent* pIdent = (NodeIdent*)m_vecArgs[iArg];
-			Symbol *pSymbol = (*pVecArgSyms)[iArg];
-			//G_COUT << "arg: " << pIdent->GetIdent() << std::endl;
+			const Node* pDefArg = pIdent->GetDefArg();
 
+			Symbol *pSymbol = 0;
+
+			if(iArg < pVecArgSyms->size())	// argument given by caller
+				pSymbol = (*pVecArgSyms)[iArg];
+			else if(pDefArg)		// default argument
+				pSymbol = pDefArg->eval(info, pTableSup);
+			else
+			{
+				G_CERR << linenr(T_STR"Error", info) << "Argument \""
+					<< pIdent->GetIdent() << "\" for function \""
+					<< strName << "\"  not given." << std::endl;
+				continue;
+			}
+
+			//G_COUT << "arg: " << pIdent->GetIdent() << std::endl;
 			pLocalSym->InsertSymbol(pIdent->GetIdent(), pSymbol?pSymbol->clone():0);
 		}
 	}

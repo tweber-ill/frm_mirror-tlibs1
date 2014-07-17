@@ -80,9 +80,11 @@
 %type<pNode> ranged_expr
 %type<pNode> arr_args
 %type<pNode> map_args
-%type<pNode> idents
 //%type<pNode> idents_noeps
 %type<pNode> ident
+
+%type<pNode> idents_defarg
+%type<pNode> ident_defarg
 
 
 %right '='
@@ -114,7 +116,7 @@ funcs: func funcs		{ $$ = new NodeBinaryOp($1, $2, NODE_FUNCS); set_linenr($$, p
 	| /* eps */			{ $$ = 0; }
 	;
 
-func: ident '(' idents ')' stmt 		{ $$ = new NodeFunction($1, $3, $5); set_linenr($$, pParseObj); }
+func: ident '(' idents_defarg ')' stmt 		{ $$ = new NodeFunction($1, $3, $5); set_linenr($$, pParseObj); }
 	; 
 
 
@@ -167,16 +169,10 @@ map_args: pair ',' map_args	{ $$ = new NodeBinaryOp($1, $3, NODE_ARGS); set_line
 //	|	/*eps*/		{ $$ = 0; }
 	;
 
-idents:	ident ',' idents	{ $$ = new NodeBinaryOp($1, $3, NODE_IDENTS); set_linenr($$, pParseObj); }
-	|   ident				{ $$ = $1; } 
-	| 	/*eps*/				{ $$ = 0; }
+idents_defarg:	ident_defarg ',' idents_defarg		{ $$ = new NodeBinaryOp($1, $3, NODE_IDENTS); set_linenr($$, pParseObj); }
+	|   ident_defarg				{ $$ = $1; } 
+	| 	/*eps*/					{ $$ = 0; }
 	;
-
-/*
-idents_noeps : ident ',' idents	{ $$ = new NodeBinaryOp($1, $3, NODE_IDENTS); set_linenr($$, pParseObj); }
-	| ident			{ $$ = $1; }
-	;
-*/
 
 assign: TOK_GLOBAL expr '=' expr	{ $$ = new NodeBinaryOp($2, $4, NODE_ASSIGN); ((NodeBinaryOp*)$$)->SetGlobal(1); set_linenr($$, pParseObj); }
 	| expr '=' expr			{ $$ = new NodeBinaryOp($1, $3, NODE_ASSIGN); set_linenr($$, pParseObj); }
@@ -227,5 +223,9 @@ expr:	'(' expr ')'			{ $$ = $2; }
 
 	
 ident: TOK_IDENT			{ $$ = $1; }
+
+ident_defarg: ident			{ $$ = $1; }
+	|	ident '=' expr		{ $$ = $1; ((NodeIdent*)$1)->SetDefArg((Node*)$3); }
+	;
 
 %%

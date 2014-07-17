@@ -1,0 +1,10 @@
+tst(a="1234")
+{
+	print(a);
+}
+
+main(args)
+{
+	tst();
+	tst("xyz");
+}

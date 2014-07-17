@@ -93,7 +93,7 @@ load_eiger(filename)
 scanned_var(steps)
 {
 	step_toks = tokens(steps, ",");
-	print(step_toks);
+	#print(step_toks);
 	for(step_tok : step_toks)
 	{
 		keyval = trim(tokens(step_tok, "="));
@@ -190,6 +190,8 @@ load_eiger_multi(filenames)
 		}
 	}
 
+	if(!is_valid(curlabs, curdata, curparams))
+		return;
 	return [labs, data, params];
 }
 
@@ -220,6 +222,9 @@ plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 	else
 		[labs, data, params] = load_eiger(filenames);
 
+	if(!is_valid(labs, data, params))
+		return -1;
+
 	if(typeof(data[0])!="vector" || length(data[0]) == 0)
 	{
 		print("Error: Empty data file.");
@@ -236,6 +241,15 @@ plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 
 			for(dat : data)
 				dat = dat[cntremove:length(dat)];
+		}
+
+		if(has_key(opts, "remove_back"))
+		{
+			cntremove = opts["remove_back"];
+			print("Removing last " + cntremove + " data points.");
+
+			for(dat : data)
+				dat = dat[0: length(dat)-cntremove];
 		}
 
 		#print(data);
