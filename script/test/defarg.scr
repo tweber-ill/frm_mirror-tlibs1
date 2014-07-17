@@ -3,8 +3,17 @@ tst(a="1234")
 	print(a);
 }
 
+tst2(a="123", b="456", c)
+{
+	print("a = " + a);
+	print("b = " + b);
+	print("c = " + c);
+}
+
 main(args)
 {
 	tst();
 	tst("xyz");
+
+	tst2("abc", null(), "xyz");
 }

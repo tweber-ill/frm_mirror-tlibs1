@@ -49,6 +49,12 @@ static Symbol* fkt_is_valid(const std::vector<Symbol*>& vecSyms,
 	return new SymbolInt(1);
 }
 
+static Symbol* fkt_null(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info, SymbolTable* pSymTab)
+{
+	return 0;
+}
+
 static Symbol* fkt_call(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
@@ -957,6 +963,7 @@ static t_mapFkts g_mapFkts =
 	t_mapFkts::value_type(T_STR"interp_ver", fkt_version),
 	t_mapFkts::value_type(T_STR"register_var", fkt_register_var),
 	t_mapFkts::value_type(T_STR"is_valid", fkt_is_valid),
+	t_mapFkts::value_type(T_STR"null", fkt_null),
 	t_mapFkts::value_type(T_STR"call", fkt_call),
 
 	// input/output

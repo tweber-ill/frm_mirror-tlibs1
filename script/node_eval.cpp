@@ -1214,15 +1214,24 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 
 			Symbol *pSymbol = 0;
 
-			if(iArg < pVecArgSyms->size())	// argument given by caller
+			if(iArg < pVecArgSyms->size())		// argument given by caller
 				pSymbol = (*pVecArgSyms)[iArg];
-			else if(pDefArg)		// default argument
+			if(pSymbol==0 && pDefArg)		// default argument
+			{
 				pSymbol = pDefArg->eval(info, pTableSup);
-			else
+
+				if(iArg < pVecArgSyms->size() && pSymbol)
+					G_CERR << linenr(T_STR"Warning", info)
+						<< "Given argument \"" << pIdent->GetIdent() 
+						<< "\" for function \"" 
+						<< strName << "\" not valid. " 
+						<< "Using default argument." << std::endl;
+			}
+			if(pSymbol==0)
 			{
 				G_CERR << linenr(T_STR"Error", info) << "Argument \""
 					<< pIdent->GetIdent() << "\" for function \""
-					<< strName << "\"  not given." << std::endl;
+					<< strName << "\" not given." << std::endl;
 				continue;
 			}
 
