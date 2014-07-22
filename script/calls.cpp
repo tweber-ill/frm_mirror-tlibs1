@@ -17,6 +17,7 @@
 #include <cmath>
 #include <algorithm>
 #include <utility>
+#include <initializer_list>
 
 #include <ratio>
 #include <chrono>
@@ -29,6 +30,71 @@ extern t_string linenr(const t_string& strErr, const ParseInfo &info)
 	if(info.pCurCaller)
 		return info.pCurCaller->linenr(strErr, info);
 	return strErr + T_STR": ";
+}
+
+extern bool check_args(ParseInfo& info, 
+			const std::vector<Symbol*>& vecSyms, 
+			const std::initializer_list<unsigned int>& lstTypes, 
+			const std::initializer_list<bool> &lstOptional, 
+			const char* pcFkt, const char* pcErr=0)
+{
+	const std::size_t iSyms = vecSyms.size();
+	const std::size_t iTypes = lstTypes.size();
+	const std::size_t iTotalOpt = lstOptional.size();
+	std::size_t iCompulsory = 0;
+	for(bool bOpt : lstOptional)
+		if(!bOpt) ++iCompulsory;
+
+	if(iSyms < iCompulsory)
+	{
+		G_CERR << linenr(T_STR"Error", info) 
+				<< "Function \"" << pcFkt << "\""
+				<< " requires " << iCompulsory
+				<< " arguments, but only "
+				<< iSyms << " were given.";
+		if(pcErr) G_CERR << " " << pcErr;
+		G_CERR << std::endl;
+		return 0;
+	}
+
+
+	std::vector<Symbol*>::const_iterator iterSym = vecSyms.begin();
+	std::initializer_list<unsigned int>::iterator iterTypes = lstTypes.begin();
+	std::initializer_list<bool>::iterator iterOptional = lstOptional.begin();
+
+	std::size_t iCurSym = 0;
+	for(; iterSym!=vecSyms.end(); ++iterSym, ++iterTypes, ++iterOptional, ++iCurSym)
+	{
+		// ignore remaining symbols
+		if(iCurSym >= iTypes || iCurSym >= iTotalOpt)
+			break;
+
+		if(!*iterSym)
+		{
+			G_CERR << linenr(T_STR"Error", info)
+					<< "Function \"" << pcFkt << "\""
+					<< " argument " << (iCurSym+1) 
+					<< " is invalid.";
+			if(pcErr) G_CERR << " " << pcErr;
+			G_CERR << std::endl;
+
+			return 0;
+		}
+
+		if(!(*iterTypes & (*iterSym)->GetType()))
+		{
+			G_CERR << linenr(T_STR"Error", info)
+					<< "Function \"" << pcFkt << "\""
+					<< " argument " << (iCurSym+1)
+					<< " has wrong type.";
+			if(pcErr) G_CERR << " " << pcErr;
+			G_CERR << std::endl;
+
+			return 0;
+		}
+	}
+
+	return 1;
 }
 
 static Symbol* fkt_version(const std::vector<Symbol*>& vecSyms,
@@ -55,16 +121,12 @@ static Symbol* fkt_null(const std::vector<Symbol*>& vecSyms,
 	return 0;
 }
 
+// call("fkt", [arg1, arg2, ...]);
 static Symbol* fkt_call(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size() < 1 || vecSyms[0]->GetType()!=SYMBOL_STRING)
-	{
-		G_CERR << linenr(T_STR"Error", info) 
-			<< "call needs a function name." 
-			<< std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_STRING, SYMBOL_ARRAY}, {0,1}, "call", "Function name needed."))
 		return 0;
-	}
 
 	const t_string& strFkt = ((SymbolString*)vecSyms[0])->GetVal();
 	NodeFunction *pFkt = info.GetFunction(strFkt);
@@ -110,18 +172,11 @@ static Symbol* fkt_double(const std::vector<Symbol*>& vecSyms,
 static Symbol* fkt_double_vec(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size() == 0)
+	if(!check_args(info, vecSyms, {SYMBOL_ARRAY}, {0}, "real_vec"))
 		return 0;
 
 	SymbolArray* pSymRet = new SymbolArray();
 	pSymRet->GetArr().reserve(vecSyms.size());
-
-	if(vecSyms[0]->GetType() != SYMBOL_ARRAY)
-	{
-		G_CERR << linenr(T_STR"Error", info) 
-			<< "Vector needed as argument for real_vec." << std::endl;
-		return 0;
-	}
 
 	for(Symbol *pSym : ((SymbolArray*)vecSyms[0])->GetArr())
 	{
@@ -189,13 +244,8 @@ static Symbol* fkt_input(const std::vector<Symbol*>& vecSyms,
 static Symbol* fkt_sleep(const std::vector<Symbol*>& vecSyms,
 		ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size()!=1)
-	{
-		G_CERR << linenr(T_STR"Error", info)
-			<< "Sleep needs one argument."
-			<< std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_DOUBLE|SYMBOL_INT}, {0,1}, "sleep", "Number of ms needed."))
 		return 0;
-	}
 
 	t_real dMillis = vecSyms[0]->GetValDouble();
 
@@ -270,15 +320,10 @@ static Symbol* fkt_import(const std::vector<Symbol*>& vecSyms,
 static Symbol* fkt_has_var(const std::vector<Symbol*>& vecSyms,
 			ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size()!=1)
-	{
-		G_CERR << linenr(T_STR"Error", info)
-			<< "Need a symbol name for has_var."
-			<< std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_STRING}, {0}, "has_var", "Symbol name needed."))
 		return 0;
-	}
 
-	const t_string strVar = vecSyms[0]->print();
+	const t_string& strVar = ((SymbolString*)vecSyms[0])->GetVal();
 	bool bHasVar = 0;
 
 	// check local variables
@@ -967,8 +1012,8 @@ static t_mapFkts g_mapFkts =
 	t_mapFkts::value_type(T_STR"call", fkt_call),
 
 	// input/output
-	t_mapFkts::value_type(T_STR"output", fkt_output),
 	t_mapFkts::value_type(T_STR"input", fkt_input),
+	t_mapFkts::value_type(T_STR"output", fkt_output),
 	t_mapFkts::value_type(T_STR"print", fkt_print),	// output with "\n" at the end
 	t_mapFkts::value_type(T_STR"sleep", fkt_sleep),
 
