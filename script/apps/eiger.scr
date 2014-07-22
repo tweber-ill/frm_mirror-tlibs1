@@ -343,6 +343,7 @@ plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 	maxy = max(dat_y);
 	yrange = (maxy-miny)/20.;
 	ylims = (miny-yrange) + " " + (maxy+yrange);
+	#ylims = "0 0.003";
 
 	# Fit
 	if(do_fit)
@@ -419,7 +420,7 @@ plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 		"title" : title,
 		"term" : "wxt"]);
 
-	if(length(outfile) != 0)
+	if(is_valid(outfile) && length(outfile) != 0)
 	{
 		fileplot(outfile, plotobjs,
 			["xlimits" : xlims,

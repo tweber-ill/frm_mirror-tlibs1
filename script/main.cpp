@@ -123,6 +123,7 @@ static inline int script_main(int argc, char** argv)
 	pTableSup->InsertSymbol(T_STR"<args>", &arrMainArgs);
 	par.pRoot->eval(info, pTableSup);
 	pTableSup->RemoveSymbolNoDelete(T_STR"<args>");
+	delete pTableSup;
 
 	if(bShowSymbols)
 	{
@@ -151,8 +152,6 @@ static inline int script_main(int argc, char** argv)
 		G_COUT << std::endl;
 	}
 
-	delete pTableSup;
-
 	return 0;
 }
 
@@ -177,7 +176,7 @@ int main(int argc, char** argv)
 		G_CERR << "Critical error in script interpreter: " << ex.what() << std::endl;
 	}
 
-	if(g_bShowTiming)
+	if(g_bShowTiming && iRet==0)
 	{
 		t_tp timeStop = std::chrono::system_clock::now();
 		t_dur dur = timeStop-timeStart;

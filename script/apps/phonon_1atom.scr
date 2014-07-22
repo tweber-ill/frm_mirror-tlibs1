@@ -1,11 +1,21 @@
 #!./hermelin
 
+#
+# Calculate phonon dispersion
+# Author: tw
+#
 
-disp(beta, m, q, a)
+phonon_disp_beta(beta, m, q, a)
 {
 	# see Furrer p. 90
 	om_sq = 4.*beta/m * sin(q*a/2.)^2.;
 	return sqrt(om_sq);
+}
+
+phonon_disp(v, m, q, a)
+{
+	beta = v2beta(v, a, m);
+	return phonon_disp_beta(beta, m, q, a);
 }
 
 speedofsound(beta, m, a)
@@ -13,27 +23,32 @@ speedofsound(beta, m, a)
 	return sqrt(beta/m) * a;
 }
 
-usage(app)
+v2beta(v, a, m)
 {
-        print("\nPhonon branch calculation\n\nUsage: e.g. " + app + " m=1 a=1 beta=1");
-        print("\tm\tmass of atoms");
-        print("\ta\tdistance between two atoms");
-        print("\tbeta\tforce constant");
+	return (v/a)^2. * m;
+}
+
+phonon_usage(app)
+{
+        print("\nPhonon branch calculation\n\nUsage: e.g. " + app + " m=1 a=1 v=1");
+        print("\tm\tmass of atoms [amu]");
+        print("\ta\tdistance between two atoms [A]");
+        print("\tv\tspeed of sound [meV/A^-1]");
 	print();
 }
 
 main(args)
 {
-	beta = 1.;
 	m = 1.;
 	a = 1.;
+	v = 1.;
 
 	if(length(args) greater 1)
         for(arg : args[1:length(args)])
         {
                 if(trim(arg) eq "--help")
                 {
-			usage(args[0]);
+			phonon_usage(args[0]);
                         return 0;
                 }
 
@@ -43,15 +58,16 @@ main(args)
 
 
 	q = linspace(-pi/a, pi/a, 256);
-	om = disp(beta, m, q, a);
-	v = speedofsound(beta, m, a);
+#	q = linspace(-pi/a/10., pi/a/10., 256);
+	beta = v2beta(v, a, m);
+	om = phonon_disp(v, m, q, a);
 
 	xlim = str(min(q)) + " " + str(max(q));
 
 	plopt = ["style":"line", "legend":"phonon dispersion"];
 
-	title = "m=" + m + ", a=" + a + ", beta=" + beta + ", v=" + v;
-	plopt2 = ["xlabel":"q", "ylabel":"omega", "title":title, "xlimits":xlim];
+	title = "m=" + m + " amu, a=" + a + " A, beta=" + beta + ", v=" + v + " meV/A^{-1}";
+	plopt2 = ["xlabel":"q (1/A)", "ylabel":"E (meV)", "title":title, "xlimits":xlim];
 
 	plot([q, om, plopt], plopt2);
 }

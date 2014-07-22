@@ -231,8 +231,10 @@ fit_doublegauss(x, y, yerr, E0)
 		print("Error: Prefitter didn't find enough peaks.");
 		return 0;
 	}
-	
-	return fit_doublegauss_manual(x, y, yerr, E0, peaks_x, peaks_size, peaks_width);
+
+        x0 = min([peaks_x[0], peaks_x[1]]);
+        x1 = max([peaks_x[0], peaks_x[1]]);
+        return fit_doublegauss_manual2(x, y, yerr, E0, peaks_x, peaks_size, peaks_width);
 }
 # -----------------------------------------------------------------------------
 
