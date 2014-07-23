@@ -240,8 +240,9 @@ static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 	}
 	else
 	{
-		G_CERR << linenr(T_STR"Error", info) << "Invalid call to plot." << std::endl;
-		return 0;
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "Invalid call to plot." << std::endl;
+		throw Err(ostrErr.str(), 0);
 	}
 
 	if(pPlotParams)
@@ -309,8 +310,9 @@ static Symbol* fkt_plot2d(const std::vector<Symbol*>& vecSyms,
 	}
 	else
 	{
-		G_CERR << linenr(T_STR"Error", info) << "Invalid call to plot2d." << std::endl;
-		return 0;
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "Invalid call to plot2d." << std::endl;
+		throw Err(ostrErr.str(),0);
 	}
 
 	return 0;
@@ -324,9 +326,10 @@ static Symbol* _fkt_fileplot(const std::vector<Symbol*>& vecSyms,
 	g_plot.Init();
 	if(vecSyms.size() < 1 || vecSyms[0]->GetType()!=SYMBOL_STRING)
 	{
-		G_CERR << linenr(T_STR"Error", info)
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info)
 			<< "First argument to fileplot has to be the file name." << std::endl;
-		return 0;
+		throw Err(ostrErr.str(),0);
 	}
 
 	const t_string& strFile = ((SymbolString*)vecSyms[0])->GetVal();

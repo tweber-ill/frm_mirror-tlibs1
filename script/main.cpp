@@ -173,7 +173,8 @@ int main(int argc, char** argv)
 	}
 	catch(const std::exception& ex)
 	{
-		G_CERR << "Critical error in script interpreter: " << ex.what() << std::endl;
+		G_CERR << "Critical failure: " << ex.what();
+		G_CERR << "Interpreter halted." << std::endl;
 	}
 
 	if(g_bShowTiming && iRet==0)

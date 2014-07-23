@@ -257,28 +257,31 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 
 	if(vecSyms.size()<4 || !is_vec(vecSyms[1]) || !is_vec(vecSyms[2]) || !is_vec(vecSyms[3]))
 	{
-		G_CERR << linenr(T_STR"Error", info)
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info)
 			<< "Invalid arguments for fit."
 			<< std::endl;
-		return 0;
+		throw Err(ostrErr.str(),0);
 	}
 
 	if(vecSyms[0]->GetType() != SYMBOL_STRING)
 	{
-		G_CERR << linenr(T_STR"Error", info)
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info)
 			<< "Need a fit function name."
 			<< std::endl;
-		return 0;
+		throw Err(ostrErr.str(),0);
 	}
 
 	const t_string& strFkt = ((SymbolString*)vecSyms[0])->GetVal();
 	NodeFunction *pFkt = info.GetFunction(strFkt);
 	if(!pFkt)
 	{
-		G_CERR << linenr(T_STR"Error", info) << "Invalid function \""
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "Invalid function \""
 			<< strFkt << "\"."
 			<< std::endl;
-		return 0;
+		throw Err(ostrErr.str(),0);
 	}
 
 
@@ -608,9 +611,10 @@ static Symbol* _fkt_param(FktParam whichfkt, const std::vector<Symbol*>& vecSyms
 {
 	if(vecSyms.size() < 2 || !is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
 	{
-		G_CERR << linenr(T_STR"Error", info) << "Function needs x and y vector arguments."
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "Function needs x and y vector arguments."
 			<< std::endl;
-		return 0;
+		throw Err(ostrErr.str(),0);
 	}
 
 	unsigned int ideg = 3;
@@ -633,9 +637,10 @@ static Symbol* _fkt_param(FktParam whichfkt, const std::vector<Symbol*>& vecSyms
 		pfkt = new Bezier(iSize, vecX.data(), vecY.data());
 	else
 	{
-		G_CERR << linenr(T_STR"Error", info) << "Unknown parametric function selected."
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "Unknown parametric function selected."
 					<< std::endl;
-		return 0;
+		throw Err(ostrErr.str(),0);
 	}
 
 	SymbolArray* pArrX = new SymbolArray();
@@ -680,9 +685,10 @@ static Symbol* fkt_find_peaks(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size() < 2)
 	{
-		G_CERR << linenr(T_STR"Error", info) << "find_peaks needs x and y arrays."
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "find_peaks needs x and y arrays."
 					<< std::endl;
-		return 0;
+		throw Err(ostrErr.str(),0);
 	}
 
 	const unsigned int iOrder = 5;
@@ -717,7 +723,6 @@ static Symbol* fkt_map_vec_to_val(const std::vector<Symbol*>& vecSyms,
 		G_CERR << linenr(T_STR"Error", info)
 					<< "Need a map of vectors."
 					<< std::endl;
-
 		return 0;
 	}
 

@@ -75,14 +75,15 @@ extern bool check_args(ParseInfo& info,
 
 	if(iSyms < iCompulsory)
 	{
-		G_CERR << linenr(T_STR"Error", info) 
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) 
 				<< "Function \"" << pcFkt << "\""
 				<< " requires " << iCompulsory
 				<< " arguments, but only "
 				<< iSyms << " were given.";
-		if(pcErr) G_CERR << " " << pcErr;
-		G_CERR << std::endl;
-		return 0;
+		if(pcErr) ostrErr << " " << pcErr;
+		ostrErr << std::endl;
+		throw Err(ostrErr.str(),0);
 	}
 
 
@@ -99,29 +100,31 @@ extern bool check_args(ParseInfo& info,
 
 		if(!*iterSym)
 		{
-			G_CERR << linenr(T_STR"Error", info)
+			std::ostringstream ostrErr;
+			ostrErr << linenr(T_STR"Error", info)
 					<< "Argument " << (iCurSym+1) 
 					<< " of function \"" << pcFkt << "\""
 					<< " is invalid.";
-			if(pcErr) G_CERR << " " << pcErr;
-			G_CERR << std::endl;
+			if(pcErr) ostrErr << " " << pcErr;
+			ostrErr << std::endl;
 
-			return 0;
+			throw Err(ostrErr.str(),0);
 		}
 
 		if(!(*iterTypes & (*iterSym)->GetType()))
 		{
-			G_CERR << linenr(T_STR"Error", info)
+			std::ostringstream ostrErr;
+			ostrErr << linenr(T_STR"Error", info)
 					<< "Argument " << (iCurSym+1)
 					<< " of function \"" << pcFkt << "\""
 					<< " has wrong type. "
 					<< "Expected " << get_type_name(*iterTypes)
 					<< ", received " << get_type_name((*iterSym)->GetType()) 
 					<< ".";
-			if(pcErr) G_CERR << " " << pcErr;
-			G_CERR << std::endl;
+			if(pcErr) ostrErr << " " << pcErr;
+			ostrErr << std::endl;
 
-			return 0;
+			throw Err(ostrErr.str(),0);
 		}
 	}
 
@@ -311,8 +314,10 @@ static bool _import_file(const t_string& strFile, ParseInfo& info, SymbolTable* 
 
 	if(!par.pLexer->IsOk())
 	{
-		G_CERR << linenr(T_STR"Error", info) << "Lexer returned with errors." << std::endl;
-		return 0;
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "Lexer returned with errors" 
+			<< " for file \"" << _strFile << "\"."<< std::endl;
+		throw Err(ostrErr.str(),0);
 	}
 
 	int iParseRet = yyparse(&par);
@@ -322,8 +327,11 @@ static bool _import_file(const t_string& strFile, ParseInfo& info, SymbolTable* 
 
 	if(iParseRet != 0)
 	{
-		G_CERR << linenr(T_STR"Error", info) << "Parser returned with error code " << iParseRet << "." << std::endl;
-		return 0;
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "Parser returned with error code " 
+			<< iParseRet 
+			<< "for file \"" << _strFile << "\"." << std::endl;
+		throw Err(ostrErr.str(),0);
 	}
 
 	Node *pRoot = par.pRoot;
@@ -408,8 +416,11 @@ static Symbol* fkt_register_var(const std::vector<Symbol*>& vecSyms,
 		}
 	}
 	else
-		G_CERR << linenr(T_STR"Error", info) << "Invalid call to register_var." << std::endl;
-
+	{
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "Invalid call to register_var." << std::endl;
+		throw Err(ostrErr.str(),0);
+	}
 	return 0;
 }
 
@@ -473,8 +484,9 @@ static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
 	Symbol *pSymSize = vecSyms[0];
 	if(pSymSize->GetType() != SYMBOL_INT)
 	{
-		G_CERR << linenr(T_STR"Error", info) << "\"num\" in vec(num, val=0) has to be integer." << std::endl;
-		return 0;
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "\"num\" in vec(num, val=0) has to be integer." << std::endl;
+		throw Err(ostrErr.str(),0);
 	}
 
 	t_int iVal = ((SymbolInt*)pSymSize)->GetVal();
@@ -524,7 +536,11 @@ static Symbol* fkt_array_size(const std::vector<Symbol*>& vecSyms,
 	else if(pSymArr->GetType() == SYMBOL_MAP)
 		pSymRet->SetVal(((SymbolMap*)pSymArr)->GetMap().size());
 	else
-		G_CERR << linenr(T_STR"Error", info) << "vec_size needs a vector type argument." << std::endl;
+	{
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "vec_size needs a vector type argument." << std::endl;
+		throw Err(ostrErr.str(),0);
+	}
 
 	return pSymRet;
 }
@@ -569,8 +585,9 @@ static int pos_in_array(const SymbolArray* pSymArr, const Symbol *pSym)
 		}
 		else
 		{
-			G_CERR << "Error: Array compare not yet implemented." << std::endl;
-			continue;
+			std::ostringstream ostrErr;
+			ostrErr << "Error: Array compare not yet implemented." << std::endl;
+			throw(ostrErr.str(),0);
 
 			// TODO: array/map compare
 		}
@@ -596,8 +613,10 @@ static Symbol* fkt_find(const std::vector<Symbol*>& vecSyms,
 	}
 	else if(pContainer->GetType() == SYMBOL_MAP)
 	{
-		G_CERR << linenr(T_STR"Error", info) 
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) 
 			<< "Find not yet implemented for map." << std::endl;
+		throw Err(ostrErr.str(),0);
 
 		// TODO: Implement and also adapt fkt_contains
 	}
@@ -605,9 +624,11 @@ static Symbol* fkt_find(const std::vector<Symbol*>& vecSyms,
 	{
 		if(pContainee->GetType() != SYMBOL_STRING)
 		{
-			G_CERR << linenr(T_STR"Error", info)
+			std::ostringstream ostrErr;
+			ostrErr << linenr(T_STR"Error", info)
 				<< "Second argument to find has to be of string type."
 				<< std::endl;
+			throw Err(ostrErr.str(),0);
 		}
 
 		int iPos = pos_in_string((SymbolString*)pContainer, (SymbolString*)pContainee);
@@ -641,8 +662,9 @@ static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
 	//std::cout << "Ident: " << strIdent << std::endl;
 	if(strIdent == T_STR"")
 	{
-		G_CERR << linenr(T_STR"Error", info) << "No identifier given for cur_iter." << std::endl;
-		return 0;
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "No identifier given for cur_iter." << std::endl;
+		throw Err(ostrErr.str(),0);
 	}
 
 
@@ -652,9 +674,10 @@ static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
 	//pSymTab->print();
 	if(!pSymIter || pSymIter->GetType()!=SYMBOL_INT)
 	{
-		G_CERR << linenr(T_STR"Error", info) << "cur_iter could not determine iteration index \""
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "cur_iter could not determine iteration index \""
 					<< strIter << "\"." << std::endl;
-		return 0;
+		throw Err(ostrErr.str(),0);
 	}
 
 	return pSymIter;
@@ -688,10 +711,11 @@ static Symbol* fkt_sort(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size()<1 || vecSyms[0]->GetType()!=SYMBOL_ARRAY)
 	{
-		G_CERR << linenr(T_STR"Error", info) 
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) 
 			<< "Arguments to sort have to be arrays." 
 			<< std::endl;
-		return 0;
+		throw Err(ostrErr.str(),0);
 	}
 
 	const SymbolArray* pArr = (SymbolArray*)vecSyms[0];
@@ -733,7 +757,7 @@ static Symbol* fkt_sort(const std::vector<Symbol*>& vecSyms,
 		if(pSym->GetType() != SYMBOL_ARRAY)
 		{
 			G_CERR << linenr(T_STR"Error", info) 
-				<< "Arguments to sort have to be arrays." 
+				<< "Arguments to sort have to be arrays. Ignoring." 
 				<< std::endl;
 			continue;
 		}
@@ -741,7 +765,7 @@ static Symbol* fkt_sort(const std::vector<Symbol*>& vecSyms,
 		if(((SymbolArray*)pSym)->GetArr().size() != vecSortedIndices.size())
 		{
 			G_CERR << linenr(T_STR"Error", info)
-				<< "Array size mismatch in sort."
+				<< "Array size mismatch in sort. Ignoring."
 				<< std::endl;
 			continue;
 		}
@@ -770,7 +794,7 @@ static Symbol* fkt_zip(const std::vector<Symbol*>& vecSyms,
 		{
 			G_CERR << linenr(T_STR"Error", info) << "Symbol \"" << pSym->GetName()
 					<< "\" is of type " << pSym->GetTypeName()
-					<< ", but zip needs vectors." << std::endl;
+					<< ", but zip needs vectors. Ignoring." << std::endl;
 			continue;
 		}
 
@@ -880,9 +904,10 @@ static Symbol* fkt_tokens(const std::vector<Symbol*>& vecSyms,
 
 	if(!pstrInput)
 	{
-		G_CERR << linenr(T_STR"Error", info)
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info)
 				<< "Called tokens with invalid arguments." << std::endl;
-		return 0;
+		throw Err(ostrErr.str(),0);
 	}
 
 	std::vector<t_string> vecTokens;
@@ -1036,11 +1061,12 @@ extern Symbol* ext_call(const t_string& strFkt,
 	t_mapFkts::iterator iter = g_mapFkts.find(strFkt);
 	if(iter == g_mapFkts.end())
 	{
-		G_CERR << linenr(T_STR"Error", info)
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info)
 					<< "Tried to call unknown function \""
 					<< strFkt << "\"."
 					<< std::endl;
-		return 0;
+		throw Err(ostrErr.str(),0);
 	}
 
 	return (*iter).second(vecSyms, info, pSymTab);

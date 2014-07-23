@@ -71,9 +71,9 @@ const T& math_fkt(const T& t1, const T& t2)
 	else if(fkt == MATH_MIN)
 		return std::min<T>(t1, t2);
 
-	static const T tErr = T(0);
-	G_CERR << "Error: Invalid function selected in math_fkt." << std::endl;
-	return tErr;
+	std::ostringstream ostrErr;
+	ostrErr << "Error: Invalid function selected in math_fkt." << std::endl;
+	throw Err(ostrErr.str(),0);
 }
 
 template<MathFkts fkt>
@@ -82,8 +82,11 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size() < 1)
 	{
-		G_CERR << linenr(T_STR"Error", info) << "fkt_math_for_every needs at least one argument" << std::endl;
-		return 0;
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) 
+			<< "fkt_math_for_every needs at least one argument" 
+			<< std::endl;
+		throw Err(ostrErr.str(),0);
 	}
 
 	t_real dRes;
@@ -138,8 +141,13 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 	else if(!bHadInt && bHadDouble)
 		return new SymbolDouble(dRes);
 
-	G_CERR << linenr(T_STR"Error", info) << "No valid arguments given for fkt_math_for_every." << std::endl;
-	return 0;
+
+	std::ostringstream ostrErr;
+	ostrErr << linenr(T_STR"Error", info) 
+		<< "No valid arguments given for fkt_math_for_every." 
+		<< std::endl;
+	throw Err(ostrErr.str(), 0);
+	//return 0;
 }
 
 
@@ -233,8 +241,10 @@ static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
 	}
 
 
-	G_CERR << linenr(T_STR"Error", info) << "abs received unsupported symbol type." << std::endl;
-	return 0;
+	std::ostringstream ostrErr;
+	ostrErr << linenr(T_STR"Error", info) << "abs received unsupported symbol type." << std::endl;
+	throw Err(ostrErr.str(),0);
+	//return 0;
 }
 
 
@@ -313,10 +323,11 @@ static Symbol* _fkt_fft(const std::vector<Symbol*>& vecSyms,
 
 	if(!bArgsOk)
 	{
-		G_CERR << linenr(T_STR"Error", info)
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info)
 				<< "fft received invalid arguments."
 				<< std::endl;
-		return 0;
+		throw Err(ostrErr.str(),0);
 	}
 
 	if(vecRealIn.size() != vecImagIn.size())
@@ -369,9 +380,10 @@ static Symbol* fkt_length(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 
 	if(!is_vec(vecSyms[0]))
 	{
-		G_CERR << linenr(T_STR"Error", info) << "len needs a vector argument."
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "len needs a vector argument."
 			<< std::endl;
-		return 0;
+		throw Err(ostrErr.str(),0);
 	}
 
 	t_vec<t_real> vec = sym_to_vec<t_vec>(vecSyms[0]);
@@ -386,9 +398,10 @@ static Symbol* fkt_mean(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Sy
 
 	if(!is_vec(vecSyms[0]))
 	{
-		G_CERR << linenr(T_STR"Error", info) << "Mean value needs vector arguments."
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "Mean value needs vector arguments."
 			<< std::endl;
-		return 0;
+		throw Err(ostrErr.str(),0);
 	}
 
 	t_vec<t_real> vecLeft = sym_to_vec<t_vec>(vecSyms[0]);
@@ -404,9 +417,10 @@ static Symbol* fkt_stddev(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 
 	if(!is_vec(vecSyms[0]))
 	{
-		G_CERR << linenr(T_STR"Error", info) << "Standard deviation needs vector arguments."
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "Standard deviation needs vector arguments."
 			<< std::endl;
-		return 0;
+		throw Err(ostrErr.str(),0);
 	}
 
 	t_vec<t_real> vecLeft = sym_to_vec<t_vec>(vecSyms[0]);
@@ -422,9 +436,10 @@ static Symbol* fkt_cross(const std::vector<Symbol*>& vecSyms, ParseInfo& info, S
 
 	if(!is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
 	{
-		G_CERR << linenr(T_STR"Error", info) << "Cross product needs vector arguments."
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "Cross product needs vector arguments."
 			<< std::endl;
-		return 0;
+		throw Err(ostrErr.str(),0);
 	}
 
 	t_vec<t_real> vecLeft = sym_to_vec<t_vec>(vecSyms[0]);
@@ -432,9 +447,10 @@ static Symbol* fkt_cross(const std::vector<Symbol*>& vecSyms, ParseInfo& info, S
 
 	if(vecLeft.size()!=3 || vecRight.size()!=3)
 	{
-		G_CERR << linenr(T_STR"Error", info) << "Cross product needs 3-vectors."
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "Cross product needs 3-vectors."
 			<< std::endl;
-		return 0;
+		throw Err(ostrErr.str(), 0);
 	}
 
 	t_vec<t_real> vecCross = cross_3(vecLeft, vecRight);
@@ -447,8 +463,9 @@ static Symbol* fkt_matrix(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 {
 	if(vecSyms.size()<1)
 	{
-		G_CERR << linenr(T_STR"Error", info) << "Need size of matrix." << std::endl;
-		return 0;
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "Need size of matrix." << std::endl;
+		throw Err(ostrErr.str(), 0);
 	}
 
 	t_int iRows = vecSyms[0]->GetValInt();
@@ -472,8 +489,9 @@ static Symbol* fkt_transpose(const std::vector<Symbol*>& vecSyms,
 	t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0], &bIsMat);
 	if(!bIsMat)
 	{
-		G_CERR << linenr(T_STR"Error", info) << "Transpose needs a matrix." << std::endl;
-		return 0;
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "Transpose needs a matrix." << std::endl;
+		throw Err(ostrErr.str(),0);
 	}
 
 	t_mat<t_real> mat_trans = ublas::trans(mat);
@@ -490,8 +508,9 @@ static Symbol* fkt_inverse(const std::vector<Symbol*>& vecSyms,
 	t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0], &bIsMat);
 	if(!bIsMat)
 	{
-		G_CERR << linenr(T_STR"Error", info) << "Inverse needs a matrix." << std::endl;
-		return 0;
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "Inverse needs a matrix." << std::endl;
+		throw Err(ostrErr.str(),0);
 	}
 
 	t_mat<t_real> mat_inv;
@@ -542,8 +561,9 @@ static Symbol* fkt_outerproduct(const std::vector<Symbol*>& vecSyms, ParseInfo& 
 
 	if(!is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
 	{
-		G_CERR << linenr(T_STR"Error", info) << "Outer product needs two vector arguments." << std::endl;
-		return 0;
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "Outer product needs two vector arguments." << std::endl;
+		throw Err(ostrErr.str(),0);
 	}
 
 	Symbol* pRet = 0;
@@ -561,10 +581,11 @@ static Symbol* fkt_dot(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Sym
 
 	if(!is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
 	{
-		G_CERR << linenr(T_STR"Error", info) 
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) 
 			<< "Inner product needs two vector arguments." 
 			<< std::endl;
-		return 0;
+		throw Err(ostrErr.str(),0);
 	}
 
 	t_vec<t_real> vec1 = sym_to_vec<t_vec>(vecSyms[0]);
@@ -630,7 +651,11 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 	}
 
 	if(!pRet)
-		G_CERR << linenr(T_STR"Error", info) << "Invalid call to prod." << std::endl;
+	{
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "Invalid call to prod." << std::endl;
+		throw Err(ostrErr.str(),0);
+	}
 	return pRet;
 }
 
@@ -733,8 +758,9 @@ static Symbol* fkt_minmax(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 	SymbolArray* pElem = (SymbolArray*)fkt_minmax_elem(vecSyms, info, pSymTab);
 	if(!pElem || pElem->GetArr().size()!=2)
 	{
-		G_CERR << linenr(T_STR"Error", info) << "Invalid input for minmax." << std::endl;
-		return 0;
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) << "Invalid input for minmax." << std::endl;
+		throw Err(ostrErr.str(),0);
 	}
 
 	int iIdxMin = pElem->GetArr()[0]->GetValInt();
