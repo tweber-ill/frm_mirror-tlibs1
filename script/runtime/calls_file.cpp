@@ -20,20 +20,8 @@
 static Symbol* fkt_file_exists(const std::vector<Symbol*>& vecSyms,
 							ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size() != 1)
-	{
-		G_CERR << linenr(T_STR"Error", info) << "file_exists takes exactly one argument." 
-			<< std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_STRING}, {0}, "file_exists"))
 		return 0;
-	}
-
-	if(vecSyms[0]->GetType() != SYMBOL_STRING)
-	{
-		G_CERR << linenr(T_STR"Error", info) 
-				<< "file_exists needs a string argument as file name." 
-				<< std::endl;
-		return 0;
-	}
 
 	const t_string& strFile = ((SymbolString*)vecSyms[0])->GetVal();
 	t_ifstream ifstr(strFile);
@@ -45,20 +33,8 @@ static Symbol* fkt_file_exists(const std::vector<Symbol*>& vecSyms,
 static Symbol* fkt_read_file(const std::vector<Symbol*>& vecSyms,
 							ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size() != 1)
-	{
-		G_CERR << linenr(T_STR"Error", info) << "read_file takes exactly one argument." 
-				<< std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_STRING}, {0}, "read_file"))
 		return 0;
-	}
-
-	if(vecSyms[0]->GetType() != SYMBOL_STRING)
-	{
-		G_CERR << linenr(T_STR"Error", info) 
-				<< "read_file needs a string argument as file name." 
-				<< std::endl;
-		return 0;
-	}
 
 	const t_string& strFile = ((SymbolString*)vecSyms[0])->GetVal();
 
@@ -79,20 +55,8 @@ static Symbol* fkt_read_file(const std::vector<Symbol*>& vecSyms,
 static Symbol* fkt_write_file(const std::vector<Symbol*>& vecSyms,
 							ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size() != 2)
-	{
-		G_CERR << linenr(T_STR"Error", info) << "write_file takes exactly two arguments." 
-				<< std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_STRING, SYMBOL_ANY}, {0,0}, "write_file"))
 		return 0;
-	}
-
-	if(vecSyms[0]->GetType() != SYMBOL_STRING)
-	{
-		G_CERR << linenr(T_STR"Error", info) 
-				<< "write_file needs a string argument as file name." 
-				<< std::endl;
-		return 0;
-	}
 
 	const t_string& strFile = ((SymbolString*)vecSyms[0])->GetVal();
 	t_ofstream ofstr(strFile);
@@ -128,23 +92,11 @@ static Symbol* fkt_write_file(const std::vector<Symbol*>& vecSyms,
 static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
 							ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size() != 1)
-	{
-		G_CERR << linenr(T_STR"Error", info) << "loadtxt takes exactly one argument." << std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_STRING}, {0}, "loadtxt"))
 		return 0;
-	}
-
-	if(vecSyms[0]->GetType() != SYMBOL_STRING)
-	{
-		G_CERR << linenr(T_STR"Error", info) << "loadtxt needs a string argument." << std::endl;
-		return 0;
-	}
 
 	const t_string& strFile = ((SymbolString*)vecSyms[0])->GetVal();
-
-
 	SymbolArray *pArr = new SymbolArray();
-
 	LoadTxt dat;
 
 	bool bLoaded = dat.Load(WSTR_TO_STR(strFile).c_str());
@@ -269,16 +221,11 @@ static std::string get_2darr_strval(const SymbolArray* pArr,
 static Symbol* fkt_savetxt(const std::vector<Symbol*>& vecSyms,
 							ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size()!=2 ||
-		(vecSyms[0]->GetType()!=SYMBOL_STRING || vecSyms[1]->GetType()!=SYMBOL_ARRAY))
-	{
-		G_CERR << linenr(T_STR"Error", info) << "savetxt takes two arguments (file name, 2d array)." << std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_STRING, SYMBOL_ARRAY}, {0,0}, "savetxt"))
 		return 0;
-	}
 
 	const t_string& strFile = ((SymbolString*)vecSyms[0])->GetVal();
 	SymbolArray* pArr = (SymbolArray*)vecSyms[1];
-
 
 	t_ofstream ofstr(WSTR_TO_STR(strFile).c_str());
 	if(!ofstr.is_open())

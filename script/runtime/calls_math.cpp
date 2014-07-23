@@ -14,13 +14,8 @@
 static inline Symbol* _fkt_linlogspace(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab, bool bLog)
 {
-	if(vecSyms.size()<3)
-	{
-		G_CERR << linenr(T_STR"Error", info)
-				<< "Invalid call to linspace(start, end, count)."
-				<< std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_SCALAR, SYMBOL_SCALAR, SYMBOL_INT}, {0,0,0}, "linspace"))
 		return 0;
-	}
 
 	t_int iNum = vecSyms[2]->GetValInt();
 	t_real dmin = vecSyms[0]->GetValDouble();
@@ -152,11 +147,8 @@ template<t_real (*FKT)(t_real)>
 static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size() != 1)
-	{
-		G_CERR << linenr(T_STR"Error", info) << "fkt_math_1arg takes exactly one argument." << std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_ANY}, {0}, "fkt_math_1arg"))
 		return 0;
-	}
 
 	if(vecSyms[0]->GetType() == SYMBOL_ARRAY)
 	{
@@ -188,11 +180,8 @@ template<t_real (*FKT)(t_real, t_real)>
 static Symbol* fkt_math_2args(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size() != 2)
-	{
-		G_CERR << linenr(T_STR"Error", info) << "fkt_math_2args takes exactly two arguments." << std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_ANY, SYMBOL_ANY}, {0,0}, "fkt_math_2args"))
 		return 0;
-	}
 
 	t_real dResult = FKT(vecSyms[0]->GetValDouble(), vecSyms[1]->GetValDouble());
 	return new SymbolDouble(dResult);
@@ -213,11 +202,8 @@ template<> t_real myabs(t_real t) { return ::fabs(t); }
 static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size() != 1)
-	{
-		G_CERR << linenr(T_STR"Error", info) << "abs takes exactly one argument." << std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_ANY}, {0}, "abs"))
 		return 0;
-	}
 
 	if(vecSyms[0]->GetType() == SYMBOL_ARRAY)
 	{
@@ -258,11 +244,8 @@ template<bool (*FKT)(t_real)>
 static Symbol* fkt_math_1arg_bret(const std::vector<Symbol*>& vecSyms,
 				ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size() != 1)
-	{
-		G_CERR << linenr(T_STR"Error", info) << "fkt_math_1arg_bret takes exactly one argument." << std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_ANY}, {0}, "fkt_math_1arg_bret"))
 		return 0;
-	}
 
 	if(vecSyms[0]->GetType() == SYMBOL_ARRAY)
 	{
@@ -381,16 +364,12 @@ template<typename T=t_real> using t_mat = ublas::matrix<T>;
 
 static Symbol* fkt_length(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size() != 1)
-	{
-		G_CERR << linenr(T_STR"Error", info) << "Length needs one argument."
-			<< std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_ARRAY}, {0}, "len"))
 		return 0;
-	}
 
 	if(!is_vec(vecSyms[0]))
 	{
-		G_CERR << linenr(T_STR"Error", info) << "Length needs a vector argument."
+		G_CERR << linenr(T_STR"Error", info) << "len needs a vector argument."
 			<< std::endl;
 		return 0;
 	}
@@ -402,12 +381,8 @@ static Symbol* fkt_length(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 
 static Symbol* fkt_mean(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size() != 1)
-	{
-		G_CERR << linenr(T_STR"Error", info) << "Mean value needs one arguments."
-			<< std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_ARRAY}, {0}, "mean"))
 		return 0;
-	}
 
 	if(!is_vec(vecSyms[0]))
 	{
@@ -424,12 +399,8 @@ static Symbol* fkt_mean(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Sy
 
 static Symbol* fkt_stddev(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size() != 1)
-	{
-		G_CERR << linenr(T_STR"Error", info) << "Standard deviation needs one arguments."
-			<< std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_ARRAY}, {0}, "stddev"))
 		return 0;
-	}
 
 	if(!is_vec(vecSyms[0]))
 	{
@@ -446,12 +417,8 @@ static Symbol* fkt_stddev(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 
 static Symbol* fkt_cross(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size() != 2)
-	{
-		G_CERR << linenr(T_STR"Error", info) << "Cross product needs two arguments."
-			<< std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_ARRAY, SYMBOL_ARRAY}, {0,0}, "cross"))
 		return 0;
-	}
 
 	if(!is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
 	{
@@ -498,11 +465,8 @@ static Symbol* fkt_matrix(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 static Symbol* fkt_transpose(const std::vector<Symbol*>& vecSyms, 
 				ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size()!=1)
-	{
-		G_CERR << linenr(T_STR"Error", info) << "Transpose needs one argument" << std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_ARRAY}, {0}, "trans"))
 		return 0;
-	}
 
 	bool bIsMat = 0;
 	t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0], &bIsMat);
@@ -519,11 +483,8 @@ static Symbol* fkt_transpose(const std::vector<Symbol*>& vecSyms,
 static Symbol* fkt_inverse(const std::vector<Symbol*>& vecSyms, 
 				ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size()!=1)
-	{
-		G_CERR << linenr(T_STR"Error", info) << "Inverse needs one argument" << std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_ARRAY}, {0}, "inv"))
 		return 0;
-	}
 
 	bool bIsMat = 0;
 	t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0], &bIsMat);
@@ -546,11 +507,8 @@ static Symbol* fkt_inverse(const std::vector<Symbol*>& vecSyms,
 static Symbol* fkt_determinant(const std::vector<Symbol*>& vecSyms,
                                 ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size()!=1)
-	{
-		G_CERR << linenr(T_STR"Error", info) << "Determinant needs one argument" << std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_ARRAY}, {0}, "det"))
 		return 0;
-	}
 
 	bool bIsMat = 0;
 	t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0], &bIsMat);
@@ -568,11 +526,8 @@ static Symbol* fkt_determinant(const std::vector<Symbol*>& vecSyms,
 
 static Symbol* fkt_unitmatrix(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size()!=1 || vecSyms[0]->GetType()!=SYMBOL_INT)
-	{
-		G_CERR << linenr(T_STR"Error", info) << "Need size of unit matrix." << std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_INT}, {0}, "unity"))
 		return 0;
-	}
 
 	t_int iSize = vecSyms[0]->GetValInt();
 	t_mat<t_real> mat = unit_matrix<t_real>(iSize);
@@ -582,7 +537,10 @@ static Symbol* fkt_unitmatrix(const std::vector<Symbol*>& vecSyms, ParseInfo& in
 
 static Symbol* fkt_outerproduct(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size()!=2 || !is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
+	if(!check_args(info, vecSyms, {SYMBOL_ARRAY, SYMBOL_ARRAY}, {0,0}, "outer_prod"))
+		return 0;
+
+	if(!is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
 	{
 		G_CERR << linenr(T_STR"Error", info) << "Outer product needs two vector arguments." << std::endl;
 		return 0;
@@ -598,7 +556,10 @@ static Symbol* fkt_outerproduct(const std::vector<Symbol*>& vecSyms, ParseInfo& 
 
 static Symbol* fkt_dot(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size()!=2 || !is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
+	if(!check_args(info, vecSyms, {SYMBOL_ARRAY, SYMBOL_ARRAY}, {0,0}, "dot"))
+		return 0;
+
+	if(!is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
 	{
 		G_CERR << linenr(T_STR"Error", info) 
 			<< "Inner product needs two vector arguments." 
@@ -614,11 +575,8 @@ static Symbol* fkt_dot(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Sym
 
 static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size() != 2)
-	{
-		G_CERR << linenr(T_STR"Error", info) << "Product needs two arguments." << std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_ANY, SYMBOL_ANY}, {0,0}, "prod"))
 		return 0;
-	}
 
 	Symbol* pRet = 0;
 
@@ -694,11 +652,8 @@ static Symbol* fkt_rand01(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 
 static Symbol* fkt_rand_real(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size() != 2)
-	{
-		G_CERR << linenr(T_STR"Error", info) << "rand_real needs two arguments." << std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_SCALAR, SYMBOL_SCALAR}, {0,0}, "rand_real"))
 		return 0;
-	}
 
 	t_real dMin = vecSyms[0]->GetValDouble();
 	t_real dMax = vecSyms[1]->GetValDouble();
@@ -709,11 +664,8 @@ static Symbol* fkt_rand_real(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 
 static Symbol* fkt_rand_int(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size() != 2)
-	{
-		G_CERR << linenr(T_STR"Error", info) << "rand_int needs two arguments." << std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_SCALAR, SYMBOL_SCALAR}, {0,0}, "rand_int"))
 		return 0;
-	}
 
 	t_int iMin = vecSyms[0]->GetValInt();
 	t_int iMax = vecSyms[1]->GetValInt();
@@ -724,11 +676,8 @@ static Symbol* fkt_rand_int(const std::vector<Symbol*>& vecSyms, ParseInfo& info
 
 static Symbol* fkt_rand_norm(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size() != 2)
-	{
-		G_CERR << linenr(T_STR"Error", info) << "rand_norm needs two arguments." << std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_SCALAR, SYMBOL_SCALAR}, {0,0}, "rand_norm"))
 		return 0;
-	}
 
 	t_real dMu = 0.;
 	t_real dSigma = 1.;
@@ -751,11 +700,8 @@ static Symbol* fkt_rand_norm(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 
 static Symbol* fkt_minmax_elem(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(vecSyms.size()!=1 || vecSyms[0]->GetType()!=SYMBOL_ARRAY)
-	{
-		G_CERR << linenr(T_STR"Error", info) << "minmax_elem needs one array argument." << std::endl;
+	if(!check_args(info, vecSyms, {SYMBOL_ARRAY}, {0}, "minmax_elem"))
 		return 0;
-	}
 
 	const Symbol *pSymMin=0, *pSymMax=0;
 	unsigned int iIdxMin=0, iIdxMax=0;
