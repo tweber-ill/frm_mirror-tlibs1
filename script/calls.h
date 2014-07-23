@@ -12,9 +12,19 @@
 #include "symbol.h"
 #include "node.h"
 
+#include <initializer_list>
+
 // helper functions
 extern t_string linenr(const t_string& strErr, const ParseInfo &info);
+extern const std::string& get_type_name(SymbolType ty);
+extern const std::string& get_type_name(unsigned int ty);
 
+// errors
+extern bool check_args(ParseInfo& info, 
+			const std::vector<Symbol*>& vecSyms, 
+			const std::initializer_list<unsigned int>& lstTypes, 
+			const std::initializer_list<bool> &lstOptional, 
+			const char* pcFkt, const char* pcErr=0);
 
 // typedefs
 typedef Symbol*(*t_extcall)(const std::vector<Symbol*>&, ParseInfo&, SymbolTable*);
