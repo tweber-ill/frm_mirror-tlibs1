@@ -7,6 +7,9 @@ INCS = -I/usr/include/root
 FLAGS = -std=c++11 -fopenmp ${OPT_FLAGS} ${DEFINES} ${INCS}
 LIBS = -lboost_iostreams -L/usr/local/lib -L/usr/lib64/root -lMinuit2 -lstdc++ -lm
 
+YY = bison
+#YY = /usr/local/bin/bison
+
 hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/node.o \
 		obj/node_eval.o obj/calls.o obj/handles.o obj/gnuplot.o obj/file.o \
 		obj/string.o obj/loadtxt.o obj/rand.o obj/fourier.o obj/script_helper.o \
@@ -24,7 +27,7 @@ hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/nod
 	strip hermelin
 
 obj/script.o: script.yy
-	bison --defines=tokens.h script.yy
+	${YY} --defines=tokens.h script.yy
 	${CC} ${FLAGS} -x c++ -c -o obj/script.o script.tab.cc
 
 obj/lexer.o: lexer.h lexer.cpp

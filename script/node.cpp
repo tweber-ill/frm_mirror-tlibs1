@@ -435,35 +435,41 @@ NodeFunction* ParseInfo::GetFunction(const t_string& strName)
 t_string Node::linenr(const t_string& strErr, const ParseInfo &info) const
 {
 	t_ostringstream ostr;
+	ostr << strErr;
 
-	ostr << strErr << " ";
-	ostr << "(";
+	t_ostringstream ostrDetail;
 
 	bool bHasLine = 0;
 	if(m_iLine>0)
 	{
-		ostr << "line " << m_iLine;
+		ostrDetail << "line " << m_iLine;
 		bHasLine = 1;
 	}
 
 	if(info.pCurFunction)
 	{
 		if(bHasLine)
-			ostr << " ";
+			ostrDetail << " ";
 
 		const t_string& strFile = info.pCurFunction->GetScrFile();
 		const t_string& strFkt = info.pCurFunction->GetName();
 
 		if(strFile == T_STR"")
-			ostr << "in unknown file";
+			ostrDetail << "in unknown file";
 		else
-			ostr << "in \"" << strFile << "\"";
+			ostrDetail << "in \"" << strFile << "\"";
 
 		if(strFkt != T_STR"")
-			ostr << " -> \"" << strFkt << "\"";
+			ostrDetail << " -> \"" << strFkt << "\"";
 	}
 
-	ostr << "): ";
+	if(ostrDetail.str().length() > 0)
+	{
+		ostr << " (";
+		ostr << ostrDetail.str();
+		ostr << ")";
+	}
+	ostr << ": ";
 
 	return ostr.str();
 }

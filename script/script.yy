@@ -8,8 +8,8 @@
 %{
 	#include "parseobj.h"
 	
-	#define YYLEX_PARAM pParseObj
-	#define YYPARSE_PARAM pParseObj
+	//#define YYLEX_PARAM pParseObj
+	//#define YYPARSE_PARAM pParseObj
 	//#define YYLTYPE int
 
 	#include <iostream>
@@ -31,15 +31,14 @@
 //%glr-parser
 %token-table
 
+%lex-param { void* pParseObj }
+%parse-param { void* pParseObj }
+%union { void *pNode; }
+
 //%verbose
 %error-verbose
 //%define parse.error verbose
 //%debug
-
-%union
-{
-	void *pNode;
-}
 
 
 %token<pNode> TOK_DOUBLE

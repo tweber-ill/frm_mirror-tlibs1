@@ -12,13 +12,8 @@
 #include "yylexer.h"
 #include "parseobj.h"
 
-// !! only used for yyerror which should better take it as argument to stay reentrant !!
-static ParseObj *g_pCurParseObj = 0;
-
 extern "C" int yylex(void* _yylval, void* _pParseObj)
 {
-	g_pCurParseObj = (ParseObj*)_pParseObj;
-
 	if(_yylval==0 || _pParseObj==0)
 	{
 		G_CERR << "Error: Invalid lval or parseobj in lexer." << std::endl;
@@ -95,14 +90,16 @@ extern "C" int yylex(void* _yylval, void* _pParseObj)
 }
 
 
-extern "C" void yyerror(const char* pc)
+extern "C" void yyerror(void *_pParseObj, const char* pc)
 {
+	ParseObj *pParseObj = (ParseObj*)_pParseObj;
+
 	t_string strLine;
-	if(g_pCurParseObj)		// !!
+	if(pParseObj)
 	{
 		t_ostringstream ostrLine;
-		ostrLine << " (line " << g_pCurParseObj->iCurLine;
-		ostrLine << " in \"" << g_pCurParseObj->strCurFile << "\"";
+		ostrLine << " (line " << pParseObj->iCurLine;
+		ostrLine << " in \"" << pParseObj->strCurFile << "\"";
 		ostrLine << ")";
 		strLine = ostrLine.str();
 	}

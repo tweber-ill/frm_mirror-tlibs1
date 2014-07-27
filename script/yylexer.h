@@ -16,7 +16,8 @@ extern "C" {
 
 
 int yylex(void*, void* _pParseObj=0);
-void yyerror(const char*);
+void yyerror(void* pParseObj, const char*);
+//void yyerror(const char*);
 
 
 #ifdef __cplusplus

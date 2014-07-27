@@ -1,7 +1,7 @@
 main()
 {
 	str = "123456";
-	replace(str, 123, 3);
+#	replace(str, 123, 3);
 
 	a[x];
 }
