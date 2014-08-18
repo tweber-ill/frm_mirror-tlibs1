@@ -1,23 +1,16 @@
 /*
- * Simple Script grammar
+ * Hermelin Script grammar
  * @author tweber
- * @date 2013
+ * @date 2013, 2014
  */
-
 
 %{
 	#include "parseobj.h"
 	
-	//#define YYLEX_PARAM pParseObj
-	//#define YYPARSE_PARAM pParseObj
-	//#define YYLTYPE int
-
 	#include <iostream>
 	#include <math.h>
 	#include "yylexer.h"
 
-	//#define YYSTYPE Node*
-	
 	static inline void set_linenr(void* dollardollar, void* pParseObj)
 	{
 		if(dollardollar && pParseObj)
@@ -28,7 +21,7 @@
 %language "C"
 %pure-parser
 //%define api.pure full
-//%glr-parser
+%glr-parser
 %token-table
 
 %lex-param { void* pParseObj }
