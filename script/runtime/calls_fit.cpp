@@ -26,6 +26,7 @@ template<typename T> using t_stdvec = std::vector<T>;
 #include <Minuit2/FunctionMinimum.h>
 #include <Minuit2/MnMigrad.h>
 #include <Minuit2/MnPrint.h>
+#include <Minuit2/MnMinos.h>
 
 /*
 static inline std::vector<std::string>
@@ -254,6 +255,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
 	int iDebug = 0;
+	bool bDoMinos = 1;
 
 	if(vecSyms.size()<4 || !is_vec(vecSyms[1]) || !is_vec(vecSyms[2]) || !is_vec(vecSyms[3]))
 	{
@@ -564,18 +566,50 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	}
 
 
+
+	std::vector<std::pair<double,double>> vecMinosErrs;
+	vecMinosErrs.reserve(iParamSize);
+
+	if(bDoMinos)
+	{
+		// error analysis (negative (first) and positive (second) errors)
+		// TODO: make available for scripts (not just debug output)
+		ROOT::Minuit2::MnMinos minos(chi2fkt, lastmini);
+		for(unsigned int iParam=0; iParam<iParamSize; ++iParam)
+		{
+			const std::string& strCurParam = vecParamNames[iParam];
+			std::pair<double, double> err = minos(iParam);
+
+			vecMinosErrs.push_back(err);
+		}
+	}
+
+
+
 	if(bFitterDebug)
 	{
-		G_CERR << "--------------------------------------------------------------------------------" << std::endl;
+		G_CERR << "--------------------------------------------------------------------------------" << "\n";
 		unsigned int uiMini=0;
 		for(const auto& mini : minis)
 		{
 			std::ostringstream ostrMini;
 			ostrMini << mini;
 
-			G_CERR << "result of user-defined fit step " << (++uiMini) << std::endl;
-			G_CERR << "=================================" << std::endl;
+			G_CERR << "result of user-defined fit step " << (++uiMini) << "\n";
+			G_CERR << "=================================\n";
 			G_CERR << STR_TO_WSTR(ostrMini.str()) << std::endl;
+		}
+
+		if(bDoMinos)
+		{
+			G_CERR << "\nMinos error analysis";
+			G_CERR << "\n====================\n\n";
+			for(unsigned int iParam=0; iParam<iParamSize; ++iParam)
+			{
+				G_CERR << vecParamNames[iParam] << ": lower error: " 
+					<< vecMinosErrs[iParam].first << ", upper error: "
+					<< vecMinosErrs[iParam].second << std::endl;
+			}
 		}
 		G_CERR << "--------------------------------------------------------------------------------" << std::endl;
 	}
