@@ -256,6 +256,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 {
 	int iDebug = 0;
 	bool bDoMinos = 1;
+	double dSigma = 1.;
 
 	if(vecSyms.size()<4 || !is_vec(vecSyms[1]) || !is_vec(vecSyms[2]) || !is_vec(vecSyms[3]))
 	{
@@ -344,6 +345,8 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 
 		SymbolMap::t_map::iterator iterDebug = mapSym.find(T_STR"debug");
 
+		SymbolMap::t_map::iterator iterSigma = mapSym.find(T_STR"sigma");
+
 
 		if(iterHints != mapSym.end())
 			get_values(vecParamNames, iterHints->second, vecHints, vecHintsActive);
@@ -364,6 +367,10 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		if(iterDebug != mapSym.end())
 			iDebug = iterDebug->second->GetValInt();
 
+		if(iterSigma != mapSym.end())
+			dSigma = iterSigma->second->GetValDouble();
+
+
 //		for(const t_string& strFixed : vecFixedParams)
 //			G_COUT << "fixed params: " << strFixed << std::endl;
 	}
@@ -379,6 +386,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	iSize = std::min<unsigned int>(iSize, vecYErr.size());
 
 	Chi2Function chi2fkt(&mod, iSize, vecX.data(), vecY.data(), vecYErr.data());
+	chi2fkt.SetSigma(dSigma);
 
 
 	ROOT::Minuit2::MnUserParameters params;

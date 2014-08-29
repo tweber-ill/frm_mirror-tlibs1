@@ -21,7 +21,8 @@ main()
 				"lower_limits":["offs":min(y), "amp":0., "sigma":0.],
 				"upper_limits":["offs":max(y), "amp":max(y)],
 				"steps":["rfff", "rrff", "rrrf", "rrrr"],
-				"debug":1
+				"debug":1,
+				"sigma":3
 			]);
 	print("fit parameters: " + str(params));
 
