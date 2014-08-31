@@ -255,7 +255,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
 	int iDebug = 0;
-	bool bDoMinos = 1;
+	bool bDoMinos = 0;
 	double dSigma = 1.;
 
 	if(vecSyms.size()<4 || !is_vec(vecSyms[1]) || !is_vec(vecSyms[2]) || !is_vec(vecSyms[3]))
@@ -346,6 +346,8 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		SymbolMap::t_map::iterator iterDebug = mapSym.find(T_STR"debug");
 
 		SymbolMap::t_map::iterator iterSigma = mapSym.find(T_STR"sigma");
+		SymbolMap::t_map::iterator iterErrAnalysis = mapSym.find(T_STR"error_analysis");
+
 
 
 		if(iterHints != mapSym.end())
@@ -369,6 +371,8 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 
 		if(iterSigma != mapSym.end())
 			dSigma = iterSigma->second->GetValDouble();
+		if(iterErrAnalysis != mapSym.end())
+			bDoMinos = (iterErrAnalysis->second->GetValInt()!=0);
 
 
 //		for(const t_string& strFixed : vecFixedParams)

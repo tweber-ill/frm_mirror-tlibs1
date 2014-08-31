@@ -1,5 +1,6 @@
 #!./hermelin
 
+
 rotmat(angle)
 {
 	c = cos(angle/180.*pi);
@@ -13,31 +14,36 @@ rotmat(angle)
 
 main()
 {
-	a = 4.56;
-	kh = 0.04;
+	a = 4.54288;
+	kh = 0.036;
+	scale = 1.75;
+
 	orient1 = [0., 1., 1.];
 	orient2 = [0., -1., 1.];
 	nuc = [0., 1., 1.];
-	startangle = 0.;
+
+	startangle = 180.;
 	#stepangle = 60.;
-	stepangle = 15.;
+	stepangle = 90./5.;
 
 	rlu = 2.*pi / a;
 	#print("kh2rlu = " + kh2rlu);
 	
 	startvec = prod(rotmat(startangle), orient1);
-	#print("Start: " + str(start));
+	#print("Start: " + str(startvec));
 
-	numpts = int(360. / stepangle);
+	numpts = int(90. / stepangle)+1;
 
 	for(ipt=0; ipt<numpts; ipt+=1)
 	{
-		rot = rotmat(startangle + real(ipt)*stepangle);
+		angle = real(ipt)*stepangle;
+		rot = rotmat(angle);
 		curvec = prod(rot, startvec);
 		curvec /= len(curvec);
-		curvec *= kh;
+		curvec *= kh*scale;
 		curvec /= rlu;
 
+		output("angle: " + str(angle) + ": ");
 		#print("Vec: " + str(curvec));
 		print(nuc + curvec);
 	}
