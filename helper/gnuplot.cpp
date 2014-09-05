@@ -390,4 +390,4 @@ void GnuPlot::SetColorBarRange(double dMin, double dMax, bool bCyclic)
 }
 
 bool GnuPlot::IsReady() const { return m_postr!=0; }
-std::ostream& GnuPlot::GetStream() { return *m_postr; };
+std::ostream& GnuPlot::GetStream() { return *m_postr; }
