@@ -197,7 +197,7 @@ int main(int argc, char** argv)
 		G_COUT << "================================================================================\n";	
 		G_COUT << "Script start time:     " << cStart << "\n";
 		G_COUT << "Script stop time:      " << cStop << "\n";
-		G_COUT << "Script execution time: " << dDur << " s.\n";
+		G_COUT << "Script execution time: " << dDur << " s\n";
 		G_COUT << "================================================================================";
 		G_COUT << std::endl;
 	}

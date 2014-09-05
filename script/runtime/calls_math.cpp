@@ -9,6 +9,7 @@
 #include "../calls.h"
 #include "../helper/fourier.h"
 #include "../helper/linalg.h"
+#include "../helper/linalg2.h"
 #include "../helper/rand.h"
 
 static inline Symbol* _fkt_linlogspace(const std::vector<Symbol*>& vecSyms,
@@ -89,8 +90,8 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 		throw Err(ostrErr.str(),0);
 	}
 
-	t_real dRes;
-	t_int iRes;
+	t_real dRes = 0.;
+	t_int iRes = 0;
 
 	bool bHadInt = 0,
 		bHadDouble = 0;
@@ -663,6 +664,143 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 
 
 
+// --------------------------------------------------------------------------------
+// advanced linalg stuff
+
+static Symbol* fkt_eigenvecs(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(!check_args(info, vecSyms, {SYMBOL_ARRAY}, {0}, "eigenvecs"))
+		return 0;
+
+	if(!is_mat(vecSyms[0]))
+	{
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) 
+			<< "Invalid call to eigenvecs." 
+			<< std::endl;
+		throw Err(ostrErr.str(),0);
+	}
+
+	t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0]);
+
+	std::vector<t_vec<t_real>> evecs_real, evecs_imag;
+	std::vector<t_real> evals_real, evals_imag;
+
+	bool bOk = eigenvec<t_real>(mat, evecs_real, evecs_imag, evals_real, evals_imag);
+	if(!bOk) return 0;
+
+	SymbolArray* pSymRet = new SymbolArray();
+	SymbolArray* pSymEvecs_real = new SymbolArray();
+	SymbolArray* pSymEvecs_imag = new SymbolArray();
+	SymbolArray* pSymEvals_real = new SymbolArray();
+	SymbolArray* pSymEvals_imag = new SymbolArray();
+
+	pSymRet->GetArr().push_back(pSymEvecs_real);
+	pSymRet->GetArr().push_back(pSymEvecs_imag);
+	pSymRet->GetArr().push_back(pSymEvals_real);
+	pSymRet->GetArr().push_back(pSymEvals_imag);
+
+	for(const ublas::vector<t_real>& evec : evecs_real)
+	{
+		Symbol* pEvec = vec_to_sym<t_vec>(evec);
+		pSymEvecs_real->GetArr().push_back(pEvec);
+	}
+	for(const ublas::vector<t_real>& evec : evecs_imag)
+	{
+		Symbol* pEvec = vec_to_sym<t_vec>(evec);
+		pSymEvecs_imag->GetArr().push_back(pEvec);
+	}
+
+	for(const t_real dEval : evals_real)
+	{
+		Symbol *pSymReal = new SymbolDouble(dEval);
+		pSymEvals_real->GetArr().push_back(pSymReal);
+	}
+	for(const t_real dEval : evals_imag)
+	{
+		Symbol *pSymReal = new SymbolDouble(dEval);
+		pSymEvals_imag->GetArr().push_back(pSymReal);
+	}
+
+	return pSymRet;
+}
+
+static Symbol* fkt_eigenvecs_sym(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(!check_args(info, vecSyms, {SYMBOL_ARRAY}, {0}, "eigenvecs_sym"))
+		return 0;
+
+	if(!is_mat(vecSyms[0]))
+	{
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) 
+			<< "Invalid call to eigenvecs_sym." 
+			<< std::endl;
+		throw Err(ostrErr.str(),0);
+	}
+
+	t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0]);
+
+	std::vector<t_vec<t_real>> evecs_real;
+	std::vector<t_real> evals_real;
+
+	bool bOk = eigenvec_sym<t_real>(mat, evecs_real, evals_real);
+	if(!bOk) return 0;
+
+	SymbolArray* pSymRet = new SymbolArray();
+	SymbolArray* pSymEvecs_real = new SymbolArray();
+	SymbolArray* pSymEvals_real = new SymbolArray();
+
+	pSymRet->GetArr().push_back(pSymEvecs_real);
+	pSymRet->GetArr().push_back(pSymEvals_real);
+
+	for(const ublas::vector<t_real>& evec : evecs_real)
+	{
+		Symbol* pEvec = vec_to_sym<t_vec>(evec);
+		pSymEvecs_real->GetArr().push_back(pEvec);
+	}
+
+	for(const t_real dEval : evals_real)
+	{
+		Symbol *pSymReal = new SymbolDouble(dEval);
+		pSymEvals_real->GetArr().push_back(pSymReal);
+	}
+
+	return pSymRet;
+}
+
+static Symbol* fkt_qr(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(!check_args(info, vecSyms, {SYMBOL_ARRAY}, {0}, "qr"))
+		return 0;
+
+	if(!is_mat(vecSyms[0]))
+	{
+		std::ostringstream ostrErr;
+		ostrErr << linenr(T_STR"Error", info) 
+			<< "Invalid call to qr." 
+			<< std::endl;
+		throw Err(ostrErr.str(),0);
+	}
+
+	t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0]);
+
+	ublas::matrix<t_real> Q, R;
+	bool bOk = qr<t_real>(mat, Q, R);
+	if(!bOk) return 0;
+
+	Symbol *pQ = mat_to_sym<t_mat>(Q);
+	Symbol *pR = mat_to_sym<t_mat>(R);
+
+	SymbolArray* pSymRet = new SymbolArray();
+	pSymRet->GetArr().push_back(pQ);
+	pSymRet->GetArr().push_back(pR);
+
+	return pSymRet;
+}
+
+// --------------------------------------------------------------------------------
+
 
 
 // --------------------------------------------------------------------------------
@@ -866,6 +1004,11 @@ extern void init_ext_math_calls()
 
 		// matrix-vector operations
 		t_mapFkts::value_type(T_STR"prod", fkt_product),
+
+		// advanced linalg
+		t_mapFkts::value_type(T_STR"eigenvecs", fkt_eigenvecs),
+		t_mapFkts::value_type(T_STR"eigenvecs_sym", fkt_eigenvecs_sym),
+		t_mapFkts::value_type(T_STR"qr", fkt_qr),
 
 
 		// random numbers

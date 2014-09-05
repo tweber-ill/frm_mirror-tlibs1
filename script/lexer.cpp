@@ -14,7 +14,7 @@
 #include "helper/spec_char.h"
 
 Lexer::Lexer() : m_bOk(1),
-		m_strWhitespace(T_STR" \t\r"), m_strSep(T_STR"=+-*/\%^{}[]();,\":\n!<>&|"),
+		m_strWhitespace(T_STR" \t\r"), m_strSep(T_STR"=+-*/%^{}[]();,\":\n!<>&|"),
 		m_iLexPos(0), m_iNumToks(0)
 {
 	m_tokEnd.type = LEX_TOKEN_END;

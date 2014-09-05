@@ -5,7 +5,12 @@ OPT_FLAGS = -O2 -march=native
 DEFINES = -DNO_QT -DNO_COMP
 INCS = -I/usr/include/root
 FLAGS = -std=c++11 -fopenmp ${OPT_FLAGS} ${DEFINES} ${INCS}
+#FLAGS += -Wall -Wpedantic
 LIBS = -lboost_iostreams -L/usr/local/lib -L/usr/lib64/root -lMinuit2 -lstdc++ -lm
+
+# Lapack/e
+INCS += -I/usr/include/lapacke
+LIBS += -llapack -llapacke
 
 YY = bison
 #YY = /usr/local/bin/bison
@@ -15,14 +20,14 @@ hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/nod
 		obj/string.o obj/loadtxt.o obj/rand.o obj/fourier.o obj/script_helper.o \
 		obj/calls_plot.o obj/calls_math.o obj/calls_file.o obj/calls_thread.o \
 		obj/calls_fit.o obj/globals.o obj/flags.o obj/fitter.o obj/chi2.o \
-		obj/interpolation.o obj/spec_char.o
+		obj/interpolation.o obj/spec_char.o obj/linalg.o obj/linalg2.o
 	${CC} ${FLAGS} -o hermelin obj/script.o obj/lexer.o obj/main.o obj/yylexer.o \
 		obj/symbol.o obj/node.o obj/node_eval.o obj/calls.o obj/handles.o \
 		obj/gnuplot.o obj/file.o obj/string.o obj/loadtxt.o obj/rand.o \
 		obj/fourier.o obj/script_helper.o obj/calls_plot.o obj/calls_math.o \
 		obj/calls_file.o obj/calls_thread.o obj/calls_fit.o obj/globals.o \
 		obj/flags.o obj/fitter.o obj/chi2.o obj/interpolation.o \
-		obj/spec_char.o \
+		obj/spec_char.o obj/linalg.o obj/linalg2.o \
 			${LIBS}
 	strip hermelin
 
@@ -110,6 +115,13 @@ obj/chi2.o: fitter/chi2.cpp fitter/chi2.h
 
 obj/interpolation.o: fitter/models/interpolation.cpp fitter/models/interpolation.h
 	${CC} ${FLAGS} -c -o obj/interpolation.o fitter/models/interpolation.cpp
+
+
+obj/linalg.o: helper/linalg.cpp helper/linalg.h
+	${CC} ${FLAGS} -c -o obj/linalg.o helper/linalg.cpp
+
+obj/linalg2.o: helper/linalg2.cpp helper/linalg2.h
+	${CC} ${FLAGS} -c -o obj/linalg2.o helper/linalg2.cpp
 
 
 clean:
