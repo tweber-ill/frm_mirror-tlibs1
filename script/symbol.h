@@ -9,6 +9,7 @@
 
 #include "types.h"
 #include <map>
+#include <unordered_map>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -168,8 +169,8 @@ protected:
 public:
 	SymbolString() : Symbol() {}
 	SymbolString(const t_char* pcStr) : m_strVal(pcStr) {}
-	SymbolString(const t_string& str) : m_strVal(str) {}
-	SymbolString(t_string&& str) : m_strVal(str) {}
+	template<typename _t_string = t_string>
+	SymbolString(_t_string&& str) : m_strVal(std::forward<_t_string>(str)) {}
 	SymbolString(t_real dVal) { throw Err("Invalid SymbolString constructor."); }
 
 	virtual SymbolType GetType() const { return SYMBOL_STRING; }
@@ -242,8 +243,8 @@ public:
 	virtual ~SymbolMap();
 
 	// no copy/move constructors -> use clone
-	//SymbolMap(const SymbolMap& map);
-	//SymbolMap(SymbolMap&& map);
+	SymbolMap(const SymbolMap& map) = delete;
+	SymbolMap(SymbolMap&& map) = delete;
 
 	virtual SymbolType GetType() const { return SYMBOL_MAP; }
 	virtual t_string GetTypeName() const { return T_STR"map"; }
@@ -275,7 +276,7 @@ public:
 class SymbolTable
 {
 protected:
-	typedef std::map<t_string, Symbol*> t_syms;
+	typedef std::unordered_map<t_string, Symbol*> t_syms;
 	t_syms m_syms;
 
 public:

@@ -8,9 +8,11 @@
 #define __SCRIPT_HANDLES__
 
 #include "types.h"
+#include "symbol.h"
 
 #include <vector>
 #include <thread>
+#include <future>
 #include <mutex>
 #include <stdio.h>
 
@@ -20,6 +22,7 @@ enum HandleType
 	HANDLE_FILE,
 
 	HANDLE_THREAD,
+	HANDLE_TASK,
 	HANDLE_MUTEX
 };
 
@@ -73,6 +76,7 @@ public:
 
 
 using HandleThread = GenericHandle<std::thread, HANDLE_THREAD>;
+using HandleTask = GenericHandle<std::future<Symbol*>, HANDLE_TASK>;
 using HandleMutex = GenericHandle<std::mutex, HANDLE_MUTEX>;
 
 

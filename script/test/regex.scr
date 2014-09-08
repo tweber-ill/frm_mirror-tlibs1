@@ -1,0 +1,25 @@
+main()
+{
+	print(regex_replace("TestA123TestB789abc", "[0-9]+", "<xyz>"));
+
+
+	print("-"*80);
+
+
+	print(regex_match("Test123", "[A-Za-z]*[0-9]*"));
+	print(regex_match("Test123", "[A-Za-z]*"));
+
+
+	print("-"*80);
+
+
+	strIn = "Test12345XYZ456abc789a";
+	res = regex_find(strIn, "[0-9]+");
+	print("Input string: " + strIn);
+	for(single_res : res)
+	{
+		output("String: " + single_res[0] + ", ");
+		output("Index: " + single_res[1] + ", ");
+		print("Length: " + single_res[2]);
+	}
+}

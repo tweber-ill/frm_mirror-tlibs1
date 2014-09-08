@@ -9,6 +9,7 @@
 #include "types.h"
 
 #include <vector>
+#include <unordered_map>
 #include "symbol.h"
 #include "node.h"
 
@@ -28,7 +29,7 @@ extern bool check_args(ParseInfo& info,
 
 // typedefs
 typedef Symbol*(*t_extcall)(const std::vector<Symbol*>&, ParseInfo&, SymbolTable*);
-typedef std::map<t_string, t_extcall> t_mapFkts;
+typedef std::unordered_map<t_string, t_extcall> t_mapFkts;
 
 
 // adding new external calls

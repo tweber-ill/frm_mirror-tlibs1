@@ -3,10 +3,21 @@ CC = gcc
 OPT_FLAGS = -O2 -march=native
 #OPT_FLAGS = -ggdb -DDEBUG
 DEFINES = -DNO_QT -DNO_COMP
-INCS = -I/usr/include/root
+INCS = 
 FLAGS = -std=c++11 -fopenmp ${OPT_FLAGS} ${DEFINES} ${INCS}
 #FLAGS += -Wall -Wpedantic
-LIBS = -lboost_iostreams -L/usr/local/lib -L/usr/lib64/root -lMinuit2 -lstdc++ -lm
+
+LIBS = -L/usr/local/lib
+
+# Boost
+LIBS = -lboost_iostreams -lboost_regex
+
+# Minuit
+INCS += -I/usr/include/root
+LIBS += -L/usr/lib64/root -lMinuit2 
+
+# std
+LIBS += -lstdc++ -lm
 
 # Lapack/e
 INCS += -I/usr/include/lapacke
@@ -18,6 +29,7 @@ YY = bison
 hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/node.o \
 		obj/node_eval.o obj/calls.o obj/handles.o obj/gnuplot.o obj/file.o \
 		obj/string.o obj/loadtxt.o obj/rand.o obj/fourier.o obj/script_helper.o \
+		obj/calls_basic.o \
 		obj/calls_plot.o obj/calls_math.o obj/calls_file.o obj/calls_thread.o \
 		obj/calls_fit.o obj/globals.o obj/flags.o obj/fitter.o obj/chi2.o \
 		obj/interpolation.o obj/spec_char.o obj/linalg.o obj/linalg2.o
@@ -25,6 +37,7 @@ hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/nod
 		obj/symbol.o obj/node.o obj/node_eval.o obj/calls.o obj/handles.o \
 		obj/gnuplot.o obj/file.o obj/string.o obj/loadtxt.o obj/rand.o \
 		obj/fourier.o obj/script_helper.o obj/calls_plot.o obj/calls_math.o \
+		obj/calls_basic.o \
 		obj/calls_file.o obj/calls_thread.o obj/calls_fit.o obj/globals.o \
 		obj/flags.o obj/fitter.o obj/chi2.o obj/interpolation.o \
 		obj/spec_char.o obj/linalg.o obj/linalg2.o \
@@ -56,6 +69,9 @@ obj/symbol.o: symbol.cpp symbol.h
 
 obj/calls.o: calls.cpp calls.h
 	${CC} ${FLAGS} -c -o obj/calls.o calls.cpp
+
+obj/calls_basic.o: runtime/calls_basic.cpp runtime/calls_basic.h
+	${CC} ${FLAGS} -c -o obj/calls_basic.o runtime/calls_basic.cpp
 
 obj/calls_plot.o: runtime/calls_plot.cpp runtime/calls_plot.h
 	${CC} ${FLAGS} -c -o obj/calls_plot.o runtime/calls_plot.cpp

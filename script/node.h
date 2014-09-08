@@ -13,6 +13,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <unordered_map>
 #include <map>
 #include <mutex>
 
@@ -23,55 +24,7 @@ class Node;
 class NodeFunction;
 class NodeCall;
 
-struct ParseInfo
-{
-	// external imported modules
-	typedef std::map<t_string, Node*> t_mods;
-	t_mods *pmapModules;
-
-	// function to execute, e.g. "main"
-	t_string strExecFkt;
-	t_string strInitScrFile;
-
-	// all functions from all modules
-	std::vector<NodeFunction*> vecFuncs;
-
-	// global symbol table
-	SymbolTable *pGlobalSyms;
-
-	HandleManager *phandles;
-	// mutex for script
-	std::mutex *pmutexGlobal;
-	// mutex for interpreter
-	std::mutex *pmutexInterpreter;
-
-	// currently active function
-	const NodeFunction *pCurFunction;
-	const NodeCall *pCurCaller;
-	bool bWantReturn = 0;
-
-	const Node* pCurLoop;
-	bool bWantBreak;
-	bool bWantContinue;
-
-	bool bDestroyParseInfo;
-
-	ParseInfo();
-	virtual ~ParseInfo();
-
-	NodeFunction* GetFunction(const t_string& strName);
-
-	bool IsExecDisabled() const
-	{
-		return bWantReturn || bWantBreak || bWantContinue;
-	}
-
-protected:
-	void init_global_syms();
-};
-
-
-enum NodeType
+enum /*class*/ NodeType
 {
 	NODE_NOP,
 
@@ -132,8 +85,55 @@ enum NodeType
 	NODE_INVALID
 };
 
+struct ParseInfo
+{
+	// external imported modules
+	typedef std::unordered_map<t_string, Node*> t_mods;
+	t_mods *pmapModules;
 
-extern std::map<NodeType, t_real (*)(t_real, t_real)> g_mapBinOps_d;
+	// function to execute, e.g. "main"
+	t_string strExecFkt;
+	t_string strInitScrFile;
+
+	// all functions from all modules
+	std::vector<NodeFunction*> vecFuncs;
+
+	// global symbol table
+	SymbolTable *pGlobalSyms;
+
+	HandleManager *phandles;
+	// mutex for script
+	std::mutex *pmutexGlobal;
+	// mutex for interpreter
+	std::mutex *pmutexInterpreter;
+
+	// currently active function
+	const NodeFunction *pCurFunction;
+	const NodeCall *pCurCaller;
+	bool bWantReturn = 0;
+
+	const Node* pCurLoop;
+	bool bWantBreak;
+	bool bWantContinue;
+
+	bool bDestroyParseInfo;
+
+	ParseInfo();
+	virtual ~ParseInfo();
+
+	NodeFunction* GetFunction(const t_string& strName);
+
+	bool IsExecDisabled() const
+	{
+		return bWantReturn || bWantBreak || bWantContinue;
+	}
+
+protected:
+	void init_global_syms();
+};
+
+
+extern std::unordered_map<NodeType, t_real (*)(t_real, t_real), EnumDirectHash<NodeType>> g_mapBinOps_d;
 //extern Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op);
 extern void safe_delete(Symbol *&pSym, const SymbolTable* pSymTab, const SymbolTable* pGlobalSymTab);
 

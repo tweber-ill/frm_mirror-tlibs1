@@ -5,6 +5,7 @@
  */
 
 #include "globals.h"
+#include "runtime/calls_basic.h"
 #include "runtime/calls_plot.h"
 #include "runtime/calls_math.h"
 #include "runtime/calls_fit.h"
@@ -16,10 +17,11 @@
 int yydebug = 0;
 bool g_bDebug = 0;
 
-const t_char* g_pcVersion = T_STR"Hermelin script interpreter, version 0.6";
+const t_char* g_pcVersion = T_STR"Hermelin script interpreter, version 0.6.5";
 
 static inline void init_funcs()
 {
+	init_ext_basic_calls();
 	init_ext_thread_calls();
 	init_ext_file_calls();
 	init_ext_math_calls();

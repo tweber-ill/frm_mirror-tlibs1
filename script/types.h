@@ -17,6 +17,16 @@ typedef double t_real;
 typedef int t_int;
 
 
+template<typename tyEnum>
+struct EnumDirectHash
+{
+	std::size_t operator()(tyEnum ty) const
+	{
+		return static_cast<std::size_t>(ty);
+	}
+};
+
+
 //#define USE_WCHAR
 
 

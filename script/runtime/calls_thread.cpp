@@ -10,6 +10,7 @@
 #include "calls_thread.h"
 #include "../calls.h"
 #include <thread>
+#include <future>
 #include <wait.h>
 #include <cstdlib>
 
@@ -92,9 +93,9 @@ void delete_symbols(std::vector<Symbol*>* pvecSyms)
 	delete pvecSyms;
 }
 
-static void thread_proc(NodeFunction* pFunc, ParseInfo* pinfo, std::vector<Symbol*>* pvecSyms)
+static Symbol* task_proc(NodeFunction* pFunc, ParseInfo* pinfo, std::vector<Symbol*>* pvecSyms)
 {
-	if(!pFunc || !pinfo) return;
+	if(!pFunc || !pinfo) return 0;
 
 	SymbolTable *pTable = new SymbolTable();
 	SymbolArray arrArgs;
@@ -109,18 +110,28 @@ static void thread_proc(NodeFunction* pFunc, ParseInfo* pinfo, std::vector<Symbo
 
 	pTable->InsertSymbol(T_STR"<args>", &arrArgs);
 	Symbol* pRet = pThreadFunc->eval(*pinfo2, pTable);
+	//pTable->RemoveSymbolNoDelete(T_STR"<ret>");
 	pTable->RemoveSymbolNoDelete(T_STR"<args>");
 
 	if(pTable) delete pTable;
-	if(pRet) delete pRet;
 	if(pvecSyms) delete_symbols(pvecSyms);
 	//if(pThreadFunc) delete pThreadFunc;
 	if(pinfo2) delete pinfo2;
+
+	return pRet;
 }
 
-static Symbol* fkt_thread(const std::vector<Symbol*>& vecSyms,
+static void thread_proc(NodeFunction* pFunc, ParseInfo* pinfo, std::vector<Symbol*>* pvecSyms)
+{
+	// ignore return value
+	Symbol *pRet = task_proc(pFunc, pinfo, pvecSyms);
+	if(pRet) delete pRet;
+}
+
+static Symbol* fkt_thread_task(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info,
-						SymbolTable* pSymTab)
+						SymbolTable* pSymTab,
+						bool bTask=0)
 {
 	if(vecSyms.size()<1)
 	{
@@ -150,10 +161,36 @@ static Symbol* fkt_thread(const std::vector<Symbol*>& vecSyms,
 	}
 
 	std::vector<Symbol*>* vecThreadSymsClone = clone_symbols(&vecSyms, 1);
-	std::thread* pThread = new std::thread(::thread_proc, pFunc, &info, vecThreadSymsClone);
-	t_int iHandle = info.phandles->AddHandle(new HandleThread(pThread));
+
+	t_int iHandle = -1;
+	if(bTask)
+	{
+		std::future<Symbol*> *pFuture = new std::future<Symbol*>(
+				std::async(std::launch::async, 
+				::task_proc, pFunc, &info, vecThreadSymsClone));
+		iHandle = info.phandles->AddHandle(new HandleTask(pFuture));
+	}
+	else
+	{
+		std::thread* pThread = new std::thread(::thread_proc, pFunc, &info, vecThreadSymsClone);
+		iHandle = info.phandles->AddHandle(new HandleThread(pThread));
+	}
 
 	return new SymbolInt(iHandle);
+}
+
+static Symbol* fkt_thread(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info,
+						SymbolTable* pSymTab)
+{
+	return fkt_thread_task(vecSyms, info, pSymTab, 0);
+}
+
+static Symbol* fkt_task(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info,
+						SymbolTable* pSymTab)
+{
+	return fkt_thread_task(vecSyms, info, pSymTab, 1);
 }
 
 static Symbol* fkt_thread_hwcount(const std::vector<Symbol*>& vecSyms,
@@ -278,6 +315,7 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 		throw Err(ostrErr.str(),0);
 	}
 
+	Symbol *pRet = 0;
 	for(Symbol* pSym : vecSyms)
 	{
 		if(pSym == 0) continue;
@@ -298,22 +336,42 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 		t_int iHandle = ((SymbolInt*)pSym)->GetVal();
 		Handle *pHandle = info.phandles->GetHandle(iHandle);
 
-		if(pHandle==0 || pHandle->GetType()!=HANDLE_THREAD)
+		if(pHandle==0)
 		{
 			std::ostringstream ostrErr;
 			ostrErr << linenr(T_STR"Error", info) << "Handle (" 
-				<< iHandle << ") does not exist"
-				<< " or is not a thread handle." << std::endl;
+				<< iHandle << ") does not exist." << std::endl;
 			throw Err(ostrErr.str(), 0);
 			//continue;
 		}
 
-		HandleThread *pThreadHandle = (HandleThread*)pHandle;
-		std::thread *pThread = pThreadHandle->GetInternalHandle();
+		if(pHandle->GetType() == HANDLE_THREAD)
+		{
+			HandleThread *pThreadHandle = (HandleThread*)pHandle;
+			std::thread *pThread = pThreadHandle->GetInternalHandle();
 
-		pThread->join();
+			pThread->join();
+		}
+		else if(pHandle->GetType() == HANDLE_TASK)
+		{
+			HandleTask *pTaskHandle = (HandleTask*)pHandle;
+			std::future<Symbol*> *pFut = pTaskHandle->GetInternalHandle();
+
+			// TODO: array task joins
+			if(pRet != 0)
+				delete pRet;
+			pRet = pFut->get();
+		}
+		else
+		{
+			std::ostringstream ostrErr;
+			ostrErr << linenr(T_STR"Error", info) << "Handle (" 
+				<< iHandle << ") is invalid." << std::endl;
+			throw Err(ostrErr.str(), 0);
+		}
 	}
-	return 0;
+
+	return pRet;
 }
 
 
@@ -460,9 +518,11 @@ extern void init_ext_thread_calls()
 {
 	t_mapFkts mapFkts =
 	{
-		// threads
+		// threads & tasks
 		t_mapFkts::value_type(T_STR"thread", fkt_thread),
 		t_mapFkts::value_type(T_STR"nthread", fkt_nthread),
+		t_mapFkts::value_type(T_STR"task", fkt_task),
+
 		t_mapFkts::value_type(T_STR"thread_hwcount", fkt_thread_hwcount),
 		t_mapFkts::value_type(T_STR"join", fkt_thread_join),
 		t_mapFkts::value_type(T_STR"mutex", fkt_mutex),

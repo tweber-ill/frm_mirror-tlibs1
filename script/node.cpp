@@ -72,7 +72,7 @@ static t_int pow_int(t_int a, t_int b)
 	return t_int(pow(a,b));
 }
 
-std::map<NodeType, t_real (*)(t_real, t_real)> g_mapBinOps_d = 
+std::unordered_map<NodeType, t_real (*)(t_real, t_real), EnumDirectHash<NodeType>> g_mapBinOps_d = 
 {
 	std::pair<NodeType, t_real (*)(t_real, t_real)>(NODE_PLUS, plus_op),
 	std::pair<NodeType, t_real (*)(t_real, t_real)>(NODE_MINUS, minus_op),
@@ -82,7 +82,7 @@ std::map<NodeType, t_real (*)(t_real, t_real)> g_mapBinOps_d =
 	std::pair<NodeType, t_real (*)(t_real, t_real)>(NODE_POW, pow),
 };
 
-std::map<NodeType, t_int (*)(t_int, t_int)> g_mapBinOps_i =
+std::unordered_map<NodeType, t_int (*)(t_int, t_int), EnumDirectHash<NodeType>> g_mapBinOps_i =
 {
 	std::pair<NodeType, t_int (*)(t_int, t_int)>(NODE_PLUS, plus_op),
 	std::pair<NodeType, t_int (*)(t_int, t_int)>(NODE_MINUS, minus_op),
@@ -92,13 +92,13 @@ std::map<NodeType, t_int (*)(t_int, t_int)> g_mapBinOps_i =
 	std::pair<NodeType, t_int (*)(t_int, t_int)>(NODE_POW, pow_int)
 };
 
-std::map<NodeType, t_string (*)(t_string, t_string)> g_mapBinOps_s =
+std::unordered_map<NodeType, t_string (*)(t_string, t_string), EnumDirectHash<NodeType>> g_mapBinOps_s =
 {
 	std::pair<NodeType, t_string (*)(t_string,t_string)>(NODE_PLUS, plus_op),
 };
 
 
-std::map<NodeType, bool (*)(t_real, t_real)> g_mapBinLogOps_d =
+std::unordered_map<NodeType, bool (*)(t_real, t_real), EnumDirectHash<NodeType>> g_mapBinLogOps_d =
 {
 	std::pair<NodeType, bool (*)(t_real, t_real)>(NODE_LOG_OR, log_or_op),
 	std::pair<NodeType, bool (*)(t_real, t_real)>(NODE_LOG_AND, log_and_op),
@@ -110,7 +110,7 @@ std::map<NodeType, bool (*)(t_real, t_real)> g_mapBinLogOps_d =
 	std::pair<NodeType, bool (*)(t_real, t_real)>(NODE_LOG_GREATER, log_greater_op)
 };
 
-std::map<NodeType, bool (*)(t_int, t_int)> g_mapBinLogOps_i =
+std::unordered_map<NodeType, bool (*)(t_int, t_int), EnumDirectHash<NodeType>> g_mapBinLogOps_i =
 {
 	std::pair<NodeType, bool (*)(t_int, t_int)>(NODE_LOG_OR, log_or_op),
 	std::pair<NodeType, bool (*)(t_int, t_int)>(NODE_LOG_AND, log_and_op),
@@ -122,7 +122,7 @@ std::map<NodeType, bool (*)(t_int, t_int)> g_mapBinLogOps_i =
 	std::pair<NodeType, bool (*)(t_int, t_int)>(NODE_LOG_GREATER, log_greater_op)
 };
 
-std::map<NodeType, bool (*)(t_string,t_string)> g_mapBinLogOps_s =
+std::unordered_map<NodeType, bool (*)(t_string,t_string), EnumDirectHash<NodeType>> g_mapBinLogOps_s =
 {
 	std::pair<NodeType, bool (*)(t_string,t_string)>(NODE_LOG_EQ, log_eq_op),
 	std::pair<NodeType, bool (*)(t_string,t_string)>(NODE_LOG_NEQ, log_neq_op),

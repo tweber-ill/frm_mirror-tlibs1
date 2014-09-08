@@ -10,6 +10,8 @@
 #include <boost/tokenizer.hpp>
 #include <ctype.h>
 #include <tuple>
+#include <unordered_map>
+
 #include "helper/string.h"
 #include "helper/spec_char.h"
 
@@ -121,7 +123,7 @@ void Lexer::ReplaceEscapes(t_string& str)
 	const t_mapSpecChars& mapSpec = get_spec_chars();
 
 	static bool s_bEscapesInited = 0;
-	static std::map<t_string, t_string> s_mapstrSpecial;
+	static std::unordered_map<t_string, t_string> s_mapstrSpecial;
 
 	typedef std::tuple<std::string, std::string> t_tupstr;
 
