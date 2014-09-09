@@ -101,12 +101,15 @@ static Symbol* task_proc(NodeFunction* pFunc, ParseInfo* pinfo, std::vector<Symb
 	SymbolArray arrArgs;
 	arrArgs.SetDontDel(1);
 
-	pinfo->pmutexInterpreter->lock();
-		const NodeFunction* pThreadFunc = (NodeFunction*)pFunc/*->clone()*/;
-		ParseInfo *pinfo2 = new ParseInfo(*pinfo);	// threads cannot share the same bWantReturn etc.
+	const NodeFunction *pThreadFunc = 0;
+	ParseInfo *pinfo2 = 0;
+	{
+		std::lock_guard<std::mutex> _lck(*pinfo->pmutexInterpreter);
+		pThreadFunc = (NodeFunction*)pFunc/*->clone()*/;
+		pinfo2 = new ParseInfo(*pinfo);	// threads cannot share the same bWantReturn etc.
 		pinfo2->bDestroyParseInfo = 0;
 		if(pvecSyms) arrArgs.GetArr() = *pvecSyms;
-	pinfo->pmutexInterpreter->unlock();
+	}
 
 	pTable->InsertSymbol(T_STR"<args>", &arrArgs);
 	Symbol* pRet = pThreadFunc->eval(*pinfo2, pTable);
