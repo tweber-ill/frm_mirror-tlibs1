@@ -1,6 +1,7 @@
-tst(a="1234")
+tst(a="xyz", b="1234")
 {
 	print(a);
+	print(b);
 }
 
 tst2(a="123", b="456", c)
@@ -13,7 +14,7 @@ tst2(a="123", b="456", c)
 main(args)
 {
 	tst();
-	tst("xyz");
+	tst("XYZ");
 
 	tst2("abc", null(), "xyz");
 }

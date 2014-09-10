@@ -1072,6 +1072,46 @@ static Symbol* fkt_match_regex(const std::vector<Symbol*>& vecSyms,
 
 	return new SymbolInt(bMatch);
 }
+
+static Symbol* fkt_subfind_regex(const std::vector<Symbol*>& vecSyms,
+				ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(!check_args(info, vecSyms, {SYMBOL_STRING, SYMBOL_STRING, SYMBOL_INT}, {0,0,1}, "regex_subfind"))
+		return 0;
+
+	const t_string& str = ((SymbolString*)vecSyms[0])->GetVal();
+	const t_string& strRegex = ((SymbolString*)vecSyms[1])->GetVal();
+
+	// search or match regex?
+	bool bSearch = 1;
+
+	SymbolArray *pSymRet = new SymbolArray();
+
+	try
+	{
+		std::tr1::basic_regex<t_char> rex(strRegex, std::tr1::regex::ECMAScript);
+		std::tr1::smatch mRes;
+
+		if(bSearch)
+			std::tr1::regex_search(str, mRes, rex);
+		else
+			std::tr1::regex_match(str, mRes, rex);
+
+		for(const std::tr1::ssub_match& strMatch : mRes)
+		{
+			pSymRet->GetArr().push_back(new SymbolString(strMatch));
+		}
+	}
+	catch(const std::exception& ex)
+	{
+		G_CERR << linenr(T_STR"Error", info)
+			<< "Regex evaluation failed with error: " << ex.what() 
+			<< std::endl;
+		return 0;
+	}
+
+	return pSymRet;
+}
 // --------------------------------------------------------------------------------
 
 
@@ -1138,6 +1178,7 @@ extern void init_ext_basic_calls()
 		t_mapFkts::value_type(T_STR"regex_replace", fkt_replace_regex),
 		t_mapFkts::value_type(T_STR"regex_find", fkt_find_regex),
 		t_mapFkts::value_type(T_STR"regex_match", fkt_match_regex),
+		t_mapFkts::value_type(T_STR"regex_subfind", fkt_subfind_regex),
 
 
 		// array operations

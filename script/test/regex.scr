@@ -22,4 +22,14 @@ main()
 		output("Index: " + single_res[1] + ", ");
 		print("Length: " + single_res[2]);
 	}
+
+
+	print("-"*80);
+
+
+	str = "xyz@abc.de";
+	str2 = regex_subfind(str, "([A-Za-z]+)@([A-Za-z.]+)", 1);
+	print("Mail: " + str2[0]);
+	print("Name: " + str2[1]);
+	print("Address: " + str2[2]);
 }
