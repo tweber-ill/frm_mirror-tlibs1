@@ -9,5 +9,5 @@ main()
 	spl = spline(x,y, 128, 2);
 	spl[2] = ["style" : "line", "legend" : "spline"];
 
-	plot([[x,y], bez, spl], ["term":"qt"]);
+	plot([[x,y], bez, spl], ["term":"wxt"]);
 }

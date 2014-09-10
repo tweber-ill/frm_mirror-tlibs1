@@ -16,5 +16,5 @@ main(args)
 	tst();
 	tst("XYZ");
 
-	tst2("abc", null(), "xyz");
+	tst2(null(), null(), "xyz");
 }

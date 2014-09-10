@@ -8,5 +8,7 @@ tst()
 
 main()
 {
+	print(1./k_B_eVperK);
+
 	print(tst());
 }
