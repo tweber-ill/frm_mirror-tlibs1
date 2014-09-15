@@ -10,6 +10,7 @@
 #include "../helper/string.h"
 #include "../helper/misc.h"
 #include "../helper/math.h"
+#include "../helper/log.h"
 
 #include <string>
 #include <iostream>
@@ -160,7 +161,7 @@ bool LoadTxt::Load(const char* pcFile)
 	bool bTranspose = false;
 	bool bIsResData = false;
 
-	
+
 	std::string strExt = get_fileext(std::string(pcFile));
 	if(is_equal(strExt, std::string("sqw")))
 	{
@@ -175,7 +176,7 @@ bool LoadTxt::Load(const char* pcFile)
 	{
 		bIsResData = true;
 	}
-	
+
 
 	std::ifstream ifstr(pcFile);
 	if(!ifstr.is_open())
@@ -186,7 +187,7 @@ bool LoadTxt::Load(const char* pcFile)
 	std::vector<std::vector<double> > vecLines;
 	unsigned int uiLine = 0;
 	unsigned int uiLineWithoutComment = 0;
-	
+
 	std::vector<double> vecLine;
 	int iLineSize=-1;
 	int iLastPercentLoaded=-1;
@@ -202,7 +203,7 @@ bool LoadTxt::Load(const char* pcFile)
 			int iPercentLoaded = int(100.*double(uiFilePos)/double(uiFileSize));
 			if(ifstr.eof())
 				iPercentLoaded = 100;
-			
+
 			if(iPercentLoaded != iLastPercentLoaded)
 			{
 				std::cout << "\rLoading... " << iPercentLoaded << "%";
@@ -218,7 +219,7 @@ bool LoadTxt::Load(const char* pcFile)
 		StrTrim(strLine);
 		if(strLine.size()==0) continue;
 		++uiLineWithoutComment;
-		
+
 		// end of head comment section?
 		if(strLine.size()!=0 && m_bLoadOnlyHeader)
 			break;
@@ -254,8 +255,7 @@ bool LoadTxt::Load(const char* pcFile)
 		}
 
 		if(CleanString(strLine))
-			std::cerr << "Warning: Replaced \"inf\"/\"nan\" with \"0\" in line "
-				<< uiLine << std::endl;
+			log_warn("Replaced \"inf\"/\"nan\" with \"0\" in line ",uiLine);
 
 		vecLine.clear();
 		get_tokens<double>(strLine, std::string(" \t"), vecLine);
@@ -267,29 +267,27 @@ bool LoadTxt::Load(const char* pcFile)
 		}
 		if(vecLine.size() != (unsigned int)(iLineSize))
 		{
-			std::cerr << "Warning: Line " << uiLine << " has wrong size!"
-					  << " Expected " << iLineSize
-					  << " tokens, got " << vecLine.size() << ".";
+			log_warn("Line ", uiLine, " has wrong size!",
+					  " Expected ", iLineSize,
+					  " tokens, got ", vecLine.size(), ".");
 
 			//return 0;
 
 			if(int(vecLine.size()) > iLineSize)
 			{
-				std::cerr << " Removing last elements.";
+				log_warn("Removing last elements.");
 				vecLine.resize(iLineSize);
 			}
 			else if(int(vecLine.size()) < iLineSize)
 			{
-				std::cerr << " Inserting zeros.";
+				log_warn("Inserting zeros.");
 
 				unsigned int iOldSize = vecLine.size();
 				vecLine.resize(iLineSize);
-				
+
 				for(unsigned int iElem=iOldSize; int(iElem)<iLineSize; ++iElem)
 					vecLine[iElem] = 0.;
 			}
-
-			std::cerr << std::endl;
 		}
 
 		vecLines.push_back(vecLine);
@@ -300,8 +298,7 @@ bool LoadTxt::Load(const char* pcFile)
 	{
 		if(iLineSize<=0)
 		{
-			std::cerr << "Warning: No data in file \"" << pcFile << "\"."
-					<< std::endl;
+			log_warn("No data in file \"", pcFile, "\".");
 			return 0;
 		}
 
@@ -557,15 +554,13 @@ DataRes::DataRes(const LoadTxt& data) : McData(data)
 {
 	const unsigned int iResColCnt = 11;
 	m_bOk = true;
-	
+
 	m_iDim = m_data.GetColLen();
 	m_iCols = m_data.GetColCnt();
-	
+
 	if(m_data.GetColCnt()!=iResColCnt && m_data.GetColCnt()!=(iResColCnt+3))
 	{
-		std::cerr << "Error: Wrong number of columns (need "
-				  << iResColCnt << " or " << iResColCnt+3 << ")."
-				  << std::endl;
+		log_err("Wrong number of columns (need ", iResColCnt, " or ", iResColCnt+3,  ").");
 		m_bOk = false;
 	}
 }
@@ -585,7 +580,7 @@ const double* DataRes::GetColumn(unsigned int iIdx) const
 Data1D::Data1D(const LoadTxt& data) : McData(data)
 {
 	m_iDim = m_data.GetColLen();
-		
+
 	std::string strVal;
 	if(GetString("type", strVal))		// e.g.: "type: array_1d(32)"
 	{
@@ -600,7 +595,7 @@ Data1D::Data1D(const LoadTxt& data) : McData(data)
 		{
 			std::string strDim = strVal.substr(idx+1);
 			trim(strDim);
-		
+
 			if(strDim.size() != 0)
 			{
 				std::istringstream istr(strDim);
@@ -609,15 +604,13 @@ Data1D::Data1D(const LoadTxt& data) : McData(data)
 				//std::cout << "dim: " << m_iDim << std::endl;
 			}
 		}
-			
+
 		if(m_data.GetColLen() != m_iDim)
 		{
 			m_iDim = m_data.GetColLen();
-			std::cerr << "Warning: Mismatch in dimension, assuming "
-						<< m_iDim << "."
-						<< std::endl;
+			log_warn("Mismatch in dimension, assuming ", m_iDim, ".");
 		}
-		
+
 		m_bOk = true;
 	}
 	else
@@ -823,33 +816,29 @@ Data2D::Data2D(const LoadTxt& data)
 
 	m_iXDim = m_data.GetColCnt();
 	m_iYDim = m_data.GetColLen()/m_iNumBlocks;
-	
+
 	std::string strVal;
 	if(GetString("type", strVal) && strVal.length()>8)
-	{		
+	{
 		const std::string strDim = strVal.substr(9);
 		std::istringstream istr(strDim);
-		
+
 		char c;
 		// data now looks like this: "123, 234, 345"
 		istr >> m_iXDim >> c >> m_iYDim;
 		//std::cout << m_iXDim << " " << m_iYDim << " " << m_iTDim << std::endl;
-		
+
 		if(m_data.GetColCnt()!=m_iXDim)
 		{
 			m_iXDim = m_data.GetColCnt();
-			std::cerr << "Warning: Mismatch in x dimension, assuming "
-						<< m_iXDim << "."
-						<< std::endl;
+			log_warn("Mismatch in x dimension, assuming ", m_iXDim, ".");
 		}
 		if(m_data.GetColLen()/m_iNumBlocks!=m_iYDim)
 		{
 			m_iYDim = m_data.GetColLen()/m_iNumBlocks;
-			std::cerr << "Warning: Mismatch in y dimension, assuming "
-						<< m_iYDim << "."
-						<< std::endl;
+			log_warn("Mismatch in y dimension, assuming ", m_iYDim, ".");
 		}
-		
+
 		m_bOk = true;
 	}
 	else
@@ -1008,25 +997,25 @@ bool Data2D::GetLimits(double& dXMin, double& dXMax,
 bool Data2D::GetLabels(std::string& strLabelX, std::string& strLabelY, std::string& strLabelZ) const
 {
 	bool bOk = true;
-	
+
 	if(!GetString("xlabel", strLabelX))
 		bOk = false;
-	
+
 	if(!GetString("ylabel", strLabelY))
 		bOk = false;
-	
+
 	if(!GetString("zlabel", strLabelZ))
 		bOk = false;
-	
+
 	return bOk;
 }
-			   
+
 bool Data2D::ExtractColOrRow(int iCol, int iRow, const char* pcOutFile, const Data2D* pErrors)
 {
 	std::ofstream ofstr(pcOutFile);
 	if(!ofstr.is_open())
 	{
-		std::cerr << "Error: Could not open \"" << pcOutFile << "\"." << std::endl;
+		log_err("Could not open \"", pcOutFile, "\".");
 		return 0;
 	}
 
@@ -1036,12 +1025,12 @@ bool Data2D::ExtractColOrRow(int iCol, int iRow, const char* pcOutFile, const Da
 
 	if(bWantRow==0 && bWantCol==0)
 	{
-		std::cerr << "Error: Neither column nor row selected." << std::endl;
+		log_err("Neither column nor row selected.");
 		return 0;
 	}
 	if(bWantRow==1 && bWantCol==1)
 	{
-		std::cerr << "Error: Both column and row selected." << std::endl;
+		log_err("Both column and row selected.");
 		return 0;
 	}
 
@@ -1073,21 +1062,21 @@ bool Data2D::ExtractColOrRow(int iCol, int iRow, const char* pcOutFile, const Da
 	ostrTitle << " = "
 			  << tic_trafo(iDim_other, dMin_other, dMax_other, bLog_other, double(bWantRow?iRow:iCol))
 			  << "\n";
-	
+
 	ofstr << "# title: " << ostrTitle.str();
 	ofstr << "# xlabel: " << (bWantRow?strLabX:strLabY) << "\n";
 	ofstr << "# ylabel: " << strLabZ << "\n";
 	ofstr << "# which-col-is-x: 0\n";
 	ofstr << "# which-col-is-y: 1\n";
 	ofstr << "# which-col-is-yerr: 2\n";
-	
+
 	double dValMin=0., dValMax=1.;
 	GetValMinMax(dValMin, dValMax);
 
 	for(unsigned int uiPix=0; uiPix<iDim; ++uiPix)
 	{
 		double dXval = tic_trafo(iDim, dMin, dMax, bLog, double(uiPix));
-		
+
 		double dYval, dYerr;
 		if(bWantRow)
 		{
@@ -1105,7 +1094,7 @@ bool Data2D::ExtractColOrRow(int iCol, int iRow, const char* pcOutFile, const Da
 			if(pErrors)
 				dYerr = pErrors->GetVal(iCol, uiPix);
 		}
-		
+
 		// assume an error
 		if(pErrors==0 && IsOwnDataFile())
 		{
@@ -1113,10 +1102,10 @@ bool Data2D::ExtractColOrRow(int iCol, int iRow, const char* pcOutFile, const Da
 			//std::cerr << "Warning: Assuming an error of " << dYerr << "."
 			//			<< std::endl;
 		}
-		
+
 		ofstr << dXval << " " << dYval << " " << dYerr << "\n";
 	}
-	
+
 	ofstr.flush();
 	ofstr.close();
 
@@ -1132,13 +1121,13 @@ Data3D::Data3D(const LoadTxt& data)
 {
 	if(IsOwnDataFile())
 		m_iNumBlocks = 1;
-	
+
 	std::string strVal;
 	if(GetString("type", strVal) && strVal.length()>8)
 	{
 		const std::string strDim = strVal.substr(9);
 		std::istringstream istr(strDim);
-		
+
 		char c;
 		// data now looks like this: "123, 234, 345"
 		istr >> m_iXDim >> c >> m_iYDim >> c >> m_iTDim;
@@ -1147,23 +1136,19 @@ Data3D::Data3D(const LoadTxt& data)
 		if(m_data.GetColCnt()!=m_iXDim)
 		{
 			m_iXDim = m_data.GetColCnt();
-			std::cerr << "Warning: Mismatch in x dimension, assuming "
-					  << m_iXDim << "."
-					  << std::endl;
+			log_warn("Mismatch in x dimension, assuming ", m_iXDim, ".");
 		}
 		if(m_data.GetColLen()/m_iNumBlocks/m_iTDim!=m_iYDim)
 		{
 			m_iYDim = m_data.GetColLen()/m_iNumBlocks/m_iTDim;
-			std::cerr << "Warning: Mismatch in y dimension, assuming "
-					  << m_iYDim << "."
-					  << std::endl;
+			log_warn("Mismatch in y dimension, assuming ", m_iYDim, ".");
 		}
 
 		m_bOk = true;
 	}
 	else
 	{
-		std::cerr << "Error: Unknown dimensions of 3d data." << std::endl;
+		log_err("Unknown dimensions of 3d data.");
 		m_bOk = false;
 	}
 }
@@ -1302,7 +1287,7 @@ bool Data3D::SaveTChan(const char* pcFile, unsigned int iX, unsigned int iY) con
 	
 	double *px = new double[GetTDim()];
 	autodeleter<double> _adel(px, true);
-	
+
 	if(bHasLimits)
 	{
 		for(unsigned int i=0; i<GetTDim(); ++i)
@@ -1316,37 +1301,36 @@ bool Data3D::SaveTChan(const char* pcFile, unsigned int iX, unsigned int iY) con
 
 	std::string strLabX, strLabY, strLabT;
 	GetLabels(strLabX, strLabY, strLabT);
-	
+
 	std::string strTitle;
 	GetTitle(strTitle);
-	
+
 	const double* py = GetT(iX, iY);
 	const double* pyerr = GetTErr(iX, iY);
-	
+
 	if(!py || !pyerr)
 	{
-		std::cerr << "Error: Invalid pixel." << std::endl;
+		log_err("Invalid pixel.");
 		return false;
 	}
-	
+
 	std::ofstream ofstr(pcFile);
 	if(!ofstr.is_open())
 	{
-		std::cerr << "Error: Could not open file \"" << pcFile << "\"." 
-					<< std::endl;
+		log_err("Could not open file \"", pcFile, "\".");
 		return false;
 	}
-	
+
 	ofstr << std::scientific;
 	ofstr << "# title: " << strTitle << ", pixel (" << iX << ", " << iY << ")\n" ;
 	ofstr << "# xlabel: " << strLabT << "\n";
 	ofstr << "# ylabel: Intensity" << "\n";
 	ofstr << "# xlimits: " << dTMin << " " << dTMax << "\n";
 	ofstr << "# type: array_1d(" << GetTDim() << ")\n";
-	
+
 	for(unsigned int i=0; i<GetTDim(); ++i)
 		ofstr << px[i] << " " << py[i] << " " << pyerr[i] << "\n";
-	
+
 	ofstr.flush();
 	return true;
 }
@@ -1356,8 +1340,7 @@ bool Data3D::SaveXY(const char* pcFile, unsigned int uiBlock, int iT) const
 	std::ofstream ofstr(pcFile);
 	if(!ofstr.is_open())
 	{
-		std::cerr << "Error: Could not open file \"" << pcFile << "\"."
-					<< std::endl;
+		log_err("Could not open file \"", pcFile, "\".");
 		return false;
 	}
 
