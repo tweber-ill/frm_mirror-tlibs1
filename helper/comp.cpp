@@ -6,6 +6,7 @@
 
 #include "comp.h"
 #include "string.h"
+#include "log.h"
 
 #include <fstream>
 #include <list>
@@ -74,12 +75,12 @@ bool decomp_stream_to_stream(std::istream& istr, std::ostream& ostr, Compressor 
 		input.push(ios::zlib_decompressor());
 	else if(comp == COMP_XZ)
 	{
-		std::cerr << "Error: XZ decompression not yet supported." << std::endl;
+		log_err("XZ decompression not yet supported.");
 		return false;
 	}
 	else
 	{
-		std::cerr << "Error: Unknown decompression selected." << std::endl;
+		log_err("Unknown decompression selected.");
 		return false;
 	}
 
@@ -105,12 +106,12 @@ bool comp_stream_to_stream(std::istream& istr, std::ostream& ostr, Compressor co
 		input.push(ios::zlib_compressor(/*ios::zlib_params(9)*/));
 	else if(comp == COMP_XZ)
 	{
-		std::cerr << "Error: XZ compression not yet supported." << std::endl;
+		log_err("XZ compression not yet supported.");
 		return false;
 	}
 	else
 	{
-		std::cerr << "Error: Unknown compression selected." << std::endl;
+		log_err("Unknown compression selected.");
 		return false;
 	}
 
@@ -129,7 +130,7 @@ static inline bool __comp_file_to_file(const char* pcFileIn, const char* pcFileO
 	std::ifstream ifstr(pcFileIn, std::ios_base::binary);
 	if(!ifstr.is_open())
 	{
-		std::cerr << "Error: Cannot open \"" << pcFileIn << "\"." << std::endl;
+		log_err("Cannot open \"", pcFileIn, "\".");
 		return false;
 	}
 
@@ -137,7 +138,7 @@ static inline bool __comp_file_to_file(const char* pcFileIn, const char* pcFileO
 	std::ofstream ofstr(pcFileOut, std::ios_base::binary);
 	if(!ofstr.is_open())
 	{
-		std::cerr << "Error: Cannot open \"" << pcFileOut << "\"." << std::endl;
+		log_err("Cannot open \"", pcFileOut, "\".");
 		return false;
 	}
 

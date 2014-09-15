@@ -8,9 +8,12 @@
 #include "gnuplot.h"
 #include "misc.h"
 #include "string.h"
+#include "log.h"
+
 #include <cstdio>
 #include <sstream>
 #include <iomanip>
+
 namespace ios = boost::iostreams;
 
 
@@ -43,7 +46,7 @@ void GnuPlot::Init()
 	//m_pipe = popen("gnuplot -persist 2>gnuplot.err 1>gnuplot.out", "w");
 	if(!m_pipe)
 	{
-		std::cerr << "Error: Could not load gnuplot." << std::endl;
+		log_err("Could not load gnuplot.");
 		return;
 	}
 
@@ -98,8 +101,8 @@ void GnuPlot::SetFileTerminal(const char* pcFile)
 	}
 	else
 	{
-		std::cerr << "Error: Unknown file extension \"" 
-			<< strExt << "\" for output terminal." << std::endl;
+		log_err("Unknown file extension \"", 
+			strExt, "\" for output terminal.");
 		return;
 	}
 
@@ -280,7 +283,7 @@ std::string GnuPlot::BuildCmd()
 				ostr << "with lines lt 2 lw " << dSize;
 				break;
 			default:
-				std::cerr << "Warning: Unknown line style." << std::endl;
+				log_warn("Unknown line style.");
 			case STYLE_POINTS:
 				ostr << strPointStyle;
 				break;

@@ -8,6 +8,8 @@
 #include "fourier.h"
 #include "misc.h"
 #include "math.h"
+#include "log.h"
+
 #include <iostream>
 #include <string.h>
 
@@ -46,7 +48,7 @@ Fourier::Fourier(unsigned int iSize) : m_iSize(iSize)
 								FFTW_BACKWARD, FFTW_MEASURE);
 
 	if(!*pPlan || !*pPlan_inv)
-		std::cerr << "Fourier: Could not create plan." << std::endl;
+		log_err("Fourier: Could not create plan.");
 }
 
 Fourier::~Fourier()
@@ -128,7 +130,7 @@ Fourier::Fourier(unsigned int iSize) : m_iSize(iSize)
 
 	if(errIn==cudaErrorMemoryAllocation || errOut==cudaErrorMemoryAllocation)
 	{
-		std::cerr << "Error: Cuda could not allocate memory." << std::endl;
+		log_err("Cuda could not allocate memory.");
 		return;
 	}
 
@@ -141,7 +143,7 @@ Fourier::Fourier(unsigned int iSize) : m_iSize(iSize)
 	cufftPlan1d((cufftHandle*)m_pPlan_inv, m_iSize, CUFFT_C2C, 1);
 
 	if(!*(cufftHandle*)m_pPlan || !*(cufftHandle*)m_pPlan_inv)
-		std::cerr << "Fourier: Could not create plan." << std::endl;
+		log_err("Fourier: Could not create plan.");
 }
 
 Fourier::~Fourier()
