@@ -14,6 +14,7 @@
 
 #include "helper/string.h"
 #include "helper/spec_char.h"
+#include "helper/log.h"
 
 Lexer::Lexer() : m_bOk(1),
 		m_strWhitespace(T_STR" \t\r"), m_strSep(T_STR"=+-*/%^{}[]();,\":\n!<>&|"),
@@ -269,9 +270,7 @@ void Lexer::load(const t_string& _strInput)
 				if(iStringIdx >= vecStr.size())
 				{
 					m_bOk = 0;
-					G_CERR << "Error: String index exceeds string table size."
-								<< std::endl;
-
+					log_err("String index exceeds string table size.");
 					continue;
 				}
 				tokStr.strVal = vecStr[iStringIdx];
@@ -333,8 +332,8 @@ void Lexer::load(const t_string& _strInput)
 			if(m_strFile != T_STR"")
 				strFile = t_string(T_STR" in \"") + m_strFile + T_STR"\"";
 
-			G_CERR << "Error (line " << iCurLine << strFile << "): "
-					<< "Unknown token: \"" << str << "\"." << std::endl;
+			log_err("Error in line ", iCurLine, strFile,  ": ",
+				"Unknown token: \"", str, "\".");
 			continue;
 		}
 

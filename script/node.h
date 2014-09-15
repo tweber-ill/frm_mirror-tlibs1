@@ -24,7 +24,7 @@ class Node;
 class NodeFunction;
 class NodeCall;
 
-enum /*class*/ NodeType
+enum /*class*/ NodeType : unsigned int
 {
 	NODE_NOP,
 
@@ -156,7 +156,7 @@ public:
 	void SetLine(unsigned int iLine) { m_iLine = iLine; }
 
 	// create a string containing the line number for error output
-	t_string linenr(const t_string& strErr, const ParseInfo &info) const;
+	t_string linenr(const ParseInfo &info) const;
 
 	static Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op);
 };
@@ -528,7 +528,7 @@ public:
 	Node* GetSecond() const { return m_pSecond; }
 };
 
-enum RangeType
+enum RangeType : unsigned int
 {
 	RANGE_BEGINEND,
 	RANGE_FULL,

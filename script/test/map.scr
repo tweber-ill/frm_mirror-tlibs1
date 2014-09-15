@@ -1,5 +1,22 @@
 main()
 {
+	map0 = map();
+	map0[12.3] = 45.6;
+	map0[5] = 789;
+	map0[[1,2,3]] = "abc";
+	map0[[1,2]] = "xyz";
+
+	print(map0);
+	print(map0[5]);
+	print(map0[12.3]);
+	print(map0[[1,2,3]]);
+	print(map0[[1,2]]);
+
+
+	print("-"*80);
+
+
+
 	print(a = ["test" : 4, "abc" : "cde"] + ["test2" : 123]);
 	print(a["test"] + "\n");
 

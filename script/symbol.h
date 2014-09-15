@@ -15,9 +15,11 @@
 #include <iostream>
 #include <sstream>
 #include <initializer_list>
+#include <functional>
+#include <boost/functional/hash.hpp>
 #include "helper/exception.h"
 
-enum SymbolType
+enum SymbolType : unsigned int
 {
 	SYMBOL_DOUBLE = 1,
 	SYMBOL_INT = 2,
@@ -42,7 +44,7 @@ protected:
 	unsigned int m_iArrIdx;			// if symbol is contained in an array
 	SymbolArray *m_pArr;
 
-	t_string m_strMapKey;			// if symbol is contained in a map
+	std::size_t m_iMapKey;			// if symbol is contained in a map
 	SymbolMap *m_pMap;
 
 public:
@@ -51,6 +53,8 @@ public:
 
 	virtual SymbolType GetType() const = 0;
 	virtual t_string GetTypeName() const = 0;
+
+	virtual std::size_t hash() const = 0;
 
 	virtual const t_string& GetName() const { return m_strName; }
 	virtual const t_string& GetIdent() const { return m_strIdent; }
@@ -79,8 +83,8 @@ public:
 	SymbolMap* GetMapPtr() { return m_pMap; }
 	void SetMapPtr(SymbolMap* pMap) { m_pMap = pMap; }
 
-	const t_string& GetMapKey() const { return m_strMapKey; }
-	void SetMapKey(const t_string& str) { m_strMapKey = str; }
+	std::size_t GetMapKey() const { return m_iMapKey; }
+	void SetMapKey(std::size_t i) { m_iMapKey = i; }
 
 
 	SymbolArray* GetArrPtr() const { return m_pArr; }
@@ -97,26 +101,30 @@ protected:
 	static const int m_defprec;
 	static int m_prec;
 
+	static /*std::*/boost::hash<t_real> s_hsh;
+
 public:
 	SymbolDouble() : Symbol(), m_dVal(0.) {}
 	SymbolDouble(t_real dVal) : m_dVal(dVal) {}
 	SymbolDouble(const t_string&) { throw Err("Invalid SymbolDouble constructor."); }
 
-	virtual SymbolType GetType() const { return SYMBOL_DOUBLE; }
-	virtual t_string GetTypeName() const { return T_STR"real"; }
-	virtual Symbol* ToType(SymbolType stype) const;
+	virtual SymbolType GetType() const override { return SYMBOL_DOUBLE; }
+	virtual t_string GetTypeName() const override { return T_STR"real"; }
+	virtual Symbol* ToType(SymbolType stype) const override;
 
-	virtual t_string print() const;
-	virtual Symbol* clone() const;
-	virtual void assign(Symbol *pSym);
+	virtual std::size_t hash() const override { return s_hsh(m_dVal); }
+
+	virtual t_string print() const override;
+	virtual Symbol* clone() const override;
+	virtual void assign(Symbol *pSym) override;
 
 	//virtual bool equals(Symbol *pSym) const;
-	virtual bool IsLessThan(const Symbol&) const;
-	virtual bool IsGreaterThan(const Symbol&) const;
-	virtual bool IsNotZero() const { return m_dVal != 0.; }
+	virtual bool IsLessThan(const Symbol&) const override;
+	virtual bool IsGreaterThan(const Symbol&) const override;
+	virtual bool IsNotZero() const override { return m_dVal != 0.; }
 
-	virtual t_int GetValInt() const { return t_int(m_dVal); }
-	virtual t_real GetValDouble() const { return m_dVal; }
+	virtual t_int GetValInt() const override { return t_int(m_dVal); }
+	virtual t_real GetValDouble() const override { return m_dVal; }
 
 	static const int GetDefPrec() { return m_defprec; }
 	static const int GetPrec() { return m_prec; }
@@ -126,7 +134,7 @@ public:
 	const t_real& GetVal() const { return m_dVal; }
 	t_real& GetVal() { return m_dVal; }
 
-	virtual bool IsScalar() const { return 1; }
+	virtual bool IsScalar() const override { return 1; }
 };
 
 class SymbolInt : public Symbol
@@ -134,37 +142,43 @@ class SymbolInt : public Symbol
 protected:
 	t_int m_iVal;
 
+	static /*std::*/boost::hash<t_int> s_hsh;
+
 public:
 	SymbolInt() : Symbol(), m_iVal(0) {}
 	SymbolInt(t_int iVal) : m_iVal(iVal) {}
 
-	virtual SymbolType GetType() const { return SYMBOL_INT; }
-	virtual t_string GetTypeName() const { return T_STR"int"; }
-	virtual Symbol* ToType(SymbolType stype) const;
+	virtual SymbolType GetType() const override { return SYMBOL_INT; }
+	virtual t_string GetTypeName() const override { return T_STR"int"; }
+	virtual Symbol* ToType(SymbolType stype) const override;
 
-	virtual t_string print() const;
-	virtual Symbol* clone() const;
-	virtual void assign(Symbol *pSym);
+	virtual std::size_t hash() const override { return s_hsh(m_iVal); }
+
+	virtual t_string print() const override;
+	virtual Symbol* clone() const override;
+	virtual void assign(Symbol *pSym) override;
 
 	//virtual bool equals(Symbol *pSym) const;
-	virtual bool IsLessThan(const Symbol&) const;
-	virtual bool IsGreaterThan(const Symbol&) const;
-	virtual bool IsNotZero() const { return m_iVal != 0; }
+	virtual bool IsLessThan(const Symbol&) const override;
+	virtual bool IsGreaterThan(const Symbol&) const override;
+	virtual bool IsNotZero() const override { return m_iVal != 0; }
 
-	virtual t_int GetValInt() const { return m_iVal; }
-	virtual t_real GetValDouble() const { return t_real(m_iVal); }
+	virtual t_int GetValInt() const override { return m_iVal; }
+	virtual t_real GetValDouble() const override { return t_real(m_iVal); }
 
 	void SetVal(int iVal) { m_iVal = iVal; }
 	const t_int& GetVal() const { return m_iVal; }
 	t_int& GetVal() { return m_iVal; }
 
-	virtual bool IsScalar() const { return 1; }
+	virtual bool IsScalar() const override { return 1; }
 };
 
 class SymbolString : public Symbol
 {
 protected:
 	t_string m_strVal;
+
+	static /*std::*/boost::hash<std::string> s_hsh;
 
 public:
 	SymbolString() : Symbol() {}
@@ -173,23 +187,26 @@ public:
 	SymbolString(_t_string&& str) : m_strVal(std::forward<_t_string>(str)) {}
 	SymbolString(t_real dVal) { throw Err("Invalid SymbolString constructor."); }
 
-	virtual SymbolType GetType() const { return SYMBOL_STRING; }
-	virtual t_string GetTypeName() const { return T_STR"string"; }
-	virtual Symbol* ToType(SymbolType stype) const;
+	virtual SymbolType GetType() const override { return SYMBOL_STRING; }
+	virtual t_string GetTypeName() const override { return T_STR"string"; }
+	virtual Symbol* ToType(SymbolType stype) const override;
+
+	virtual std::size_t hash() const override { return s_hsh(m_strVal); }
+	static std::size_t hash(const t_string& str) { return s_hsh(str); }
 
 	//virtual bool equals(Symbol *pSym) const;
-	virtual bool IsLessThan(const Symbol&) const;
-	virtual bool IsGreaterThan(const Symbol&) const;
+	virtual bool IsLessThan(const Symbol&) const override;
+	virtual bool IsGreaterThan(const Symbol&) const override;
 
-	virtual t_string print() const;
-	virtual Symbol* clone() const;
-	virtual void assign(Symbol *pSym);
+	virtual t_string print() const override;
+	virtual Symbol* clone() const override;
+	virtual void assign(Symbol *pSym) override;
 
 	void SetVal(const t_string& str) { m_strVal = str; }
 	const t_string& GetVal() const { return m_strVal; }
 	t_string& GetVal() { return m_strVal; }
 
-	virtual bool IsNotZero() const { return 0; }
+	virtual bool IsNotZero() const override { return 0; }
 };
 
 
@@ -204,19 +221,21 @@ public:
 	SymbolArray(const std::initializer_list<Symbol*>& lst);
 	virtual ~SymbolArray();
 
-	virtual SymbolType GetType() const { return SYMBOL_ARRAY; }
-	virtual t_string GetTypeName() const { return T_STR"vector"; }
-	virtual Symbol* ToType(SymbolType stype) const;
+	virtual SymbolType GetType() const override { return SYMBOL_ARRAY; }
+	virtual t_string GetTypeName() const override { return T_STR"vector"; }
+	virtual Symbol* ToType(SymbolType stype) const override;
+
+	virtual std::size_t hash() const override;
 
 	std::vector<t_real> ToDoubleArray() const;
 	void FromDoubleArray(const std::vector<t_real>& vec);
 
-	virtual t_string print() const;
-	virtual Symbol* clone() const;
-	virtual void assign(Symbol *pSym);
+	virtual t_string print() const override;
+	virtual Symbol* clone() const override;
+	virtual void assign(Symbol *pSym) override;
 	//virtual bool equals(Symbol *pSym) const;
 
-	virtual bool IsNotZero() const { return 0; }
+	virtual bool IsNotZero() const override { return 0; }
 
 	void UpdateIndex(unsigned int);
 	void UpdateIndices();
@@ -224,17 +243,44 @@ public:
 	const std::vector<Symbol*>& GetArr() const { return m_arr; }
 	std::vector<Symbol*>& GetArr() { return m_arr; }
 
-	virtual bool IsScalar() const { return 0; }
+	virtual bool IsScalar() const override { return 0; }
 
 
 	bool GetDontDel() const { return m_bDontDel; }
 	void SetDontDel(bool b) { m_bDontDel = b; }
 };
 
+
+
+struct SymbolMapKey
+{
+	std::size_t key;	// the actual hash
+	t_string strKey;	// optional key name
+
+	SymbolMapKey(std::size_t _key) : key(_key) {}
+
+	SymbolMapKey(std::size_t _key, const t_string& _str) : key(_key), strKey(_str) {}
+	SymbolMapKey(std::size_t _key, t_string&& _str) : key(_key), strKey(_str) {}
+
+	SymbolMapKey(const t_string& _str) : key(SymbolString::hash(_str)), strKey(_str) {}
+	SymbolMapKey(t_string&& _str) : key(SymbolString::hash(_str)), strKey(_str) {}
+};
+
+struct SymbolMapKeyHash
+{
+	std::size_t operator()(const SymbolMapKey& key) const { return key.key; }
+};
+
+struct SymbolMapKeyEqual
+{
+	bool operator()(const SymbolMapKey& key0, const SymbolMapKey& key1) const 
+	{ return key0.key==key1.key; }
+};
+
 class SymbolMap : public Symbol
 {
 public:
-	typedef std::map<t_string, Symbol*> t_map;
+	typedef std::unordered_map<SymbolMapKey, Symbol*, SymbolMapKeyHash, SymbolMapKeyEqual> t_map;
 protected:
 	t_map m_map;
 
@@ -246,28 +292,36 @@ public:
 	SymbolMap(const SymbolMap& map) = delete;
 	SymbolMap(SymbolMap&& map) = delete;
 
-	virtual SymbolType GetType() const { return SYMBOL_MAP; }
-	virtual t_string GetTypeName() const { return T_STR"map"; }
-	virtual Symbol* ToType(SymbolType stype) const;
+	virtual SymbolType GetType() const override { return SYMBOL_MAP; }
+	virtual t_string GetTypeName() const override { return T_STR"map"; }
+	virtual Symbol* ToType(SymbolType stype) const override;
 
-	virtual t_string print() const;
-	virtual Symbol* clone() const;
-	virtual void assign(Symbol *pSym);
+	virtual std::size_t hash() const override;
+
+	virtual t_string print() const override;
+	virtual Symbol* clone() const override;
+	virtual void assign(Symbol *pSym) override;
 	//virtual bool equals(Symbol *pSym) const;
 
-	virtual bool IsNotZero() const { return 0; }
+	virtual bool IsNotZero() const override { return 0; }
 
 	void UpdateIndex(const t_map::key_type& strKey);
 	void UpdateIndices();
 
-	t_string GetStringVal(const t_string& strKey, bool *pbHasVal=0) const;
-	t_int GetIntVal(const t_string& strKey, bool *pbHasVal=0) const;
+	t_string GetStringVal(std::size_t key, bool *pbHasVal=0) const;
+	t_int GetIntVal(std::size_t key, bool *pbHasVal=0) const;
 
-	virtual bool IsScalar() const { return 0; }
+	t_string GetStringVal(const t_string& strKey, bool *pbHasVal=0) const
+	{ return GetStringVal(SymbolString::hash(strKey), pbHasVal); }
+	t_int GetIntVal(const t_string& strKey, bool *pbHasVal=0) const
+	{ return GetIntVal(SymbolString::hash(strKey), pbHasVal); }
+
+	virtual bool IsScalar() const override { return 0; }
 
 	const t_map& GetMap() const { return m_map; }
 	t_map& GetMap() { return m_map; }
 };
+
 
 
 // --------------------------------------------------------------------------------
@@ -332,7 +386,7 @@ static std::map<T1, T2> sym_to_map(const Symbol* pSym)
 
 	unsigned int iIdx = 0;
 	for(const typename SymbolMap::t_map::value_type& pair : pSymMap->GetMap())
-		_map[pair.first] = convert_symbol<T2>(pair.second);
+		_map[pair.first.strKey] = convert_symbol<T2>(pair.second);
 
 	return _map;
 }

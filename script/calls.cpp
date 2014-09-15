@@ -15,6 +15,14 @@
 static t_mapFkts g_mapFkts;
 
 
+extern t_string linenr(const ParseInfo &info)
+{
+	if(info.pCurCaller)
+		return info.pCurCaller->linenr(info);
+	return T_STR"";
+}
+
+
 extern Symbol* ext_call(const t_string& strFkt,
 			const std::vector<Symbol*>& vecSyms,
 			ParseInfo& info,
@@ -24,10 +32,10 @@ extern Symbol* ext_call(const t_string& strFkt,
 	if(iter == g_mapFkts.end())
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info)
-					<< "Tried to call unknown function \""
-					<< strFkt << "\"."
-					<< std::endl;
+		ostrErr << linenr(info)
+			<< "Tried to call unknown function \""
+			<< strFkt << "\"."
+			<< std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 

@@ -5,6 +5,7 @@
  */
 
 #include "symbol.h"
+#include "helper/log.h"
 #include <set>
 #include <limits>
 
@@ -244,8 +245,7 @@ Symbol* SymbolArray::ToType(SymbolType stype) const
 		pNewSym = pNewSymS;
 	}
 	else
-		G_CERR << "Error: Cannot convert array to type "
-			<< stype << "." << std::endl;
+		log_err("Cannot convert array to type ", stype, ".");
 
 	return pNewSym;
 }
@@ -325,6 +325,18 @@ void SymbolArray::FromDoubleArray(const std::vector<t_real>& vec)
 	}
 }
 
+std::size_t SymbolArray::hash() const
+{
+	static const std::size_t iArrSeed = SYMBOL_ARRAY;	// unique seed
+
+	std::size_t iSeed = iArrSeed;
+	for(const Symbol* pSym : m_arr)
+	{
+		std::size_t iHsh = pSym->hash();
+		boost::hash_combine(iSeed, iHsh);
+	}
+	return iSeed;
+}
 
 
 SymbolMap::~SymbolMap()
@@ -352,8 +364,7 @@ Symbol* SymbolMap::ToType(SymbolType stype) const
 		pNewSym = pNewSymS;
 	}
 	else
-		G_CERR << "Error: Cannot convert map to other type."
-					<< std::endl;
+		log_err("Cannot convert map to other type.");
 
 	return pNewSym;
 }
@@ -362,19 +373,23 @@ t_string SymbolMap::print() const
 {
 	t_ostringstream ostr;
 
-	ostr << "[";
+	ostr << T_STR"[";
 	unsigned int iIter = 0;
 	for(const t_map::value_type& val : m_map)
 	{
 		const Symbol* pSym = val.second;
-		ostr << val.first << " : " << (val.second ? val.second->print() : T_STR"");
+		if(val.first.strKey == "")
+			ostr << T_STR"#" << std::hex << val.first.key << std::dec;
+		else
+			ostr << val.first.strKey;
+		ostr << ": " << (val.second ? val.second->print() : T_STR"");
 
 		if(iIter < m_map.size()-1)
-			ostr << ", ";
+			ostr << T_STR", ";
 
 		++iIter;
 	}
-	ostr << "]";
+	ostr << T_STR"]";
 
 	return ostr.str();
 }
@@ -399,15 +414,15 @@ void SymbolMap::assign(Symbol *pSym)
 	this->m_map = pOther->m_map;
 }
 
-void SymbolMap::UpdateIndex(const t_map::key_type& strKey)
+void SymbolMap::UpdateIndex(const t_map::key_type& key)
 {
-	t_map::iterator iter = m_map.find(strKey);
+	t_map::iterator iter = m_map.find(key);
 	if(iter != m_map.end() && iter->second)
 	{
 		//G_COUT << "updating index for " << strKey << std::endl;
 
 		iter->second->SetMapPtr(this);
-		iter->second->SetMapKey(iter->first);
+		iter->second->SetMapKey(iter->first.key);
 	}
 }
 
@@ -418,11 +433,11 @@ void SymbolMap::UpdateIndices()
 		//G_COUT << "updating index for " << val.first << std::endl;
 
 		val.second->SetMapPtr(this);
-		val.second->SetMapKey(val.first);
+		val.second->SetMapKey(val.first.key);
 	}
 }
 
-t_string SymbolMap::GetStringVal(const t_string& strKey, bool *pbHasVal) const
+t_string SymbolMap::GetStringVal(std::size_t strKey, bool *pbHasVal) const
 {
 	if(pbHasVal) *pbHasVal = 0;
 
@@ -440,7 +455,7 @@ t_string SymbolMap::GetStringVal(const t_string& strKey, bool *pbHasVal) const
 	return pSym->print();
 }
 
-t_int SymbolMap::GetIntVal(const t_string& strKey, bool *pbHasVal) const
+t_int SymbolMap::GetIntVal(std::size_t strKey, bool *pbHasVal) const
 {
 	if(pbHasVal) *pbHasVal = 0;
 
@@ -458,13 +473,27 @@ t_int SymbolMap::GetIntVal(const t_string& strKey, bool *pbHasVal) const
 		return pSym->GetValInt();
 }
 
+std::size_t SymbolMap::hash() const
+{
+	static const std::size_t iMapSeed = SYMBOL_MAP;	// unique seed
+
+	std::size_t iSeed = iMapSeed;
+	for(t_map::const_iterator iter=m_map.begin(); iter!=m_map.end(); ++iter)
+	{
+		std::size_t iHshKey = iter->first.key;
+		boost::hash_combine(iSeed, iHshKey);
+
+		std::size_t iHshVal = iter->second->hash();
+		boost::hash_combine(iSeed, iHshVal);
+	}
+	return iSeed;
+}
 
 //--------------------------------------------------------------------------------
 
 
 SymbolTable::SymbolTable()
-{
-}
+{}
 
 SymbolTable::~SymbolTable()
 {
@@ -498,7 +527,7 @@ void SymbolTable::print() const
 		else
 			strSym = T_STR"<null>";
 
-		G_COUT << val.first << " = " << strSym << std::endl;
+		log_info(val.first, " = ", strSym);
 	}
 }
 

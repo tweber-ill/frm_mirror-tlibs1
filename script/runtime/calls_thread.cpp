@@ -7,6 +7,7 @@
 #include "../types.h"
 #include "../helper/flags.h"
 #include "../helper/string.h"
+#include "../helper/log.h"
 #include "calls_thread.h"
 #include "../calls.h"
 #include <thread>
@@ -139,7 +140,7 @@ static Symbol* fkt_thread_task(const std::vector<Symbol*>& vecSyms,
 	if(vecSyms.size()<1)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Need thread proc identifier." << std::endl;
+		ostrErr << linenr(info) << "Need thread proc identifier." << std::endl;
 		throw Err(ostrErr.str(), 0);
 	}
 
@@ -147,7 +148,7 @@ static Symbol* fkt_thread_task(const std::vector<Symbol*>& vecSyms,
 	if(_pSymIdent->GetType() != SYMBOL_STRING)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Thread proc identifier needs to be a string." << std::endl;
+		ostrErr << linenr(info) << "Thread proc identifier needs to be a string." << std::endl;
 		throw Err(ostrErr.str(), 0);
 	}
 
@@ -159,7 +160,7 @@ static Symbol* fkt_thread_task(const std::vector<Symbol*>& vecSyms,
 	if(pFunc == 0)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Thread proc \"" << strIdent << "\" not defined." << std::endl;
+		ostrErr << linenr(info) << "Thread proc \"" << strIdent << "\" not defined." << std::endl;
 		throw Err(ostrErr.str(), 0);
 	}
 
@@ -238,7 +239,7 @@ static Symbol* fkt_begin_critical(const std::vector<Symbol*>& vecSyms,
 				if(pHandle==0 || pHandle->GetType()!=HANDLE_MUTEX)
 				{
 					std::ostringstream ostrErr;
-					ostrErr << linenr(T_STR"Error", info) << "Handle (" 
+					ostrErr << linenr(info) << "Handle (" 
 						<< iHandle << ") does not exist"
 						<< " or is not a mutex handle. Ignoring." 
 						<< std::endl;
@@ -252,7 +253,7 @@ static Symbol* fkt_begin_critical(const std::vector<Symbol*>& vecSyms,
 			else
 			{
 				std::ostringstream ostrErr;
-				ostrErr << linenr(T_STR"Error", info) << "Invalid mutex handle: "
+				ostrErr << linenr(info) << "Invalid mutex handle: "
 						<< pSym->print() << " Ignoring." << std::endl;
 				throw Err(ostrErr.str(), 0);
 			}
@@ -284,7 +285,7 @@ static Symbol* fkt_end_critical(const std::vector<Symbol*>& vecSyms,
 				if(pHandle==0 || pHandle->GetType()!=HANDLE_MUTEX)
 				{
 					std::ostringstream ostrErr;
-					ostrErr << linenr(T_STR"Error", info) << "Handle (" 
+					ostrErr << linenr(info) << "Handle (" 
 						<< iHandle << ") does not exist"
 						<< " or is not a mutex handle." << std::endl;
 					throw Err(ostrErr.str(), 0);
@@ -297,7 +298,7 @@ static Symbol* fkt_end_critical(const std::vector<Symbol*>& vecSyms,
 			else
 			{
 				std::ostringstream ostrErr;
-				ostrErr << linenr(T_STR"Error", info) << "Invalid mutex handle: "
+				ostrErr << linenr(info) << "Invalid mutex handle: "
 						<< pSym->print() << std::endl;
 				throw Err(ostrErr.str(), 0);
 			}
@@ -314,7 +315,7 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 	if(vecSyms.size()<1)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "join needs at least one argument." << std::endl;
+		ostrErr << linenr(info) << "join needs at least one argument." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -331,7 +332,7 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 		if(pSym->GetType() != SYMBOL_INT)
 		{
 			std::ostringstream ostrErr;
-			ostrErr << linenr(T_STR"Error", info) << "join needs thread handles." << std::endl;
+			ostrErr << linenr(info) << "join needs thread handles." << std::endl;
 			throw Err(ostrErr.str(), 0);
 			//continue;
 		}
@@ -342,7 +343,7 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 		if(pHandle==0)
 		{
 			std::ostringstream ostrErr;
-			ostrErr << linenr(T_STR"Error", info) << "Handle (" 
+			ostrErr << linenr(info) << "Handle (" 
 				<< iHandle << ") does not exist." << std::endl;
 			throw Err(ostrErr.str(), 0);
 			//continue;
@@ -368,7 +369,7 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 		else
 		{
 			std::ostringstream ostrErr;
-			ostrErr << linenr(T_STR"Error", info) << "Handle (" 
+			ostrErr << linenr(info) << "Handle (" 
 				<< iHandle << ") is invalid." << std::endl;
 			throw Err(ostrErr.str(), 0);
 		}
@@ -388,7 +389,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 	if(vecSyms.size()<3)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) 
+		ostrErr << linenr(info) 
 			<< "nthread needs at least 3 arguments: N, func, arg." 
 			<< std::endl;
 		throw Err(ostrErr.str(),0);
@@ -398,7 +399,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 	if(_pSymN->GetType() != SYMBOL_INT)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Number of threads has to be integer." << std::endl;
+		ostrErr << linenr(info) << "Number of threads has to be integer." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -411,7 +412,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 	if(_pSymIdent->GetType() != SYMBOL_STRING)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Thread proc identifier needs to be a string." << std::endl;
+		ostrErr << linenr(info) << "Thread proc identifier needs to be a string." << std::endl;
 		throw Err(ostrErr.str(), 0);
 	}
 
@@ -424,7 +425,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 	if(_pSymArr->GetType() != SYMBOL_ARRAY)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Thread arg has to be an array." << std::endl;
+		ostrErr << linenr(info) << "Thread arg has to be an array." << std::endl;
 		throw Err(ostrErr.str(), 0);
 	}
 
@@ -437,7 +438,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 	if(pFunc == 0)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Thread proc \"" << strIdent 
+		ostrErr << linenr(info) << "Thread proc \"" << strIdent 
 			<< "\" not defined." << std::endl;
 		throw Err(ostrErr.str(), 0);
 	}
@@ -449,9 +450,8 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 	if(iNumThreads > vecArr.size())
 	{
 		iNumThreads = vecArr.size();
-		G_CERR << linenr(T_STR"Warning", info) << "More threads requested in nthread than necessary, "
-						  << "reducing to array size (" << iNumThreads << ")."
-						  << std::endl;
+		log_warn(linenr(info), "More threads requested in nthread than necessary, ",
+					"reducing to array size (", iNumThreads, ").");
 	}
 
 

@@ -5,6 +5,8 @@
  */
 
 #include "types.h"
+#include "helper/log.h"
+
 #include <iostream>
 #include <string.h>
 
@@ -16,7 +18,7 @@ extern "C" int yylex(void* _yylval, void* _pParseObj)
 {
 	if(_yylval==0 || _pParseObj==0)
 	{
-		G_CERR << "Error: Invalid lval or parseobj in lexer." << std::endl;
+		log_err("Invalid lval or parseobj in lexer.");
 		return 0;
 	}
 
@@ -83,9 +85,9 @@ extern "C" int yylex(void* _yylval, void* _pParseObj)
 		}
 	}
 
-	G_CERR << "Error (line " << pParseObj->iCurLine
-				<< " in \"" << pParseObj->strCurFile
-				<<"\"): Invalid token: " << tok.type << std::endl;
+	log_err("Line ", pParseObj->iCurLine,
+		" in \"", pParseObj->strCurFile,
+		"\"): Invalid token: ", tok.type);
 	return 0;
 }
 
@@ -98,11 +100,11 @@ extern "C" void yyerror(void *_pParseObj, const char* pc)
 	if(pParseObj)
 	{
 		t_ostringstream ostrLine;
-		ostrLine << " (line " << pParseObj->iCurLine;
+		ostrLine << "Line " << pParseObj->iCurLine;
 		ostrLine << " in \"" << pParseObj->strCurFile << "\"";
 		ostrLine << ")";
 		strLine = ostrLine.str();
 	}
 
-	G_CERR << "Error" << strLine << ": " << pc << "." << std::endl;
+	log_err(strLine, ": ", pc, ".");
 }

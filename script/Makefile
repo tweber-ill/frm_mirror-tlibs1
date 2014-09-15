@@ -32,7 +32,8 @@ hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/nod
 		obj/calls_basic.o \
 		obj/calls_plot.o obj/calls_math.o obj/calls_file.o obj/calls_thread.o \
 		obj/calls_fit.o obj/globals.o obj/flags.o obj/fitter.o obj/chi2.o \
-		obj/interpolation.o obj/spec_char.o obj/linalg.o obj/linalg2.o
+		obj/interpolation.o obj/spec_char.o obj/linalg.o obj/linalg2.o \
+		obj/log.o
 	${CC} ${FLAGS} -o hermelin obj/script.o obj/lexer.o obj/main.o obj/yylexer.o \
 		obj/symbol.o obj/node.o obj/node_eval.o obj/calls.o obj/handles.o \
 		obj/gnuplot.o obj/file.o obj/string.o obj/loadtxt.o obj/rand.o \
@@ -41,6 +42,7 @@ hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/nod
 		obj/calls_file.o obj/calls_thread.o obj/calls_fit.o obj/globals.o \
 		obj/flags.o obj/fitter.o obj/chi2.o obj/interpolation.o \
 		obj/spec_char.o obj/linalg.o obj/linalg2.o \
+		obj/log.o \
 			${LIBS}
 	strip hermelin
 
@@ -121,6 +123,9 @@ obj/globals.o: globals.cpp globals.h
 
 obj/flags.o: helper/flags.cpp helper/flags.h
 	${CC} ${FLAGS} -c -o obj/flags.o helper/flags.cpp
+
+obj/log.o: helper/log.cpp helper/log.h
+	${CC} ${FLAGS} -c -o obj/log.o helper/log.cpp
 
 
 obj/fitter.o: fitter/fitter.cpp fitter/fitter.h

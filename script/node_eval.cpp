@@ -7,7 +7,7 @@
 
 #include "node.h"
 #include "calls.h"
-
+#include "helper/log.h"
 
 void safe_delete(Symbol *&pSym, const SymbolTable* pSymTab, const SymbolTable* pSymTabGlob)
 {
@@ -58,7 +58,7 @@ Symbol* NodeBreak::eval(ParseInfo &info, SymbolTable *pSym) const
 	if(info.pCurLoop==0)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info)
+		ostrErr << linenr(info)
 				<< "Cannot use break outside loop."
 				<< std::endl;
 		throw Err(ostrErr.str(),0);
@@ -75,7 +75,7 @@ Symbol* NodeContinue::eval(ParseInfo &info, SymbolTable *pSym) const
 	if(info.pCurLoop==0)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info)
+		ostrErr << linenr(info)
 				<< "Cannot use continue outside loop."
 				<< std::endl;
 		throw Err(ostrErr.str(),0);
@@ -96,8 +96,8 @@ Symbol* NodeIdent::eval(ParseInfo &info, SymbolTable *pSym) const
 
 	if(pSymbol && pSymbolGlob)
 	{
-		G_CERR << linenr(T_STR"Warning", info) << "Symbol \"" << m_strIdent
-				<< "\" exists in local and global scope, using local one." << std::endl;
+		log_warn(linenr(info), "Symbol \"", m_strIdent,
+			"\" exists in local and global scope, using local one.");
 	}
 
 	// if no local symbol is available, use global symbol instead
@@ -107,8 +107,8 @@ Symbol* NodeIdent::eval(ParseInfo &info, SymbolTable *pSym) const
 	if(!pSymbol)
 	{
 		// no throw, so null symbol or symbol validity query can be used in script
-		G_CERR << linenr(T_STR"Error", info) << "Symbol \"" << m_strIdent
-				<< "\" not in symbol table." << std::endl;
+		log_err(linenr(info), "Symbol \"", m_strIdent,
+			"\" not in symbol table.");
 		return 0;
 	}
 
@@ -158,16 +158,16 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 			if(!pChild)
 			{
 				std::ostringstream ostrErr;
-				ostrErr << linenr(T_STR"Error", info)
-						<< "Invalid symbol to unpack." << std::endl;
+				ostrErr << linenr(info)
+					<< "Invalid symbol to unpack." << std::endl;
 				throw Err(ostrErr.str(),0);
 			}
 			Symbol *pSymChild = pChild->eval(info, pSym);
 			if(pSymChild->GetType() != SYMBOL_MAP)
 			{
 				std::ostringstream ostrErr;
-				ostrErr << linenr(T_STR"Error", info)
-						<< "Cannot unpack non-map." << std::endl;
+				ostrErr << linenr(info)
+					<< "Cannot unpack non-map." << std::endl;
 				throw Err(ostrErr.str(),0);
 			}
 
@@ -177,12 +177,11 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 			for(unsigned int iParam=vecArgSyms.size(); iParam<vecParamNames.size(); ++iParam)
 			{
 				const t_string& strParamName = vecParamNames[iParam];
-				SymbolMap::t_map::iterator iter = mapSyms.find(strParamName);
+				SymbolMap::t_map::iterator iter = mapSyms.find(SymbolMapKey(strParamName));
 				if(iter == mapSyms.end())
 				{
-					G_CERR << linenr(T_STR"Error", info)
-							<< "Parameter \"" << strParamName
-							<< "\" not in map. Using 0." << std::endl;
+					log_err(linenr(info), "Parameter \"", strParamName,
+						"\" not in map. Using 0.");
 
 					vecArgSyms.push_back(new SymbolDouble(0.));
 					continue;
@@ -244,7 +243,7 @@ Symbol* NodePair::eval(ParseInfo &info, SymbolTable *pSym) const
 	if(info.IsExecDisabled()) return 0;
 
 	std::ostringstream ostrErr;
-	ostrErr << linenr(T_STR"Error", info)
+	ostrErr << linenr(info)
 		<< "Pairs should not be evaluated directly." 
 		<< std::endl;
 	throw Err(ostrErr.str(),0);
@@ -267,7 +266,7 @@ Symbol* NodeMap::eval(ParseInfo &info, SymbolTable *pSym) const
 		if(pNode->GetType() != NODE_PAIR)
 		{
 			std::ostringstream ostrErr;
-			ostrErr << linenr(T_STR"Error", info)
+			ostrErr << linenr(info)
 				<< "Maps have to consist of key-value pairs." 
 				<< std::endl;
 			throw Err(ostrErr.str(),0);
@@ -284,22 +283,13 @@ Symbol* NodeMap::eval(ParseInfo &info, SymbolTable *pSym) const
 
 		if(pSymFirst && pSymSecond)
 		{
+			std::size_t iKey = pSymFirst->hash();
+			t_string strKey;
 			if(pSymFirst->GetType() == SYMBOL_STRING)
-			{
-				const t_string& strKey = ((SymbolString*)pSymFirst)->GetVal();
-				pSymMap->GetMap().insert(
-					SymbolMap::t_map::value_type(strKey, pSymSecond->clone()));
-			}
-			else
-			{
-				G_CERR << linenr(T_STR"Warning", info)
-					<< "Only string keys are directly supported at the moment."
-					<< std::endl;
-
-				std::string strKeySubs = pSymFirst->print();
-				pSymMap->GetMap().insert(
-					SymbolMap::t_map::value_type(strKeySubs, pSymSecond->clone()));
-			}
+				strKey = ((SymbolString*)pSymFirst)->GetVal();
+			pSymMap->GetMap().insert(
+				SymbolMap::t_map::value_type(SymbolMapKey(iKey, std::move(strKey)), 
+								pSymSecond->clone()));
 		}
 
 		safe_delete(pSymFirst, pSym, info.pGlobalSyms);
@@ -339,9 +329,7 @@ Symbol* NodeRange::eval(ParseInfo &info, SymbolTable *pSym) const
 	if(info.IsExecDisabled()) return 0;
 
 	std::ostringstream ostrErr;
-	ostrErr << linenr(T_STR"Error", info)
-				<< "Range should not be evaluated directly."
-				<< std::endl;
+	ostrErr << linenr(info) << "Range should not be evaluated directly." << std::endl;
 	throw Err(ostrErr.str(), 0);
 }
 
@@ -366,7 +354,7 @@ void NodeRange::GetRangeIndices(ParseInfo &info, SymbolTable *pSym,
 		if(m_pBegin==0 || m_pEnd==0)
 		{
 			std::ostringstream ostrErr;
-			ostrErr << linenr(T_STR"Error", info) << "Invalid range." << std::endl;
+			ostrErr << linenr(info) << "Invalid range." << std::endl;
 			throw Err(ostrErr.str(),0);
 		}
 
@@ -383,18 +371,14 @@ void NodeRange::GetRangeIndices(ParseInfo &info, SymbolTable *pSym,
 
 		if(iBeginIdx<0 || iBeginIdx>=iMaxLen)
 		{
-			G_CERR << linenr(T_STR"Error", info)
-						<< "Lower array index out of bounds: "
-						<< iBeginIdx << ". Adjusting to lower limit."
-						<< std::endl;
+			log_err(linenr(info), "Lower array index out of bounds: ",
+				iBeginIdx, ". Adjusting to lower limit.");
 			iBeginIdx = 0;
 		}
 		if(iEndIdx<-1 || iEndIdx>iMaxLen)
 		{
-			G_CERR << linenr(T_STR"Error", info)
-						<< "Upper array index out of bounds: "
-						<< iEndIdx << ". Adjusting to upper limit."
-						<< std::endl;
+			log_err(linenr(info), "Upper array index out of bounds: ",
+				iEndIdx, ". Adjusting to upper limit.");
 			iEndIdx = iMaxLen;
 		}
 
@@ -406,7 +390,7 @@ void NodeRange::GetRangeIndices(ParseInfo &info, SymbolTable *pSym,
 	else
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Invalid range operation." << std::endl;
+		ostrErr << linenr(info) << "Invalid range operation." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 }
@@ -490,7 +474,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 	if(!m_pIdent /*|| m_pIdent->GetType() != NODE_IDENT*/)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Tried to access non-array." << std::endl;
+		ostrErr << linenr(info) << "Tried to access non-array." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -500,7 +484,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 	if(!pSymbol)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) 
+		ostrErr << linenr(info) 
 			<< "Symbol for array not found." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
@@ -581,7 +565,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 				if(pSymExpr==0 || pSymExpr->GetType()!=SYMBOL_INT)
 				{
 					std::ostringstream ostrErr;
-					ostrErr << linenr(T_STR"Error", info)
+					ostrErr << linenr(info)
 							<< "Array index has to be of integer type."
 							<< std::endl;
 					throw Err(ostrErr.str(),0);
@@ -597,7 +581,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 				if(iIdx < 0)
 				{
 					std::ostringstream ostrErr;
-					ostrErr << linenr(T_STR"Error", info)
+					ostrErr << linenr(info)
 						<< "Invalid array index."
 						<< std::endl;
 					throw Err(ostrErr.str(),0);
@@ -631,43 +615,46 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 		if(m_vecIndices.size()==0)
 		{
 			std::ostringstream ostrErr;
-			ostrErr << linenr(T_STR"Error", info) << "No key given for map." << std::endl;
+			ostrErr << linenr(info) << "No key given for map." << std::endl;
 			throw Err(ostrErr.str(),0);
 		}
 		else if(m_vecIndices.size()>1)
 		{
-			G_CERR << linenr(T_STR"Warning", info) << "Multiple keys given for map, using first one."
-						<< std::endl;
+			log_warn(linenr(info), "Multiple keys given for map, using first one.");
 		}
 
 		Node *pNodeKey = m_vecIndices[0];
 		Symbol *pSymExpr = pNodeKey->eval(info, pSym);
-		if(pSymExpr==0 || pSymExpr->GetType()!=SYMBOL_STRING)
+		if(pSymExpr==0)
 		{
 			std::ostringstream ostrErr;
-			ostrErr << linenr(T_STR"Error", info) << "Map key has to be of string type."
+			ostrErr << linenr(info) << "Map key is invalid."
 						<< std::endl;
 			throw Err(ostrErr.str(),0);
 		}
 
-		const t_string& strKey = ((SymbolString*)pSymExpr)->GetVal();
+		std::size_t iKey = pSymExpr->hash();
+		t_string strKey;
+		if(pSymExpr->GetType() == SYMBOL_STRING)
+			strKey = ((SymbolString*)pSymExpr)->GetVal();
 
 		SymbolMap *pMap = (SymbolMap*)pSymbol;
-		SymbolMap::t_map::iterator iterMap = pMap->GetMap().find(strKey);
+		SymbolMap::t_map::iterator iterMap = pMap->GetMap().find(iKey);
 
 		// key not yet in map -> insert it
 		if(iterMap == pMap->GetMap().end())
 		{
 			SymbolString *pNewSym = new SymbolString();
 			pNewSym->SetName(T_STR"<const>");
-			iterMap = pMap->GetMap().insert(SymbolMap::t_map::value_type(strKey, pNewSym)).first;
+			iterMap = pMap->GetMap().insert(
+				SymbolMap::t_map::value_type(SymbolMapKey(iKey, strKey), pNewSym)).first;
 		}
 
 		if((void*)pSymbol != (void*)iterMap->second)
 			safe_delete(pSymbol, pSym, info.pGlobalSyms);
 
 		pSymbol = iterMap->second;
-		pMap->UpdateIndex(strKey);
+		pMap->UpdateIndex(iKey);
 		safe_delete(pSymExpr, pSym, info.pGlobalSyms);
 	}
 	else if(pSymbol->GetType() == SYMBOL_STRING)
@@ -678,7 +665,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 		if(m_vecIndices.size()!=1)
 		{
 			std::ostringstream ostrErr;
-			ostrErr << linenr(T_STR"Error", info)
+			ostrErr << linenr(info)
 					<< "Need exactly one string index."
 					<< std::endl;
 			throw(Err(ostrErr.str()),0);
@@ -716,7 +703,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 			if(pSymExpr==0 || pSymExpr->GetType()!=SYMBOL_INT)
 			{
 				std::ostringstream ostrErr;
-				ostrErr << linenr(T_STR"Error", info)
+				ostrErr << linenr(info)
 						<< "String index has to be of integer type."
 						<< std::endl;
 				throw Err(ostrErr.str(),0);
@@ -732,7 +719,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 			if(iIdx < 0 || iIdx >= iStrLen)
 			{
 				std::ostringstream ostrErr;
-				ostrErr << linenr(T_STR"Error", info) << "String index out of bounds."
+				ostrErr << linenr(info) << "String index out of bounds."
 					<< std::endl;
 
 				throw Err(ostrErr.str(),0);
@@ -747,7 +734,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 	else
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Symbol \"" << strIdent
+		ostrErr << linenr(info) << "Symbol \"" << strIdent
 				<< "\" is neither an array nor a map." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
@@ -775,10 +762,7 @@ static void uminus_inplace(Symbol* pSym, ParseInfo& info)
 	}*/
 	else
 	{
-		G_CERR << linenr(T_STR"Error", info)
-			<< "Unary minus not defined for " 
-			<< pSym->GetTypeName() << "."
-			<< std::endl;
+		log_err(linenr(info), "Unary minus not defined for ", pSym->GetTypeName(), ".");
 	}
 }
 
@@ -826,17 +810,13 @@ Symbol* NodeUnaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 
 		case NODE_UNPACK:
 		{
-			G_CERR << linenr(T_STR"Warning", info)
-					<< "Unpack operation only allowed in function call. Ignoring."
-					<< std::endl;
+			log_warn(linenr(info), "Unpack operation only allowed in function call. Ignoring.");
 
 			if(m_pChild)
 				return m_pChild->eval(info, pSym);
 		}
 		default:
-			G_CERR << linenr(T_STR"Warning", info)
-					<< "Unknown node type: " << GetType()
-					<< std::endl;
+			log_warn(linenr(info), "Unknown node type: ", GetType());
 			break;
 	}
 
@@ -853,7 +833,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 
 	if(pLeft==0 || pRight==0)
 	{
-		G_CERR << linenr(T_STR"Error", info) << "NULL assignment." << std::endl;
+		log_err(linenr(info), "NULL assignment.");
 		return 0;
 	}
 
@@ -867,9 +847,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 
 	if(!pSymbolOrg)
 	{
-		G_CERR << linenr(T_STR"Error", info)
-				<< "Invalid rhs expression in assignment."
-				<< std::endl;
+		log_err(linenr(info), "Invalid rhs expression in assignment.");
 		return 0;
 	}
 
@@ -887,14 +865,13 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 
 		if(pSymLoc && pSymGlob)
 		{
-			G_CERR << linenr(T_STR"Warning", info) << "Symbol \"" << strIdent
-					  << "\" exists in local and global scope, using local one." << std::endl;
+			log_warn(linenr(info), "Symbol \"", strIdent,
+				"\" exists in local and global scope, using local one.");
 		}
 
 		if(pSymGlob && !pSymLoc && !*pbGlob)
 		{
-			G_CERR << linenr(T_STR"Warning", info) << "Overwriting global symbol \""
-					<< strIdent << "\"." << std::endl;
+			log_warn(linenr(info), "Overwriting global symbol \"", strIdent, "\".");
 			info.pGlobalSyms->InsertSymbol(strIdent, pSymbol);
 		}
 		else
@@ -911,9 +888,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 	{	// TODO: check that LHS does not want eval!
 		if(pSymbol->GetType() != SYMBOL_ARRAY)
 		{
-			G_CERR << linenr(T_STR"Error", info)
-				<< "Assignment needs an array on the right-hand side."
-				<< std::endl;
+			log_err(linenr(info), "Assignment needs an array on the right-hand side.");
 			return pSymbol;
 		}
 		SymbolArray *pArrRight = (SymbolArray*)pSymbol;
@@ -922,10 +897,9 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 		unsigned int iArrSize = vecLeftArgs.size();
 		if(vecLeftArgs.size() != pArrRight->GetArr().size())
 		{
-                        G_CERR << linenr(T_STR"Warning", info)
-				<< "Size mismatch between assigned and returned array: "
-				<< vecLeftArgs.size() << " != " << pArrRight->GetArr().size() << "."
-				<< std::endl;
+                        log_warn(linenr(info),
+				"Size mismatch between assigned and returned array: ",
+				vecLeftArgs.size(), " != ", pArrRight->GetArr().size(), ".");
 
 			iArrSize = std::min(vecLeftArgs.size(), pArrRight->GetArr().size());
 		}
@@ -948,8 +922,8 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 		if(!pSymLeft)
 		{
 			std::ostringstream ostrErr;
-			ostrErr << linenr(T_STR"Error", info)
-					<< "No array element found." << std::endl;
+			ostrErr << linenr(info)
+				<< "No array element found." << std::endl;
 			throw Err(ostrErr.str(),0);
 		}
 
@@ -986,8 +960,8 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 			if((void*)pSymOld != (void*)pSymLeft)
 			{
 				std::ostringstream ostrErr;
-				ostrErr << linenr(T_STR"Error", info)
-						<< "Array member mismatch." << std::endl;
+				ostrErr << linenr(info)
+					<< "Array member mismatch." << std::endl;
 				throw Err(ostrErr.str(),0);
 			}
 
@@ -1002,29 +976,29 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 		}
 		else if(pSymLeft->GetMapPtr())		// map
 		{
-			const t_string& strMapKey = pSymLeft->GetMapKey();
+			std::size_t iMapKey = pSymLeft->GetMapKey();
 			SymbolMap* pMap = pSymLeft->GetMapPtr();
 
-			SymbolMap::t_map::iterator iterMap = pMap->GetMap().find(strMapKey);
+			SymbolMap::t_map::iterator iterMap = pMap->GetMap().find(iMapKey);
 
 			// symbol not in map -> insert a zero
 			if(iterMap == pMap->GetMap().end())
 			{
 				SymbolDouble *pNewSym = new SymbolDouble(0.);
 				pNewSym->SetName(T_STR"<const>");
-				iterMap = pMap->GetMap().insert(SymbolMap::t_map::value_type(strMapKey, pNewSym)).first;
+				iterMap = pMap->GetMap().insert(SymbolMap::t_map::value_type(iMapKey, pNewSym)).first;
 			}
 
 			Symbol* pSymOld = iterMap->second;
 			if((void*)pSymOld != (void*)pSymLeft)
 			{
 				std::ostringstream ostrErr;
-				ostrErr << linenr(T_STR"Error", info) << "Map member mismatch." << std::endl;
+				ostrErr << linenr(info) << "Map member mismatch." << std::endl;
 				throw Err(ostrErr.str(),0);
 			}
 
 			pSymbol->SetMapPtr(pMap);
-			pSymbol->SetMapKey(strMapKey);
+			pSymbol->SetMapKey(iMapKey);
 			iterMap->second = pSymbol;
 
 			pSymOld->SetMapPtr(0);
@@ -1033,7 +1007,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 		else
 		{
 			std::ostringstream ostrErr;
-			ostrErr << linenr(T_STR"Error", info)
+			ostrErr << linenr(info)
 				<< "Trying to access array/map member with no associated array/map."
 				<< std::endl;
 			throw Err(ostrErr.str(),0);
@@ -1070,20 +1044,19 @@ Symbol* NodeBinaryOp::eval_funcinit(ParseInfo &info, SymbolTable *pSym) const
 		else if(info.GetFunction(strFktName))
 		{
 			if(strFktName != "main")
-				G_CERR << linenr(T_STR"Warning", info)
-					<< "Function \"" << strFktName
-					<< "\" redefined in \"" << info.strInitScrFile << "\"."
-					<< " Ignoring." << std::endl;
+				log_warn(linenr(info),
+					"Function \"", strFktName,
+					"\" redefined in \"", info.strInitScrFile, "\".",
+					" Ignoring.");
 		}
 		else
 		{
 			if(has_ext_call(strFktName))
 			{
-				G_CERR << linenr(T_STR"Warning", info)
-					<< "Function \"" << strFktName
-					<< "\" in \"" << info.strInitScrFile
-					<< "\" overwrites a system function."
-					<< std::endl;
+				log_warn(linenr(info),
+					"Function \"", strFktName,
+					"\" in \"", info.strInitScrFile,
+					"\" overwrites a system function.");
 			}
 			vecFuncs.push_back(pNodeFunc);
 		}
@@ -1117,8 +1090,7 @@ Symbol* NodeBinaryOp::eval_funcinit(ParseInfo &info, SymbolTable *pSym) const
 			}
 		}
 
-		G_CERR << linenr(T_STR"Error", info) << "Function \"" << info.strExecFkt
-			<< "\" not defined." << std::endl;
+		log_err(linenr(info), "Function \"", info.strExecFkt, "\" not defined.");
 	}
 	return 0;
 }
@@ -1166,9 +1138,7 @@ Symbol* NodeBinaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 			case NODE_STMTS:
 			//case NODE_ARGS:
 			{
-				G_CERR << linenr(T_STR"Info", info)
-						<< "Should better be evaluated sequentially in interpreter."
-						<< std::endl;
+				log_info(linenr(info), "Should better be evaluated sequentially in interpreter.");
 				return eval_recursive(info, pSym);
 			}
 
@@ -1247,17 +1217,17 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 				pSymbol = pDefArg->eval(info, pTableSup);
 
 				if(iArg < pVecArgSyms->size() && pSymbol)
-					G_CERR << linenr(T_STR"Warning", info)
-						<< "Given argument \"" << pIdent->GetIdent() 
-						<< "\" for function \"" 
-						<< strName << "\" not valid. " 
-						<< "Using default argument." << std::endl;
+					log_warn(linenr(info),
+						"Given argument \"", pIdent->GetIdent(), 
+						"\" for function \"", 
+						strName, "\" not valid. ", 
+						"Using default argument.");
 			}
 			if(pSymbol==0)
 			{
-				G_CERR << linenr(T_STR"Error", info) << "Argument \""
-					<< pIdent->GetIdent() << "\" for function \""
-					<< strName << "\" not given. Ignoring." << std::endl;
+				log_err(linenr(info), "Argument \"",
+					pIdent->GetIdent(), "\" for function \"",
+					strName, "\" not given. Ignoring.");
 				continue;
 			}
 
@@ -1411,7 +1381,7 @@ Symbol* NodeRangedFor::eval(ParseInfo &info, SymbolTable *pSym) const
 	if(m_pIdent->GetType() != NODE_IDENT)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) 
+		ostrErr << linenr(info) 
 			<< "Range-based for loop needs identifier." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
@@ -1421,7 +1391,7 @@ Symbol* NodeRangedFor::eval(ParseInfo &info, SymbolTable *pSym) const
 	if(!_pArr)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info)
+		ostrErr << linenr(info)
 			<< "Invalid array for loop." << std::endl;
 		return 0;
 	}
@@ -1429,7 +1399,7 @@ Symbol* NodeRangedFor::eval(ParseInfo &info, SymbolTable *pSym) const
 	if(_pArr->GetType() != SYMBOL_ARRAY)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info)
+		ostrErr << linenr(info)
 				<< "Range-based for loop needs array." << std::endl;
 		safe_delete(_pArr, pSym, info.pGlobalSyms);
 

@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-enum TokenType
+enum TokenType : unsigned int
 {
 	LEX_TOKEN_INVALID,
 	LEX_TOKEN_END,

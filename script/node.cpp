@@ -7,6 +7,7 @@
 #include "node.h"
 #include "calls.h"
 #include "helper/math.h"
+#include "helper/log.h"
 
 ParseInfo::ParseInfo() : pmapModules(0), phandles(0),
 			pmutexGlobal(0), pmutexInterpreter(0),
@@ -311,9 +312,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			}
 			else
 			{
-				G_CERR << "Error: Operator \"" << op 
-						<< "\" not defined for real type."
-						<< std::endl;
+				log_err("Operator \"", op, "\" not defined for real type.");
 				pResult->SetVal(0);
 			}
 			pRes = pResult;
@@ -329,9 +328,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			}
 			else
 			{
-				G_CERR << "Error: Operator \"" << op 
-						<< "\" not defined for real type."
-						<< std::endl;
+				log_err("Operator \"", op, "\" not defined for real type.");
 			}
 			pRes = pResult;
 		}
@@ -349,9 +346,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			}
 			else
 			{
-				G_CERR << "Error: Operator \"" << op 
-						<< "\" not defined for int type."
-						<< std::endl;
+				log_err("Operator \"", op, "\" not defined for int type.");
 			}
 			pRes = pResult;
 		}
@@ -366,9 +361,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			}
 			else
 			{
-				G_CERR << "Error: Operator \"" << op 
-						<< "\" not defined for int type."
-						<< std::endl;
+				log_err("Operator \"", op, "\" not defined for int type.");
 			}
 			pRes = pResult;
 		}
@@ -386,9 +379,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			}
 			else
 			{
-				G_CERR << "Error: Operator \"" << op 
-						<< "\" not defined for string type."
-						<< std::endl;
+				log_err("Operator \"", op, "\" not defined for string type.");
 			}
 			pRes = pResult;
 		}
@@ -403,9 +394,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op)
 			}
 			else
 			{
-				G_CERR << "Error: Operator \"" << op 
-						<< "\" not defined for string type."
-						<< std::endl;
+				log_err("Operator \"", op, "\" not defined for string type.");
 			}
 			pRes = pResult;
 		}
@@ -432,11 +421,9 @@ NodeFunction* ParseInfo::GetFunction(const t_string& strName)
 
 
 
-t_string Node::linenr(const t_string& strErr, const ParseInfo &info) const
+t_string Node::linenr(const ParseInfo &info) const
 {
 	t_ostringstream ostr;
-	ostr << strErr;
-
 	t_ostringstream ostrDetail;
 
 	bool bHasLine = 0;
@@ -455,9 +442,9 @@ t_string Node::linenr(const t_string& strErr, const ParseInfo &info) const
 		const t_string& strFkt = info.pCurFunction->GetName();
 
 		if(strFile == T_STR"")
-			ostrDetail << "in unknown file";
+			ostrDetail << "In unknown file";
 		else
-			ostrDetail << "in \"" << strFile << "\"";
+			ostrDetail << "In \"" << strFile << "\"";
 
 		if(strFkt != T_STR"")
 			ostrDetail << " -> \"" << strFkt << "\"";

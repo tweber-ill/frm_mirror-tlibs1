@@ -8,9 +8,11 @@
 #include "helper/flags.h"
 #include "helper/string.h"
 #include "helper/spec_char.h"
+#include "helper/log.h"
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <array>
 
 #include "parseobj.h"
 #include "script_helper.h"
@@ -62,7 +64,7 @@ static inline int script_main(int argc, char** argv)
 
 	if(iStartArg >= argc)
 	{
-		G_CERR << "Error: No input file given." << std::endl;
+		log_err("No input file given.");
 		return -1;
 	}
 
@@ -84,7 +86,7 @@ static inline int script_main(int argc, char** argv)
 
 	if(!par.pLexer->IsOk())
 	{
-		G_CERR << "Error: Lexer returned with errors." << std::endl;
+		log_err("Lexer returned with errors.");
 		return -3;
 	}
 
@@ -98,7 +100,7 @@ static inline int script_main(int argc, char** argv)
 
 	if(iParseRet != 0)
 	{
-		G_CERR << "Error: Parser returned with error code " << iParseRet << "." << std::endl;
+		log_err("Parser returned with error code ", iParseRet, ".");
 		return -4;
 	}
 
@@ -127,29 +129,23 @@ static inline int script_main(int argc, char** argv)
 
 	if(bShowSymbols)
 	{
-		G_COUT << "\n";
-		G_COUT << "================================================================================\n";	
-		G_COUT << "Global symbols:\n";
+		log_info("================================================================================");
+		log_info("Global symbols:");
 		info.pGlobalSyms->print();
 
-
-		G_COUT << "\n";
-		G_COUT << "Script functions:\n";
+		std::ostringstream ostrFkts;
 		for(const NodeFunction* pFunc : info.vecFuncs)
-			G_COUT << pFunc->GetName() << ", ";
-		G_COUT << "\n";
+			ostrFkts << pFunc->GetName() << ", ";
+		log_info("Script functions: ", ostrFkts.str());
 
 
 		const t_mapFkts* pExtFkts = get_ext_calls();
 
-		G_COUT << "\n";
-		G_COUT << "System functions:\n";
+		std::ostringstream ostrSysFkts;
 		for(const auto& fktpair : *pExtFkts)
-			G_COUT << fktpair.first << ", ";
-		G_COUT << "\n";
-
-		G_COUT << "================================================================================";
-		G_COUT << std::endl;
+			ostrSysFkts << fktpair.first << ", ";
+		log_info("System functions: ", ostrSysFkts.str());
+		log_info("================================================================================");
 	}
 
 	return 0;
@@ -163,6 +159,13 @@ typedef std::chrono::system_clock::duration t_dur;
 
 int main(int argc, char** argv)
 {
+	const std::array<Log*, 5> arrLogs{&log_crit, &log_err, &log_warn, &log_info, &log_debug};
+	for(Log* pLog : arrLogs)
+	{
+		pLog->SetShowDate(0);
+		pLog->SetShowThread(0);
+	}
+
 	int iRet = -99;
 	t_tp timeStart = std::chrono::system_clock::now();
 
@@ -173,8 +176,7 @@ int main(int argc, char** argv)
 	}
 	catch(const std::exception& ex)
 	{
-		G_CERR << "Critical failure: " << ex.what();
-		G_CERR << "Interpreter halted." << std::endl;
+		log_crit(ex.what());
 	}
 
 	if(g_bShowTiming && iRet==0)
@@ -193,13 +195,11 @@ int main(int argc, char** argv)
 		std::strftime(cStart, sizeof cStart, "%Y-%b-%d %H:%M:%S", &tmStart);
 		std::strftime(cStop, sizeof cStop, "%Y-%b-%d %H:%M:%S", &tmStop);
 
-		G_COUT << "\n";
-		G_COUT << "================================================================================\n";	
-		G_COUT << "Script start time:     " << cStart << "\n";
-		G_COUT << "Script stop time:      " << cStop << "\n";
-		G_COUT << "Script execution time: " << dDur << " s\n";
-		G_COUT << "================================================================================";
-		G_COUT << std::endl;
+		log_info("================================================================================");
+		log_info("Script start time:     ", cStart);
+		log_info("Script stop time:      ", cStop);
+		log_info("Script execution time: ", dDur, " s");
+		log_info("================================================================================");
 	}
 
 	return iRet;

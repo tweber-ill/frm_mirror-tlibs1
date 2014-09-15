@@ -11,6 +11,7 @@
 #include "../helper/linalg.h"
 #include "../helper/linalg2.h"
 #include "../helper/rand.h"
+#include "../helper/log.h"
 
 static inline Symbol* _fkt_linlogspace(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab, bool bLog)
@@ -84,9 +85,7 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 	if(vecSyms.size() < 1)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) 
-			<< "fkt_math_for_every needs at least one argument" 
-			<< std::endl;
+		ostrErr << linenr(info) << "fkt_math_for_every needs at least one argument" << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -144,9 +143,7 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 
 
 	std::ostringstream ostrErr;
-	ostrErr << linenr(T_STR"Error", info) 
-		<< "No valid arguments given for fkt_math_for_every." 
-		<< std::endl;
+	ostrErr << linenr(info) << "No valid arguments given for fkt_math_for_every." << std::endl;
 	throw Err(ostrErr.str(), 0);
 	//return 0;
 }
@@ -243,7 +240,7 @@ static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
 
 
 	std::ostringstream ostrErr;
-	ostrErr << linenr(T_STR"Error", info) << "abs received unsupported symbol type." << std::endl;
+	ostrErr << linenr(info) << "abs received unsupported symbol type." << std::endl;
 	throw Err(ostrErr.str(),0);
 	//return 0;
 }
@@ -325,9 +322,7 @@ static Symbol* _fkt_fft(const std::vector<Symbol*>& vecSyms,
 	if(!bArgsOk)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info)
-				<< "fft received invalid arguments."
-				<< std::endl;
+		ostrErr << linenr(info) << "fft received invalid arguments." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -382,8 +377,7 @@ static Symbol* fkt_length(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 	if(!is_vec(vecSyms[0]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "len needs a vector argument."
-			<< std::endl;
+		ostrErr << linenr(info) << "len needs a vector argument." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -400,8 +394,7 @@ static Symbol* fkt_mean(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Sy
 	if(!is_vec(vecSyms[0]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Mean value needs vector arguments."
-			<< std::endl;
+		ostrErr << linenr(info) << "Mean value needs vector arguments." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -419,8 +412,7 @@ static Symbol* fkt_stddev(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 	if(!is_vec(vecSyms[0]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Standard deviation needs vector arguments."
-			<< std::endl;
+		ostrErr << linenr(info) << "Standard deviation needs vector arguments." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -438,8 +430,7 @@ static Symbol* fkt_cross(const std::vector<Symbol*>& vecSyms, ParseInfo& info, S
 	if(!is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Cross product needs vector arguments."
-			<< std::endl;
+		ostrErr << linenr(info) << "Cross product needs vector arguments." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -449,8 +440,7 @@ static Symbol* fkt_cross(const std::vector<Symbol*>& vecSyms, ParseInfo& info, S
 	if(vecLeft.size()!=3 || vecRight.size()!=3)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Cross product needs 3-vectors."
-			<< std::endl;
+		ostrErr << linenr(info) << "Cross product needs 3-vectors." << std::endl;
 		throw Err(ostrErr.str(), 0);
 	}
 
@@ -465,7 +455,7 @@ static Symbol* fkt_matrix(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 	if(vecSyms.size()<1)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Need size of matrix." << std::endl;
+		ostrErr << linenr(info) << "Need size of matrix." << std::endl;
 		throw Err(ostrErr.str(), 0);
 	}
 
@@ -491,7 +481,7 @@ static Symbol* fkt_transpose(const std::vector<Symbol*>& vecSyms,
 	if(!bIsMat)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Transpose needs a matrix." << std::endl;
+		ostrErr << linenr(info) << "Transpose needs a matrix." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -510,14 +500,14 @@ static Symbol* fkt_inverse(const std::vector<Symbol*>& vecSyms,
 	if(!bIsMat)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Inverse needs a matrix." << std::endl;
+		ostrErr << linenr(info) << "Inverse needs a matrix." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
 	t_mat<t_real> mat_inv;
 	if(!inverse(mat, mat_inv))
 	{
-		G_CERR << linenr(T_STR"Warning", info) << "Matrix inversion failed." << std::endl;
+		log_warn(linenr(info), "Matrix inversion failed.");
 		return 0;
 	}
 
@@ -534,9 +524,7 @@ static Symbol* fkt_determinant(const std::vector<Symbol*>& vecSyms,
 	t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0], &bIsMat);
 	if(!bIsMat || mat.size1()!=mat.size2())
 	{
-		G_CERR << linenr(T_STR"Error", info)
-			<< "Determinant needs a square matrix."
-			<< std::endl;
+		log_err(linenr(info), "Determinant needs a square matrix.");
 		return 0;
 	}
 
@@ -563,7 +551,7 @@ static Symbol* fkt_outerproduct(const std::vector<Symbol*>& vecSyms, ParseInfo& 
 	if(!is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Outer product needs two vector arguments." << std::endl;
+		ostrErr << linenr(info) << "Outer product needs two vector arguments." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -583,9 +571,7 @@ static Symbol* fkt_dot(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Sym
 	if(!is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) 
-			<< "Inner product needs two vector arguments." 
-			<< std::endl;
+		ostrErr << linenr(info) << "Inner product needs two vector arguments." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -621,9 +607,7 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 		{
 			if(iRows1 != iCols2 || iCols1 != iRows2)
 			{
-				G_CERR << linenr(T_STR"Error", info)
-					<< "Row and column counts of matrices do not match."
-					<< std::endl;
+				log_err(linenr(info), "Row and column counts of matrices do not match.");
 				return 0;
 			}
 
@@ -654,7 +638,7 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 	if(!pRet)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Invalid call to prod." << std::endl;
+		ostrErr << linenr(info) << "Invalid call to prod." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 	return pRet;
@@ -675,9 +659,7 @@ static Symbol* fkt_eigenvecs(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 	if(!is_mat(vecSyms[0]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) 
-			<< "Invalid call to eigenvecs." 
-			<< std::endl;
+		ostrErr << linenr(info) << "Invalid call to eigenvecs." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -733,9 +715,7 @@ static Symbol* fkt_eigenvecs_sym(const std::vector<Symbol*>& vecSyms, ParseInfo&
 	if(!is_mat(vecSyms[0]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) 
-			<< "Invalid call to eigenvecs_sym." 
-			<< std::endl;
+		ostrErr << linenr(info) << "Invalid call to eigenvecs_sym." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -777,9 +757,7 @@ static Symbol* fkt_qr(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Symb
 	if(!is_mat(vecSyms[0]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) 
-			<< "Invalid call to qr." 
-			<< std::endl;
+		ostrErr << linenr(info) << "Invalid call to qr." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -897,7 +875,7 @@ static Symbol* fkt_minmax(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 	if(!pElem || pElem->GetArr().size()!=2)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Invalid input for minmax." << std::endl;
+		ostrErr << linenr(info) << "Invalid input for minmax." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 

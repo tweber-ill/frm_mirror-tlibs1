@@ -241,21 +241,21 @@ static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 	else
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Invalid call to plot." << std::endl;
+		ostrErr << linenr(info) << "Invalid call to plot." << std::endl;
 		throw Err(ostrErr.str(), 0);
 	}
 
 	if(pPlotParams)
 	{
 		// also plot to file
-		if(pPlotParams->GetMap().find("outfile") != pPlotParams->GetMap().end()
-			&& pPlotParams->GetMap().find("<outfile_written>") == pPlotParams->GetMap().end())
+		if(pPlotParams->GetMap().find(SymbolMapKey("outfile")) != pPlotParams->GetMap().end()
+			&& pPlotParams->GetMap().find(SymbolMapKey("<outfile_written>")) == pPlotParams->GetMap().end())
 		{
 			// hack to prevent infinite recursion
 			pPlotParams->GetMap().insert(
-				SymbolMap::t_map::value_type("<outfile_written>", new SymbolInt(1)));
+				SymbolMap::t_map::value_type(SymbolMapKey("<outfile_written>"), new SymbolInt(1)));
 
-			Symbol* pSymFileName = pPlotParams->GetMap()["outfile"];
+			Symbol* pSymFileName = pPlotParams->GetMap()[SymbolMapKey("outfile")];
 			std::vector<Symbol*> vecNewSyms;
 			vecNewSyms.reserve(vecSyms.size()+1);
 			vecNewSyms.push_back(pSymFileName);
@@ -311,7 +311,7 @@ static Symbol* fkt_plot2d(const std::vector<Symbol*>& vecSyms,
 	else
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Invalid call to plot2d." << std::endl;
+		ostrErr << linenr(info) << "Invalid call to plot2d." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -327,7 +327,7 @@ static Symbol* _fkt_fileplot(const std::vector<Symbol*>& vecSyms,
 	if(vecSyms.size() < 1 || vecSyms[0]->GetType()!=SYMBOL_STRING)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info)
+		ostrErr << linenr(info)
 			<< "First argument to fileplot has to be the file name." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}

@@ -5,6 +5,7 @@
  */
 
 #include "../helper/flags.h"
+#include "../helper/log.h"
 #include "calls_basic.h"
 #include "../types.h"
 #include "../calls.h"
@@ -30,18 +31,11 @@
 #include <boost/tr1/regex.hpp>
 
 
-extern t_string linenr(const t_string& strErr, const ParseInfo &info)
+extern const t_string& get_type_name(SymbolType ty)
 {
-	if(info.pCurCaller)
-		return info.pCurCaller->linenr(strErr, info);
-	return strErr + T_STR": ";
-}
+	static const t_string strInvalid = "invalid";
 
-extern const std::string& get_type_name(SymbolType ty)
-{
-	static const std::string strInvalid = "invalid";
-
-	static const std::unordered_map<SymbolType, std::string, EnumDirectHash<SymbolType>> mapTypes =
+	static const std::unordered_map<SymbolType, t_string, EnumDirectHash<SymbolType>> mapTypes =
 		{
 			{SYMBOL_DOUBLE, "real"},
 			{SYMBOL_INT, "int"},
@@ -61,7 +55,7 @@ extern const std::string& get_type_name(SymbolType ty)
 
 	return iter->second;
 }
-extern const std::string& get_type_name(unsigned int ty)
+extern const t_string& get_type_name(unsigned int ty)
 {
 	return get_type_name(SymbolType(ty));
 }
@@ -82,7 +76,7 @@ extern bool check_args(ParseInfo& info,
 	if(iSyms < iCompulsory)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) 
+		ostrErr << linenr(info) 
 				<< "Function \"" << pcFkt << "\""
 				<< " requires " << iCompulsory
 				<< " arguments, but only "
@@ -107,7 +101,7 @@ extern bool check_args(ParseInfo& info,
 		if(!*iterSym)
 		{
 			std::ostringstream ostrErr;
-			ostrErr << linenr(T_STR"Error", info)
+			ostrErr << linenr(info)
 					<< "Argument " << (iCurSym+1) 
 					<< " of function \"" << pcFkt << "\""
 					<< " is invalid.";
@@ -120,7 +114,7 @@ extern bool check_args(ParseInfo& info,
 		if(!(*iterTypes & (*iterSym)->GetType()))
 		{
 			std::ostringstream ostrErr;
-			ostrErr << linenr(T_STR"Error", info)
+			ostrErr << linenr(info)
 					<< "Argument " << (iCurSym+1)
 					<< " of function \"" << pcFkt << "\""
 					<< " has wrong type. "
@@ -321,7 +315,7 @@ static bool _import_file(const t_string& strFile, ParseInfo& info, SymbolTable* 
 	if(!par.pLexer->IsOk())
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Lexer returned with errors" 
+		ostrErr << linenr(info) << "Lexer returned with errors" 
 			<< " for file \"" << _strFile << "\"."<< std::endl;
 		throw Err(ostrErr.str(),0);
 	}
@@ -334,7 +328,7 @@ static bool _import_file(const t_string& strFile, ParseInfo& info, SymbolTable* 
 	if(iParseRet != 0)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Parser returned with error code " 
+		ostrErr << linenr(info) << "Parser returned with error code " 
 			<< iParseRet 
 			<< "for file \"" << _strFile << "\"." << std::endl;
 		throw Err(ostrErr.str(),0);
@@ -409,7 +403,11 @@ static Symbol* fkt_register_var(const std::vector<Symbol*>& vecSyms,
 		SymbolMap::t_map& varmap = ((SymbolMap*)vecSyms[0])->GetMap();
 		for(SymbolMap::t_map::value_type& val : varmap)
 		{
-			SymbolString symKey(val.first);
+			const t_string& strKey = val.first.strKey;
+			if(strKey == "")
+				continue;
+
+			SymbolString symKey(strKey);
 			Symbol *pSymVal = val.second;
 
 			std::vector<Symbol*> vecDummy;
@@ -424,7 +422,7 @@ static Symbol* fkt_register_var(const std::vector<Symbol*>& vecSyms,
 	else
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Invalid call to register_var." << std::endl;
+		ostrErr << linenr(info) << "Invalid call to register_var." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 	return 0;
@@ -491,7 +489,7 @@ static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
 	if(pSymSize->GetType() != SYMBOL_INT)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "\"num\" in vec(num, val=0) has to be integer." << std::endl;
+		ostrErr << linenr(info) << "\"num\" in vec(num, val=0) has to be integer." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -544,7 +542,7 @@ static Symbol* fkt_array_size(const std::vector<Symbol*>& vecSyms,
 	else
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "vec_size needs a vector type argument." << std::endl;
+		ostrErr << linenr(info) << "vec_size needs a vector type argument." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -620,8 +618,7 @@ static Symbol* fkt_find(const std::vector<Symbol*>& vecSyms,
 	else if(pContainer->GetType() == SYMBOL_MAP)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) 
-			<< "Find not yet implemented for map." << std::endl;
+		ostrErr << linenr(info) << "Find not yet implemented for map." << std::endl;
 		throw Err(ostrErr.str(),0);
 
 		// TODO: Implement and also adapt fkt_contains
@@ -631,7 +628,7 @@ static Symbol* fkt_find(const std::vector<Symbol*>& vecSyms,
 		if(pContainee->GetType() != SYMBOL_STRING)
 		{
 			std::ostringstream ostrErr;
-			ostrErr << linenr(T_STR"Error", info)
+			ostrErr << linenr(info)
 				<< "Second argument to find has to be of string type."
 				<< std::endl;
 			throw Err(ostrErr.str(),0);
@@ -669,7 +666,7 @@ static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
 	if(strIdent == T_STR"")
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "No identifier given for cur_iter." << std::endl;
+		ostrErr << linenr(info) << "No identifier given for cur_iter." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -681,7 +678,7 @@ static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
 	if(!pSymIter || pSymIter->GetType()!=SYMBOL_INT)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "cur_iter could not determine iteration index \""
+		ostrErr << linenr(info) << "cur_iter could not determine iteration index \""
 					<< strIter << "\"." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
@@ -718,7 +715,7 @@ static Symbol* fkt_sort(const std::vector<Symbol*>& vecSyms,
 	if(vecSyms.size()<1 || vecSyms[0]->GetType()!=SYMBOL_ARRAY)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) 
+		ostrErr << linenr(info) 
 			<< "Arguments to sort have to be arrays." 
 			<< std::endl;
 		throw Err(ostrErr.str(),0);
@@ -762,17 +759,13 @@ static Symbol* fkt_sort(const std::vector<Symbol*>& vecSyms,
 		const Symbol* pSym = vecSyms[iElem];
 		if(pSym->GetType() != SYMBOL_ARRAY)
 		{
-			G_CERR << linenr(T_STR"Error", info) 
-				<< "Arguments to sort have to be arrays. Ignoring." 
-				<< std::endl;
+			log_err(linenr(info), "Arguments to sort have to be arrays. Ignoring.");
 			continue;
 		}
 
 		if(((SymbolArray*)pSym)->GetArr().size() != vecSortedIndices.size())
 		{
-			G_CERR << linenr(T_STR"Error", info)
-				<< "Array size mismatch in sort. Ignoring."
-				<< std::endl;
+			log_err(linenr(info), "Array size mismatch in sort. Ignoring.");
 			continue;
 		}
 
@@ -798,9 +791,9 @@ static Symbol* fkt_zip(const std::vector<Symbol*>& vecSyms,
 	{
 		if(pSym->GetType() != SYMBOL_ARRAY)
 		{
-			G_CERR << linenr(T_STR"Error", info) << "Symbol \"" << pSym->GetName()
-					<< "\" is of type " << pSym->GetTypeName()
-					<< ", but zip needs vectors. Ignoring." << std::endl;
+			log_err(linenr(info), "Symbol \"", pSym->GetName(),
+				"\" is of type ", pSym->GetTypeName(),
+				", but zip needs vectors. Ignoring.");
 			continue;
 		}
 
@@ -911,8 +904,7 @@ static Symbol* fkt_tokens(const std::vector<Symbol*>& vecSyms,
 	if(!pstrInput)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info)
-				<< "Called tokens with invalid arguments." << std::endl;
+		ostrErr << linenr(info) << "Called tokens with invalid arguments." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -954,7 +946,7 @@ static Symbol* fkt_replace_regex(const std::vector<Symbol*>& vecSyms,
 	const t_string& strRegex = ((SymbolString*)vecSyms[1])->GetVal();
 	const t_string& strRepl = ((SymbolString*)vecSyms[2])->GetVal();
 
-	std::string strRet;
+	t_string strRet;
 	try
 	{
 		//std::cout << "Regex: " << strRegex << std::endl;
@@ -963,9 +955,7 @@ static Symbol* fkt_replace_regex(const std::vector<Symbol*>& vecSyms,
 	}
 	catch(const std::exception& ex)
 	{
-		G_CERR << linenr(T_STR"Error", info)
-			<< "Regex evaluation failed with error: " << ex.what() 
-			<< std::endl;
+		log_err(linenr(info), "Regex evaluation failed with error: ", ex.what()); 
 		return 0;
 	}
 
@@ -983,7 +973,7 @@ static Symbol* fkt_find_regex(const std::vector<Symbol*>& vecSyms,
 
 	struct Match
 	{
-		std::string strMatch;
+		t_string strMatch;
 		int iPos;
 		int iLen;
 	};
@@ -1017,9 +1007,7 @@ static Symbol* fkt_find_regex(const std::vector<Symbol*>& vecSyms,
 	}
 	catch(const std::exception& ex)
 	{
-		G_CERR << linenr(T_STR"Error", info)
-			<< "Regex evaluation failed with error: " << ex.what() 
-			<< std::endl;
+		log_err(linenr(info), "Regex evaluation failed with error: ", ex.what());
 		return 0;
 	}
 
@@ -1064,9 +1052,7 @@ static Symbol* fkt_match_regex(const std::vector<Symbol*>& vecSyms,
 	}
 	catch(const std::exception& ex)
 	{
-		G_CERR << linenr(T_STR"Error", info)
-			<< "Regex evaluation failed with error: " << ex.what() 
-			<< std::endl;
+		log_err(linenr(info), "Regex evaluation failed with error: ", ex.what());
 		return 0;
 	}
 
@@ -1104,9 +1090,7 @@ static Symbol* fkt_subfind_regex(const std::vector<Symbol*>& vecSyms,
 	}
 	catch(const std::exception& ex)
 	{
-		G_CERR << linenr(T_STR"Error", info)
-			<< "Regex evaluation failed with error: " << ex.what() 
-			<< std::endl;
+		log_err(linenr(info), "Regex evaluation failed with error: ", ex.what());
 		return 0;
 	}
 
@@ -1123,13 +1107,13 @@ static Symbol* fkt_subfind_regex(const std::vector<Symbol*>& vecSyms,
 static Symbol* fkt_has_key(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_MAP, SYMBOL_STRING}, {0,0}, "has_key"))
+	if(!check_args(info, vecSyms, {SYMBOL_MAP, SYMBOL_ANY}, {0,0}, "has_key"))
 		return 0;
 
 	const SymbolMap* pMap = (SymbolMap*)vecSyms[0];
-	const std::string& strKey = ((SymbolString*)vecSyms[1])->GetVal();
+	std::size_t iKey = vecSyms[1]->hash();
 
-	int bHasKey = (pMap->GetMap().find(strKey) != pMap->GetMap().end());
+	int bHasKey = (pMap->GetMap().find(iKey) != pMap->GetMap().end());
 	return new SymbolInt(bHasKey);
 }
 

@@ -6,6 +6,7 @@
 
 #include "../types.h"
 #include "../helper/string.h"
+#include "../helper/log.h"
 #include "calls_fit.h"
 #include "../calls.h"
 #include "../node.h"
@@ -147,8 +148,7 @@ public:
 	{
 		if(vecParams.size() != m_vecParamNames.size())
 		{
-			G_CERR << "Error: Parameter array length mismatch."
-					<< std::endl;
+			log_err("Parameter array length mismatch.");
 			return 0;
 		}
 
@@ -261,18 +261,14 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	if(vecSyms.size()<4 || !is_vec(vecSyms[1]) || !is_vec(vecSyms[2]) || !is_vec(vecSyms[3]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info)
-			<< "Invalid arguments for fit."
-			<< std::endl;
+		ostrErr << linenr(info) << "Invalid arguments for fit." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
 	if(vecSyms[0]->GetType() != SYMBOL_STRING)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info)
-			<< "Need a fit function name."
-			<< std::endl;
+		ostrErr << linenr(info) << "Need a fit function name." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -281,9 +277,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	if(!pFkt)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Invalid function \""
-			<< strFkt << "\"."
-			<< std::endl;
+		ostrErr << linenr(info) << "Invalid function \"" << strFkt << "\"." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -299,7 +293,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	{
 		SymbolMap::t_map& mapSym = ((SymbolMap*)vecSyms[4])->GetMap();
 
-		SymbolMap::t_map::iterator iterParamNames = mapSym.find(T_STR"use_param_vec");
+		SymbolMap::t_map::iterator iterParamNames = mapSym.find(SymbolMapKey(T_STR"use_param_vec"));
 		if(iterParamNames != mapSym.end())
 		{
 			vecParamNames = sym_to_vec<t_stdvec, t_string>(iterParamNames->second);
@@ -333,20 +327,20 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	{
 		SymbolMap::t_map& mapSym = ((SymbolMap*)vecSyms[4])->GetMap();
 
-		SymbolMap::t_map::iterator iterHints = mapSym.find(T_STR"hints");
-		SymbolMap::t_map::iterator iterHintsErr = mapSym.find(T_STR"hints_errors");
+		SymbolMap::t_map::iterator iterHints = mapSym.find(SymbolMapKey(T_STR"hints"));
+		SymbolMap::t_map::iterator iterHintsErr = mapSym.find(SymbolMapKey(T_STR"hints_errors"));
 
-		SymbolMap::t_map::iterator iterLimitsMin = mapSym.find(T_STR"lower_limits");
-		SymbolMap::t_map::iterator iterLimitsMax = mapSym.find(T_STR"upper_limits");
+		SymbolMap::t_map::iterator iterLimitsMin = mapSym.find(SymbolMapKey(T_STR"lower_limits"));
+		SymbolMap::t_map::iterator iterLimitsMax = mapSym.find(SymbolMapKey(T_STR"upper_limits"));
 
-		SymbolMap::t_map::iterator iterFixed = mapSym.find(T_STR"fixed");
+		SymbolMap::t_map::iterator iterFixed = mapSym.find(SymbolMapKey(T_STR"fixed"));
 
-		SymbolMap::t_map::iterator iterSteps = mapSym.find(T_STR"steps");
+		SymbolMap::t_map::iterator iterSteps = mapSym.find(SymbolMapKey(T_STR"steps"));
 
-		SymbolMap::t_map::iterator iterDebug = mapSym.find(T_STR"debug");
+		SymbolMap::t_map::iterator iterDebug = mapSym.find(SymbolMapKey(T_STR"debug"));
 
-		SymbolMap::t_map::iterator iterSigma = mapSym.find(T_STR"sigma");
-		SymbolMap::t_map::iterator iterErrAnalysis = mapSym.find(T_STR"error_analysis");
+		SymbolMap::t_map::iterator iterSigma = mapSym.find(SymbolMapKey(T_STR"sigma"));
+		SymbolMap::t_map::iterator iterErrAnalysis = mapSym.find(SymbolMapKey(T_STR"error_analysis"));
 
 
 
@@ -525,8 +519,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 					case 'n':			// nop
 						break;
 					default:
-						G_CERR << "Error: Unknow fitting step operation \'"
-								<< cOp << "\'." << std::endl;
+						log_err("Unknow fitting step operation \'", cOp, "\'.");
 						break;
 				}
 			} // ops
@@ -600,34 +593,30 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 
 	if(bFitterDebug)
 	{
-		G_CERR << "--------------------------------------------------------------------------------" << "\n";
 		unsigned int uiMini=0;
 		for(const auto& mini : minis)
 		{
 			std::ostringstream ostrMini;
 			ostrMini << mini;
 
-			G_CERR << "result of user-defined fit step " << (++uiMini) << "\n";
-			G_CERR << "=================================\n";
-			G_CERR << STR_TO_WSTR(ostrMini.str()) << std::endl;
+			log_info("result of user-defined fit step ", (++uiMini));
+			log_info(STR_TO_WSTR(ostrMini.str()));
 		}
 
 		if(bDoMinos)
 		{
-			G_CERR << "\nMinos error analysis";
-			G_CERR << "\n====================\n\n";
+			log_info("Minos error analysis");
 			for(unsigned int iParam=0; iParam<iParamSize; ++iParam)
 			{
-				G_CERR << vecParamNames[iParam] << ": lower error: " 
-					<< vecMinosErrs[iParam].first << ", upper error: "
-					<< vecMinosErrs[iParam].second << std::endl;
+				log_info(vecParamNames[iParam], ": lower error: ",
+					vecMinosErrs[iParam].first, ", upper error: ",
+					vecMinosErrs[iParam].second);
 			}
 		}
-		G_CERR << "--------------------------------------------------------------------------------" << std::endl;
 	}
 
 	SymbolInt *pSymFitValid = new SymbolInt(bValidFit);
-	pSymMap->GetMap()["<valid>"] = pSymFitValid;
+	pSymMap->GetMap()[SymbolMapKey("<valid>")] = pSymFitValid;
 	//if(!bValidFit)
 	//	G_CERR << "Error: Fit invalid!" << std::endl;
 	return pSymMap;
@@ -658,8 +647,7 @@ static Symbol* _fkt_param(FktParam whichfkt, const std::vector<Symbol*>& vecSyms
 	if(vecSyms.size() < 2 || !is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Function needs x and y vector arguments."
-			<< std::endl;
+		ostrErr << linenr(info) << "Function needs x and y vector arguments." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -684,8 +672,7 @@ static Symbol* _fkt_param(FktParam whichfkt, const std::vector<Symbol*>& vecSyms
 	else
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "Unknown parametric function selected."
-					<< std::endl;
+		ostrErr << linenr(info) << "Unknown parametric function selected." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -732,8 +719,7 @@ static Symbol* fkt_find_peaks(const std::vector<Symbol*>& vecSyms,
 	if(vecSyms.size() < 2)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(T_STR"Error", info) << "find_peaks needs x and y arrays."
-					<< std::endl;
+		ostrErr << linenr(info) << "find_peaks needs x and y arrays." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -766,9 +752,7 @@ static Symbol* fkt_map_vec_to_val(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size()<1 || vecSyms[0]->GetType()!=SYMBOL_MAP)
 	{
-		G_CERR << linenr(T_STR"Error", info)
-					<< "Need a map of vectors."
-					<< std::endl;
+		log_err(linenr(info), "Need a map of vectors.");
 		return 0;
 	}
 
@@ -780,9 +764,7 @@ static Symbol* fkt_map_vec_to_val(const std::vector<Symbol*>& vecSyms,
 		iIdx = vecSyms[1]->GetValInt();
 		if(iIdx < 0)
 		{
-			G_CERR << linenr(T_STR"Warning", info)
-						<< "Ignoring negative index."
-						<< std::endl;
+			log_warn(linenr(info), "Ignoring negative index.");
 			iIdx = 0;
 		}
 	}
@@ -792,7 +774,7 @@ static Symbol* fkt_map_vec_to_val(const std::vector<Symbol*>& vecSyms,
 
 	for(const SymbolMap::t_map::value_type& pair : ((SymbolMap*)vecSyms[0])->GetMap())
 	{
-		const t_string& strKey = pair.first;
+		const t_string& strKey = pair.first.strKey;
 		const Symbol* pSym = pair.second;
 
 		if(pSym->GetType() != SYMBOL_ARRAY)
@@ -809,9 +791,7 @@ static Symbol* fkt_map_vec_to_val(const std::vector<Symbol*>& vecSyms,
 		const std::vector<Symbol*>& arr = ((SymbolArray*)pSym)->GetArr();
 		if(iIdx >= arr.size())
 		{
-			G_CERR << linenr(T_STR"Warning", info)
-						<< "Ignoring invalid index."
-						<< std::endl;
+			log_warn(linenr(info), "Ignoring invalid index.");
 			continue;
 		}
 

@@ -7,6 +7,7 @@
 #include "../types.h"
 #include "../helper/string.h"
 #include "../helper/file.h"
+#include "../helper/log.h"
 #include "calls_file.h"
 #include "../calls.h"
 #include "../loader/loadtxt.h"
@@ -102,7 +103,7 @@ static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
 	bool bLoaded = dat.Load(WSTR_TO_STR(strFile).c_str());
 	if(!bLoaded)
 	{
-		G_CERR << linenr(T_STR"Error", info) << "loadtxt could not open \"" << strFile << "\"." << std::endl;
+		log_err(linenr(info), "loadtxt could not open \"", strFile, "\".");
 		return pArr;
 	}
 
@@ -204,7 +205,7 @@ static std::string get_2darr_strval(const SymbolArray* pArr,
 
 	if(!bFoundCol)
 	{
-		G_CERR << "Error: Invalid column index: " << iCol << "." << std::endl;
+		log_err("Invalid column index: ", iCol, ".");
 		return "0";
 	}
 
@@ -230,7 +231,7 @@ static Symbol* fkt_savetxt(const std::vector<Symbol*>& vecSyms,
 	t_ofstream ofstr(WSTR_TO_STR(strFile).c_str());
 	if(!ofstr.is_open())
 	{
-		G_CERR << linenr(T_STR"Error", info) << "Cannot open \"" << strFile << "\"." << std::endl;
+		log_err(linenr(info), "Cannot open \"", strFile, "\".");
 		return 0;
 	}
 
@@ -244,7 +245,7 @@ static Symbol* fkt_savetxt(const std::vector<Symbol*>& vecSyms,
 
 			for(const SymbolMap::t_map::value_type& val : pSymMap->GetMap())
 			{
-				ofstr << "# " << val.first << " : "
+				ofstr << "# " << val.first.strKey << " : "
 						<< (val.second?val.second->print():T_STR"") << "\n";
 			}
 		}

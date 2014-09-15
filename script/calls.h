@@ -16,7 +16,7 @@
 #include <initializer_list>
 
 // helper functions
-extern t_string linenr(const t_string& strErr, const ParseInfo &info);
+extern t_string linenr(const ParseInfo &info);
 extern const std::string& get_type_name(SymbolType ty);
 extern const std::string& get_type_name(unsigned int ty);
 

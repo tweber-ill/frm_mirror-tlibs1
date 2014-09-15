@@ -17,7 +17,7 @@
 #include <stdio.h>
 
 
-enum HandleType
+enum HandleType : unsigned int
 {
 	HANDLE_FILE,
 

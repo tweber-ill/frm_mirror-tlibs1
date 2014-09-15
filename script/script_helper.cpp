@@ -5,6 +5,7 @@
  */
 
 #include "script_helper.h"
+#include "helper/log.h"
 #include <fstream>
 #include <iostream>
 
@@ -15,7 +16,7 @@ t_char* load_file(const char* pcFile)
 
 	if(!ifstr.is_open())
 	{
-		G_CERR << "Error: Cannot open \"" << pcFile << "\"." << std::endl;
+		log_err("Cannot open \"", pcFile, "\".");
 		return 0;
 	}
 
@@ -28,7 +29,7 @@ t_char* load_file(const char* pcFile)
 	pcInput[iFileLen] = 0;
 
 	if(ifstr.fail())
-		G_CERR << "Error: Failed loading file \"" << pcFile << "\"." << std::endl;
+		log_err("Failed loading file \"", pcFile, "\".");
 
 	return pcInput;
 }
