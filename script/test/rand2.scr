@@ -6,7 +6,7 @@ rand_gauss_2d()
 
 	do_rotate = 1;
 
-	angle = 45./180.*pi;
+	angle = 25./180.*pi;
 	c = cos(angle);
 	s = sin(angle);
 	rotmat = [[c,-s],[s,c]];

@@ -554,6 +554,9 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	const ROOT::Minuit2::FunctionMinimum& lastmini = *minis.rbegin();
 
 
+	std::vector<double> vecLastParams;
+	vecLastParams.reserve(vecParamNames.size());
+
 	SymbolMap *pSymMap = new SymbolMap();
 	for(const t_string& strSym : vecParamNames)
 	{
@@ -562,6 +565,8 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		t_real dVal = lastmini.UserState().Value(_strSym);
 		t_real dErr = lastmini.UserState().Error(_strSym);
 		dErr = fabs(dErr);
+
+		vecLastParams.push_back(dVal);
 
 		SymbolArray* pArr = new SymbolArray();
 		pArr->GetArr().push_back(new SymbolDouble(dVal));
@@ -613,6 +618,10 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 					vecMinosErrs[iParam].second);
 			}
 		}
+
+		double dChi2 = chi2fkt(vecLastParams);
+		log_info("Chi^2 = ", dChi2);
+		log_info("Chi^2 / ndf = ", dChi2 / double(vecLastParams.size()));
 	}
 
 	SymbolInt *pSymFitValid = new SymbolInt(bValidFit);
