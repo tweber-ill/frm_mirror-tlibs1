@@ -15,7 +15,6 @@
 #include <boost/units/systems/si/codata/electron_constants.hpp>
 
 int yydebug = 0;
-bool g_bDebug = 0;
 
 const t_char* g_pcVersion = T_STR"Hermelin script interpreter, version 0.6.5";
 

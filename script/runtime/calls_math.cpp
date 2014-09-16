@@ -368,6 +368,8 @@ static Symbol* fkt_ifft(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Sy
 template<typename T=t_real> using t_vec = ublas::vector<T>;
 template<typename T=t_real> using t_mat = ublas::matrix<T>;
 
+template<typename T=t_real> using t_stdvec = std::vector<T>;
+
 
 static Symbol* fkt_length(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
 {
@@ -831,6 +833,24 @@ static Symbol* fkt_rand_norm(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 	t_real dRand = rand_norm<t_real>(dMu, dSigma);
 	return new SymbolDouble(dRand);
 }
+
+static Symbol* fkt_rand_norm_nd(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(!check_args(info, vecSyms, {SYMBOL_ARRAY, SYMBOL_ARRAY}, {0,0}, "rand_norm_nd"))
+		return 0;
+
+	t_stdvec<t_real> vecMu = sym_to_vec<t_stdvec>(vecSyms[0]);
+	t_stdvec<t_real> vecSigma = sym_to_vec<t_stdvec>(vecSyms[1]);
+
+	if(vecMu.size() != vecSigma.size())
+	{
+		log_err(linenr(info), "Mu and sigma arrays have different sizes.");
+		return 0;
+	}
+
+	t_stdvec<t_real> vecResult = rand_norm_nd<t_real>(vecMu, vecSigma);
+	return vec_to_sym<t_stdvec>(vecResult);
+}
 // --------------------------------------------------------------------------------
 
 
@@ -994,6 +1014,7 @@ extern void init_ext_math_calls()
 		t_mapFkts::value_type(T_STR"rand_real", fkt_rand_real),
 		t_mapFkts::value_type(T_STR"rand_int", fkt_rand_int),
 		t_mapFkts::value_type(T_STR"rand_norm", fkt_rand_norm),
+		t_mapFkts::value_type(T_STR"rand_norm_nd", fkt_rand_norm_nd),
 
 		// float classification
 		t_mapFkts::value_type(T_STR"isnan", fkt_math_1arg_bret<std::isnan>),

@@ -35,12 +35,16 @@ static inline int script_main(int argc, char** argv)
 		G_COUT << "\nArguments to hermelin:" << "\n";
 		G_COUT << "\t-t, --timing\t\tShow timing information.\n";
 		G_COUT << "\t-s, --symbols\t\tShow symbol tables.\n";
-		//G_COUT << "\t-d, --debug\t\tEnable debug output.\n";
+		G_COUT << "\t-d[0-4] \t\tVerbosity (0=none, 1=errors, 2=warnings, 3=infos, 4=debug).\n";
 		G_COUT << std::endl;
 		return -1;
 	}
 
 	bool bShowSymbols = 0;
+	unsigned int uiDebugLevel = 3;
+#ifndef NDEBUG
+	uiDebugLevel = 4;
+#endif
 	unsigned int iStartArg = 1;
 	for(iStartArg=1; iStartArg<argc; ++iStartArg)
 	{
@@ -55,12 +59,19 @@ static inline int script_main(int argc, char** argv)
 			g_bShowTiming = 1;
 		else if(strArg=="-s" || strArg == "--symbols")
 			bShowSymbols = 1;
-		else if(strArg=="-d" || strArg == "--debug")
-			g_bDebug = 1;
+		else if(strArg=="-d0") uiDebugLevel = 0;
+		else if(strArg=="-d1") uiDebugLevel = 1;
+		else if(strArg=="-d2") uiDebugLevel = 2;
+		else if(strArg=="-d3") uiDebugLevel = 3;
+		else if(strArg=="-d4") uiDebugLevel = 4;
 	}
 
+	const std::array<Log*, 5> arrLogs{&log_crit, &log_err, &log_warn, &log_info, &log_debug};
+	for(unsigned int iLog=0; iLog<arrLogs.size(); ++iLog)
+		arrLogs[iLog]->SetEnabled(uiDebugLevel>=iLog);
+
 	// debug in script.yy needs to be set
-	yydebug = g_bDebug;
+	yydebug = (uiDebugLevel==4);
 
 	if(iStartArg >= argc)
 	{
