@@ -20,7 +20,7 @@ int fib(int a)
 int main()
 {
 	int a = 0;
-	while(a < 10)
+	while(a < 15)
 	{
 		int result = fak(a);
 		std::cout << a << "! = " << result << std::endl;
@@ -32,7 +32,7 @@ int main()
 	std::cout << "\n\n";
 
 	a = 0;
-	while(a < 30)
+	while(a < 40)
 	{
 		int result = fib(a);
 		std::cout << "fib(" << a << ") = " << result << std::endl;
