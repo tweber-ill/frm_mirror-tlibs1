@@ -33,8 +33,31 @@ enum SymbolType : unsigned int
 	SYMBOL_ANY = 0xffffffff
 };
 
+
+class Symbol;
 class SymbolArray;
 class SymbolMap;
+class SymbolString;
+class SymbolInt;
+class SymbolDouble;
+
+
+struct SymbolMapKey
+{
+	std::size_t key;	// the actual hash
+	t_string strKey;	// key as string
+	SymbolType tyKey;	// key type
+
+	SymbolMapKey(const t_string& _str);
+	SymbolMapKey(t_string&& _str);
+
+	SymbolMapKey(const Symbol* pSym);
+
+	SymbolMapKey() = default;
+};
+
+
+
 class Symbol
 {
 protected:
@@ -44,7 +67,7 @@ protected:
 	unsigned int m_iArrIdx;			// if symbol is contained in an array
 	SymbolArray *m_pArr;
 
-	std::size_t m_iMapKey;			// if symbol is contained in a map
+	SymbolMapKey m_MapKey;			// if symbol is contained in a map
 	SymbolMap *m_pMap;
 
 public:
@@ -83,8 +106,9 @@ public:
 	SymbolMap* GetMapPtr() { return m_pMap; }
 	void SetMapPtr(SymbolMap* pMap) { m_pMap = pMap; }
 
-	std::size_t GetMapKey() const { return m_iMapKey; }
-	void SetMapKey(std::size_t i) { m_iMapKey = i; }
+	const SymbolMapKey& GetMapKey() const { return m_MapKey; }
+	void SetMapKey(const SymbolMapKey& key) { m_MapKey = key; }
+	void SetMapKey(SymbolMapKey&& key) { m_MapKey = key; }
 
 
 	SymbolArray* GetArrPtr() const { return m_pArr; }
@@ -252,20 +276,6 @@ public:
 
 
 
-struct SymbolMapKey
-{
-	std::size_t key;	// the actual hash
-	t_string strKey;	// optional key name
-
-	SymbolMapKey(std::size_t _key) : key(_key) {}
-
-	SymbolMapKey(std::size_t _key, const t_string& _str) : key(_key), strKey(_str) {}
-	SymbolMapKey(std::size_t _key, t_string&& _str) : key(_key), strKey(_str) {}
-
-	SymbolMapKey(const t_string& _str) : key(SymbolString::hash(_str)), strKey(_str) {}
-	SymbolMapKey(t_string&& _str) : key(SymbolString::hash(_str)), strKey(_str) {}
-};
-
 struct SymbolMapKeyHash
 {
 	std::size_t operator()(const SymbolMapKey& key) const { return key.key; }
@@ -273,8 +283,8 @@ struct SymbolMapKeyHash
 
 struct SymbolMapKeyEqual
 {
-	bool operator()(const SymbolMapKey& key0, const SymbolMapKey& key1) const 
-	{ return key0.key==key1.key; }
+	bool operator()(const SymbolMapKey& key0, const SymbolMapKey& key1) const
+	{ return key0.key==key1.key && key0.strKey==key1.strKey && key0.tyKey==key1.tyKey; }
 };
 
 class SymbolMap : public Symbol
@@ -308,13 +318,13 @@ public:
 	void UpdateIndex(const t_map::key_type& strKey);
 	void UpdateIndices();
 
-	t_string GetStringVal(std::size_t key, bool *pbHasVal=0) const;
-	t_int GetIntVal(std::size_t key, bool *pbHasVal=0) const;
+	t_string GetStringVal(const SymbolMapKey& key, bool *pbHasVal=0) const;
+	t_int GetIntVal(const SymbolMapKey& key, bool *pbHasVal=0) const;
 
 	t_string GetStringVal(const t_string& strKey, bool *pbHasVal=0) const
-	{ return GetStringVal(SymbolString::hash(strKey), pbHasVal); }
+	{ return GetStringVal(SymbolMapKey(strKey), pbHasVal); }
 	t_int GetIntVal(const t_string& strKey, bool *pbHasVal=0) const
-	{ return GetIntVal(SymbolString::hash(strKey), pbHasVal); }
+	{ return GetIntVal(SymbolMapKey(strKey), pbHasVal); }
 
 	virtual bool IsScalar() const override { return 0; }
 

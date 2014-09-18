@@ -283,13 +283,9 @@ Symbol* NodeMap::eval(ParseInfo &info, SymbolTable *pSym) const
 
 		if(pSymFirst && pSymSecond)
 		{
-			std::size_t iKey = pSymFirst->hash();
-			t_string strKey;
-			if(pSymFirst->GetType() == SYMBOL_STRING)
-				strKey = ((SymbolString*)pSymFirst)->GetVal();
 			pSymMap->GetMap().insert(
-				SymbolMap::t_map::value_type(SymbolMapKey(iKey, std::move(strKey)), 
-								pSymSecond->clone()));
+				SymbolMap::t_map::value_type(SymbolMapKey(pSymFirst),
+				pSymSecond->clone()));
 		}
 
 		safe_delete(pSymFirst, pSym, info.pGlobalSyms);
@@ -633,28 +629,23 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 			throw Err(ostrErr.str(),0);
 		}
 
-		std::size_t iKey = pSymExpr->hash();
-		t_string strKey;
-		if(pSymExpr->GetType() == SYMBOL_STRING)
-			strKey = ((SymbolString*)pSymExpr)->GetVal();
-
 		SymbolMap *pMap = (SymbolMap*)pSymbol;
-		SymbolMap::t_map::iterator iterMap = pMap->GetMap().find(iKey);
+		SymbolMapKey key = SymbolMapKey(pSymExpr);
+		SymbolMap::t_map::iterator iterMap = pMap->GetMap().find(key);
 
 		// key not yet in map -> insert it
 		if(iterMap == pMap->GetMap().end())
 		{
 			SymbolString *pNewSym = new SymbolString();
 			pNewSym->SetName(T_STR"<const>");
-			iterMap = pMap->GetMap().insert(
-				SymbolMap::t_map::value_type(SymbolMapKey(iKey, strKey), pNewSym)).first;
+			iterMap = pMap->GetMap().insert(SymbolMap::t_map::value_type(key, pNewSym)).first;
 		}
 
 		if((void*)pSymbol != (void*)iterMap->second)
 			safe_delete(pSymbol, pSym, info.pGlobalSyms);
 
 		pSymbol = iterMap->second;
-		pMap->UpdateIndex(iKey);
+		pMap->UpdateIndex(key);
 		safe_delete(pSymExpr, pSym, info.pGlobalSyms);
 	}
 	else if(pSymbol->GetType() == SYMBOL_STRING)
@@ -976,17 +967,17 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 		}
 		else if(pSymLeft->GetMapPtr())		// map
 		{
-			std::size_t iMapKey = pSymLeft->GetMapKey();
+			const SymbolMapKey& MapKey = pSymLeft->GetMapKey();
 			SymbolMap* pMap = pSymLeft->GetMapPtr();
 
-			SymbolMap::t_map::iterator iterMap = pMap->GetMap().find(iMapKey);
+			SymbolMap::t_map::iterator iterMap = pMap->GetMap().find(MapKey);
 
 			// symbol not in map -> insert a zero
 			if(iterMap == pMap->GetMap().end())
 			{
 				SymbolDouble *pNewSym = new SymbolDouble(0.);
 				pNewSym->SetName(T_STR"<const>");
-				iterMap = pMap->GetMap().insert(SymbolMap::t_map::value_type(iMapKey, pNewSym)).first;
+				iterMap = pMap->GetMap().insert(SymbolMap::t_map::value_type(MapKey, pNewSym)).first;
 			}
 
 			Symbol* pSymOld = iterMap->second;
@@ -998,7 +989,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 			}
 
 			pSymbol->SetMapPtr(pMap);
-			pSymbol->SetMapKey(iMapKey);
+			pSymbol->SetMapKey(MapKey);
 			iterMap->second = pSymbol;
 
 			pSymOld->SetMapPtr(0);

@@ -9,6 +9,24 @@
 #include <set>
 #include <limits>
 
+
+
+SymbolMapKey::SymbolMapKey(const t_string& _str) 
+	: key(SymbolString::hash(_str)), strKey(_str), tyKey(SYMBOL_STRING) 
+{}
+
+SymbolMapKey::SymbolMapKey(t_string&& _str) 
+	: key(SymbolString::hash(_str)), strKey(_str), tyKey(SYMBOL_STRING) 
+{}
+
+SymbolMapKey::SymbolMapKey(const Symbol* pSym) 
+	: key(pSym->hash()), 
+		strKey(pSym->GetType()==SYMBOL_STRING?pSym->print():""), 
+		tyKey(pSym->GetType())
+{}
+
+
+
 const int SymbolDouble::m_defprec = std::numeric_limits<t_real>::digits10;
 int SymbolDouble::m_prec = m_defprec;
 
@@ -422,7 +440,7 @@ void SymbolMap::UpdateIndex(const t_map::key_type& key)
 		//G_COUT << "updating index for " << strKey << std::endl;
 
 		iter->second->SetMapPtr(this);
-		iter->second->SetMapKey(iter->first.key);
+		iter->second->SetMapKey(iter->first);
 	}
 }
 
@@ -433,15 +451,15 @@ void SymbolMap::UpdateIndices()
 		//G_COUT << "updating index for " << val.first << std::endl;
 
 		val.second->SetMapPtr(this);
-		val.second->SetMapKey(val.first.key);
+		val.second->SetMapKey(val.first);
 	}
 }
 
-t_string SymbolMap::GetStringVal(std::size_t strKey, bool *pbHasVal) const
+t_string SymbolMap::GetStringVal(const SymbolMapKey& key, bool *pbHasVal) const
 {
 	if(pbHasVal) *pbHasVal = 0;
 
-	t_map::const_iterator iter = m_map.find(strKey);
+	t_map::const_iterator iter = m_map.find(key);
 	if(iter == m_map.end())
 		return T_STR"";
 
@@ -455,11 +473,11 @@ t_string SymbolMap::GetStringVal(std::size_t strKey, bool *pbHasVal) const
 	return pSym->print();
 }
 
-t_int SymbolMap::GetIntVal(std::size_t strKey, bool *pbHasVal) const
+t_int SymbolMap::GetIntVal(const SymbolMapKey& key, bool *pbHasVal) const
 {
 	if(pbHasVal) *pbHasVal = 0;
 
-	t_map::const_iterator iter = m_map.find(strKey);
+	t_map::const_iterator iter = m_map.find(key);
 	if(iter == m_map.end())
 		return 0;
 

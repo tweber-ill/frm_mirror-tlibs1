@@ -124,14 +124,16 @@ main(args)
 
 	U = [orient1, orient2, orientup];
 	B = B_matrix(a,b,c, alpha/180.*pi,beta/180.*pi,gamma/180.*pi);
-	#UB = prod(U, B);
+	UB = prod(U, B);
 
-        #print("B = " + str(B));
-        #print("U = " + str(U));
+	print("U = " + str(U));
+	print("B = " + str(B));
+	print("UB = " + str(UB));
+	print("-"*80);
 
 	Q_vec = prod(B, hkl);
-	#Q_vec_in_U = prod(UB, hkl);
-	Q_vec_in_U = prod(U, Q_vec);
+	Q_vec_in_U = prod(UB, hkl);
+	#Q_vec_in_U = prod(U, Q_vec);
 
 	print("Q = " + str(Q_vec) + " 1/A");
 	print("Q_plane = " + str(Q_vec_in_U) + " 1/A");

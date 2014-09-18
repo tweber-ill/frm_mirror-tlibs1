@@ -1111,9 +1111,8 @@ static Symbol* fkt_has_key(const std::vector<Symbol*>& vecSyms,
 		return 0;
 
 	const SymbolMap* pMap = (SymbolMap*)vecSyms[0];
-	std::size_t iKey = vecSyms[1]->hash();
 
-	int bHasKey = (pMap->GetMap().find(iKey) != pMap->GetMap().end());
+	int bHasKey = (pMap->GetMap().find(vecSyms[1]) != pMap->GetMap().end());
 	return new SymbolInt(bHasKey);
 }
 
