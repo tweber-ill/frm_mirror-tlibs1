@@ -12,7 +12,7 @@ bragg_tail(k, q, kf_fix=1)
 	if(kf_fix)
 		term = -term;
 
-	om = -hbar / m_n * k*q*(1+term);
+	om = hbar / m_n * k*q*(1+term);
 	E = hbar * om;
 	E /= q_e;
 
@@ -25,7 +25,7 @@ bragg_tail(k, q, kf_fix=1)
 # -> Shirane, p. 152
 bragg_tail_approx(k_i, q)
 {
-	return -4.*k_i * q;
+	return 4.*k_i * q;
 }
 
 
@@ -58,11 +58,11 @@ main(args)
 	q = linspace(-2., 2., 64);
 	E_kf_fix = bragg_tail(k, q, 1);
 	E_ki_fix = bragg_tail(k, q, 0);
-#	E_ki_fix_approx = bragg_tail_approx(k, q);
+	E_ki_fix_approx = bragg_tail_approx(k, q);
 
 	plot([	[q, E_kf_fix, ["style":"line", "legend":"k_f = fixed", "size":2, "color":0xff0000]],
 		[q, E_ki_fix, ["style":"line", "legend":"k_i = fixed", "size":2, "color":0x0000ff]],
-#		[q, E_ki_fix_approx, ["style":"line", "legend":"k_i = fixed, approx.", "size":2, "color":0x00ffff]]
+		[q, E_ki_fix_approx, ["style":"line", "legend":"k_i = fixed, approx.", "size":2, "color":0x00ffff]]
 		], 
 			["xlabel":"q (1/A)", 
 			"ylabel":"E (meV)",
