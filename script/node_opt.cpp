@@ -4,7 +4,7 @@
  * @date 27-sep-2014
  */
 
-#include "node_opt.h"
+#include "node.h"
 #include "helper/log.h"
 
 static bool is_symbol_node(const Node *pNode)
@@ -259,4 +259,62 @@ Node* NodeFunction::optimize()
 	if(m_pStmts) m_pStmts = m_pStmts->optimize();
 
 	return this;
+}
+
+
+//--------------------------------------------------------------------------------
+
+void NodeBinaryOp::FlattenNodes(NodeType ntype)
+{
+	if(GetType() == ntype)
+	{
+		m_vecNodesFlat = this->flatten(ntype);
+		//G_COUT << "Node type: " << ntype << ", flattened: " << m_vecNodesFlat.size() << std::endl;
+	}
+}
+
+// TODO: Fix: Gets called for non casted NodeBinaryOps which are of other type!
+std::vector<Node*> NodeBinaryOp::flatten(NodeType ntype) const
+{
+	//G_COUT << GetType() << ", " << ntype << std::endl;
+
+	std::vector<Node*> vecNodes;
+
+	if(GetType() == ntype)
+	{
+		NodeBinaryOp *pLeft = (NodeBinaryOp*) m_pLeft;
+		NodeBinaryOp *pRight = (NodeBinaryOp*) m_pRight;
+
+		if(m_pLeft)
+		{
+			if(m_pLeft->GetType() == ntype)
+			{
+				std::vector<Node*> vecLeft = pLeft->flatten(ntype);
+				vecNodes.insert(vecNodes.begin(), vecLeft.begin(), vecLeft.end());
+			}
+			else
+			{
+				vecNodes.push_back(m_pLeft);
+			}
+		}
+
+		if(m_pRight)
+		{
+			if(m_pRight->GetType() == ntype)
+			{
+				std::vector<Node*> vecRight = pRight->flatten(ntype);
+				vecNodes.insert(vecNodes.end(), vecRight.begin(), vecRight.end());
+			}
+			else
+			{
+				vecNodes.push_back(m_pRight);
+			}
+		}
+	}
+	else
+	{
+		vecNodes.push_back(const_cast<NodeBinaryOp*>(this));
+	}
+
+	return vecNodes;
 }

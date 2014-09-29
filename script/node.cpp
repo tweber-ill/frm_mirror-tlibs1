@@ -613,15 +613,6 @@ NodeBinaryOp::NodeBinaryOp(Node* pLeft, Node* pRight, NodeType ntype)
 	: Node(ntype), m_pLeft(pLeft), m_pRight(pRight), m_bGlobal(0)
 {}
 
-void NodeBinaryOp::FlattenNodes(NodeType ntype)
-{
-	if(GetType() == ntype)
-	{
-		m_vecNodesFlat = this->flatten(ntype);
-		//G_COUT << "Node type: " << ntype << ", flattened: " << m_vecNodesFlat.size() << std::endl;
-	}
-}
-
 
 NodeCall::NodeCall(Node* _pIdent, Node* _pArgs)
 	: Node(NODE_CALL), m_pIdent(_pIdent), m_pArgs(_pArgs)
@@ -807,53 +798,8 @@ Node* NodeFunction::clone() const
 }
 
 
+
 //--------------------------------------------------------------------------------
-
-// TODO: Fix: Gets called for non casted NodeBinaryOps which are of other type!
-std::vector<Node*> NodeBinaryOp::flatten(NodeType ntype) const
-{
-	//G_COUT << GetType() << ", " << ntype << std::endl;
-
-	std::vector<Node*> vecNodes;
-
-	if(GetType() == ntype)
-	{
-		NodeBinaryOp *pLeft = (NodeBinaryOp*) m_pLeft;
-		NodeBinaryOp *pRight = (NodeBinaryOp*) m_pRight;
-
-		if(m_pLeft)
-		{
-			if(m_pLeft->GetType() == ntype)
-			{
-				std::vector<Node*> vecLeft = pLeft->flatten(ntype);
-				vecNodes.insert(vecNodes.begin(), vecLeft.begin(), vecLeft.end());
-			}
-			else
-			{
-				vecNodes.push_back(m_pLeft);
-			}
-		}
-
-		if(m_pRight)
-		{
-			if(m_pRight->GetType() == ntype)
-			{
-				std::vector<Node*> vecRight = pRight->flatten(ntype);
-				vecNodes.insert(vecNodes.end(), vecRight.begin(), vecRight.end());
-			}
-			else
-			{
-				vecNodes.push_back(m_pRight);
-			}
-		}
-	}
-	else
-	{
-		vecNodes.push_back(const_cast<NodeBinaryOp*>(this));
-	}
-
-	return vecNodes;
-}
 
 
 const t_string& NodeFunction::GetName() const

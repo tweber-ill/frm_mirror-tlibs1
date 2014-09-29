@@ -68,7 +68,7 @@ obj/node_eval.o: node_eval.cpp node.h
 obj/symbol.o: symbol.cpp symbol.h
 	${CC} ${FLAGS} -c -o obj/symbol.o symbol.cpp
 
-obj/node_opt.o: node_opt.cpp node_opt.h
+obj/node_opt.o: node_opt.cpp node.h
 	${CC} ${FLAGS} -c -o obj/node_opt.o node_opt.cpp
 
 

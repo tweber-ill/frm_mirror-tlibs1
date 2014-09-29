@@ -19,7 +19,6 @@
 #include "script_helper.h"
 #include "globals.h"
 #include "calls.h"
-#include "node_opt.h"
 
 extern int yyparse(void*);
 static bool g_bShowTiming = 0;
