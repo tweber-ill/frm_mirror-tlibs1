@@ -124,6 +124,7 @@ static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
 			pArrCol->GetArr().push_back(pSymD);
 		}
 
+		pArrCol->UpdateIndices();
 		pArr->GetArr().push_back(pArrCol);
 	}
 
@@ -143,6 +144,7 @@ static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
 	}
 	pArr->GetArr().push_back(pSymMap);
 
+	pArr->UpdateIndices();
 	return pArr;
 }
 

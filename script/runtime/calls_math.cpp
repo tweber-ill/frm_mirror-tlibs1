@@ -39,7 +39,6 @@ static inline Symbol* _fkt_linlogspace(const std::vector<Symbol*>& vecSyms,
 	}
 
 	pSymRet->UpdateIndices();
-
 	return pSymRet;
 }
 
@@ -706,6 +705,7 @@ static Symbol* fkt_eigenvecs(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 		pSymEvals_imag->GetArr().push_back(pSymReal);
 	}
 
+	pSymRet->UpdateIndices();
 	return pSymRet;
 }
 
@@ -748,6 +748,7 @@ static Symbol* fkt_eigenvecs_sym(const std::vector<Symbol*>& vecSyms, ParseInfo&
 		pSymEvals_real->GetArr().push_back(pSymReal);
 	}
 
+	pSymRet->UpdateIndices();
 	return pSymRet;
 }
 
@@ -776,6 +777,7 @@ static Symbol* fkt_qr(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Symb
 	pSymRet->GetArr().push_back(pQ);
 	pSymRet->GetArr().push_back(pR);
 
+	pSymRet->UpdateIndices();
 	return pSymRet;
 }
 

@@ -5,7 +5,8 @@ main()
 
 	print("Entered: \"" + a + "\"");
 	print("Trimmed: \"" + trim(a) + "\"");
-	print("Tokens: " + str(split(a)));
+	print("Split: " + str(split(a, " ")));
+	print("Tokens: " + str(tokens(a)));
 	print("Int: " + int(a));
 	print("Real: " + real(a));
 }

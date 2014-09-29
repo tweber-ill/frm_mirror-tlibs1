@@ -7,7 +7,7 @@ thread_func(a)
 			print("In " + a +  ": " + i);
 		end_critical(mtx);
 
-		i = i+1;
+		i += 1;
 	}
 }
 
@@ -16,6 +16,7 @@ main()
 	global mtx = mutex();
 
 	nthreads = thread_hwcount();
+	nthreads *= 2;
 	print("Hardware supports " + thread_hwcount() + " threads.\n");
 
 	th = vec(nthreads);

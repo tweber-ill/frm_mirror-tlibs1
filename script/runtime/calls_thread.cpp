@@ -106,7 +106,7 @@ static Symbol* task_proc(NodeFunction* pFunc, ParseInfo* pinfo, std::vector<Symb
 	ParseInfo *pinfo2 = 0;
 	{
 		std::lock_guard<std::mutex> _lck(*pinfo->pmutexInterpreter);
-		pThreadFunc = (NodeFunction*)pFunc/*->clone()*/;
+		pThreadFunc = (NodeFunction*)pFunc->clone();
 		pinfo2 = new ParseInfo(*pinfo);	// threads cannot share the same bWantReturn etc.
 		pinfo2->bDestroyParseInfo = 0;
 		if(pvecSyms) arrArgs.GetArr() = *pvecSyms;
@@ -119,7 +119,7 @@ static Symbol* task_proc(NodeFunction* pFunc, ParseInfo* pinfo, std::vector<Symb
 
 	if(pTable) delete pTable;
 	if(pvecSyms) delete_symbols(pvecSyms);
-	//if(pThreadFunc) delete pThreadFunc;
+	if(pThreadFunc) delete pThreadFunc;
 	if(pinfo2) delete pinfo2;
 
 	return pRet;
@@ -465,6 +465,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 			vecSymArrays[iCurTh] = new SymbolArray();
 
 		vecSymArrays[iCurTh]->GetArr().push_back(pThisSym->clone());
+		vecSymArrays[iCurTh]->UpdateLastNIndices(1);
 
 		++iCurTh;
 		if(iCurTh == iNumThreads)
@@ -511,6 +512,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 		pArrThreads->GetArr().push_back(pSymThreadHandle);
 	}
 
+	pArrThreads->UpdateIndices();
 	return pArrThreads;
 }
 

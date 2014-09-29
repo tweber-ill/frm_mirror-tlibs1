@@ -9,6 +9,7 @@
 #include "helper/string.h"
 #include "helper/spec_char.h"
 #include "helper/log.h"
+
 #include <iostream>
 #include <fstream>
 #include <cmath>
@@ -18,6 +19,7 @@
 #include "script_helper.h"
 #include "globals.h"
 #include "calls.h"
+#include "node_opt.h"
 
 extern int yyparse(void*);
 static bool g_bShowTiming = 0;
@@ -71,7 +73,7 @@ static inline int script_main(int argc, char** argv)
 		arrLogs[iLog]->SetEnabled(uiDebugLevel>=iLog);
 
 	// debug in script.yy needs to be set
-	yydebug = (uiDebugLevel==4);
+	yydebug = (uiDebugLevel>=4);
 
 	if(iStartArg >= argc)
 	{
@@ -79,6 +81,9 @@ static inline int script_main(int argc, char** argv)
 		return -1;
 	}
 
+
+
+	// loading of input file
 	const char* pcFile = argv[iStartArg];
 	t_string strFile = STR_TO_WSTR(pcFile);
 
@@ -86,9 +91,13 @@ static inline int script_main(int argc, char** argv)
 	if(!pcInput)
 		return -2;
 
+
 	ParseObj par;
 	ParseInfo info;
+	info.bEnableDebug = (uiDebugLevel>=4);
 
+
+	// lexing
 	par.strCurFile = strFile;
 	par.pLexer = new Lexer(pcInput, strFile.c_str());
 
@@ -103,7 +112,8 @@ static inline int script_main(int argc, char** argv)
 
 	init_global_syms(info.pGlobalSyms);
 
-	//yydebug = 0;
+
+	// parsing
 	int iParseRet = yyparse(&par);
 
 	delete par.pLexer;
@@ -115,6 +125,13 @@ static inline int script_main(int argc, char** argv)
 		return -4;
 	}
 
+
+	// optimizing
+	par.pRoot = par.pRoot->optimize();
+
+
+
+	// executing
 	SymbolArray *parrMainArgs = new SymbolArray();
 	for(int iArg=iStartArg; iArg<argc; ++iArg)
 	{
@@ -137,6 +154,7 @@ static inline int script_main(int argc, char** argv)
 	par.pRoot->eval(info, pTableSup);
 	pTableSup->RemoveSymbolNoDelete(T_STR"<args>");
 	delete pTableSup;
+
 
 	if(bShowSymbols)
 	{

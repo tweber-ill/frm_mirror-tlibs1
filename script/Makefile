@@ -1,7 +1,7 @@
 CC = gcc
 #CC = clang
 OPT_FLAGS = -O2 -march=native -DNDEBUG
-#OPT_FLAGS = -ggdb -DDEBUG
+#OPT_FLAGS = -ggdb -DDEBUG -rdynamic
 DEFINES = -DNO_QT -DNO_COMP
 INCS = 
 FLAGS = -std=c++11 -fopenmp ${OPT_FLAGS} ${DEFINES} ${INCS}
@@ -33,7 +33,7 @@ hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/nod
 		obj/calls_plot.o obj/calls_math.o obj/calls_file.o obj/calls_thread.o \
 		obj/calls_fit.o obj/globals.o obj/flags.o obj/fitter.o obj/chi2.o \
 		obj/interpolation.o obj/spec_char.o obj/linalg.o obj/linalg2.o \
-		obj/log.o
+		obj/log.o obj/node_opt.o
 	${CC} ${FLAGS} -o hermelin obj/script.o obj/lexer.o obj/main.o obj/yylexer.o \
 		obj/symbol.o obj/node.o obj/node_eval.o obj/calls.o obj/handles.o \
 		obj/gnuplot.o obj/file.o obj/string.o obj/loadtxt.o obj/rand.o \
@@ -42,7 +42,7 @@ hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/nod
 		obj/calls_file.o obj/calls_thread.o obj/calls_fit.o obj/globals.o \
 		obj/flags.o obj/fitter.o obj/chi2.o obj/interpolation.o \
 		obj/spec_char.o obj/linalg.o obj/linalg2.o \
-		obj/log.o \
+		obj/log.o obj/node_opt.o \
 			${LIBS}
 	strip hermelin
 
@@ -67,6 +67,9 @@ obj/node_eval.o: node_eval.cpp node.h
 
 obj/symbol.o: symbol.cpp symbol.h
 	${CC} ${FLAGS} -c -o obj/symbol.o symbol.cpp
+
+obj/node_opt.o: node_opt.cpp node_opt.h
+	${CC} ${FLAGS} -c -o obj/node_opt.o node_opt.cpp
 
 
 obj/calls.o: calls.cpp calls.h

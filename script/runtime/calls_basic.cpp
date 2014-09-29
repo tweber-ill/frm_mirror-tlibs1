@@ -138,6 +138,32 @@ static Symbol* fkt_version(const std::vector<Symbol*>& vecSyms,
 	return new SymbolString(g_pcVersion);
 }
 
+static Symbol* fkt_traceback(const std::vector<Symbol*>& vecSyms,
+							ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(!info.bEnableDebug)
+		log_warn(linenr(info), "Debugging is disabled.");
+
+	ParseInfo::t_stckTraceback& mapstck = info.stckTraceback;
+	typedef typename ParseInfo::t_stckTraceback::value_type::second_type t_stck;
+	t_stck& stck = mapstck[std::this_thread::get_id()];
+
+	SymbolArray *pArr = new SymbolArray();
+	unsigned int iCur = 0;
+	for(t_stck::const_iterator iter = stck.begin(); iter!=stck.end(); ++iter)
+	{
+		const t_string& str = *iter;
+
+		SymbolString *pStr = new SymbolString(std::to_string(iCur) + ": " + str);
+		pArr->GetArr().push_back(pStr);
+
+		++iCur;
+	}
+
+	pArr->UpdateIndices();
+	return pArr;
+}
+
 static Symbol* fkt_is_valid(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
@@ -147,6 +173,15 @@ static Symbol* fkt_is_valid(const std::vector<Symbol*>& vecSyms,
 			return new SymbolInt(0);
 	}
 	return new SymbolInt(1);
+}
+
+static Symbol* fkt_is_rval(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(!check_args(info, vecSyms, {SYMBOL_ANY}, {0}, "is_rval", "Symbol needed."))
+		return 0;
+
+	return new SymbolInt(vecSyms[0]->IsRval());
 }
 
 static Symbol* fkt_null(const std::vector<Symbol*>& vecSyms,
@@ -228,6 +263,7 @@ static Symbol* fkt_double_vec(const std::vector<Symbol*>& vecSyms,
 			pSymRet->GetArr().push_back(pSymCast);
 	}
 
+	pSymRet->UpdateIndices();
 	return pSymRet;
 }
 
@@ -335,6 +371,9 @@ static bool _import_file(const t_string& strFile, ParseInfo& info, SymbolTable* 
 	}
 
 	Node *pRoot = par.pRoot;
+	if(pRoot) pRoot = pRoot->optimize();
+
+
 	info.pmapModules->insert(ParseInfo::t_mods::value_type(strFile, pRoot));
 	info.strExecFkt = T_STR"";
 	info.strInitScrFile = strFile;
@@ -516,11 +555,10 @@ static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
 	for(t_int i=0; i<iVal; ++i)
 		pSymRet->GetArr().push_back(pSymVal->clone());
 
-	pSymRet->UpdateIndices();
-
 	if(bOwnVal)
 		delete pSymVal;
 
+	pSymRet->UpdateIndices();
 	return pSymRet;
 }
 
@@ -775,6 +813,7 @@ static Symbol* fkt_sort(const std::vector<Symbol*>& vecSyms,
 		pArrArr->GetArr().push_back(pNextArr);
 	}
 
+	pArrArr->UpdateIndices();
 	return pArrArr;
 }
 
@@ -823,6 +862,7 @@ static Symbol* fkt_zip(const std::vector<Symbol*>& vecSyms,
 			((SymbolArray*)(*pVec)[i])->GetArr().push_back(curSym[i]->clone());
 	}
 
+	pArrRet->UpdateIndices();
 	return pArrRet;
 }
 // --------------------------------------------------------------------------------
@@ -848,6 +888,7 @@ static Symbol* fkt_trim(const std::vector<Symbol*>& vecSyms,
 			pArr->GetArr().push_back(fkt_trim(vecDummy, info, pSymTab));
 		}
 
+		pArr->UpdateIndices();
 		return pArr;
 	}
 	else if(vecSyms[0]->GetType() == SYMBOL_STRING)
@@ -867,22 +908,32 @@ static Symbol* fkt_trim(const std::vector<Symbol*>& vecSyms,
 static Symbol* fkt_split(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_STRING, SYMBOL_STRING}, {0,0}, "split"))
+	if(!check_args(info, vecSyms, {SYMBOL_STRING, SYMBOL_STRING}, {0, 1}, "split"))
 		return 0;
 
+	static const std::string strDefaultDelim = " ";
+
 	const t_string& str = ((SymbolString*)vecSyms[0])->GetVal();
-	const t_string& strDelim = ((SymbolString*)vecSyms[1])->GetVal();
-	std::size_t iPos = str.find(strDelim);
+	const t_string* pstrDelim;
+
+	if(vecSyms.size() >= 2)
+		pstrDelim = &((SymbolString*)vecSyms[1])->GetVal();
+	else
+		pstrDelim = &strDefaultDelim;
+
+	std::size_t iPos = str.find(*pstrDelim);
 
 	t_string str0 = str.substr(0, iPos);
 	t_string str1;
 
 	if(iPos != t_string::npos)
-		str1 = str.substr(iPos + strDelim.length(), t_string::npos);
+		str1 = str.substr(iPos + pstrDelim->length(), t_string::npos);
 
 	SymbolArray* pSymRet = new SymbolArray();
 	pSymRet->GetArr().push_back(new SymbolString(str0));
 	pSymRet->GetArr().push_back(new SymbolString(str1));
+
+	pSymRet->UpdateIndices();
 	return pSymRet;
 }
 
@@ -915,6 +966,7 @@ static Symbol* fkt_tokens(const std::vector<Symbol*>& vecSyms,
 	for(const t_string& strTok : vecTokens)
 		pArr->GetArr().push_back(new SymbolString(strTok));
 
+	pArr->UpdateIndices();
 	return pArr;
 }
 
@@ -1026,6 +1078,7 @@ static Symbol* fkt_find_regex(const std::vector<Symbol*>& vecSyms,
 		pMatch->GetArr().push_back(new SymbolInt(match.iLen));
 	}
 
+	pRet->UpdateIndices();
 	return pRet;
 }
 
@@ -1094,6 +1147,7 @@ static Symbol* fkt_subfind_regex(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 
+	pSymRet->UpdateIndices();
 	return pSymRet;
 }
 // --------------------------------------------------------------------------------
@@ -1130,6 +1184,8 @@ extern void init_ext_basic_calls()
 		t_mapFkts::value_type(T_STR"is_valid", fkt_is_valid),
 		t_mapFkts::value_type(T_STR"null", fkt_null),
 		t_mapFkts::value_type(T_STR"call", fkt_call),
+		t_mapFkts::value_type(T_STR"is_rval", fkt_is_rval),
+		t_mapFkts::value_type(T_STR"traceback", fkt_traceback),
 
 		// input/output
 		t_mapFkts::value_type(T_STR"input", fkt_input),

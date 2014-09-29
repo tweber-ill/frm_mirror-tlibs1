@@ -35,7 +35,8 @@ rand_gauss_4d()
 
 		cnt += 1;
 	}
-	savetxt("/home/tweber/Projekte/mc.dat", trans(evts));
+	#savetxt("/home/tweber/Projekte/mc.dat", trans(evts));
+	savetxt("mc.dat", trans(evts));
 
 	output("done\n");
 }

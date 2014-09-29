@@ -13,6 +13,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <stack>
 #include <unordered_map>
 #include <map>
 #include <mutex>
@@ -118,6 +119,13 @@ struct ParseInfo
 
 	bool bDestroyParseInfo;
 
+
+	bool bEnableDebug = 0;
+	typedef std::deque<std::string> t_oneTraceback;
+	typedef std::unordered_map<std::thread::id, t_oneTraceback> t_stckTraceback;
+	t_stckTraceback stckTraceback;
+
+
 	ParseInfo();
 	virtual ~ParseInfo();
 
@@ -128,14 +136,16 @@ struct ParseInfo
 		return bWantReturn || bWantBreak || bWantContinue;
 	}
 
+
+	void PushTraceback(std::string&& strTrace);
+	void PopTraceback();
+
 protected:
 	void init_global_syms();
 };
 
 
 extern std::unordered_map<NodeType, t_real (*)(t_real, t_real), EnumDirectHash<NodeType>> g_mapBinOps_d;
-//extern Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op);
-extern void safe_delete(Symbol *&pSym, const SymbolTable* pSymTab, const SymbolTable* pGlobalSymTab);
 
 
 class Node
@@ -155,10 +165,12 @@ public:
 	unsigned int GetLine() const { return m_iLine; }
 	void SetLine(unsigned int iLine) { m_iLine = iLine; }
 
+	virtual Node* optimize() = 0;
+
 	// create a string containing the line number for error output
 	t_string linenr(const ParseInfo &info) const;
 
-	static Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op);
+	static Symbol* Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, bool bOptim=1);
 };
 
 class NodeReturn : public Node
@@ -184,6 +196,8 @@ public:
 	virtual Node* clone() const;
 
 	Node* GetExpr() const { return m_pExpr; }
+
+	virtual Node* optimize() override;
 };
 
 class NodeBreak : public Node
@@ -198,6 +212,8 @@ public:
 
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 	virtual Node* clone() const;
+
+	virtual Node* optimize() override;
 };
 
 class NodeContinue : public Node
@@ -212,6 +228,8 @@ public:
 
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 	virtual Node* clone() const;
+
+	virtual Node* optimize() override;
 };
 
 class NodeIdent : public Node
@@ -237,6 +255,8 @@ public:
 	const Node* GetDefArg() const { return m_pDefArg; }
 
 	const t_string& GetIdent() const { return m_strIdent; }
+
+	virtual Node* optimize() override;
 };
 
 class NodeCall : public Node
@@ -264,6 +284,7 @@ public:
 	Node* GetIdent() const { return m_pIdent; }
 	Node* GetArgs() const { return m_pArgs; }
 
+	virtual Node* optimize() override;
 
 protected:
 	std::vector<Node*> m_vecArgs;
@@ -298,6 +319,8 @@ public:
 	Node* GetExpr() const { return m_pExpr; }
 	Node* GetIf() const { return m_pIf; }
 	Node* GetElse() const { return m_pElse; }
+
+	virtual Node* optimize() override;
 };
 
 class NodeWhile : public Node
@@ -326,6 +349,8 @@ public:
 
 	Node* GetExpr() const { return m_pExpr; }
 	Node* GetStmt() const { return m_pStmt; }
+
+	virtual Node* optimize() override;
 };
 
 class NodeFor : public Node
@@ -362,6 +387,8 @@ public:
 	Node* GetExprCond() const { return m_pExprCond; }
 	Node* GetExprEnd() const { return m_pExprEnd; }
 	Node* GetStmt() const { return m_pStmt; }
+
+	virtual Node* optimize() override;
 };
 
 class NodeRangedFor : public Node
@@ -394,15 +421,15 @@ public:
 	Node* GetIdent() const { return m_pIdent; }
 	Node* GetExpr() const { return m_pExpr; }
 	Node* GetStmt() const { return m_pStmt; }
+
+	virtual Node* optimize() override;
 };
 
 
 class NodeDouble : public Node
 {
-protected:
-	t_real m_dVal;
-
 public:
+	explicit NodeDouble(SymbolDouble* pSym) : Node(NODE_DOUBLE), m_pSymbol(pSym) {}
 	NodeDouble(t_real dVal);
 	virtual ~NodeDouble()
 	{
@@ -412,7 +439,8 @@ public:
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 	virtual Node* clone() const;
 
-	t_real GetVal() const { return m_dVal; }
+	virtual Node* optimize() override;
+	SymbolDouble* GetSym() { return m_pSymbol; }
 
 protected:
 	SymbolDouble *m_pSymbol;
@@ -420,10 +448,8 @@ protected:
 
 class NodeInt : public Node
 {
-protected:
-	t_int m_iVal;
-
 public:
+	explicit NodeInt(SymbolInt* pSym) : Node(NODE_INT), m_pSymbol(pSym) {}
 	NodeInt(t_int iVal);
 	virtual ~NodeInt()
 	{
@@ -433,7 +459,8 @@ public:
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 	virtual Node* clone() const;
 
-	t_int GetVal() const { return m_iVal; }
+	virtual Node* optimize() override;
+	SymbolInt* GetSym() { return m_pSymbol; }
 
 protected:
 	SymbolInt *m_pSymbol;
@@ -441,10 +468,8 @@ protected:
 
 class NodeString : public Node
 {
-protected:
-	t_string m_strVal;
-
 public:
+	explicit NodeString(SymbolString* pSym) : Node(NODE_STRING), m_pSymbol(pSym) {}
 	NodeString(t_string strVal);
 	virtual ~NodeString()
 	{
@@ -454,7 +479,8 @@ public:
 	virtual Symbol* eval(ParseInfo &info, SymbolTable *pSym=0) const;
 	virtual Node* clone() const;
 
-	const t_string& GetVal() const { return m_strVal; }
+	virtual Node* optimize() override;
+	SymbolString* GetSym() { return m_pSymbol; }
 
 protected:
 	SymbolString *m_pSymbol;
@@ -480,6 +506,8 @@ public:
 	virtual Node* clone() const;
 
 	Node* GetArr() const { return m_pArr; }
+
+	virtual Node* optimize() override;
 };
 
 class NodeMap : public Node
@@ -502,6 +530,8 @@ public:
 	virtual Node* clone() const;
 
 	Node* GetMap() const { return m_pMap; }
+
+	virtual Node* optimize() override;
 };
 
 class NodePair : public Node
@@ -526,6 +556,8 @@ public:
 
 	Node* GetFirst() const { return m_pFirst; }
 	Node* GetSecond() const { return m_pSecond; }
+
+	virtual Node* optimize() override;
 };
 
 enum RangeType : unsigned int
@@ -563,6 +595,8 @@ public:
 	RangeType GetRangeType() const { return m_rangetype; }
 	Node* GetBegin() const { return m_pBegin; }
 	Node* GetEnd() const { return m_pEnd; }
+
+	virtual Node* optimize() override;
 };
 
 class NodeArrayAccess : public Node
@@ -588,6 +622,8 @@ public:
 
 	Node* GetIdent() const { return m_pIdent; }
 	Node* GetExpr() const { return m_pExpr; }
+
+	virtual Node* optimize() override;
 
 protected:
 	std::vector<Node*> m_vecIndices;
@@ -616,6 +652,8 @@ public:
 	virtual Node* clone() const;
 
 	Node* GetChild() const { return m_pChild; }
+
+	virtual Node* optimize() override;
 };
 
 class NodeBinaryOp : public Node
@@ -658,6 +696,8 @@ public:
 
 	void SetGlobal(bool bGlob) { m_bGlobal = bGlob; }
 	void SetOwnsLeft(bool bOwns) { m_bOwnsLeft = bOwns; }
+
+	virtual Node* optimize() override;
 };
 
 class NodeFunction : public Node
@@ -699,6 +739,8 @@ public:
 
 	const t_string& GetName() const;
 	std::vector<t_string> GetParamNames() const;
+
+	virtual Node* optimize() override;
 };
 
 #endif

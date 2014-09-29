@@ -18,6 +18,8 @@
 #include <functional>
 #include <boost/functional/hash.hpp>
 #include "helper/exception.h"
+#include "helper/log.h"
+
 
 enum SymbolType : unsigned int
 {
@@ -63,19 +65,27 @@ class Symbol
 protected:
 	t_string m_strName;
 	t_string m_strIdent;			// last seen identifier
+	bool m_bIsRval = 1;			// is the symbol an rvalue?
+	bool m_bIsConst = 0;			// is the symbol a constant? -> forces clone
 
-	unsigned int m_iArrIdx;			// if symbol is contained in an array
-	SymbolArray *m_pArr;
+	unsigned int m_iArrIdx = 0;		// if symbol is contained in an array
+	SymbolArray *m_pArr = 0;
 
 	SymbolMapKey m_MapKey;			// if symbol is contained in a map
-	SymbolMap *m_pMap;
+	SymbolMap *m_pMap = 0;
 
 public:
-	Symbol() : m_iArrIdx(0), m_pArr(0), m_pMap(0) {}
-	virtual ~Symbol() {}
+	Symbol() = default;
+	virtual ~Symbol() = 0;
 
 	virtual SymbolType GetType() const = 0;
 	virtual t_string GetTypeName() const = 0;
+
+	bool IsRval() const { return m_bIsRval; }
+	void SetRval(bool bRval) { m_bIsRval = bRval; }
+
+	bool IsConst() const { return m_bIsConst; }
+	void SetConst(bool bConst) { m_bIsConst = bConst; }
 
 	virtual std::size_t hash() const = 0;
 
@@ -89,6 +99,7 @@ public:
 
 	virtual t_string print() const = 0;
 	virtual Symbol* clone() const = 0;
+	virtual Symbol* alloc() const = 0;		// alloc new symbol of same type
 	virtual void assign(Symbol *pSym) = 0;
 
 	//virtual bool equals(Symbol *pSym) const = 0;
@@ -103,7 +114,7 @@ public:
 	virtual bool IsScalar() const { return 0; }
 
 public:
-	SymbolMap* GetMapPtr() { return m_pMap; }
+	SymbolMap* GetMapPtr() const { return m_pMap; }
 	void SetMapPtr(SymbolMap* pMap) { m_pMap = pMap; }
 
 	const SymbolMapKey& GetMapKey() const { return m_MapKey; }
@@ -116,6 +127,12 @@ public:
 
 	unsigned int GetArrIdx() const { return m_iArrIdx; }
 	void SetArrIdx(unsigned int iIdx) { m_iArrIdx = iIdx; }
+
+	void ClearIndices()
+	{
+		m_pMap = 0;
+		m_pArr = 0;
+	}
 };
 
 class SymbolDouble : public Symbol
@@ -140,6 +157,7 @@ public:
 
 	virtual t_string print() const override;
 	virtual Symbol* clone() const override;
+	virtual Symbol* alloc() const override { return new SymbolDouble(); }
 	virtual void assign(Symbol *pSym) override;
 
 	//virtual bool equals(Symbol *pSym) const;
@@ -180,6 +198,7 @@ public:
 
 	virtual t_string print() const override;
 	virtual Symbol* clone() const override;
+	virtual Symbol* alloc() const override { return new SymbolInt(); }
 	virtual void assign(Symbol *pSym) override;
 
 	//virtual bool equals(Symbol *pSym) const;
@@ -224,6 +243,7 @@ public:
 
 	virtual t_string print() const override;
 	virtual Symbol* clone() const override;
+	virtual Symbol* alloc() const override { return new SymbolString(); }
 	virtual void assign(Symbol *pSym) override;
 
 	void SetVal(const t_string& str) { m_strVal = str; }
@@ -236,9 +256,12 @@ public:
 
 class SymbolArray : public Symbol
 {
+public:
+	using t_arr = std::vector<Symbol*>;
+
 protected:
 	bool m_bDontDel;
-	std::vector<Symbol*> m_arr;
+	t_arr m_arr;
 
 public:
 	SymbolArray() : Symbol(), m_bDontDel(0) { /*std::cout << "symarr -> new" << std::endl;*/ }
@@ -256,12 +279,14 @@ public:
 
 	virtual t_string print() const override;
 	virtual Symbol* clone() const override;
+	virtual Symbol* alloc() const override { return new SymbolArray(); }
 	virtual void assign(Symbol *pSym) override;
 	//virtual bool equals(Symbol *pSym) const;
 
 	virtual bool IsNotZero() const override { return 0; }
 
 	void UpdateIndex(unsigned int);
+	void UpdateLastNIndices(unsigned int N);
 	void UpdateIndices();
 
 	const std::vector<Symbol*>& GetArr() const { return m_arr; }
@@ -310,6 +335,7 @@ public:
 
 	virtual t_string print() const override;
 	virtual Symbol* clone() const override;
+	virtual Symbol* alloc() const override { return new SymbolMap(); }
 	virtual void assign(Symbol *pSym) override;
 	//virtual bool equals(Symbol *pSym) const;
 
@@ -432,6 +458,7 @@ static Symbol* vec_to_sym(const t_vec<T>& vec)
 	for(const T& t : vec)
 		pSym->GetArr().push_back(create_symbol<T>(t));
 
+	pSym->UpdateIndices();
 	return pSym;
 }
 
@@ -488,10 +515,18 @@ static Symbol* mat_to_sym(const t_mat<T>& mat)
 			pRow->GetArr().push_back(pSymVal);
 		}
 
+		pRow->UpdateIndices();
 		pSym->GetArr().push_back(pRow);
 	}
 
+	pSym->UpdateIndices();
 	return pSym;
 }
+
+
+extern void safe_delete(Symbol *&pSym, const SymbolTable* pSymTab, const SymbolTable* pGlobalSymTab);
+extern bool is_tmp_sym(const Symbol* pSym);
+extern bool clone_if_needed(Symbol *pSym, Symbol*& pClone);
+extern Symbol* recycle_or_alloc(const std::initializer_list<const Symbol*>& lstSyms, bool bAlwaysAlloc=0);
 
 #endif

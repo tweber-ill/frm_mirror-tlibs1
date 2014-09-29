@@ -10,6 +10,10 @@
 #include <limits>
 
 
+/*std::*/boost::hash<t_real> SymbolDouble::s_hsh;
+/*std::*/boost::hash<t_int> SymbolInt::s_hsh;
+/*std::*/boost::hash<t_string> SymbolString::s_hsh;
+
 
 SymbolMapKey::SymbolMapKey(const t_string& _str) 
 	: key(SymbolString::hash(_str)), strKey(_str), tyKey(SYMBOL_STRING) 
@@ -29,6 +33,14 @@ SymbolMapKey::SymbolMapKey(const Symbol* pSym)
 
 const int SymbolDouble::m_defprec = std::numeric_limits<t_real>::digits10;
 int SymbolDouble::m_prec = m_defprec;
+
+
+Symbol::~Symbol()
+{
+	//log_debug("Deleting ", this, ", name: ", GetName(), ", ident: ", GetIdent());
+	//log_backtrace();
+}
+
 
 Symbol* SymbolDouble::ToType(SymbolType stype) const
 {
@@ -71,6 +83,8 @@ Symbol* SymbolDouble::clone() const
 {
 	SymbolDouble *pSym = new SymbolDouble;
 	*pSym = *this;
+	pSym->SetRval(1);
+	pSym->SetConst(0);
 	return pSym;
 }
 
@@ -132,6 +146,8 @@ Symbol* SymbolInt::clone() const
 {
 	SymbolInt *pSym = new SymbolInt;
 	*pSym = *this;
+	pSym->SetRval(1);
+	pSym->SetConst(0);
 	return pSym;
 }
 
@@ -208,6 +224,8 @@ Symbol* SymbolString::clone() const
 {
 	SymbolString *pSym = new SymbolString;
 	*pSym = *this;
+	pSym->SetRval(1);
+	pSym->SetConst(0);
 	return pSym;
 }
 
@@ -235,6 +253,8 @@ SymbolArray::SymbolArray(const std::initializer_list<Symbol*>& lst)
 	m_arr.reserve(lst.size());
 	for(std::initializer_list<Symbol*>::const_iterator iter=lst.begin(); iter!=lst.end(); ++iter)
 		m_arr.push_back(*iter);
+
+	UpdateIndices();
 }
 
 SymbolArray::~SymbolArray()
@@ -311,6 +331,22 @@ void SymbolArray::UpdateIndex(unsigned int iIdx)
 	m_arr[iIdx]->SetArrIdx(iIdx);
 }
 
+void SymbolArray::UpdateLastNIndices(unsigned int N)
+{
+	unsigned int iLast = m_arr.size();
+	if(iLast == 0) return;
+	iLast -= 1;
+
+	t_arr::reverse_iterator iter = m_arr.rbegin();
+	for(unsigned int i=0; i<N && iter!=m_arr.rend(); ++i, ++iter)
+	{
+		if(!*iter) continue;
+
+		(*iter)->SetArrPtr(this);
+		(*iter)->SetArrIdx(iLast-i);
+	}
+}
+
 void SymbolArray::UpdateIndices()
 {
 	for(unsigned int iIdx=0; iIdx<m_arr.size(); ++iIdx)
@@ -341,6 +377,8 @@ void SymbolArray::FromDoubleArray(const std::vector<t_real>& vec)
 		pSym->SetVal(d);
 		m_arr.push_back(pSym);
 	}
+
+	UpdateIndices();
 }
 
 std::size_t SymbolArray::hash() const
@@ -560,6 +598,8 @@ Symbol* SymbolTable::GetSymbol(const t_string& strKey)
 void SymbolTable::InsertSymbol(const t_string& strKey, Symbol *pSym)
 {
 	RemoveSymbol(strKey);
+	if(pSym)
+		pSym->SetRval(0);
 	m_syms[strKey] = pSym;
 }
 
@@ -642,4 +682,93 @@ bool is_mat(const Symbol* pSym, unsigned int *piNumCols, unsigned int *piNumRows
 	}
 
 	return true;
+}
+
+
+// --------------------------------------------------------------------------------
+
+void safe_delete(Symbol *&pSym, const SymbolTable* pSymTab, const SymbolTable* pSymTabGlob)
+{
+	if(!pSym) return;
+
+	// don't delete constants
+	if(pSym->IsConst())
+		return;
+
+	// don't delete array or map members
+	if(pSym->GetArrPtr() || pSym->GetMapPtr())
+		return;
+
+	// don't delete symbols in table
+	bool bIsInTable = pSymTab->IsPtrInMap(pSym);
+	bool bIsInGlobTable = pSymTabGlob->IsPtrInMap(pSym);
+	if(!bIsInTable && !bIsInGlobTable)
+	{
+		//log_debug("safe_deleting ", (void*)pSym, ", type: ", pSym->GetType(), ", val: ", pSym->print());
+		//log_backtrace();
+
+		delete pSym;
+		pSym = 0;
+	}
+}
+
+bool is_tmp_sym(const Symbol* pSym)
+{
+	const bool bIsMember = pSym->GetArrPtr() || pSym->GetMapPtr();
+	if(bIsMember)
+		return false;
+
+	const bool bNoConst = !pSym->IsConst();
+	//const bool bNoIdent = (pSym->GetName().size()==0);
+	return bNoConst && pSym->IsRval() /*&& bNoIdent*/;
+}
+
+bool clone_if_needed(Symbol *pSym, Symbol*& pClone)
+{
+	if(!pSym)
+	{
+		pClone = 0;
+		return 0;
+	}
+
+	bool bNeedClone = !is_tmp_sym(pSym);
+
+	if(bNeedClone)
+		pClone = pSym->clone();
+	else
+		pClone = pSym;
+
+	//log_debug("Cloned: ", bNeedClone);
+	return bNeedClone;
+}
+
+Symbol* recycle_or_alloc(const std::initializer_list<const Symbol*>& lstSyms, bool bAlwaysAlloc)
+{
+	if(!lstSyms.size())
+		return 0;
+
+	if(!bAlwaysAlloc)
+	{
+		Symbol *pSymTmp = 0;
+
+		// find recyclable symbol (all symbols have to be of the same type!)
+		for(const Symbol* pSym : lstSyms)
+		{
+			if(is_tmp_sym(pSym))
+			{
+				//log_debug("Recycling ", pSym, ", ", pSym->GetType(), ": ", pSym->GetIdent(), " = ", pSym->print());
+				pSymTmp = const_cast<Symbol*>(pSym);
+				pSymTmp->ClearIndices();
+				pSymTmp->SetRval(1);
+				pSymTmp->SetConst(0);
+				break;
+			}
+		}
+
+		if(pSymTmp)
+			return pSymTmp;
+	}
+
+	// allocate empty symbol of the same type
+	return (*lstSyms.begin())->alloc();
 }

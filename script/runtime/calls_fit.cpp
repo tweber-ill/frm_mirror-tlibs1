@@ -118,6 +118,8 @@ public:
 			m_vecSyms.resize(2);
 			m_vecSyms[0] = new SymbolDouble(0.);	// free parameter
 			m_vecSyms[1] = pSymParams;		// parameter vector
+
+			pSymParams->UpdateIndices();
 		}
 		else
 		{
@@ -173,6 +175,7 @@ public:
 		SymbolArray arrArgs;
 		arrArgs.SetDontDel(1);
 		arrArgs.GetArr() = m_vecSyms;
+		arrArgs.UpdateIndices();
 		//m_pFkt->SetArgSyms(&m_vecSyms);
 
 		m_pTable->InsertSymbol(T_STR"<args>", &arrArgs);
@@ -571,10 +574,11 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		SymbolArray* pArr = new SymbolArray();
 		pArr->GetArr().push_back(new SymbolDouble(dVal));
 		pArr->GetArr().push_back(new SymbolDouble(dErr));
+		pArr->UpdateIndices();
 
 		pSymMap->GetMap().insert(SymbolMap::t_map::value_type(strSym, pArr));
 	}
-
+	pSymMap->UpdateIndices();
 
 
 	std::vector<std::pair<double,double>> vecMinosErrs;
@@ -707,6 +711,11 @@ static Symbol* _fkt_param(FktParam whichfkt, const std::vector<Symbol*>& vecSyms
 	SymbolArray *pArr = new SymbolArray();
 	pArr->GetArr().push_back(pArrX);
 	pArr->GetArr().push_back(pArrY);
+
+	pArrX->UpdateIndices();
+	pArrY->UpdateIndices();
+	pArr->UpdateIndices();
+
 	return pArr;
 }
 
@@ -750,6 +759,8 @@ static Symbol* fkt_find_peaks(const std::vector<Symbol*>& vecSyms,
 	pArr->GetArr().push_back(pArrX);
 	pArr->GetArr().push_back(pArrSizes);
 	pArr->GetArr().push_back(pArrWidths);
+	pArr->UpdateIndices();
+
 	return pArr;
 }
 // --------------------------------------------------------------------------------
@@ -809,6 +820,7 @@ static Symbol* fkt_map_vec_to_val(const std::vector<Symbol*>& vecSyms,
 		pMapRet->GetMap().insert(SymbolMap::t_map::value_type(strKey, pElem->clone()));
 	}
 
+	pMapRet->UpdateIndices();
 	return pMapRet;
 }
 

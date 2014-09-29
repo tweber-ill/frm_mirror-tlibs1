@@ -9,29 +9,6 @@
 #include "calls.h"
 #include "helper/log.h"
 
-void safe_delete(Symbol *&pSym, const SymbolTable* pSymTab, const SymbolTable* pSymTabGlob)
-{
-	if(!pSym) return;
-
-	// don't delete constants
-	if(pSym->GetName() == T_STR"<const>")
-		return;
-
-	// don't delete array or map members
-	if(pSym->GetArrPtr() || pSym->GetMapPtr())
-		return;
-
-	// don't delete symbols in table
-	bool bIsInTable = pSymTab->IsPtrInMap(pSym);
-	bool bIsInGlobTable = pSymTabGlob->IsPtrInMap(pSym);
-	if(!bIsInTable && !bIsInGlobTable)
-	{
-		//G_COUT << "deleting " << (void*)pSym << ": " << pSym->GetType() << std::endl;
-		delete pSym;
-		pSym = 0;
-	}
-}
-
 
 Symbol* NodeReturn::eval(ParseInfo &info, SymbolTable *pSym) const
 {
@@ -41,9 +18,8 @@ Symbol* NodeReturn::eval(ParseInfo &info, SymbolTable *pSym) const
 	if(m_pExpr)
 	{
 		Symbol *pEval = m_pExpr->eval(info, pSym);
-		pRet = pEval->clone();
-
-		safe_delete(pEval, pSym, info.pGlobalSyms);
+		if(clone_if_needed(pEval, pRet))
+			safe_delete(pEval, pSym, info.pGlobalSyms);
 	}
 	pSym->InsertSymbol(T_STR"<ret>", pRet ? pRet : 0);
 
@@ -187,20 +163,22 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 					continue;
 				}
 
-				vecArgSyms.push_back(iter->second->clone());
+				Symbol *pSymClone;
+				clone_if_needed(iter->second, pSymClone);
+				vecArgSyms.push_back(pSymClone);
 			}
 
 			safe_delete(pSymChild, pSym, info.pGlobalSyms);
 		}
 		else
 		{
+			//log_debug("type: ", pNode->GetType());
 			Symbol *pSymbol = pNode->eval(info, pSym);
-			//G_COUT << "argument: " << pSymbol->print() << std::endl;
-
 			vecArgSyms.push_back(pSymbol);
 		}
 	}
 
+	arrArgs.UpdateIndices();
 	Symbol* pFktRet = 0;
 	if(bCallUserFkt)	// call user-defined function
 	{
@@ -212,7 +190,19 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 	}
 	else				// call system function
 	{
+		if(info.bEnableDebug)
+		{
+			std::string strTrace = "syscall: " + strFkt + ", " 
+					+ std::to_string(vecArgSyms.size()) + " args";
+			info.PushTraceback(std::move(strTrace));
+		}
+
 		pFktRet = ext_call(strFkt, vecArgSyms, info, pSym);
+
+		if(info.bEnableDebug)
+		{
+			info.PopTraceback();
+		}
 	}
 
 	for(Symbol *pArgSym : vecArgSyms)
@@ -281,17 +271,23 @@ Symbol* NodeMap::eval(ParseInfo &info, SymbolTable *pSym) const
 		if(((NodePair*)pNode)->GetSecond())
 			pSymSecond = ((NodePair*)pNode)->GetSecond()->eval(info, pSym);
 
+		bool bSecondCloned = 0;
 		if(pSymFirst && pSymSecond)
 		{
+			Symbol *pSymClone;
+			bSecondCloned = clone_if_needed(pSymSecond, pSymClone);
+
 			pSymMap->GetMap().insert(
 				SymbolMap::t_map::value_type(SymbolMapKey(pSymFirst),
-				pSymSecond->clone()));
+				pSymClone));
 		}
 
 		safe_delete(pSymFirst, pSym, info.pGlobalSyms);
-		safe_delete(pSymSecond, pSym, info.pGlobalSyms);
+		if(bSecondCloned)
+			safe_delete(pSymSecond, pSym, info.pGlobalSyms);
 	}
 
+	pSymMap->UpdateIndices();
 	return pSymMap;
 }
 
@@ -311,12 +307,13 @@ Symbol* NodeArray::eval(ParseInfo &info, SymbolTable *pSym) const
 		if(!pNode) continue;
 
 		Symbol *pSymbol = pNode->eval(info, pSym);
-		pSymArr->GetArr().push_back(pSymbol->clone());
-		pSymArr->UpdateIndices();
+		Symbol *pClone;
+		if(clone_if_needed(pSymbol, pClone))
+			safe_delete(pSymbol, pSym, info.pGlobalSyms);
 
-		safe_delete(pSymbol, pSym, info.pGlobalSyms);
+		pSymArr->GetArr().push_back(pClone);
+		pSymArr->UpdateLastNIndices(1);
 	}
-
 	return pSymArr;
 }
 
@@ -504,7 +501,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 			if(bCreatedSym /*&& bEvenIndex*/)
 			{
 				pArr = transpose(pArr);
-				delete pSymbol;
+				safe_delete(pSymbol, pSym, info.pGlobalSyms);
 				pSymbol = pArr;
 
 				bAlreadyTransposed = 1;
@@ -590,7 +587,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 					for(unsigned int iRem=0; iRem<iIdx+1-iOldSize; ++iRem)
 					{
 						SymbolDouble *pNewSym = new SymbolDouble(0.);
-						pNewSym->SetName(T_STR"<const>");
+						pNewSym->SetConst(1);
 						pArr->GetArr().push_back(pNewSym);
 						//G_COUT << "Inserting: " << iRem << std::endl;
 					}
@@ -637,7 +634,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 		if(iterMap == pMap->GetMap().end())
 		{
 			SymbolString *pNewSym = new SymbolString();
-			pNewSym->SetName(T_STR"<const>");
+			pNewSym->SetConst(1);
 			iterMap = pMap->GetMap().insert(SymbolMap::t_map::value_type(key, pNewSym)).first;
 		}
 
@@ -768,11 +765,12 @@ Symbol* NodeUnaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 		case NODE_UMINUS:
 		{
 			Symbol *pSymbolEval = m_pChild->eval(info, pSym);
-			Symbol *pSymbol = pSymbolEval->clone();
-			safe_delete(pSymbolEval, pSym, info.pGlobalSyms);
+			Symbol *pClone;
+			if(clone_if_needed(pSymbolEval, pClone))
+				safe_delete(pSymbolEval, pSym, info.pGlobalSyms);
 
-			uminus_inplace(pSymbol, info);
-			return pSymbol;
+			uminus_inplace(pClone, info);
+			return pClone;
 		}
 
 		case NODE_LOG_NOT:
@@ -842,12 +840,15 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 		return 0;
 	}
 
-	Symbol *pSymbol = pSymbol = pSymbolOrg->clone();
-	safe_delete(pSymbolOrg, pSym, info.pGlobalSyms);
+	Symbol *pSymbol;
+	if(clone_if_needed(pSymbolOrg, pSymbol))
+		safe_delete(pSymbolOrg, pSym, info.pGlobalSyms);
+	pSymbol->SetRval(0);
 
 	if(pLeft->GetType() == NODE_IDENT)		// single variable
 	{
 		const t_string& strIdent = ((NodeIdent*)pLeft)->GetIdent();
+		//log_debug("Assigning ", strIdent, " = ", pSymbol);
 
 		Symbol* pSymGlob = info.pGlobalSyms->GetSymbol(strIdent);
 		Symbol* pSymLoc = 0;
@@ -941,8 +942,9 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 				for(unsigned int iRem=0; iRem<iArrIdx+1-iOldSize; ++iRem)
 				{
 					SymbolDouble *pNewSym = new SymbolDouble(0.);
-					pNewSym->SetName(T_STR"<const>");
+					pNewSym->SetConst(1);
 					pArr->GetArr().push_back(pNewSym);
+					pArr->UpdateLastNIndices(1);
 				}
 			}
 
@@ -976,7 +978,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 			if(iterMap == pMap->GetMap().end())
 			{
 				SymbolDouble *pNewSym = new SymbolDouble(0.);
-				pNewSym->SetName(T_STR"<const>");
+				pNewSym->SetConst(1);
 				iterMap = pMap->GetMap().insert(SymbolMap::t_map::value_type(MapKey, pNewSym)).first;
 			}
 
@@ -1158,8 +1160,8 @@ Symbol* NodeBinaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 			pSymbol = Op(pSymbolLeft, pSymbolRight, GetType());
 		}
 
-		safe_delete(pSymbolLeft, pSym, info.pGlobalSyms);
-		safe_delete(pSymbolRight, pSym, info.pGlobalSyms);
+		if(pSymbol!=pSymbolLeft) safe_delete(pSymbolLeft, pSym, info.pGlobalSyms);
+		if(pSymbol!=pSymbolRight) safe_delete(pSymbolRight, pSym, info.pGlobalSyms);
 
 		return pSymbol;
 	}
@@ -1175,11 +1177,14 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 	const t_string& strName = GetName();
 	//G_COUT << "in fkt " << strName << std::endl;
 
-	SymbolTable *pLocalSym = new SymbolTable;
+	std::unique_ptr<SymbolTable> ptrLocalSym(new SymbolTable);
+	SymbolTable *pLocalSym = ptrLocalSym.get();
 
 	SymbolArray* pArgs = 0;
 	if(pTableSup)
 		pArgs = (SymbolArray*)pTableSup->GetSymbol(T_STR"<args>");
+
+	unsigned int iArgSize = 0;
 	if(pArgs)
 	{
 		const std::vector<Symbol*> *pVecArgSyms = &pArgs->GetArr();
@@ -1193,7 +1198,7 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 					<< std::endl;
 		}*/
 
-		unsigned int iArgSize = /*std::min(*/m_vecArgs.size()/*, pVecArgSyms->size())*/;
+		iArgSize = /*std::min(*/m_vecArgs.size()/*, pVecArgSyms->size())*/;
 		for(unsigned int iArg=0; iArg<iArgSize; ++iArg)
 		{
 			NodeIdent* pIdent = (NodeIdent*)m_vecArgs[iArg];
@@ -1223,10 +1228,21 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 			}
 
 			//G_COUT << "arg: " << pIdent->GetIdent() << std::endl;
-			pLocalSym->InsertSymbol(pIdent->GetIdent(), pSymbol?pSymbol->clone():0);
+			Symbol* pSymToInsert;
+			if(clone_if_needed(pSymbol, pSymToInsert))
+				/*safe_delete(pSymbol, pLocalSym, info.pGlobalSyms)*/;
+			pSymToInsert->SetRval(0);
+			pLocalSym->InsertSymbol(pIdent->GetIdent(), pSymToInsert);
 		}
 	}
 
+
+	if(info.bEnableDebug)
+	{
+		std::string strTrace = "call: " + GetName() + ", " 
+					+ std::to_string(iArgSize) + " args";
+		info.PushTraceback(std::move(strTrace));
+	}
 
 	Symbol *pRet = 0;
 	if(m_pStmts)
@@ -1239,10 +1255,14 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 		}
 	}
 
+	if(info.bEnableDebug)
+	{
+		info.PopTraceback();
+	}
+
 	//G_COUT << "Local symbols for \"" << strName << "\":\n";
 	//pLocalSym->print();
 
-	delete pLocalSym;
 	return pRet;
 }
 
