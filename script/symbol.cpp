@@ -327,6 +327,7 @@ void SymbolArray::assign(Symbol *pSym)
 
 void SymbolArray::UpdateIndex(unsigned int iIdx)
 {
+	if(!m_arr[iIdx]) return;
 	m_arr[iIdx]->SetArrPtr(this);
 	m_arr[iIdx]->SetArrIdx(iIdx);
 }
