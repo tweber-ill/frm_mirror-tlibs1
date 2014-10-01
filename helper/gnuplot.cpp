@@ -73,7 +73,7 @@ void GnuPlot::SetTerminal(int iWnd, const char* pcBackend)
 	(*m_postr) << "set term " << pcBackend <<  " " << iWnd << " "
 			<< "size 640,480 "
 			<< "enhanced "
-			<< "font 'Helvetica,10' "
+			<< "font 'Helvetica,11' "
 //			<< "title \"" << "Plot " << (iWnd+1) << "\" " 
 			<< "persist "
 			<< "dashed "
