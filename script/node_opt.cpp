@@ -210,6 +210,9 @@ Node* NodeBinaryOp::optimize()
 	if(m_pLeft) m_pLeft = m_pLeft->optimize();
 	if(m_pRight) m_pRight = m_pRight->optimize();
 
+	if(GetType()==NODE_STMTS || GetType()==NODE_FUNCS)
+		FlattenNodes(GetType());
+
 	if(!m_pLeft || !m_pRight) return this;
 
 	if(is_symbol_node(m_pLeft) && is_symbol_node(m_pRight) && is_operator(GetType()))
@@ -269,15 +272,14 @@ void NodeBinaryOp::FlattenNodes(NodeType ntype)
 	if(GetType() == ntype)
 	{
 		m_vecNodesFlat = this->flatten(ntype);
-		//G_COUT << "Node type: " << ntype << ", flattened: " << m_vecNodesFlat.size() << std::endl;
+		//log_debug("Node type: ", ntype, ", flattened: ", m_vecNodesFlat.size());
 	}
 }
 
 // TODO: Fix: Gets called for non casted NodeBinaryOps which are of other type!
 std::vector<Node*> NodeBinaryOp::flatten(NodeType ntype) const
 {
-	//G_COUT << GetType() << ", " << ntype << std::endl;
-
+	//log_debug(GetType(), ", ", ntype);
 	std::vector<Node*> vecNodes;
 
 	if(GetType() == ntype)

@@ -516,7 +516,6 @@ NodeFunction* ParseInfo::GetFunction(const t_string& strName)
 
 t_string Node::linenr(const ParseInfo &info) const
 {
-	t_ostringstream ostr;
 	t_ostringstream ostrDetail;
 
 	bool bHasLine = 0;
@@ -535,23 +534,18 @@ t_string Node::linenr(const ParseInfo &info) const
 		const t_string& strFkt = info.pCurFunction->GetName();
 
 		if(strFile == T_STR"")
-			ostrDetail << "In unknown file";
+			ostrDetail << "in unknown file";
 		else
-			ostrDetail << "In \"" << strFile << "\"";
+			ostrDetail << "in \"" << strFile << "\"";
 
 		if(strFkt != T_STR"")
 			ostrDetail << " -> \"" << strFkt << "\"";
 	}
 
 	if(ostrDetail.str().length() > 0)
-	{
-		ostr << " (";
-		ostr << ostrDetail.str();
-		ostr << ")";
-	}
-	ostr << ": ";
+		ostrDetail << ": ";
 
-	return ostr.str();
+	return ostrDetail.str();
 }
 
 //--------------------------------------------------------------------------------

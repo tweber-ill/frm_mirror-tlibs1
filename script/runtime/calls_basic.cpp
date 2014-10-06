@@ -375,9 +375,14 @@ static bool _import_file(const t_string& strFile, ParseInfo& info, SymbolTable* 
 
 
 	info.pmapModules->insert(ParseInfo::t_mods::value_type(strFile, pRoot));
+
+	t_string strExecOld = info.strExecFkt;
+	t_string strFileOld = info.strInitScrFile;
 	info.strExecFkt = T_STR"";
 	info.strInitScrFile = strFile;
 	pRoot->eval(info);
+	info.strExecFkt = strExecOld;
+	info.strInitScrFile = strFileOld;
 
 	return 1;
 }

@@ -1,7 +1,16 @@
 CC = gcc
 #CC = clang
-OPT_FLAGS = -O3 -march=native -DNDEBUG
-#OPT_FLAGS = -ggdb -DDEBUG -rdynamic
+
+DEBUG = 0
+
+ifeq (${DEBUG}, 0)
+	OPT_FLAGS = -O3 -march=native -DNDEBUG
+	STRIP = strip
+else
+	OPT_FLAGS = -ggdb -DDEBUG -rdynamic
+	STRIP = echo debug version: no stripping of
+endif
+
 DEFINES = -DNO_QT -DNO_COMP
 INCS = 
 FLAGS = -std=c++11 -fopenmp ${OPT_FLAGS} ${DEFINES} ${INCS}
@@ -34,8 +43,8 @@ hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/nod
 		obj/calls_fit.o obj/globals.o obj/flags.o obj/fitter.o obj/chi2.o \
 		obj/interpolation.o obj/spec_char.o obj/linalg.o obj/linalg2.o \
 		obj/log.o obj/node_opt.o
-	${CC} ${FLAGS} -o hermelin $+ ${LIBS}
-	strip hermelin
+	${CC} ${FLAGS} -o $@ $+ ${LIBS}
+	${STRIP} $@
 
 obj/script.o: script.yy
 	${YY} --defines=tokens.h script.yy

@@ -92,12 +92,17 @@ struct ParseInfo
 	typedef std::unordered_map<t_string, Node*> t_mods;
 	t_mods *pmapModules;
 
-	// function to execute, e.g. "main"
+	// function to execute, e.g. "main" (with external local symbol table)
 	t_string strExecFkt;
 	t_string strInitScrFile;
+	SymbolTable *pLocalSymsOverride = nullptr;
+
+	// implicitely return last symbol in function
+	bool bImplicitRet = 0;
 
 	// all functions from all modules
-	std::vector<NodeFunction*> vecFuncs;
+	typedef std::vector<NodeFunction*> t_funcs;
+	t_funcs vecFuncs;
 
 	// global symbol table
 	SymbolTable *pGlobalSyms;
@@ -134,6 +139,10 @@ struct ParseInfo
 	bool IsExecDisabled() const
 	{
 		return bWantReturn || bWantBreak || bWantContinue;
+	}
+	void EnableExec()
+	{
+		bWantReturn = bWantBreak = bWantContinue = 0;
 	}
 
 

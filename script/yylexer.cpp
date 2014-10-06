@@ -100,9 +100,8 @@ extern "C" void yyerror(void *_pParseObj, const char* pc)
 	if(pParseObj)
 	{
 		t_ostringstream ostrLine;
-		ostrLine << "Line " << pParseObj->iCurLine;
+		ostrLine << "line " << pParseObj->iCurLine;
 		ostrLine << " in \"" << pParseObj->strCurFile << "\"";
-		ostrLine << ")";
 		strLine = ostrLine.str();
 	}
 

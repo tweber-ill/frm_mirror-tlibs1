@@ -5,6 +5,11 @@ __init__()
 	import("test/import1.scr");
 }
 
+tstfkt()
+{
+	print("In tstfkt().");
+}
+
 main()
 {
 	print("In import0.scr");

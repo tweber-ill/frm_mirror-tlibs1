@@ -758,8 +758,6 @@ Symbol* NodeUnaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 {
 	if(info.IsExecDisabled()) return 0;
 
-	std::vector<NodeFunction*>& vecFuncs = info.vecFuncs;
-
 	switch(GetType())
 	{
 		case NODE_UMINUS:
@@ -1018,11 +1016,10 @@ Symbol* NodeBinaryOp::eval_funcinit(ParseInfo &info, SymbolTable *pSym) const
 	//G_COUT << "Executing NODE_FUNCS for " << info.strInitScrFile << std::endl;
 	NodeFunction *pToRun = 0;
 
-	std::vector<Node*> vecFuncs0;
-	vecFuncs0 = this->flatten(NODE_FUNCS);
-	for(Node *_pNodeFunc : vecFuncs0)
+	//log_debug("# funcs: ", m_vecNodesFlat.size());
+	for(Node *_pNodeFunc : m_vecNodesFlat)
 	{
-		if(!_pNodeFunc)
+		if(!_pNodeFunc || _pNodeFunc->GetType()!=NODE_FUNC)
 			continue;
 
 		NodeFunction *pNodeFunc = (NodeFunction*)_pNodeFunc;
@@ -1052,6 +1049,10 @@ Symbol* NodeBinaryOp::eval_funcinit(ParseInfo &info, SymbolTable *pSym) const
 					"\" overwrites a system function.");
 			}
 			vecFuncs.push_back(pNodeFunc);
+
+			if(strFktName != T_STR"__cmd__")
+				log_debug("Imported function \"", strFktName, 
+					"\" from module \"", info.strInitScrFile, "\".");
 		}
 	}
 
@@ -1073,11 +1074,13 @@ Symbol* NodeBinaryOp::eval_funcinit(ParseInfo &info, SymbolTable *pSym) const
 		{
 			if(pFkt->GetName() == info.strExecFkt)
 			{
-				if(pFkt->GetArgVec().size() == 0)
+				if(pSym && pFkt->GetArgVec().size() == 0)
 					pSym->RemoveSymbolNoDelete(T_STR"<args>");
 
+				//log_info("Executing ", info.strExecFkt);
 				Symbol *pSymRet = pFkt->eval(info, pSym);
-				if(pSym) pSym->RemoveSymbolNoDelete(T_STR"<args>");
+				if(pSym)
+					pSym->RemoveSymbolNoDelete(T_STR"<args>");
 
 				return pSymRet;
 			}
@@ -1090,14 +1093,21 @@ Symbol* NodeBinaryOp::eval_funcinit(ParseInfo &info, SymbolTable *pSym) const
 
 Symbol* NodeBinaryOp::eval_recursive(ParseInfo &info, SymbolTable *pSym) const
 {
+	// prefer eval_sequential
+	log_warn(linenr(info), "Non-optimal statement list.");
+
 	if(m_pLeft)
 	{
+		if(info.IsExecDisabled()) return 0;
+
 		//G_COUT << "left: " << m_pLeft->GetType() << std::endl;
 		Symbol *pSymbol = m_pLeft->eval(info, pSym);
 		safe_delete(pSymbol, pSym, info.pGlobalSyms);
 	}
 	if(m_pRight)
 	{
+		if(info.IsExecDisabled()) return 0;
+
 		//G_COUT << "right: " << m_pRight->GetType() << std::endl;
 		Symbol *pSymbol = m_pRight->eval(info, pSym);
 		safe_delete(pSymbol, pSym, info.pGlobalSyms);
@@ -1107,64 +1117,68 @@ Symbol* NodeBinaryOp::eval_recursive(ParseInfo &info, SymbolTable *pSym) const
 
 Symbol* NodeBinaryOp::eval_sequential(ParseInfo &info, SymbolTable *pSym) const
 {
-	for(Node* pNode : m_vecNodesFlat)
+	Symbol *pSymRet = 0;
+
+	for(std::size_t iNode=0; iNode<m_vecNodesFlat.size(); ++iNode)
 	{
 		if(info.IsExecDisabled()) break;
 
+		Node *pNode = m_vecNodesFlat[iNode];
 		Symbol *pSymbol = pNode->eval(info, pSym);
+		if(info.bImplicitRet && iNode==m_vecNodesFlat.size()-1)
+		{
+			pSymRet = pSymbol /*? pSymbol->clone() : 0*/;
+			break;
+		}
+
 		safe_delete(pSymbol, pSym, info.pGlobalSyms);
 	}
-	return 0;
+
+	return pSymRet;
 }
 
 Symbol* NodeBinaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 {
 	if(info.IsExecDisabled()) return 0;
-	if(m_vecNodesFlat.size() != 0)
-	{
+	const bool bIsFunctionRoot = (GetType()==NODE_FUNC || GetType()==NODE_FUNCS);
+
+	if(!bIsFunctionRoot && m_vecNodesFlat.size())
 		return eval_sequential(info, pSym);
-	}
+
+	switch(GetType())
+	{
+		case NODE_STMTS:
+		//case NODE_ARGS:
+			return eval_recursive(info, pSym);
+
+		case NODE_ASSIGN: return eval_assign(info, pSym);
+
+		// should only be called once per module
+		case NODE_FUNCS: return eval_funcinit(info, pSym);
+
+		default: break;
+	};
+
+	Symbol *pSymbolLeft = m_pLeft->eval(info, pSym);
+	Symbol *pSymbolRight = 0;
+	Symbol *pSymbol = 0;
+
+	// optimisation: 0 && x == 0
+	if(GetType() == NODE_LOG_AND && pSymbolLeft->GetValInt()==0)
+		pSymbol = new SymbolInt(0);
+	// optimisation: 1 || x == 1
+	else if(GetType() == NODE_LOG_OR && pSymbolLeft->GetValInt()==1)
+		pSymbol = new SymbolInt(1);
 	else
 	{
-		switch(GetType())
-		{
-			case NODE_STMTS:
-			//case NODE_ARGS:
-			{
-				log_info(linenr(info), "Should better be evaluated sequentially in interpreter.");
-				return eval_recursive(info, pSym);
-			}
-
-			case NODE_ASSIGN: return eval_assign(info, pSym);
-
-			// should only be called once per module
-			case NODE_FUNCS: return eval_funcinit(info, pSym);
-
-			default:
-				break;
-		};
-
-		Symbol *pSymbolLeft = m_pLeft->eval(info, pSym);
-		Symbol *pSymbolRight = 0;
-		Symbol *pSymbol = 0;
-
-		// optimisation: 0 && x == 0
-		if(GetType() == NODE_LOG_AND && pSymbolLeft->GetValInt()==0)
-			pSymbol = new SymbolInt(0);
-		// optimisation: 1 || x == 1
-		else if(GetType() == NODE_LOG_OR && pSymbolLeft->GetValInt()==1)
-			pSymbol = new SymbolInt(1);
-		else
-		{
-			pSymbolRight = m_pRight->eval(info, pSym);
-			pSymbol = Op(pSymbolLeft, pSymbolRight, GetType());
-		}
-
-		if(pSymbol!=pSymbolLeft) safe_delete(pSymbolLeft, pSym, info.pGlobalSyms);
-		if(pSymbol!=pSymbolRight) safe_delete(pSymbolRight, pSym, info.pGlobalSyms);
-
-		return pSymbol;
+		pSymbolRight = m_pRight->eval(info, pSym);
+		pSymbol = Op(pSymbolLeft, pSymbolRight, GetType());
 	}
+
+	if(pSymbol!=pSymbolLeft) safe_delete(pSymbolLeft, pSym, info.pGlobalSyms);
+	if(pSymbol!=pSymbolRight) safe_delete(pSymbolRight, pSym, info.pGlobalSyms);
+
+	return pSymbol;
 }
 
 
@@ -1177,8 +1191,16 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 	const t_string& strName = GetName();
 	//G_COUT << "in fkt " << strName << std::endl;
 
-	std::unique_ptr<SymbolTable> ptrLocalSym(new SymbolTable);
+	bool bOverrideSymTab = 0;
+	if(info.pLocalSymsOverride && strName == info.strExecFkt)
+		bOverrideSymTab = 1;
+
+	std::unique_ptr<SymbolTable> ptrLocalSym(bOverrideSymTab ? 0 : new SymbolTable);
 	SymbolTable *pLocalSym = ptrLocalSym.get();
+
+	// externally supplied symbol table
+	if(bOverrideSymTab)
+		pLocalSym = info.pLocalSymsOverride;
 
 	SymbolArray* pArgs = 0;
 	if(pTableSup)

@@ -14,6 +14,7 @@
 #include <fstream>
 #include <cmath>
 #include <array>
+#include <algorithm>
 
 #include "parseobj.h"
 #include "script_helper.h"
@@ -23,25 +24,124 @@
 extern int yyparse(void*);
 static bool g_bShowTiming = 0;
 
+
+static inline void usage(const char* pcProg)
+{
+	G_COUT << "This is the " << g_pcVersion << ".\n";
+	G_COUT << "Written by Tobias Weber, 2013-2014.\n";
+	G_COUT << "Built on " << __DATE__ << ", " << __TIME__;
+	G_COUT << " with CC version " << __VERSION__ << ".\n\n";
+	G_COUT << "Usage: " << pcProg << " [arguments to hermelin]"
+		<< " <script file> [arguments to script]"
+		<< "\n";
+	G_COUT << "\nArguments to hermelin:" << "\n";
+	G_COUT << "\t-h, --help            This message.\n";
+	G_COUT << "\t-i, --interactive     Interactive mode.\n";
+	G_COUT << "\t-t, --timing          Show timing information.\n";
+	G_COUT << "\t-s, --symbols         Show symbol tables.\n";
+	G_COUT << "\t-d[0-4]               Verbosity (0=none, 1=errors, 2=warnings, 3=infos, 4=debug).\n";
+	G_COUT << std::endl;
+}
+
+
+
+// execute interactive commands
+static inline int interactive(bool bShowSymbols=0, unsigned int uiDebugLevel=3)
+{
+	static const t_char* pcCmdFunc = T_STR"__cmd__";
+
+	ParseInfo info;
+	std::unique_ptr<SymbolTable> ptrLocalSym(new SymbolTable);
+	info.pLocalSymsOverride = ptrLocalSym.get();
+	info.bImplicitRet = 1;
+	info.strExecFkt = pcCmdFunc;
+	info.strInitScrFile = "<interactive>";
+
+	init_global_syms(info.pGlobalSyms);
+
+	std::function<void()> remove_cmdfunc = [&info]()
+	{
+		ParseInfo::t_funcs::iterator iterNewEnd =
+			std::remove_if(info.vecFuncs.begin(), info.vecFuncs.end(),
+			[](const NodeFunction* pFunc)->bool
+			{ return pFunc->GetName() == pcCmdFunc; } );
+		info.vecFuncs.resize(iterNewEnd-info.vecFuncs.begin());
+	};
+
+	while(1)
+	{
+		try
+		{
+			std::cout << "> ";
+			std::string strLine;
+			if(!std::getline(std::cin, strLine))
+				break;
+
+			info.EnableExec();
+
+			t_string strInput = t_string(pcCmdFunc) + "() { " + strLine + " }";
+			Lexer lex(strInput);
+
+			if(!lex.IsOk())
+			{
+				log_err("Lexer returned with errors.");
+				continue;
+			}
+
+
+			ParseObj par;
+			info.bEnableDebug = (uiDebugLevel>=4);
+			par.pLexer = &lex;
+
+			int iParseRet = yyparse(&par);
+			if(iParseRet != 0)
+			{
+				log_err("Parser returned with error code ", iParseRet, ".");
+				remove_cmdfunc();
+				continue;
+			}
+
+			par.pRoot = par.pRoot->optimize();
+			Symbol *pSymRet = par.pRoot->eval(info, 0);
+
+			if(bShowSymbols)
+				info.pLocalSymsOverride->print();
+
+			if(pSymRet)
+			{
+				std::cout << pSymRet->print() << std::endl;
+				safe_delete(pSymRet, info.pLocalSymsOverride, info.pGlobalSyms);
+			}
+
+			remove_cmdfunc();
+
+			if(par.pRoot)
+			{
+				delete par.pRoot;
+				par.pRoot = 0;
+			}
+		}
+		catch(const std::exception& ex)
+		{
+			log_crit(ex.what());
+			remove_cmdfunc();
+		}
+	}
+}
+
+
+
+// execute script
 static inline int script_main(int argc, char** argv)
 {
 	if(argc<=1)
 	{
-		G_COUT << "This is the " << g_pcVersion << "." << "\n";
-		G_COUT << "Built on " << __DATE__ << ", " << __TIME__;
-		G_COUT << " with CC version " << __VERSION__ << ".\n\n";
-		G_COUT << "Usage: " << argv[0] << " [arguments to hermelin]" 
-					<< " <script file> [arguments to script]" 
-					<< "\n";
-		G_COUT << "\nArguments to hermelin:" << "\n";
-		G_COUT << "\t-t, --timing\t\tShow timing information.\n";
-		G_COUT << "\t-s, --symbols\t\tShow symbol tables.\n";
-		G_COUT << "\t-d[0-4] \t\tVerbosity (0=none, 1=errors, 2=warnings, 3=infos, 4=debug).\n";
-		G_COUT << std::endl;
+		usage(argv[0]);
 		return -1;
 	}
 
 	bool bShowSymbols = 0;
+	bool bInteractive = 0;
 	unsigned int uiDebugLevel = 3;
 #ifndef NDEBUG
 	uiDebugLevel = 4;
@@ -60,6 +160,11 @@ static inline int script_main(int argc, char** argv)
 			g_bShowTiming = 1;
 		else if(strArg=="-s" || strArg == "--symbols")
 			bShowSymbols = 1;
+		else if(strArg=="-i" || strArg == "--interactive")
+			bInteractive = 1;
+		else if(strArg=="-h" || strArg == "--help")
+			{ usage(argv[0]); return 0; }
+
 		else if(strArg=="-d0") uiDebugLevel = 0;
 		else if(strArg=="-d1") uiDebugLevel = 1;
 		else if(strArg=="-d2") uiDebugLevel = 2;
@@ -73,6 +178,10 @@ static inline int script_main(int argc, char** argv)
 
 	// debug in script.yy needs to be set
 	yydebug = (uiDebugLevel>=4);
+
+	if(bInteractive)
+		return interactive(bShowSymbols, uiDebugLevel);
+
 
 	if(iStartArg >= argc)
 	{
@@ -178,6 +287,7 @@ static inline int script_main(int argc, char** argv)
 
 	return 0;
 }
+
 
 
 #include <chrono>

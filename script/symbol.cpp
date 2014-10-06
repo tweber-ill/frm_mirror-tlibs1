@@ -701,8 +701,12 @@ void safe_delete(Symbol *&pSym, const SymbolTable* pSymTab, const SymbolTable* p
 		return;
 
 	// don't delete symbols in table
-	bool bIsInTable = pSymTab->IsPtrInMap(pSym);
-	bool bIsInGlobTable = pSymTabGlob->IsPtrInMap(pSym);
+	bool bIsInTable = 0;
+	bool bIsInGlobTable = 0;
+
+	if(pSymTab) bIsInTable = pSymTab->IsPtrInMap(pSym);
+	if(pSymTabGlob) bIsInGlobTable = pSymTabGlob->IsPtrInMap(pSym);
+
 	if(!bIsInTable && !bIsInGlobTable)
 	{
 		//log_debug("safe_deleting ", (void*)pSym, ", type: ", pSym->GetType(), ", val: ", pSym->print());

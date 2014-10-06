@@ -16,7 +16,7 @@
 
 int yydebug = 0;
 
-const t_char* g_pcVersion = T_STR"Hermelin script interpreter, version 0.6.8";
+const t_char* g_pcVersion = T_STR"Hermelin script interpreter, version 0.7";
 
 static inline void init_funcs()
 {
