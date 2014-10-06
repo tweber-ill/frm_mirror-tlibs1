@@ -164,7 +164,7 @@ class McData
 		{ return m_data.GetMapString(strKey, strVal); }
 		bool GetDouble(const std::string& strKey, double& dVal) const
 		{ return m_data.GetMapVal<double>(strKey, dVal); }
-				
+
 		const LoadTxt& GetRawData() const { return m_data; }
 
 		bool GetLogScale(bool &bXLog, bool &bYLog) const;
@@ -198,7 +198,7 @@ class DataRes : public McData
 		unsigned int GetDim(void) const { return m_iDim; }
 
 		const double* GetColumn(unsigned int iIdx) const;
-		
+
 		const double* Getki_x() const { return GetColumn(0); }
 		const double* Getki_y() const { return GetColumn(1); }
 		const double* Getki_z() const { return GetColumn(2); }
@@ -231,12 +231,12 @@ class Data1D : public McData
 		virtual ~Data1D() {}
 
 		void ForEach(unsigned int iColIdx, double (*)(double));
-		
+
 		unsigned int GetDim(void) const { return m_iDim; }
 		unsigned int GetColCnt() const { return m_data.GetColCnt(); }
 
 		bool GetColumnIndices(int& iX, int& iY, int&iYErr) const;
-		
+
 		const double* GetColumn(unsigned int iIdx) const;
 
 		double GetMin(unsigned int iColIdx, unsigned int *pMinIdx=0) const;
@@ -246,7 +246,7 @@ class Data1D : public McData
 
 		bool GetXLimits(double& dXMin, double& dXMax) const;
 		bool GetYLimits(double& dYMin, double& dYMax) const;
-		
+
 		bool GetLabels(std::string& strLabelX, std::string& strLabelY) const;
 		bool GetColLabel(unsigned int iCol, std::string& strLabel) const;
 
@@ -265,8 +265,8 @@ class Data2D;
 class Data2D : public McData
 {
 	protected:
-		unsigned int m_iXDim, m_iYDim;
 		unsigned int m_iNumBlocks;
+		unsigned int m_iXDim, m_iYDim;
 
 		bool m_bRecalcZLimits;
 
@@ -310,15 +310,15 @@ class Data2D : public McData
 class Data3D : public McData
 {
 	protected:
-		unsigned int m_iXDim, m_iYDim, m_iTDim;
 		unsigned int m_iNumBlocks;
-		
+		unsigned int m_iXDim, m_iYDim, m_iTDim;
+
 	public:
 		Data3D(const LoadTxt& data);
 		virtual ~Data3D() {}
 
 		void ForEach(unsigned int iBlockIdx, double (*)(double));
-		
+
 		std::string GetBlockName(unsigned int uiBlock) const;
 
 		double GetBlockVal(unsigned int iBlock, unsigned int iX, unsigned int iY, unsigned int iT) const;
@@ -339,10 +339,10 @@ class Data3D : public McData
 					   double& dYMin, double& dYMax,
 					   double& dTMin, double& dTMax) const;
 		bool GetLabels(std::string& strLabelX, std::string& strLabelY, std::string& strLabelT) const;
-		
+
 		bool SaveTChan(const char* pcFile, unsigned int iX, unsigned int iY) const;
 		bool SaveXY(const char* pcFile, unsigned int uiBlock, int iT=-1) const;
-		
+
 		double GetIntensity() const;
 		double GetIntensityError() const;
 };

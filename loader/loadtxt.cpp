@@ -773,8 +773,8 @@ void Data1D::NormY(double dNorm, double dNormErr)
 double Data1D::GetIntensity(unsigned int iICol, unsigned int iIErrCol, unsigned int iCountCol) const
 {
 	const double* pI = GetColumn(iICol);
-	const double* pI_err = GetColumn(iIErrCol);
-	const double* pCount = GetColumn(iCountCol);
+	//const double* pI_err = GetColumn(iIErrCol);
+	//const double* pCount = GetColumn(iCountCol);
 
 	double dInt = 0.;
 	for(unsigned int i=0; i<GetDim(); ++i)
@@ -784,10 +784,10 @@ double Data1D::GetIntensity(unsigned int iICol, unsigned int iIErrCol, unsigned 
 
 double Data1D::GetIntensityError(unsigned int iICol, unsigned int iIErrCol, unsigned int iCountCol) const
 {
-	const double* pI = GetColumn(iICol);
+	//const double* pI = GetColumn(iICol);
 	const double* pI_err = GetColumn(iIErrCol);
-	const double* pCount = GetColumn(iCountCol);
-	
+	//const double* pCount = GetColumn(iCountCol);
+
 	double dErr = 0.;
 	for(unsigned int i=0; i<GetDim(); ++i)
 		dErr += pI_err[i]*pI_err[i];
