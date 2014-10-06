@@ -16,10 +16,6 @@
 
 namespace ios = boost::iostreams;
 
-
-GnuPlot::GnuPlot() : m_iStartCounter(0), m_pipe(0), m_pfds(0), m_psbuf(0), m_postr(0),
-			m_bTermLocked(0), m_bHasLegend(0)
-{}
 GnuPlot::~GnuPlot() { DeInit(); }
 
 void GnuPlot::DeInit()

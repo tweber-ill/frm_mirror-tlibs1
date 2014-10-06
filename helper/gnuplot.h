@@ -42,28 +42,28 @@ struct PlotObj
 class GnuPlot
 {
 protected:
-	FILE *m_pipe;
-	boost::iostreams::file_descriptor_sink *m_pfds;
-	boost::iostreams::stream_buffer<boost::iostreams::file_descriptor_sink> *m_psbuf;
-	std::ostream *m_postr;
+	FILE *m_pipe = 0;
+	boost::iostreams::file_descriptor_sink *m_pfds = 0;
+	boost::iostreams::stream_buffer<boost::iostreams::file_descriptor_sink> *m_psbuf = 0;
+	std::ostream *m_postr = 0;
 
 	std::vector<PlotObj> m_vecObjs;
 	// has to be 0 to show plot
-	int m_iStartCounter;
+	int m_iStartCounter = 0;
 
 	std::string BuildCmd();
 	std::string BuildTable(const std::vector<double>& vecX, const std::vector<double>& vecY,
 			const std::vector<double>& vecYErr, const std::vector<double>& vecXErr);
 
-	bool m_bTermLocked;
-	bool m_bHasLegend;
+	bool m_bTermLocked = false;
+	bool m_bHasLegend = false;
 
 	std::string m_strLegendOpts;
 
 	void RefreshVars();
 
 public:
-	GnuPlot();
+	GnuPlot() = default;
 	virtual ~GnuPlot();
 
 	void Init();
