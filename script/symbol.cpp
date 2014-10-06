@@ -434,7 +434,6 @@ t_string SymbolMap::print() const
 	unsigned int iIter = 0;
 	for(const t_map::value_type& val : m_map)
 	{
-		const Symbol* pSym = val.second;
 		if(val.first.strKey == "")
 			ostr << T_STR"#" << std::hex << val.first.key << std::dec;
 		else

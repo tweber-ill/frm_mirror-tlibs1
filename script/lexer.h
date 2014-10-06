@@ -67,8 +67,8 @@ protected:
 	bool m_bOk;
 	t_string m_strWhitespace, m_strSep;
 
-	unsigned int m_iNumToks;
 	unsigned int m_iLexPos;
+	unsigned int m_iNumToks;
 	std::vector<Token> m_vecToks;
 	Token m_tokEnd;
 

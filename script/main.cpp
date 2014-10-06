@@ -127,6 +127,8 @@ static inline int interactive(bool bShowSymbols=0, unsigned int uiDebugLevel=3)
 			remove_cmdfunc();
 		}
 	}
+
+	return 0;
 }
 
 
@@ -147,7 +149,7 @@ static inline int script_main(int argc, char** argv)
 	uiDebugLevel = 4;
 #endif
 	unsigned int iStartArg = 1;
-	for(iStartArg=1; iStartArg<argc; ++iStartArg)
+	for(iStartArg=1; iStartArg<unsigned(argc); ++iStartArg)
 	{
 		t_string strArg = STR_TO_WSTR(argv[iStartArg]);
 		trim(strArg);
@@ -183,7 +185,7 @@ static inline int script_main(int argc, char** argv)
 		return interactive(bShowSymbols, uiDebugLevel);
 
 
-	if(iStartArg >= argc)
+	if(iStartArg >= unsigned(argc))
 	{
 		log_err("No input file given.");
 		return -1;

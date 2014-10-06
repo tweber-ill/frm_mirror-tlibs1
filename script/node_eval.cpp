@@ -581,7 +581,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 				}
 
 				// index too high -> fill up with zeroes
-				if(iIdx>=pArr->GetArr().size())
+				if(iIdx>=int(pArr->GetArr().size()))
 				{
 					unsigned int iOldSize = pArr->GetArr().size();
 					for(unsigned int iRem=0; iRem<iIdx+1-iOldSize; ++iRem)
@@ -884,14 +884,11 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 		SymbolArray *pArrRight = (SymbolArray*)pSymbol;
 
 		std::vector<Node*> vecLeftArgs = ((NodeBinaryOp*)((NodeArray*)pLeft)->GetArr())->flatten(NODE_ARGS);
-		unsigned int iArrSize = vecLeftArgs.size();
 		if(vecLeftArgs.size() != pArrRight->GetArr().size())
 		{
                         log_warn(linenr(info),
 				"Size mismatch between assigned and returned array: ",
 				vecLeftArgs.size(), " != ", pArrRight->GetArr().size(), ".");
-
-			iArrSize = std::min(vecLeftArgs.size(), pArrRight->GetArr().size());
 		}
 
 		for(unsigned int iArr=0; iArr<vecLeftArgs.size(); ++iArr)
@@ -928,7 +925,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 
 			//G_COUT << "Array: " << (void*) pArr << ", Index: " << iArrIdx << std::endl;
 
-			if(pArr->GetArr().size() <= iArrIdx)
+			if(int(pArr->GetArr().size()) <= iArrIdx)
 			{
 /*						G_CERR << "Warning: Array index (" << iArrIdx
 						<< ") out of bounds (array size: "
@@ -1187,7 +1184,6 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 	if(info.IsExecDisabled()) return 0;
 	info.pCurFunction = this;
 
-	std::vector<NodeFunction*>& vecFuncs = info.vecFuncs;
 	const t_string& strName = GetName();
 	//G_COUT << "in fkt " << strName << std::endl;
 
@@ -1293,8 +1289,6 @@ Symbol* NodeIf::eval(ParseInfo &info, SymbolTable *pSym) const
 {
 	if(info.IsExecDisabled()) return 0;
 
-	std::vector<NodeFunction*>& vecFuncs = info.vecFuncs;
-
 	Symbol *pSymExpr = 0;
 	Symbol *pSymRet = 0;
 	if(m_pExpr)
@@ -1315,8 +1309,6 @@ Symbol* NodeIf::eval(ParseInfo &info, SymbolTable *pSym) const
 Symbol* NodeWhile::eval(ParseInfo &info, SymbolTable *pSym) const
 {
 	if(info.IsExecDisabled()) return 0;
-
-	std::vector<NodeFunction*>& vecFuncs = info.vecFuncs;
 
 	if(!m_pExpr) return 0;
 	if(!m_pStmt) return 0;
@@ -1354,8 +1346,6 @@ Symbol* NodeWhile::eval(ParseInfo &info, SymbolTable *pSym) const
 Symbol* NodeFor::eval(ParseInfo &info, SymbolTable *pSym) const
 {
 	if(info.IsExecDisabled()) return 0;
-
-	std::vector<NodeFunction*>& vecFuncs = info.vecFuncs;
 
 	if(!m_pExprCond) return 0;
 	if(!m_pStmt) return 0;
@@ -1407,8 +1397,6 @@ Symbol* NodeFor::eval(ParseInfo &info, SymbolTable *pSym) const
 Symbol* NodeRangedFor::eval(ParseInfo &info, SymbolTable *pSym) const
 {
 	if(info.IsExecDisabled()) return 0;
-
-	std::vector<NodeFunction*>& vecFuncs = info.vecFuncs;
 	if(!m_pIdent || !m_pExpr || !m_pStmt) return 0;
 
 	if(m_pIdent->GetType() != NODE_IDENT)
@@ -1419,7 +1407,6 @@ Symbol* NodeRangedFor::eval(ParseInfo &info, SymbolTable *pSym) const
 		throw Err(ostrErr.str(),0);
 	}
 
-	Symbol *pSymRet = 0;
 	Symbol *_pArr = m_pExpr->eval(info, pSym);
 	if(!_pArr)
 	{

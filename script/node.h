@@ -90,7 +90,7 @@ struct ParseInfo
 {
 	// external imported modules
 	typedef std::unordered_map<t_string, Node*> t_mods;
-	t_mods *pmapModules;
+	t_mods *pmapModules = nullptr;
 
 	// function to execute, e.g. "main" (with external local symbol table)
 	t_string strExecFkt;
@@ -105,24 +105,24 @@ struct ParseInfo
 	t_funcs vecFuncs;
 
 	// global symbol table
-	SymbolTable *pGlobalSyms;
+	SymbolTable *pGlobalSyms = nullptr;
 
-	HandleManager *phandles;
+	HandleManager *phandles = nullptr;
 	// mutex for script
-	std::mutex *pmutexGlobal;
+	std::mutex *pmutexGlobal = nullptr;
 	// mutex for interpreter
-	std::mutex *pmutexInterpreter;
+	std::mutex *pmutexInterpreter = nullptr;
 
 	// currently active function
-	const NodeFunction *pCurFunction;
-	const NodeCall *pCurCaller;
+	const NodeFunction *pCurFunction = nullptr;
+	const NodeCall *pCurCaller = nullptr;
 	bool bWantReturn = 0;
 
-	const Node* pCurLoop;
-	bool bWantBreak;
-	bool bWantContinue;
+	const Node* pCurLoop = nullptr;
+	bool bWantBreak = 0;
+	bool bWantContinue = 0;
 
-	bool bDestroyParseInfo;
+	bool bDestroyParseInfo = true;
 
 
 	bool bEnableDebug = 0;

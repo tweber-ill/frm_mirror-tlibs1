@@ -42,7 +42,7 @@ HandleManager::~HandleManager()
 
 Handle* HandleManager::GetHandle(t_int iIdx)
 {
-	if(iIdx >= m_vecHandles.size() || iIdx<0)
+	if(iIdx >= int(m_vecHandles.size()) || iIdx<0)
 		return 0;
 
 	return m_vecHandles[iIdx];
@@ -56,7 +56,7 @@ t_int HandleManager::AddHandle(Handle* pHandle)
 
 void HandleManager::CloseHandle(t_int iIdx)
 {
-	if(iIdx >= m_vecHandles.size() || iIdx<0)
+	if(iIdx >= int(m_vecHandles.size()) || iIdx<0)
 		return;
 
 	if(m_vecHandles[iIdx])

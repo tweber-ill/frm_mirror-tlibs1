@@ -556,7 +556,6 @@ static Symbol* fkt_outerproduct(const std::vector<Symbol*>& vecSyms, ParseInfo& 
 		throw Err(ostrErr.str(),0);
 	}
 
-	Symbol* pRet = 0;
 	t_vec<t_real> vec1 = sym_to_vec<t_vec>(vecSyms[0]);
 	t_vec<t_real> vec2 = sym_to_vec<t_vec>(vecSyms[1]);
 

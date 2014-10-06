@@ -447,7 +447,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 
 
 
-	if(iNumThreads > vecArr.size())
+	if(iNumThreads > int(vecArr.size()))
 	{
 		iNumThreads = vecArr.size();
 		log_warn(linenr(info), "More threads requested in nthread than necessary, ",

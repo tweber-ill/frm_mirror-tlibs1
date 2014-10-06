@@ -9,12 +9,7 @@
 #include "helper/math.h"
 #include "helper/log.h"
 
-ParseInfo::ParseInfo() : pmapModules(0), phandles(0),
-			pmutexGlobal(0), pmutexInterpreter(0),
-			pGlobalSyms(0),
-			pCurFunction(0), pCurCaller(0), bWantReturn(0),
-			pCurLoop(0), bWantBreak(0), bWantContinue(0),
-			bDestroyParseInfo(1)
+ParseInfo::ParseInfo()
 {
 	pmapModules = new t_mods();
 	pGlobalSyms = new SymbolTable();
@@ -171,9 +166,10 @@ static inline bool IsLogicalOp(NodeType op)
 		case NODE_LOG_LEQ:
 		case NODE_LOG_GEQ:
 			return 1;
-	}
 
-	return 0;
+		default:
+			return 0;
+	}
 }
 
 Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, bool bOptim)

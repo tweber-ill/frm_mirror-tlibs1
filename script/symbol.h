@@ -420,7 +420,6 @@ static std::map<T1, T2> sym_to_map(const Symbol* pSym)
 	SymbolMap* pSymMap = (SymbolMap*)pSym;
 	std::map<T1, T2> _map;
 
-	unsigned int iIdx = 0;
 	for(const typename SymbolMap::t_map::value_type& pair : pSymMap->GetMap())
 		_map[pair.first.strKey] = convert_symbol<T2>(pair.second);
 

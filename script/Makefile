@@ -4,10 +4,10 @@ CC = gcc
 DEBUG = 0
 
 ifeq (${DEBUG}, 0)
-	OPT_FLAGS = -O3 -march=native -DNDEBUG
+	OPT_FLAGS = -O3 -march=native -DNDEBUG -Wall
 	STRIP = strip
 else
-	OPT_FLAGS = -ggdb -DDEBUG -rdynamic
+	OPT_FLAGS = -ggdb -DDEBUG -rdynamic -Wall
 	STRIP = echo debug version: no stripping of
 endif
 

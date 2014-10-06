@@ -57,23 +57,23 @@ convert_string_vector(const std::vector<std::string>& vecStr)
 class GenericModel : public FunctionModel
 {
 protected:
-	const NodeFunction *m_pFkt;
-	ParseInfo *m_pinfo;
-	const SymbolTable *m_pCallerSymTab;
+	const NodeFunction *m_pFkt = 0;
 
-	SymbolTable *m_pTable;
+	ParseInfo *m_pinfo = 0;
+	const SymbolTable *m_pCallerSymTab = 0;
+	SymbolTable *m_pTable = 0;
 
 	std::string m_strFreeParam;
 	std::vector<std::string> m_vecParamNames;
 	std::vector<Symbol*> m_vecSyms;
 
-	bool m_bUseVecParams = 0;
+	bool m_bUseVecParams = false;
 
 public:
 	GenericModel(const GenericModel& mod)
-			: m_pinfo(new ParseInfo(*mod.m_pinfo)),
+			: m_pFkt((NodeFunction*)mod.m_pFkt/*->clone()*/),
+			  m_pinfo(new ParseInfo(*mod.m_pinfo)),
 			  m_pCallerSymTab(mod.m_pCallerSymTab),
-			  m_pFkt((NodeFunction*)mod.m_pFkt/*->clone()*/),
 			  m_pTable(new SymbolTable())
 	{
 		m_pinfo->bDestroyParseInfo = 0;
@@ -97,9 +97,9 @@ public:
 
 	GenericModel(const NodeFunction *pFkt, ParseInfo& info, SymbolTable *pCallerSymTab,
 			const std::vector<t_string>* pvecParamNames=0)
-				: m_pinfo(new ParseInfo(info)),
+				: m_pFkt((NodeFunction*)pFkt/*->clone()*/),
+				  m_pinfo(new ParseInfo(info)),
 				  m_pCallerSymTab(pCallerSymTab),
-				  m_pFkt((NodeFunction*)pFkt/*->clone()*/),
 				  m_pTable(new SymbolTable())
 	{
 		m_pinfo->bDestroyParseInfo = 0;
@@ -591,9 +591,8 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		ROOT::Minuit2::MnMinos minos(chi2fkt, lastmini);
 		for(unsigned int iParam=0; iParam<iParamSize; ++iParam)
 		{
-			const std::string& strCurParam = vecParamNames[iParam];
+			//const std::string& strCurParam = vecParamNames[iParam];
 			std::pair<double, double> err = minos(iParam);
-
 			vecMinosErrs.push_back(err);
 		}
 	}
@@ -809,7 +808,7 @@ static Symbol* fkt_map_vec_to_val(const std::vector<Symbol*>& vecSyms,
 		}
 
 		const std::vector<Symbol*>& arr = ((SymbolArray*)pSym)->GetArr();
-		if(iIdx >= arr.size())
+		if(iIdx >= int(arr.size()))
 		{
 			log_warn(linenr(info), "Ignoring invalid index.");
 			continue;

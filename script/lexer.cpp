@@ -165,7 +165,7 @@ void Lexer::ReplaceEscapes(t_string& str)
 
 
 	// octal numbers
-	if(str.length()>=4) for(int i=0; i<str.length()-3; ++i)
+	if(str.length()>=4) for(int i=0; i<int(str.length())-3; ++i)
 	{
 		t_uchar c0 = str[i+1];
 		t_uchar c1 = str[i+2];
@@ -183,7 +183,7 @@ void Lexer::ReplaceEscapes(t_string& str)
 	}
 
 	// hex numbers
-	if(str.length()>=4) for(int i=0; i<str.length()-3; ++i)
+	if(str.length()>=4) for(int i=0; i<int(str.length())-3; ++i)
 	{
 		//std::cout << str << std::endl;
 		t_uchar c0 = str[i+2];
