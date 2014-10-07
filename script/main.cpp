@@ -294,8 +294,10 @@ static inline int script_main(int argc, char** argv)
 
 #include <chrono>
 #include <ctime>
-typedef std::chrono::system_clock::time_point t_tp;
-typedef std::chrono::system_clock::duration t_dur;
+typedef std::chrono::system_clock::time_point t_tp_sys;
+typedef std::chrono::steady_clock::time_point t_tp_st;
+typedef std::chrono::duration<double> t_dur;
+typedef std::chrono::system_clock::duration t_dur_sys;
 
 int main(int argc, char** argv)
 {
@@ -307,7 +309,8 @@ int main(int argc, char** argv)
 	}
 
 	int iRet = -99;
-	t_tp timeStart = std::chrono::system_clock::now();
+	t_tp_sys timeStart = std::chrono::system_clock::now();
+	t_tp_st timeStart_st = std::chrono::steady_clock::now();
 
 	try
 	{
@@ -321,12 +324,14 @@ int main(int argc, char** argv)
 
 	if(g_bShowTiming && iRet==0)
 	{
-		t_tp timeStop = std::chrono::system_clock::now();
-		t_dur dur = timeStop-timeStart;
+		t_tp_st timeStop_st = std::chrono::steady_clock::now();
+
+		t_dur dur = std::chrono::duration_cast<t_dur>(timeStop_st-timeStart_st);
+		t_dur_sys dur_sys = std::chrono::duration_cast<t_dur_sys>(dur);
 		double dDur = double(t_dur::period::num)/double(t_dur::period::den) * double(dur.count());
 
 		std::time_t tStart = std::chrono::system_clock::to_time_t(timeStart);
-		std::time_t tStop = std::chrono::system_clock::to_time_t(timeStop);
+		std::time_t tStop = std::chrono::system_clock::to_time_t(timeStart + dur_sys);
 
 		std::tm tmStart = *std::localtime(&tStart);
 		std::tm tmStop = *std::localtime(&tStop);
