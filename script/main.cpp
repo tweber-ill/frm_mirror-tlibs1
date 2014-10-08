@@ -337,8 +337,8 @@ int main(int argc, char** argv)
 		std::tm tmStop = *std::localtime(&tStop);
 
 		char cStart[128], cStop[128];
-		std::strftime(cStart, sizeof cStart, "%Y-%b-%d %H:%M:%S", &tmStart);
-		std::strftime(cStop, sizeof cStop, "%Y-%b-%d %H:%M:%S", &tmStop);
+		std::strftime(cStart, sizeof cStart, "%a %Y-%b-%d %H:%M:%S %Z", &tmStart);
+		std::strftime(cStop, sizeof cStop, "%a %Y-%b-%d %H:%M:%S %Z", &tmStop);
 
 		log_info("================================================================================");
 		log_info("Script start time:     ", cStart);
