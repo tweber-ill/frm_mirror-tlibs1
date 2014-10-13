@@ -38,7 +38,7 @@ void GnuPlot::Init()
 	if(IsReady()) return;
 	DeInit();
 
-	m_pipe = (FILE*)::/*my_*/popen("gnuplot -persist 2>/dev/null 1>/dev/null", "w");
+	m_pipe = (FILE*)::/*my_*/popen("gnuplot -p 2>/dev/null 1>/dev/null", "w");
 	//m_pipe = popen("gnuplot -persist 2>gnuplot.err 1>gnuplot.out", "w");
 	if(!m_pipe)
 	{
