@@ -10,7 +10,6 @@
 #include "script_helper.h"
 
 
-
 // external functions
 static t_mapFkts g_mapFkts;
 

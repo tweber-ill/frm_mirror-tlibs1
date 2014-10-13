@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include "symbol.h"
 #include "node.h"
+#include "info.h"
 
 #include <initializer_list>
 

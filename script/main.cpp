@@ -20,6 +20,7 @@
 #include "script_helper.h"
 #include "globals.h"
 #include "calls.h"
+#include "info.h"
 
 extern int yyparse(void*);
 static bool g_bShowTiming = 0;

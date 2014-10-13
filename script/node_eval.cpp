@@ -6,9 +6,9 @@
  */
 
 #include "node.h"
+#include "info.h"
 #include "calls.h"
 #include "helper/log.h"
-
 
 Symbol* NodeReturn::eval(ParseInfo &info, SymbolTable *pSym) const
 {
@@ -66,9 +66,14 @@ Symbol* NodeIdent::eval(ParseInfo &info, SymbolTable *pSym) const
 	if(info.IsExecDisabled()) return 0;
 
 	// local symbol
-	Symbol *pSymbol = pSym->GetSymbol(m_strIdent);
+	Symbol *pSymbol = 0;
+	if(pSym)
+		pSymbol = pSym->GetSymbol(m_strIdent);
+
 	// global symbol
-	Symbol *pSymbolGlob = info.pGlobalSyms->GetSymbol(m_strIdent);
+	Symbol *pSymbolGlob = 0;
+	if(info.pGlobalSyms)
+		pSymbolGlob = info.pGlobalSyms->GetSymbol(m_strIdent);
 
 	if(pSymbol && pSymbolGlob)
 	{
@@ -103,7 +108,7 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 	//if(m_pArgs->GetType() != NODE_ARGS)
 	//	return 0;
 
-	NodeIdent* pIdent = (NodeIdent*) m_pIdent;
+	const NodeIdent* pIdent = (NodeIdent*) m_pIdent;
 	const t_string& strFkt = pIdent->GetIdent();
 	//G_COUT << "call to " << strFkt << " with " << m_vecArgs.size() << " arguments." << std::endl;
 
@@ -125,7 +130,7 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 	SymbolArray arrArgs;
 	arrArgs.SetDontDel(1);
 	std::vector<Symbol*> &vecArgSyms = arrArgs.GetArr();
-	for(Node* pNode : m_vecArgs)
+	for(const Node* pNode : m_vecArgs)
 	{
 		// TODO: Unpack operation for vector.
 		if(pNode->GetType() == NODE_UNPACK)
@@ -163,7 +168,7 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 					continue;
 				}
 
-				Symbol *pSymClone;
+				Symbol *pSymClone = 0;
 				clone_if_needed(iter->second, pSymClone);
 				vecArgSyms.push_back(pSymClone);
 			}
@@ -178,7 +183,7 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 		}
 	}
 
-	arrArgs.UpdateIndices();
+	arrArgs.UpdateIndices(false);
 	Symbol* pFktRet = 0;
 	if(bCallUserFkt)	// call user-defined function
 	{
@@ -204,6 +209,8 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 			info.PopTraceback();
 		}
 	}
+
+	arrArgs.ClearIndices();
 
 	for(Symbol *pArgSym : vecArgSyms)
 		safe_delete(pArgSym, pSym, info.pGlobalSyms);
@@ -494,7 +501,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 		bool bEvenIndex = 0;
 		bool bAlreadyTransposed = 0;
 
-		for(Node *pIndices : m_vecIndices)
+		for(const Node *pIndices : m_vecIndices)
 		{
 			SymbolArray *pArr = (SymbolArray*)pSymbol;
 
@@ -616,7 +623,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 			log_warn(linenr(info), "Multiple keys given for map, using first one.");
 		}
 
-		Node *pNodeKey = m_vecIndices[0];
+		const Node *pNodeKey = m_vecIndices[0];
 		Symbol *pSymExpr = pNodeKey->eval(info, pSym);
 		if(pSymExpr==0)
 		{
@@ -659,7 +666,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 			throw(Err(ostrErr.str()),0);
 		}
 
-		Node *pIndices = m_vecIndices[0];
+		const Node *pIndices = m_vecIndices[0];
 
 		if(pIndices->GetType() == NODE_RANGE)	// range index
 		{
@@ -738,6 +745,8 @@ static void uminus_inplace(Symbol* pSym, ParseInfo& info)
 		((SymbolDouble*)pSym)->SetVal(-((SymbolDouble*)pSym)->GetVal());
 	else if(pSym->GetType() == SYMBOL_INT)
 		((SymbolInt*)pSym)->SetVal(-((SymbolInt*)pSym)->GetVal());
+	else if(pSym->GetType() == SYMBOL_COMPLEX)
+		((SymbolComplex*)pSym)->SetVal(-((SymbolComplex*)pSym)->GetVal());
 	else if(pSym->GetType() == SYMBOL_ARRAY)
 	{
 		for(Symbol* pElem : ((SymbolArray*)pSym)->GetArr())
@@ -848,9 +857,12 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 		const t_string& strIdent = ((NodeIdent*)pLeft)->GetIdent();
 		//log_debug("Assigning ", strIdent, " = ", pSymbol);
 
-		Symbol* pSymGlob = info.pGlobalSyms->GetSymbol(strIdent);
+		Symbol* pSymGlob = 0;
+		if(info.pGlobalSyms)
+			pSymGlob = info.pGlobalSyms->GetSymbol(strIdent);
+
 		Symbol* pSymLoc = 0;
-		if(!*pbGlob)
+		if(!*pbGlob && pSym)
 			pSymLoc = pSym->GetSymbol(strIdent);
 
 		if(pSymLoc && pSymGlob)
@@ -859,16 +871,16 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 				"\" exists in local and global scope, using local one.");
 		}
 
-		if(pSymGlob && !pSymLoc && !*pbGlob)
+		if(pSymGlob && !pSymLoc && !*pbGlob && info.pGlobalSyms)
 		{
 			log_warn(linenr(info), "Overwriting global symbol \"", strIdent, "\".");
 			info.pGlobalSyms->InsertSymbol(strIdent, pSymbol);
 		}
 		else
 		{
-			if(*pbGlob)
+			if(*pbGlob && info.pGlobalSyms)
 				info.pGlobalSyms->InsertSymbol(strIdent, pSymbol);
-			else
+			else if(pSym)
 				pSym->InsertSymbol(strIdent, pSymbol);
 		}
 
@@ -1207,19 +1219,18 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 	{
 		const std::vector<Symbol*> *pVecArgSyms = &pArgs->GetArr();
 
-		/*if(m_vecArgs.size() != pVecArgSyms->size())
+		if(m_vecArgs.size() != pVecArgSyms->size())
 		{
-			G_CERR << linenr(T_STR"Error", info) << "Function \""
-					<< strName << "\"" << " takes "
-					<< m_vecArgs.size() << " arguments, but "
-					<< pVecArgSyms->size() << " given."
-					<< std::endl;
-		}*/
+			log_warn(linenr(info), "Function \"",
+					strName, "\"", " takes ",
+					m_vecArgs.size(), " arguments, but ",
+					pVecArgSyms->size(), " given.");
+		}
 
 		iArgSize = /*std::min(*/m_vecArgs.size()/*, pVecArgSyms->size())*/;
 		for(unsigned int iArg=0; iArg<iArgSize; ++iArg)
 		{
-			NodeIdent* pIdent = (NodeIdent*)m_vecArgs[iArg];
+			const NodeIdent* pIdent = (NodeIdent*)m_vecArgs[iArg];
 			const Node* pDefArg = pIdent->GetDefArg();
 
 			Symbol *pSymbol = 0;
@@ -1248,7 +1259,7 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 			//G_COUT << "arg: " << pIdent->GetIdent() << std::endl;
 			Symbol* pSymToInsert;
 			if(clone_if_needed(pSymbol, pSymToInsert))
-				/*safe_delete(pSymbol, pLocalSym, info.pGlobalSyms)*/;
+				safe_delete(pSymbol, pLocalSym, info.pGlobalSyms);
 			pSymToInsert->SetRval(0);
 			pLocalSym->InsertSymbol(pIdent->GetIdent(), pSymToInsert);
 		}
@@ -1278,7 +1289,7 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 		info.PopTraceback();
 	}
 
-	//G_COUT << "Local symbols for \"" << strName << "\":\n";
+	//log_debug("Local symbols for \"", strName, "\":");
 	//pLocalSym->print();
 
 	return pRet;

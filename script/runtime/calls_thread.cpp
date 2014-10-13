@@ -105,11 +105,16 @@ static Symbol* task_proc(NodeFunction* pFunc, ParseInfo* pinfo, std::vector<Symb
 	const NodeFunction *pThreadFunc = 0;
 	ParseInfo *pinfo2 = 0;
 	{
-		std::lock_guard<std::mutex> _lck(*pinfo->pmutexInterpreter);
-		pThreadFunc = (NodeFunction*)pFunc->clone();
+		//std::lock_guard<std::mutex> _lck(*pinfo->pmutexInterpreter);
+		pThreadFunc = (NodeFunction*)pFunc/*->clone()->optimize()*/;
+
 		pinfo2 = new ParseInfo(*pinfo);	// threads cannot share the same bWantReturn etc.
 		pinfo2->bDestroyParseInfo = 0;
+
+		// TODO
+		//pinfo2->pGlobalSyms = 0;
 		if(pvecSyms) arrArgs.GetArr() = *pvecSyms;
+		arrArgs.UpdateIndices();
 	}
 
 	pTable->InsertSymbol(T_STR"<args>", &arrArgs);
@@ -119,7 +124,7 @@ static Symbol* task_proc(NodeFunction* pFunc, ParseInfo* pinfo, std::vector<Symb
 
 	if(pTable) delete pTable;
 	if(pvecSyms) delete_symbols(pvecSyms);
-	if(pThreadFunc) delete pThreadFunc;
+	//if(pThreadFunc) delete pThreadFunc;
 	if(pinfo2) delete pinfo2;
 
 	return pRet;
@@ -129,7 +134,10 @@ static void thread_proc(NodeFunction* pFunc, ParseInfo* pinfo, std::vector<Symbo
 {
 	// ignore return value
 	Symbol *pRet = task_proc(pFunc, pinfo, pvecSyms);
+
+	// TODO: check
 	if(pRet) delete pRet;
+	//safe_delete(pRet, 0, pinfo->pGlobalSyms);
 }
 
 static Symbol* fkt_thread_task(const std::vector<Symbol*>& vecSyms,
@@ -233,6 +241,8 @@ static Symbol* fkt_begin_critical(const std::vector<Symbol*>& vecSyms,
 				fkt_begin_critical(((SymbolArray*)pSym)->GetArr(), info, pSymTab);
 			else if(pSym->GetType() == SYMBOL_INT)
 			{
+				//std::lock_guard<std::mutex> lck(*info.pmutexCrit);
+
 				int iHandle = pSym->GetValInt();
 				Handle *pHandle = info.phandles->GetHandle(iHandle);
 
@@ -279,6 +289,8 @@ static Symbol* fkt_end_critical(const std::vector<Symbol*>& vecSyms,
 				fkt_begin_critical(((SymbolArray*)pSym)->GetArr(), info, pSymTab);
 			else if(pSym->GetType() == SYMBOL_INT)
 			{
+				//std::lock_guard<std::mutex> lck(*info.pmutexCrit);
+
 				int iHandle = pSym->GetValInt();
 				Handle *pHandle = info.phandles->GetHandle(iHandle);
 

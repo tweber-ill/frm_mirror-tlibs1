@@ -6,78 +6,15 @@
 
 #include "node.h"
 #include "calls.h"
+#include "info.h"
 #include "helper/math.h"
 #include "helper/log.h"
 
-ParseInfo::ParseInfo()
-{
-	pmapModules = new t_mods();
-	pGlobalSyms = new SymbolTable();
-	phandles = new HandleManager();
-	pmutexGlobal = new std::mutex();
-	pmutexInterpreter = new std::mutex();
-}
-
-ParseInfo::~ParseInfo()
-{
-	if(!bDestroyParseInfo)
-		return;
-
-	if(phandles) delete phandles;
-	if(pGlobalSyms) delete pGlobalSyms;
-	if(pmutexGlobal) delete pmutexGlobal;
-	if(pmutexInterpreter) delete pmutexInterpreter;
-
-	phandles = 0;
-	pGlobalSyms = 0;
-
-	if(pmapModules)
-	{
-		for(ParseInfo::t_mods::value_type vals : *pmapModules)
-		{
-			if(vals.second)
-				delete vals.second;
-		}
-
-		pmapModules->clear();
-		delete pmapModules;
-		pmapModules = 0;
-	}
-}
-
-void ParseInfo::PushTraceback(std::string&& strTrace)
-{
-	if(!bEnableDebug) return;
-
-	t_oneTraceback *pStck = 0;
-	{
-		std::lock_guard<std::mutex> lck(*pmutexInterpreter);
-		pStck = &stckTraceback[std::this_thread::get_id()];
-	}
-
-	pStck->push_front(std::move(strTrace));
-}
-
-void ParseInfo::PopTraceback()
-{
-	if(!bEnableDebug) return;
-
-	t_oneTraceback *pStck = 0;
-	{
-		std::lock_guard<std::mutex> lck(*pmutexInterpreter);
-		pStck = &stckTraceback[std::this_thread::get_id()];
-	}
-
-	pStck->pop_front();
-}
-
-
-
-template<typename T> T plus_op(T a, T b) { return a+b; }
-template<typename T> T minus_op(T a, T b) { return a-b; }
-template<typename T> T mult_op(T a, T b) { return a*b; }
-template<typename T> T div_op(T a, T b) { return a/b; }
-template<typename T> T mod_op(T a, T b) { return a%b; }
+template<typename T> typename remove_constref<T>::type plus_op(T a, T b) { return a+b; }
+template<typename T> typename remove_constref<T>::type minus_op(T a, T b) { return a-b; }
+template<typename T> typename remove_constref<T>::type mult_op(T a, T b) { return a*b; }
+template<typename T> typename remove_constref<T>::type div_op(T a, T b) { return a/b; }
+template<typename T> typename remove_constref<T>::type mod_op(T a, T b) { return a%b; }
 template<> t_real mod_op(t_real a, t_real b) { return ::fmod(a,b); }
 
 template<typename T> bool log_or_op(T a, T b) { return a||b; }
@@ -92,7 +29,7 @@ template<typename T> bool log_greater_op(T a, T b) { return a>b; }
 
 static t_int pow_int(t_int a, t_int b)
 {
-	return t_int(pow(a,b));
+	return t_int(std::pow(a,b));
 }
 
 std::unordered_map<NodeType, t_real (*)(t_real, t_real), EnumDirectHash<NodeType>> g_mapBinOps_d = 
@@ -102,7 +39,7 @@ std::unordered_map<NodeType, t_real (*)(t_real, t_real), EnumDirectHash<NodeType
 	std::pair<NodeType, t_real (*)(t_real, t_real)>(NODE_MULT, mult_op),
 	std::pair<NodeType, t_real (*)(t_real, t_real)>(NODE_DIV, div_op),
 	std::pair<NodeType, t_real (*)(t_real, t_real)>(NODE_MOD, mod_op),
-	std::pair<NodeType, t_real (*)(t_real, t_real)>(NODE_POW, pow),
+	std::pair<NodeType, t_real (*)(t_real, t_real)>(NODE_POW, std::pow),
 };
 
 std::unordered_map<NodeType, t_int (*)(t_int, t_int), EnumDirectHash<NodeType>> g_mapBinOps_i =
@@ -115,9 +52,18 @@ std::unordered_map<NodeType, t_int (*)(t_int, t_int), EnumDirectHash<NodeType>> 
 	std::pair<NodeType, t_int (*)(t_int, t_int)>(NODE_POW, pow_int)
 };
 
-std::unordered_map<NodeType, t_string (*)(t_string, t_string), EnumDirectHash<NodeType>> g_mapBinOps_s =
+std::unordered_map<NodeType, t_complex (*)(const t_complex&, const t_complex&), EnumDirectHash<NodeType>> g_mapBinOps_c = 
 {
-	std::pair<NodeType, t_string (*)(t_string,t_string)>(NODE_PLUS, plus_op),
+	std::pair<NodeType, t_complex (*)(const t_complex&, const t_complex&)>(NODE_PLUS, plus_op),
+	std::pair<NodeType, t_complex (*)(const t_complex&, const t_complex&)>(NODE_MINUS, minus_op),
+	std::pair<NodeType, t_complex (*)(const t_complex&, const t_complex&)>(NODE_MULT, mult_op),
+	std::pair<NodeType, t_complex (*)(const t_complex&, const t_complex&)>(NODE_DIV, div_op),
+	std::pair<NodeType, t_complex (*)(const t_complex&, const t_complex&)>(NODE_POW, std::pow<t_real>),
+};
+
+std::unordered_map<NodeType, t_string (*)(const t_string&, const t_string&), EnumDirectHash<NodeType>> g_mapBinOps_s =
+{
+	std::pair<NodeType, t_string (*)(const t_string&, const t_string&)>(NODE_PLUS, plus_op),
 };
 
 
@@ -145,10 +91,22 @@ std::unordered_map<NodeType, bool (*)(t_int, t_int), EnumDirectHash<NodeType>> g
 	std::pair<NodeType, bool (*)(t_int, t_int)>(NODE_LOG_GREATER, log_greater_op)
 };
 
-std::unordered_map<NodeType, bool (*)(t_string,t_string), EnumDirectHash<NodeType>> g_mapBinLogOps_s =
+std::unordered_map<NodeType, bool (*)(const t_complex&, const t_complex&), EnumDirectHash<NodeType>> g_mapBinLogOps_c =
 {
-	std::pair<NodeType, bool (*)(t_string,t_string)>(NODE_LOG_EQ, log_eq_op),
-	std::pair<NodeType, bool (*)(t_string,t_string)>(NODE_LOG_NEQ, log_neq_op),
+	//std::pair<NodeType, bool (*)(t_complex, t_complex)>(NODE_LOG_OR, log_or_op),
+	//std::pair<NodeType, bool (*)(t_complex, t_complex)>(NODE_LOG_AND, log_and_op),
+	std::pair<NodeType, bool (*)(const t_complex&, const t_complex&)>(NODE_LOG_EQ, log_eq_op),
+	std::pair<NodeType, bool (*)(const t_complex&, const t_complex&)>(NODE_LOG_NEQ, log_neq_op),
+	//std::pair<NodeType, bool (*)(t_complex, t_complex)>(NODE_LOG_LEQ, log_leq_op),
+	//std::pair<NodeType, bool (*)(t_complex, t_complex)>(NODE_LOG_GEQ, log_geq_op),
+	//std::pair<NodeType, bool (*)(t_complex, t_complex)>(NODE_LOG_LESS, log_less_op),
+	//std::pair<NodeType, bool (*)(t_complex, t_complex)>(NODE_LOG_GREATER, log_greater_op)
+};
+
+std::unordered_map<NodeType, bool (*)(const t_string&, const t_string&), EnumDirectHash<NodeType>> g_mapBinLogOps_s =
+{
+	std::pair<NodeType, bool (*)(const t_string&, const t_string&)>(NODE_LOG_EQ, log_eq_op),
+	std::pair<NodeType, bool (*)(const t_string&, const t_string&)>(NODE_LOG_NEQ, log_neq_op),
 };
 
 
@@ -222,7 +180,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 	// vector operations
 	if(pSymLeft->GetType()==SYMBOL_ARRAY || pSymRight->GetType()==SYMBOL_ARRAY)
 	{
-		SymbolArray* pSymResult;
+		SymbolArray* pSymResult=0;
 		bool bRecycledLeftArr=0, bRecycledRightArr=0;
 
 		// don't recycle array for scalar ops (types not equal)
@@ -264,7 +222,8 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 			}
 		}
 		// (vector op scalar) operation
-		else if(pSymLeft->GetType()==SYMBOL_ARRAY && pSymRight->GetType()!=SYMBOL_ARRAY)
+		//else if(pSymLeft->GetType()==SYMBOL_ARRAY && (pSymRight->GetType()&SYMBOL_SCALAR))
+		else if(pSymLeft->GetType()==SYMBOL_ARRAY && (pSymRight->GetType()!=SYMBOL_ARRAY))
 		{
 			const std::vector<Symbol*>& vecLeft = ((SymbolArray*)pSymLeft)->GetArr();
 
@@ -283,7 +242,8 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 
 		}
 		// (scalar op vector) operation
-		else if(pSymLeft->GetType()!=SYMBOL_ARRAY && pSymRight->GetType()==SYMBOL_ARRAY)
+		//else if((pSymLeft->GetType()&SYMBOL_SCALAR) && pSymRight->GetType()==SYMBOL_ARRAY)
+		else if((pSymLeft->GetType()!=SYMBOL_ARRAY) && pSymRight->GetType()==SYMBOL_ARRAY)
 		{
 			const std::vector<Symbol*>& vecRight = ((SymbolArray*)pSymRight)->GetArr();
 
@@ -306,6 +266,8 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 
 		return pSymResult;
 	}
+
+
 
 	// cast to equal symbol types
 	if(pSymLeft->GetType() != pSymRight->GetType())
@@ -339,17 +301,34 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 			}
 		}
 
+
+		// int op double -> double
 		if(pLeft->GetType()==SYMBOL_INT && pRight->GetType()==SYMBOL_DOUBLE)
 		{
 			pLeft = pLeft->ToType(SYMBOL_DOUBLE);
 			bCleanLeft = 1;
 		}
-
+		// double op int -> double
 		if(pLeft->GetType()==SYMBOL_DOUBLE && pRight->GetType()==SYMBOL_INT)
 		{
 			pRight = pRight->ToType(SYMBOL_DOUBLE);
 			bCleanRight = 1;
 		}
+
+
+		// scalar op complex -> complex
+		if((pLeft->GetType()&SYMBOL_SCALAR) && pRight->GetType()==SYMBOL_COMPLEX)
+		{
+			pLeft = pLeft->ToType(SYMBOL_COMPLEX);
+			bCleanLeft = 1;
+		}
+		// complex op scalar -> complex
+		if(pLeft->GetType()==SYMBOL_COMPLEX && (pRight->GetType()&SYMBOL_SCALAR))
+		{
+			pRight = pRight->ToType(SYMBOL_COMPLEX);
+			bCleanRight = 1;
+		}
+
 
 		if(pLeft->GetType()==SYMBOL_STRING)
 		{
@@ -363,6 +342,16 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 		}
 	}
 
+
+
+	// pLeft and pRight have to be of equal type from here on.
+	if(pLeft->GetType() != pRight->GetType())
+	{
+		log_err("Type mismatch. ", 
+			"Left: ", pLeft->GetTypeName(),
+			"Right: ", pRight->GetTypeName());
+		return 0;
+	}
 
 	Symbol *pRes = 0;
 	if(pLeft->GetType() == SYMBOL_DOUBLE)
@@ -444,6 +433,46 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 			else
 			{
 				log_err("Operator \"", op, "\" not defined for int type.");
+			}
+			pRes = pResult;
+		}
+	}
+	else if(pLeft->GetType() == SYMBOL_COMPLEX)
+	{
+		if(IsLogicalOp(op))
+		{
+			SymbolInt *pResult = new SymbolInt();
+			pResult->SetName(T_STR"<op_logical_result>");
+
+			if(g_mapBinLogOps_c.find(op) != g_mapBinLogOps_c.end())
+			{
+				pResult->SetVal(g_mapBinLogOps_c[op](((SymbolComplex*)pLeft)->GetVal(),
+								((SymbolComplex*)pRight)->GetVal()));
+			}
+			else
+			{
+				log_err("Operator \"", op, "\" not defined for complex type.");
+				pResult->SetVal(0);
+			}
+			pRes = pResult;
+		}
+		else
+		{
+			SymbolComplex *pResult = (SymbolComplex*)recycle_or_alloc({pLeft, pRight}, !bOptim);
+
+			if(pResult == pLeft) bCleanLeft = 0;
+			if(pResult == pRight) bCleanRight = 0;
+
+			pResult->SetName(T_STR"<op_result>");
+
+			if(g_mapBinOps_c.find(op) != g_mapBinOps_c.end())
+			{
+				pResult->SetVal(g_mapBinOps_c[op](((SymbolComplex*)pLeft)->GetVal(),
+						((SymbolComplex*)pRight)->GetVal()));
+			}
+			else
+			{
+				log_err("Operator \"", op, "\" not defined for complex type.");
 			}
 			pRes = pResult;
 		}

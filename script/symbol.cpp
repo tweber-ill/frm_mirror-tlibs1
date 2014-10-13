@@ -10,9 +10,28 @@
 #include <limits>
 
 
+Symbol::~Symbol()
+{
+	//log_debug("Deleting ", this, ", name: ", GetName(), ", ident: ", GetIdent());
+	//log_backtrace();
+}
+
+// ----------------------------------------------------------------------------
+
+
 /*std::*/boost::hash<t_real> SymbolDouble::s_hsh;
 /*std::*/boost::hash<t_int> SymbolInt::s_hsh;
 /*std::*/boost::hash<t_string> SymbolString::s_hsh;
+/*std::*/boost::hash<t_complex> SymbolComplex::s_hsh;
+
+const int SymbolDouble::m_defprec = std::numeric_limits<t_real>::digits10;
+int SymbolDouble::m_prec = m_defprec;
+
+const int SymbolComplex::m_defprec = std::numeric_limits<t_real>::digits10;
+int SymbolComplex::m_prec = m_defprec;
+
+
+// ----------------------------------------------------------------------------
 
 
 SymbolMapKey::SymbolMapKey(const t_string& _str) 
@@ -31,15 +50,8 @@ SymbolMapKey::SymbolMapKey(const Symbol* pSym)
 
 
 
-const int SymbolDouble::m_defprec = std::numeric_limits<t_real>::digits10;
-int SymbolDouble::m_prec = m_defprec;
+// ----------------------------------------------------------------------------
 
-
-Symbol::~Symbol()
-{
-	//log_debug("Deleting ", this, ", name: ", GetName(), ", ident: ", GetIdent());
-	//log_backtrace();
-}
 
 
 Symbol* SymbolDouble::ToType(SymbolType stype) const
@@ -57,6 +69,15 @@ Symbol* SymbolDouble::ToType(SymbolType stype) const
 		pNewSymI->SetVal(t_int(this->GetVal()));
 
 		pNewSym = pNewSymI;
+	}
+	else if(stype == SYMBOL_COMPLEX)
+	{
+		SymbolComplex *pNewSymC = new SymbolComplex();
+		pNewSymC->SetName(this->GetName());
+		pNewSymC->SetValReal(this->GetVal());
+		pNewSymC->SetValImag(0.);
+
+		pNewSym = pNewSymC;
 	}
 	else if(stype == SYMBOL_STRING)
 	{
@@ -85,12 +106,17 @@ Symbol* SymbolDouble::clone() const
 	*pSym = *this;
 	pSym->SetRval(1);
 	pSym->SetConst(0);
+	pSym->m_pArr = nullptr;
+	pSym->m_pMap = nullptr;
 	return pSym;
 }
 
 void SymbolDouble::assign(Symbol *pSym)
 {
 	SymbolDouble *pOther = (SymbolDouble*)pSym->ToType(GetType());
+	if(!pOther)
+		throw Err("Invalid assignment.");
+
 	this->SetVal(pOther->GetVal());
 }
 
@@ -104,6 +130,86 @@ bool SymbolDouble::IsGreaterThan(const Symbol& sym) const
 	return GetValDouble() > sym.GetValDouble();
 }
 
+
+
+
+// ----------------------------------------------------------------------------
+
+
+
+
+Symbol* SymbolComplex::ToType(SymbolType stype) const
+{
+	Symbol *pNewSym = 0;
+
+	if(stype == SYMBOL_COMPLEX)
+	{
+		pNewSym = this->clone();
+	}
+	else if(stype == SYMBOL_STRING)
+	{
+		SymbolString *pNewSymS = new SymbolString();
+		pNewSymS->SetName(this->GetName());
+		pNewSymS->SetVal(print());
+
+		pNewSym = pNewSymS;
+	}
+
+	return pNewSym;
+}
+
+t_string SymbolComplex::print() const
+{
+	t_ostringstream ostr;
+	ostr.precision(m_prec);
+
+	ostr << GetVal();
+	return ostr.str();
+}
+
+Symbol* SymbolComplex::clone() const
+{
+	SymbolComplex *pSym = new SymbolComplex;
+	*pSym = *this;
+	pSym->SetRval(1);
+	pSym->SetConst(0);
+	pSym->m_pArr = nullptr;
+	pSym->m_pMap = nullptr;
+	return pSym;
+}
+
+void SymbolComplex::assign(Symbol *pSym)
+{
+	SymbolComplex *pOther = (SymbolComplex*)pSym->ToType(GetType());
+	if(!pOther)
+		throw Err("Invalid assignment.");
+
+	this->SetVal(pOther->GetVal());
+}
+
+// TODO
+bool SymbolComplex::IsLessThan(const Symbol& sym) const
+{
+	if(sym.GetType() == SYMBOL_COMPLEX)
+       		return std::abs<t_real>(GetVal()) 
+			< std::abs<t_real>(((SymbolComplex&)sym).GetVal());
+
+	return GetValInt() < sym.GetValInt();
+}
+
+bool SymbolComplex::IsGreaterThan(const Symbol& sym) const
+{
+	if(sym.GetType() == SYMBOL_COMPLEX)
+       		return std::abs<t_real>(GetVal()) 
+			> std::abs<t_real>(((SymbolComplex&)sym).GetVal());
+
+	return GetValInt() > sym.GetValInt();
+}
+
+
+
+
+// ----------------------------------------------------------------------------
 
 
 
@@ -122,6 +228,15 @@ Symbol* SymbolInt::ToType(SymbolType stype) const
 		pNewSymD->SetVal(t_real(this->GetVal()));
 
 		pNewSym = pNewSymD;
+	}
+	else if(stype == SYMBOL_COMPLEX)
+	{
+		SymbolComplex *pNewSymC = new SymbolComplex();
+		pNewSymC->SetName(this->GetName());
+		pNewSymC->SetValReal(t_real(this->GetVal()));
+		pNewSymC->SetValImag(0.);
+
+		pNewSym = pNewSymC;
 	}
 	else if(stype == SYMBOL_STRING)
 	{
@@ -148,12 +263,17 @@ Symbol* SymbolInt::clone() const
 	*pSym = *this;
 	pSym->SetRval(1);
 	pSym->SetConst(0);
+	pSym->m_pArr = nullptr;
+	pSym->m_pMap = nullptr;
 	return pSym;
 }
 
 void SymbolInt::assign(Symbol *pSym)
 {
 	SymbolInt *pOther = (SymbolInt*)pSym->ToType(GetType());
+	if(!pOther)
+		throw Err("Invalid assignment.");
+
 	this->SetVal(pOther->GetVal());
 }
 
@@ -173,6 +293,9 @@ bool SymbolInt::IsGreaterThan(const Symbol& sym) const
 	return GetValInt() > sym.GetValInt();
 }
 
+
+
+// ----------------------------------------------------------------------------
 
 
 
@@ -226,12 +349,17 @@ Symbol* SymbolString::clone() const
 	*pSym = *this;
 	pSym->SetRval(1);
 	pSym->SetConst(0);
+	pSym->m_pArr = nullptr;
+	pSym->m_pMap = nullptr;
 	return pSym;
 }
 
 void SymbolString::assign(Symbol *pSym)
 {
 	SymbolString *pOther = (SymbolString*)pSym->ToType(GetType());
+	if(!pOther)
+		throw Err("Invalid assignment.");
+
 	this->SetVal(pOther->GetVal());
 }
 
@@ -245,6 +373,9 @@ bool SymbolString::IsGreaterThan(const Symbol& sym) const
        	return GetVal() > sym.print();
 }
 
+
+
+// ----------------------------------------------------------------------------
 
 
 
@@ -261,7 +392,13 @@ SymbolArray::~SymbolArray()
 {
 	if(!m_bDontDel)
 		for(Symbol *pSym : m_arr)
-			if(pSym) delete pSym;
+		{
+			if(!pSym) continue;
+			if(pSym->GetArrPtr() != this)
+				continue;
+
+			delete pSym;
+		}
 
 	m_arr.clear();
 }
@@ -322,17 +459,27 @@ Symbol* SymbolArray::clone() const
 void SymbolArray::assign(Symbol *pSym)
 {
 	SymbolArray *pOther = (SymbolArray*)pSym->ToType(GetType());
+	if(!pOther)
+		throw Err("Invalid assignment.");
+
 	this->m_arr = pOther->GetArr();
 }
 
-void SymbolArray::UpdateIndex(unsigned int iIdx)
+void SymbolArray::UpdateIndex(unsigned int iIdx, bool bOverwrite)
 {
 	if(!m_arr[iIdx]) return;
+
+	// member of another array?
+	if(!bOverwrite && m_arr[iIdx]->GetArrPtr())
+		return;
+
+	//if(m_arr[iIdx]->GetArrPtr()) log_warn("Overwriting array ownership.");
+
 	m_arr[iIdx]->SetArrPtr(this);
 	m_arr[iIdx]->SetArrIdx(iIdx);
 }
 
-void SymbolArray::UpdateLastNIndices(unsigned int N)
+void SymbolArray::UpdateLastNIndices(unsigned int N, bool bOverwrite)
 {
 	unsigned int iLast = m_arr.size();
 	if(iLast == 0) return;
@@ -343,15 +490,31 @@ void SymbolArray::UpdateLastNIndices(unsigned int N)
 	{
 		if(!*iter) continue;
 
+		// member of another array?
+		if(!bOverwrite && (*iter)->GetArrPtr())
+			continue;
+
+		//if((*iter)->GetArrPtr()) log_warn("Overwriting array ownership.");
+
 		(*iter)->SetArrPtr(this);
 		(*iter)->SetArrIdx(iLast-i);
 	}
 }
 
-void SymbolArray::UpdateIndices()
+void SymbolArray::UpdateIndices(bool bOverwrite)
 {
 	for(unsigned int iIdx=0; iIdx<m_arr.size(); ++iIdx)
-		UpdateIndex(iIdx);
+		UpdateIndex(iIdx, bOverwrite);
+}
+
+void SymbolArray::ClearIndices()
+{
+	for(Symbol *pSym : m_arr)
+	{
+		if(!pSym || pSym->GetArrPtr()!=this)
+			continue;
+		pSym->SetArrPtr(0);
+	}
 }
 
 std::vector<t_real> SymbolArray::ToDoubleArray() const
@@ -394,6 +557,10 @@ std::size_t SymbolArray::hash() const
 	}
 	return iSeed;
 }
+
+
+// ----------------------------------------------------------------------------
+
 
 
 SymbolMap::~SymbolMap()
@@ -467,6 +634,9 @@ void SymbolMap::assign(Symbol *pSym)
 	//G_COUT << "SymbolMap::assign" << std::endl;
 
 	SymbolMap *pOther = (SymbolMap*)pSym->ToType(GetType());
+	if(!pOther)
+		throw Err("Invalid assignment.");
+
 	this->m_map = pOther->m_map;
 }
 
@@ -545,6 +715,8 @@ std::size_t SymbolMap::hash() const
 	return iSeed;
 }
 
+
+
 //--------------------------------------------------------------------------------
 
 
@@ -553,15 +725,19 @@ SymbolTable::SymbolTable()
 
 SymbolTable::~SymbolTable()
 {
-	std::set<Symbol*> m_setDeleted;
+	//log_debug("Deleting symbol table with ", m_syms.size(), " elements.");
+	std::set<Symbol*> setDeleted;
 
 	for(t_syms::iterator iter=m_syms.begin(); iter!=m_syms.end(); ++iter)
 	{
 		Symbol *pSym = iter->second;
-		if(pSym && m_setDeleted.find(pSym)!=m_setDeleted.end())
-		{
-			m_setDeleted.insert(pSym);
+		if(!pSym) continue;
 
+		if(setDeleted.find(pSym)==setDeleted.end())
+		{
+			setDeleted.insert(pSym);
+
+			//log_debug("SymbolTable: Deleted ", iter->first, ", type ", pSym->GetTypeName());
 			delete pSym;
 			iter->second = 0;
 		}
@@ -708,7 +884,7 @@ void safe_delete(Symbol *&pSym, const SymbolTable* pSymTab, const SymbolTable* p
 
 	if(!bIsInTable && !bIsInGlobTable)
 	{
-		//log_debug("safe_deleting ", (void*)pSym, ", type: ", pSym->GetType(), ", val: ", pSym->print());
+		//log_debug("safe_deleting ", (void*)pSym, ", type: ", pSym->GetTypeName(), ", val: ", pSym->print());
 		//log_backtrace();
 
 		delete pSym;
@@ -751,6 +927,7 @@ Symbol* recycle_or_alloc(const std::initializer_list<const Symbol*>& lstSyms, bo
 	if(!lstSyms.size())
 		return 0;
 
+	//bAlwaysAlloc = 1;
 	if(!bAlwaysAlloc)
 	{
 		Symbol *pSymTmp = 0;

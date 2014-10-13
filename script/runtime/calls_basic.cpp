@@ -229,11 +229,18 @@ static Symbol* fkt_int(const std::vector<Symbol*>& vecSyms,
 	return vecSyms[0]->ToType(SYMBOL_INT);
 }
 
+static Symbol* fkt_cplx_real(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info, SymbolTable* pSymTab);
+
 static Symbol* fkt_double(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
 	if(vecSyms.size() == 0)
 		return new SymbolDouble(0.);
+
+	// delegate to other "real" function
+	if(vecSyms[0]->GetType() == SYMBOL_COMPLEX)
+		return fkt_cplx_real(vecSyms, info, pSymTab);
 
 	return vecSyms[0]->ToType(SYMBOL_DOUBLE);
 }
@@ -512,6 +519,71 @@ static Symbol* fkt_map(const std::vector<Symbol*>& vecSyms,
 
 	return new SymbolMap();
 }
+// --------------------------------------------------------------------------------
+
+
+
+// --------------------------------------------------------------------------------
+// complex
+static Symbol* fkt_complex(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(vecSyms.size() == 0)
+		return new SymbolComplex(0., 0.);
+	else if(vecSyms.size() == 1 && vecSyms[0]->GetType()==SYMBOL_COMPLEX)
+		return vecSyms[0]->clone();
+	else if(vecSyms.size() == 1)
+		return new SymbolComplex(vecSyms[0]->GetValDouble(), 0.);
+	else if(vecSyms.size() > 1)
+		return new SymbolComplex(vecSyms[0]->GetValDouble(), vecSyms[1]->GetValDouble());
+
+	return 0;
+}
+
+static Symbol* fkt_complex_polar(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info, SymbolTable* pSymTab)
+{
+	t_real tRho = 0.;
+	t_real tTheta = 0.;
+
+	if(vecSyms.size() > 0 && vecSyms[0])
+		tRho = vecSyms[0]->GetValDouble();
+	if(vecSyms.size() > 1 && vecSyms[1])
+		tTheta = vecSyms[1]->GetValDouble();
+
+	return new SymbolComplex(std::polar<t_real>(tRho, tTheta));
+}
+
+static Symbol* fkt_cplx_real(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(!check_args(info, vecSyms, {SYMBOL_COMPLEX}, {0}, "real"))
+		return 0;
+
+	SymbolComplex *pComplex = (SymbolComplex*)vecSyms[0];
+	return new SymbolDouble(pComplex->GetValReal());
+}
+
+static Symbol* fkt_cplx_imag(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(!check_args(info, vecSyms, {SYMBOL_COMPLEX}, {0}, "imag"))
+		return 0;
+
+	SymbolComplex *pComplex = (SymbolComplex*)vecSyms[0];
+	return new SymbolDouble(pComplex->GetValImag());
+}
+
+static Symbol* fkt_cplx_arg(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(!check_args(info, vecSyms, {SYMBOL_COMPLEX}, {0}, "carg"))
+		return 0;
+
+	SymbolComplex *pComplex = (SymbolComplex*)vecSyms[0];
+	return new SymbolDouble(std::arg<t_real>(pComplex->GetVal()));
+}
+
 // --------------------------------------------------------------------------------
 
 
@@ -1208,6 +1280,10 @@ extern void init_ext_basic_calls()
 		t_mapFkts::value_type(T_STR"str", fkt_str),
 		t_mapFkts::value_type(T_STR"map", fkt_map),
 		t_mapFkts::value_type(T_STR"vec", fkt_array),
+		t_mapFkts::value_type(T_STR"complex", fkt_complex),
+		t_mapFkts::value_type(T_STR"complex_polar", fkt_complex_polar),
+		t_mapFkts::value_type(T_STR"imag", fkt_cplx_imag),
+		t_mapFkts::value_type(T_STR"carg", fkt_cplx_arg),
 		t_mapFkts::value_type(T_STR"has_var", fkt_has_var),
 		t_mapFkts::value_type(T_STR"typeof", fkt_typeof),
 		t_mapFkts::value_type(T_STR"set_prec", fkt_setprec),

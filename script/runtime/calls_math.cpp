@@ -148,7 +148,7 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 }
 
 
-template<t_real (*FKT)(t_real)>
+template<t_real (*FKT)(t_real), t_complex (*FKT_C)(const t_complex&)=nullptr>
 static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
@@ -165,7 +165,7 @@ static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 			std::vector<Symbol*> vecDummy;
 			vecDummy.push_back(pArrElem);
 
-			pArrRet->GetArr().push_back(fkt_math_1arg<FKT>(vecDummy, info, pSymTab));
+			pArrRet->GetArr().push_back(fkt_math_1arg<FKT, FKT_C>(vecDummy, info, pSymTab));
 		}
 
 		pArrRet->UpdateIndices();
@@ -173,22 +173,90 @@ static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 	}
 	else
 	{
-		t_real dResult = FKT(vecSyms[0]->GetValDouble());
-		return new SymbolDouble(dResult);
+		if(vecSyms[0]->GetType() == SYMBOL_COMPLEX)
+		{
+			if(FKT_C == nullptr)
+			{
+				log_err(linenr(info), "Undefined complex function.");
+				return 0;
+			}
+
+			t_complex cResult = FKT_C(((SymbolComplex*)vecSyms[0])->GetVal());
+			return new SymbolComplex(std::move(cResult));
+		}
+		else
+		{
+			if(FKT == nullptr)
+			{
+				log_err(linenr(info), "Undefined real function.");
+				return 0;
+			}
+
+
+			t_real tVal = vecSyms[0]->GetValDouble();
+
+			if(((FKT==(t_real(*)(t_real))std::sqrt && tVal<0.) ||
+			   (FKT==(t_real(*)(t_real))std::log && tVal<0.) ||
+			   (FKT==(t_real(*)(t_real))std::log10 && tVal<0.))
+				&& FKT_C!=nullptr)
+			{
+				t_complex tCompVal = t_complex(tVal, 0.);
+				return new SymbolComplex(FKT_C(tCompVal));
+			}
+
+			t_real dResult = FKT(tVal);
+			return new SymbolDouble(dResult);
+		}
 	}
 
 	return 0;
 }
 
 // TODO: for arrays
-template<t_real (*FKT)(t_real, t_real)>
+template<t_real (*FKT)(t_real, t_real), t_complex (*FKT_C)(const t_complex&, const t_complex&)=nullptr>
 static Symbol* fkt_math_2args(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, SymbolTable* pSymTab)
 {
 	if(!check_args(info, vecSyms, {SYMBOL_ANY, SYMBOL_ANY}, {0,0}, "fkt_math_2args"))
 		return 0;
 
-	t_real dResult = FKT(vecSyms[0]->GetValDouble(), vecSyms[1]->GetValDouble());
+	Symbol* pFirst = vecSyms[0];
+	Symbol* pSecond = vecSyms[1];
+	Symbol* pToDel = 0;
+
+	// complex
+	bool bFirstComplex = (pFirst->GetType()==SYMBOL_COMPLEX);
+	bool bSecondComplex = (pSecond->GetType()==SYMBOL_COMPLEX);
+
+	if(bFirstComplex && !bSecondComplex)
+		pSecond = pToDel = pSecond->ToType(SYMBOL_COMPLEX);
+	else if(!bFirstComplex && bSecondComplex)
+		pFirst = pToDel = pFirst->ToType(SYMBOL_COMPLEX);
+
+	if(bFirstComplex || bSecondComplex)
+	{
+		if(FKT_C == nullptr)
+		{
+			log_err(linenr(info), "Undefined complex function.");
+			return 0;
+		}
+
+		t_complex cResult = FKT_C(((SymbolComplex*)pFirst)->GetVal(), 
+					((SymbolComplex*)pSecond)->GetVal());
+
+		if(pToDel) delete pToDel;
+		return new SymbolComplex(std::move(cResult));
+	}
+
+
+	// real
+	if(FKT == nullptr)
+	{
+		log_err(linenr(info), "Undefined real function.");
+		return 0;
+	}
+
+	t_real dResult = FKT(pFirst->GetValDouble(), pSecond->GetValDouble());
 	return new SymbolDouble(dResult);
 }
 
@@ -236,6 +304,11 @@ static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
 		SymbolDouble* pSymD = (SymbolDouble*)vecSyms[0];
 		return new SymbolDouble(myabs(pSymD->GetVal()));
 	}
+	else if(vecSyms[0]->GetType() == SYMBOL_COMPLEX)
+	{
+		SymbolComplex* pSymC = (SymbolComplex*)vecSyms[0];
+		return new SymbolDouble(std::abs<t_real>(pSymC->GetVal()));
+	}
 
 
 	std::ostringstream ostrErr;
@@ -245,6 +318,23 @@ static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
 }
 
 
+// complex norm = abs^2
+static Symbol* fkt_math_cnorm(const std::vector<Symbol*>& vecSyms,
+						ParseInfo& info, SymbolTable* pSymTab)
+{
+	if(!check_args(info, vecSyms, {SYMBOL_ANY}, {0}, "cnorm"))
+		return 0;
+
+	t_complex cVal(0., 0.);
+
+	if(vecSyms[0]->GetType() == SYMBOL_COMPLEX)
+		cVal = ((SymbolComplex*)vecSyms[0])->GetVal();
+	else
+		cVal.real(vecSyms[0]->GetValDouble());
+
+	t_real dVal = std::norm<t_real>(cVal);
+	return new SymbolDouble(dVal);
+}
 
 
 template<bool (*FKT)(t_real)>
@@ -922,33 +1012,33 @@ extern void init_ext_math_calls()
 	{
 		// math stuff
 		t_mapFkts::value_type(T_STR"sign", fkt_math_1arg< sign<t_real> >),
-		t_mapFkts::value_type(T_STR"sqrt", fkt_math_1arg< std::sqrt >),
+		t_mapFkts::value_type(T_STR"sqrt", fkt_math_1arg< std::sqrt, std::sqrt<t_real> >),
 		t_mapFkts::value_type(T_STR"cbrt", fkt_math_1arg< std::cbrt >),
-		t_mapFkts::value_type(T_STR"exp", fkt_math_1arg< std::exp >),
+		t_mapFkts::value_type(T_STR"exp", fkt_math_1arg< std::exp, std::exp<t_real> >),
 		t_mapFkts::value_type(T_STR"exp2", fkt_math_1arg< std::exp2 >),
 		t_mapFkts::value_type(T_STR"expm1", fkt_math_1arg< std::expm1 >),
-		t_mapFkts::value_type(T_STR"log", fkt_math_1arg< std::log >),
+		t_mapFkts::value_type(T_STR"log", fkt_math_1arg< std::log, std::log<t_real> >),
 		t_mapFkts::value_type(T_STR"log1p", fkt_math_1arg< std::log1p >),
-		t_mapFkts::value_type(T_STR"log10", fkt_math_1arg< std::log10 >),
+		t_mapFkts::value_type(T_STR"log10", fkt_math_1arg< std::log10, std::log10<t_real> >),
 		t_mapFkts::value_type(T_STR"log2", fkt_math_1arg< std::log2 >),
 		t_mapFkts::value_type(T_STR"logb", fkt_math_1arg< std::logb >),
-		t_mapFkts::value_type(T_STR"pow", fkt_math_2args< std::pow >),
+		t_mapFkts::value_type(T_STR"pow", fkt_math_2args< std::pow, std::pow<t_real> >),
 
-		t_mapFkts::value_type(T_STR"sin", fkt_math_1arg< std::sin >),
-		t_mapFkts::value_type(T_STR"cos", fkt_math_1arg< std::cos >),
-		t_mapFkts::value_type(T_STR"tan", fkt_math_1arg< std::tan >),
-		t_mapFkts::value_type(T_STR"asin", fkt_math_1arg< std::asin >),
-		t_mapFkts::value_type(T_STR"acos", fkt_math_1arg< std::acos >),
-		t_mapFkts::value_type(T_STR"atan", fkt_math_1arg< std::atan >),
+		t_mapFkts::value_type(T_STR"sin", fkt_math_1arg< std::sin, std::sin<t_real> >),
+		t_mapFkts::value_type(T_STR"cos", fkt_math_1arg< std::cos, std::cos<t_real> >),
+		t_mapFkts::value_type(T_STR"tan", fkt_math_1arg< std::tan, std::tan<t_real> >),
+		t_mapFkts::value_type(T_STR"asin", fkt_math_1arg< std::asin, std::asin<t_real> >),
+		t_mapFkts::value_type(T_STR"acos", fkt_math_1arg< std::acos, std::acos<t_real> >),
+		t_mapFkts::value_type(T_STR"atan", fkt_math_1arg< std::atan, std::atan<t_real> >),
 		t_mapFkts::value_type(T_STR"atan2", fkt_math_2args< std::atan2 >),
 		t_mapFkts::value_type(T_STR"hypot", fkt_math_2args< std::hypot >),
 
-		t_mapFkts::value_type(T_STR"sinh", fkt_math_1arg< std::sinh >),
-		t_mapFkts::value_type(T_STR"cosh", fkt_math_1arg< std::cosh >),
-		t_mapFkts::value_type(T_STR"tanh", fkt_math_1arg< std::tanh >),
-		t_mapFkts::value_type(T_STR"asinh", fkt_math_1arg< std::asinh >),
-		t_mapFkts::value_type(T_STR"acosh", fkt_math_1arg< std::acosh >),
-		t_mapFkts::value_type(T_STR"atanh", fkt_math_1arg< std::atanh >),
+		t_mapFkts::value_type(T_STR"sinh", fkt_math_1arg< std::sinh, std::sinh<t_real> >),
+		t_mapFkts::value_type(T_STR"cosh", fkt_math_1arg< std::cosh, std::cosh<t_real> >),
+		t_mapFkts::value_type(T_STR"tanh", fkt_math_1arg< std::tanh, std::tanh<t_real> >),
+		t_mapFkts::value_type(T_STR"asinh", fkt_math_1arg< std::asinh, std::asinh<t_real> >),
+		t_mapFkts::value_type(T_STR"acosh", fkt_math_1arg< std::acosh, std::acosh<t_real> >),
+		t_mapFkts::value_type(T_STR"atanh", fkt_math_1arg< std::atanh, std::atanh<t_real> >),
 
 		t_mapFkts::value_type(T_STR"erf", fkt_math_1arg< std::erf >),
 		t_mapFkts::value_type(T_STR"erfc", fkt_math_1arg< std::erfc >),
@@ -969,6 +1059,9 @@ extern void init_ext_math_calls()
 		t_mapFkts::value_type(T_STR"min", fkt_math_for_every<MATH_MIN>),
 		t_mapFkts::value_type(T_STR"fdim", fkt_math_2args< std::fdim >),
 		t_mapFkts::value_type(T_STR"remainder", fkt_math_2args< std::remainder >),
+
+		t_mapFkts::value_type(T_STR"conj", fkt_math_1arg<nullptr, std::conj<t_real> >),
+		t_mapFkts::value_type(T_STR"cnorm", fkt_math_cnorm),
 
 		// statistical stuff
 		t_mapFkts::value_type(T_STR"mean", fkt_mean),

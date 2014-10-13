@@ -1,5 +1,6 @@
 thread_func(vec)
 {
+#	iTh = 0;
 	begin_critical();
 		print("Thread " + iTh + " got: " + str(vec));
 		iTh = iTh + 1;

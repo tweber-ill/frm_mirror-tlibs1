@@ -38,7 +38,7 @@ YY = bison
 hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/node.o \
 		obj/node_eval.o obj/calls.o obj/handles.o obj/gnuplot.o obj/file.o \
 		obj/string.o obj/loadtxt.o obj/rand.o obj/fourier.o obj/script_helper.o \
-		obj/calls_basic.o \
+		obj/calls_basic.o obj/info.o \
 		obj/calls_plot.o obj/calls_math.o obj/calls_file.o obj/calls_thread.o \
 		obj/calls_fit.o obj/globals.o obj/flags.o obj/fitter.o obj/chi2.o \
 		obj/interpolation.o obj/spec_char.o obj/linalg.o obj/linalg2.o \
@@ -54,6 +54,8 @@ obj/lexer.o: lexer.cpp lexer.h
 obj/yylexer.o: yylexer.cpp yylexer.h obj/script.o
 	${CC} ${FLAGS} -c -o $@ $<
 obj/main.o: main.cpp
+	${CC} ${FLAGS} -c -o $@ $<
+obj/info.o: info.cpp info.h
 	${CC} ${FLAGS} -c -o $@ $<
 obj/node.o: node.cpp node.h
 	${CC} ${FLAGS} -c -o $@ $<

@@ -8,6 +8,10 @@
 #define __HERMELIN_SYM__
 
 #include "types.h"
+
+#include "helper/exception.h"
+#include "helper/log.h"
+
 #include <map>
 #include <unordered_map>
 #include <string>
@@ -17,18 +21,19 @@
 #include <initializer_list>
 #include <functional>
 #include <boost/functional/hash.hpp>
-#include "helper/exception.h"
-#include "helper/log.h"
+
 
 
 enum SymbolType : unsigned int
 {
-	SYMBOL_DOUBLE = 1,
-	SYMBOL_INT = 2,
-	SYMBOL_STRING = 4,
+	SYMBOL_DOUBLE = 1<<0,
+	SYMBOL_INT = 1<<1,
+	SYMBOL_STRING = 1<<2,
 
-	SYMBOL_ARRAY = 8,
-	SYMBOL_MAP = 16,
+	SYMBOL_ARRAY = 1<<3,
+	SYMBOL_MAP = 1<<4,
+
+	SYMBOL_COMPLEX = 1<<5,
 
 	SYMBOL_SCALAR = SYMBOL_DOUBLE | SYMBOL_INT,
 	SYMBOL_CONTAINER = SYMBOL_ARRAY | SYMBOL_MAP | SYMBOL_STRING,
@@ -42,6 +47,7 @@ class SymbolMap;
 class SymbolString;
 class SymbolInt;
 class SymbolDouble;
+class SymbolComplex;
 
 
 struct SymbolMapKey
@@ -253,6 +259,58 @@ public:
 	virtual bool IsNotZero() const override { return 0; }
 };
 
+class SymbolComplex : public Symbol
+{
+protected:
+	t_complex m_val;
+
+	static const int m_defprec;
+	static int m_prec;
+
+	static /*std::*/boost::hash<t_complex> s_hsh;
+
+public:
+	SymbolComplex() : Symbol(), m_val(0., 0.) {}
+	SymbolComplex(t_real dReal, t_real dImag) : m_val(dReal, dImag) {}
+	SymbolComplex(const t_complex& val) : m_val(val) {}
+	SymbolComplex(t_complex&& val) : m_val(val) {}
+	SymbolComplex(const t_string&) { throw Err("Invalid SymbolComplex constructor."); }
+
+	virtual SymbolType GetType() const override { return SYMBOL_COMPLEX; }
+	virtual t_string GetTypeName() const override { return T_STR"complex"; }
+	virtual Symbol* ToType(SymbolType stype) const override;
+
+	virtual std::size_t hash() const override { return s_hsh(m_val); }
+
+	virtual t_string print() const override;
+	virtual Symbol* clone() const override;
+	virtual Symbol* alloc() const override { return new SymbolComplex(); }
+	virtual void assign(Symbol *pSym) override;
+
+	//virtual bool equals(Symbol *pSym) const;
+	virtual bool IsLessThan(const Symbol&) const override;
+	virtual bool IsGreaterThan(const Symbol&) const override;
+	virtual bool IsNotZero() const override { return m_val != t_complex(0.,0.); }
+
+	virtual t_int GetValInt() const override { throw Err("Cannot convert complex to scalar type."); /*return t_int(GetValReal());*/ }
+	virtual t_real GetValDouble() const override { throw Err("Cannot convert complex to scalar type."); /*return GetValReal();*/ }
+
+	static const int GetDefPrec() { return m_defprec; }
+	static const int GetPrec() { return m_prec; }
+	static void SetPrec(int iPrec) { m_prec = iPrec; }
+
+	void SetVal(double dReal, double dImag) { m_val=t_complex(dReal, dImag); }
+	void SetVal(const t_complex& val) { m_val = val; }
+	const t_complex& GetVal() const { return m_val; }
+
+	void SetValReal(double dVal) { m_val.real(dVal); }
+	void SetValImag(double dVal) { m_val.imag(dVal); }
+	t_real GetValReal() const { return m_val.real(); }
+	t_real GetValImag() const { return m_val.imag(); }
+
+	virtual bool IsScalar() const override { return 0; }
+};
+
 
 class SymbolArray : public Symbol
 {
@@ -285,9 +343,10 @@ public:
 
 	virtual bool IsNotZero() const override { return 0; }
 
-	void UpdateIndex(unsigned int);
-	void UpdateLastNIndices(unsigned int N);
-	void UpdateIndices();
+	void UpdateIndex(unsigned int, bool bOverwrite=true);
+	void UpdateLastNIndices(unsigned int N, bool bOverwrite=true);
+	void UpdateIndices(bool bOverwrite=true);
+	void ClearIndices();
 
 	const std::vector<Symbol*>& GetArr() const { return m_arr; }
 	std::vector<Symbol*>& GetArr() { return m_arr; }

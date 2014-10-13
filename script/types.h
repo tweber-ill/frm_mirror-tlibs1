@@ -11,10 +11,13 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <complex>
+#include <type_traits>
 
 
 typedef double t_real;
 typedef int t_int;
+typedef std::complex<t_real> t_complex;
 
 
 template<typename tyEnum>
@@ -25,6 +28,15 @@ struct EnumDirectHash
 		return static_cast<std::size_t>(ty);
 	}
 };
+
+template<class T>
+struct remove_constref
+{
+	typedef typename std::remove_const<
+		typename std::remove_reference<T>::type
+		>::type type;
+};
+
 
 
 //#define USE_WCHAR

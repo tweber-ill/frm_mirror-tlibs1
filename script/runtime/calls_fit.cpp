@@ -71,7 +71,7 @@ protected:
 
 public:
 	GenericModel(const GenericModel& mod)
-			: m_pFkt((NodeFunction*)mod.m_pFkt/*->clone()*/),
+			: m_pFkt((NodeFunction*)mod.m_pFkt/*->clone()->optimize()*/),
 			  m_pinfo(new ParseInfo(*mod.m_pinfo)),
 			  m_pCallerSymTab(mod.m_pCallerSymTab),
 			  m_pTable(new SymbolTable())
@@ -97,7 +97,7 @@ public:
 
 	GenericModel(const NodeFunction *pFkt, ParseInfo& info, SymbolTable *pCallerSymTab,
 			const std::vector<t_string>* pvecParamNames=0)
-				: m_pFkt((NodeFunction*)pFkt/*->clone()*/),
+				: m_pFkt((NodeFunction*)pFkt/*->clone()->optimize()*/),
 				  m_pinfo(new ParseInfo(info)),
 				  m_pCallerSymTab(pCallerSymTab),
 				  m_pTable(new SymbolTable())
