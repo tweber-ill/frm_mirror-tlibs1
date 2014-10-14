@@ -167,10 +167,25 @@ static Symbol* fkt_thread_task(const std::vector<Symbol*>& vecSyms,
 	t_int iHandle = -1;
 	if(bTask)
 	{
+		bool bIsThread = 1;
+		std::launch policy = std::launch::async /*| std::launch::deferred*/;
+		unsigned int iNumThreads = info.phandles->CountAllThreads();
+		//log_debug("Number of threads running: ", iNumThreads);
+		
+		// start deferred
+		if(iNumThreads >= std::thread::hardware_concurrency())
+		{
+			bIsThread = 0;
+			// let system decide
+			policy |= std::launch::deferred;
+			//log_debug("starting (probably) deferred");
+		}
+		//else log_debug("starting as thread");
+
 		std::future<Symbol*> *pFuture = new std::future<Symbol*>(
-				std::async(std::launch::async, 
-				::task_proc, pFunc, &info, vecThreadSymsClone));
-		iHandle = info.phandles->AddHandle(new HandleTask(pFuture));
+					std::async(policy, ::task_proc, 
+							   pFunc, &info, vecThreadSymsClone));
+		iHandle = info.phandles->AddHandle(new HandleTask(pFuture, bIsThread));
 	}
 	else
 	{
@@ -380,6 +395,8 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 				<< iHandle << ") is invalid." << std::endl;
 			throw Err(ostrErr.str(), 0);
 		}
+		
+		info.phandles->CloseHandle(iHandle);
 	}
 
 	return pRet;

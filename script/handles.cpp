@@ -65,3 +65,38 @@ void HandleManager::CloseHandle(t_int iIdx)
 		m_vecHandles[iIdx] = 0;
 	}
 }
+
+unsigned int HandleManager::CountHandles(HandleType ty) const
+{
+	unsigned int uiCnt = 0;
+	
+	for(const Handle* pHandle : m_vecHandles)
+	{
+		if(!pHandle) continue;
+
+		if(pHandle->GetType() & ty)
+			++uiCnt;
+	}
+	
+	return uiCnt;
+}
+
+unsigned int HandleManager::CountAllThreads() const
+{
+	unsigned int uiCnt = 0;
+	
+	for(const Handle* pHandle : m_vecHandles)
+	{
+		if(!pHandle) continue;
+
+		if(pHandle->GetType() & HANDLE_THREAD)
+			++uiCnt;
+		else if(pHandle->GetType() & HANDLE_TASK)
+		{
+			if(((HandleTask*)pHandle)->IsThread())
+				++uiCnt;
+		}
+	}
+	
+	return uiCnt;
+}

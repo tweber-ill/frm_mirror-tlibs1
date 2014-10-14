@@ -19,11 +19,14 @@
 
 enum HandleType : unsigned int
 {
-	HANDLE_FILE,
+	HANDLE_FILE = (1<<0),
 
-	HANDLE_THREAD,
-	HANDLE_TASK,
-	HANDLE_MUTEX
+	HANDLE_THREAD = (1<<1),
+	HANDLE_TASK = (1<<2),
+	HANDLE_MUTEX = (1<<3),
+
+
+	HANDLE_ASYNCS = HANDLE_THREAD|HANDLE_TASK,
 };
 
 
@@ -34,7 +37,7 @@ class Handle
 public:
 	virtual ~Handle() {}
 
-	virtual HandleType GetType() = 0;
+	virtual HandleType GetType() const = 0;
 };
 
 
@@ -47,7 +50,7 @@ public:
 	HandleFile(FILE *pFile);
 	virtual ~HandleFile();
 
-	virtual HandleType GetType() { return HANDLE_FILE; }
+	virtual HandleType GetType() const { return HANDLE_FILE; }
 };
 
 
@@ -60,6 +63,7 @@ protected:
 public:
 	GenericHandle(HANDLE* pHandle) : m_pHandle(pHandle)
 	{}
+
 	virtual ~GenericHandle()
 	{
 		if(m_pHandle)
@@ -70,14 +74,26 @@ public:
 	}
 
 
-	virtual HandleType GetType() { return HANDLE_TYPE; }
+	virtual HandleType GetType() const { return HANDLE_TYPE; }
 	HANDLE* GetInternalHandle() { return m_pHandle; }
 };
 
 
 using HandleThread = GenericHandle<std::thread, HANDLE_THREAD>;
-using HandleTask = GenericHandle<std::future<Symbol*>, HANDLE_TASK>;
 using HandleMutex = GenericHandle<std::mutex, HANDLE_MUTEX>;
+
+class HandleTask : public GenericHandle<std::future<Symbol*>, HANDLE_TASK>
+{
+	protected:
+		bool m_bIsThread = 0;
+
+	public:
+		HandleTask(std::future<Symbol*>* pTask, bool bIsThread=0)
+				: GenericHandle(pTask), m_bIsThread(bIsThread)
+		{}
+		
+		bool IsThread() const { return m_bIsThread; }
+};
 
 
 
@@ -93,6 +109,9 @@ public:
 	Handle* GetHandle(t_int iIdx);
 	t_int AddHandle(Handle* pHandle);
 	void CloseHandle(t_int iIdx);
+	
+	unsigned int CountHandles(HandleType) const;
+	unsigned int CountAllThreads() const;
 };
 
 
