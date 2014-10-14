@@ -5,6 +5,7 @@
  */
 
 #include "symbol.h"
+#include "info.h"
 #include "helper/log.h"
 #include <set>
 #include <limits>
@@ -863,9 +864,14 @@ bool is_mat(const Symbol* pSym, unsigned int *piNumCols, unsigned int *piNumRows
 
 // --------------------------------------------------------------------------------
 
-void safe_delete(Symbol *&pSym, const SymbolTable* pSymTab, const SymbolTable* pSymTabGlob)
+void safe_delete(Symbol *&pSym, const SymbolTable* pSymTab, ParseInfo* pParseInfo)
 {
 	if(!pSym) return;
+	
+	const SymbolTable* pSymTabGlob = 0;
+	if(pParseInfo) 
+		pSymTabGlob = pParseInfo->pGlobalSyms;
+
 
 	// don't delete constants
 	if(pSym->IsConst())
@@ -880,7 +886,11 @@ void safe_delete(Symbol *&pSym, const SymbolTable* pSymTab, const SymbolTable* p
 	bool bIsInGlobTable = 0;
 
 	if(pSymTab) bIsInTable = pSymTab->IsPtrInMap(pSym);
-	if(pSymTabGlob) bIsInGlobTable = pSymTabGlob->IsPtrInMap(pSym);
+	if(pSymTabGlob)
+	{
+		std::lock_guard<std::mutex> _lck(*pParseInfo->pmutexGlobalSyms);
+		bIsInGlobTable = pSymTabGlob->IsPtrInMap(pSym);
+	}
 
 	if(!bIsInTable && !bIsInGlobTable)
 	{

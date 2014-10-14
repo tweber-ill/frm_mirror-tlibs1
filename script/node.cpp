@@ -359,7 +359,9 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 		if(IsLogicalOp(op))
 		{
 			SymbolInt *pResult = new SymbolInt();
+#ifdef DEBUG
 			pResult->SetName(T_STR"<op_logical_result>");
+#endif
 
 			if(g_mapBinLogOps_d.find(op) != g_mapBinLogOps_d.end())
 			{
@@ -379,14 +381,15 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 			//log_debug("Right, ", pRight, ": ", ((SymbolReal*)pRight)->GetVal());
 
 			SymbolReal *pResult = (SymbolReal*)recycle_or_alloc({pLeft, pRight}, !bOptim);
+#ifdef DEBUG
+			pResult->SetName(T_STR"<op_result>");
+#endif
 			//log_debug("Result, ", pResult, ": ", ((SymbolReal*)pResult)->GetVal());
 
 			if(pResult == pLeft) bCleanLeft = 0;
 			if(pResult == pRight) bCleanRight = 0;
 			//if(!bCleanLeft) log_debug("Recycled left double: ", pLeft, " = ", pLeft->print());
 			//if(!bCleanRight) log_debug("Recycled right double: ", pLeft, " = ", pRight->print());
-
-			pResult->SetName(T_STR"<op_result>");
 
 			if(g_mapBinOps_d.find(op) != g_mapBinOps_d.end())
 			{
@@ -405,7 +408,10 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 		if(IsLogicalOp(op))
 		{
 			SymbolInt *pResult = new SymbolInt();
+#ifdef DEBUG
 			pResult->SetName(T_STR"<op_logical_result>");
+#endif
+			
 			if(g_mapBinLogOps_i.find(op) != g_mapBinLogOps_i.end())
 			{
 				pResult->SetVal(g_mapBinLogOps_i[op](((SymbolInt*)pLeft)->GetVal(),
@@ -420,10 +426,11 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 		else
 		{
 			SymbolInt *pResult = (SymbolInt*)recycle_or_alloc({pLeft, pRight}, !bOptim);
+#ifdef DEBUG
+			pResult->SetName(T_STR"<op_result>");
+#endif
 			if(pResult == pLeft) bCleanLeft = 0;
 			if(pResult == pRight) bCleanRight = 0;
-
-			pResult->SetName(T_STR"<op_result>");
 
 			if(g_mapBinOps_i.find(op) != g_mapBinOps_i.end())
 			{
@@ -442,7 +449,9 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 		if(IsLogicalOp(op))
 		{
 			SymbolInt *pResult = new SymbolInt();
+#ifdef DEBUG
 			pResult->SetName(T_STR"<op_logical_result>");
+#endif
 
 			if(g_mapBinLogOps_c.find(op) != g_mapBinLogOps_c.end())
 			{
@@ -459,11 +468,11 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 		else
 		{
 			SymbolComplex *pResult = (SymbolComplex*)recycle_or_alloc({pLeft, pRight}, !bOptim);
-
+#ifdef DEBUG
+			pResult->SetName(T_STR"<op_result>");
+#endif
 			if(pResult == pLeft) bCleanLeft = 0;
 			if(pResult == pRight) bCleanRight = 0;
-
-			pResult->SetName(T_STR"<op_result>");
 
 			if(g_mapBinOps_c.find(op) != g_mapBinOps_c.end())
 			{
@@ -482,7 +491,10 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 		if(IsLogicalOp(op))
 		{
 			SymbolInt *pResult = new SymbolInt();
+#ifdef DEBUG
 			pResult->SetName(T_STR"<op_logical_result>");
+#endif
+			
 			if(g_mapBinLogOps_s.find(op) != g_mapBinLogOps_s.end())
 			{
 				pResult->SetVal(g_mapBinLogOps_s[op](((SymbolString*)pLeft)->GetVal(),
@@ -499,11 +511,13 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 			//log_debug("Left, ", pLeft, ": ", ((SymbolString*)pLeft)->GetVal());
 			//log_debug("Right, ", pRight, ": ", ((SymbolString*)pRight)->GetVal());
 			SymbolString *pResult = (SymbolString*)recycle_or_alloc({pLeft, pRight}, !bOptim);
+#ifdef DEBUG
+			pResult->SetName(T_STR"<op_result>");
+#endif
 			if(pResult == pLeft) bCleanLeft = 0;
 			if(pResult == pRight) bCleanRight = 0;
 			//log_debug("Result, ", pResult, ": ", ((SymbolString*)pResult)->GetVal());
 
-			pResult->SetName(T_STR"<op_result>");
 
 			if(g_mapBinOps_s.find(op) != g_mapBinOps_s.end())
 			{

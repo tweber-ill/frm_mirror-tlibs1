@@ -193,7 +193,7 @@ public:
 
 			std::cout << "evaluated: f(" << x << ") = " << dRetVal << std::endl;*/
 		}
-		safe_delete(pSymRet, m_pCallerSymTab, m_pinfo->pGlobalSyms);
+		safe_delete(pSymRet, m_pCallerSymTab, m_pinfo);
 
 		return dRetVal;
 	}

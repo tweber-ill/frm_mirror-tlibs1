@@ -321,9 +321,13 @@ static Symbol* fkt_has_var(const std::vector<Symbol*>& vecSyms,
 	if(pSymTab->GetSymbol(strVar))
 		bHasVar = 1;
 
-	// check global variables
-	if(info.pGlobalSyms->GetSymbol(strVar))
-		bHasVar = 1;
+	{
+		// check global variables
+		std::lock_guard<std::mutex> _lck(*info.pmutexGlobalSyms);
+		
+		if(info.pGlobalSyms->GetSymbol(strVar))
+			bHasVar = 1;
+	}
 
 	return new SymbolInt(bHasVar);
 }
@@ -342,10 +346,15 @@ static Symbol* fkt_register_var(const std::vector<Symbol*>& vecSyms,
 		const t_string& strVar = ((SymbolString*)vecSyms[0])->GetVal();
 		Symbol* pVar = vecSyms[1]->clone();
 
-		SymbolTable *pThisSymTab = pSymTab;
 		if(bUseGlobal)
-			pThisSymTab = info.pGlobalSyms;
-		pThisSymTab->InsertSymbol(strVar, pVar);
+		{
+			std::lock_guard<std::mutex> _lck(*info.pmutexGlobalSyms);
+			info.pGlobalSyms->InsertSymbol(strVar, pVar);
+		}
+		else
+		{
+			pSymTab->InsertSymbol(strVar, pVar);
+		}
 	}
 	else if(vecSyms.size() == 1)
 	{

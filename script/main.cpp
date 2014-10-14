@@ -112,7 +112,7 @@ static inline int interactive(bool bShowSymbols=0, unsigned int uiDebugLevel=3)
 			if(pSymRet)
 			{
 				std::cout << pSymRet->print() << std::endl;
-				safe_delete(pSymRet, runinfo.pLocalSymsOverride, info.pGlobalSyms);
+				safe_delete(pSymRet, runinfo.pLocalSymsOverride, &info);
 			}
 
 			remove_cmdfunc();

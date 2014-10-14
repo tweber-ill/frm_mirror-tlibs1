@@ -19,7 +19,7 @@ Symbol* NodeReturn::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSy
 	{
 		Symbol *pEval = m_pExpr->eval(info, runinfo, pSym);
 		if(clone_if_needed(pEval, pRet))
-			safe_delete(pEval, pSym, info.pGlobalSyms);
+			safe_delete(pEval, pSym, &info);
 	}
 	pSym->InsertSymbol(T_STR"<ret>", pRet ? pRet : 0);
 
@@ -73,7 +73,10 @@ Symbol* NodeIdent::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym
 	// global symbol
 	Symbol *pSymbolGlob = 0;
 	if(info.pGlobalSyms)
+	{
+		std::lock_guard<std::mutex> _lck(*info.pmutexGlobalSyms);
 		pSymbolGlob = info.pGlobalSyms->GetSymbol(m_strIdent);
+	}
 
 	if(pSymbol && pSymbolGlob)
 	{
@@ -93,8 +96,14 @@ Symbol* NodeIdent::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym
 		return 0;
 	}
 
-	//if(pSymbol->GetIdent().size()==0)	// !! cur_iter needs this symbol's identifier !!
-		pSymbol->SetIdent(m_strIdent);
+
+	if(pSymbol == pSymbolGlob)
+		info.pmutexGlobalSyms->lock();
+	
+	pSymbol->SetIdent(m_strIdent);
+	
+	if(pSymbol == pSymbolGlob)
+		info.pmutexGlobalSyms->unlock();
 	return pSymbol;
 }
 
@@ -173,7 +182,7 @@ Symbol* NodeCall::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym)
 				vecArgSyms.push_back(pSymClone);
 			}
 
-			safe_delete(pSymChild, pSym, info.pGlobalSyms);
+			safe_delete(pSymChild, pSym, &info);
 		}
 		else
 		{
@@ -213,7 +222,7 @@ Symbol* NodeCall::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym)
 	arrArgs.ClearIndices();
 
 	for(Symbol *pArgSym : vecArgSyms)
-		safe_delete(pArgSym, pSym, info.pGlobalSyms);
+		safe_delete(pArgSym, pSym, &info);
 	return pFktRet;
 }
 
@@ -289,9 +298,9 @@ Symbol* NodeMap::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) 
 				pSymClone));
 		}
 
-		safe_delete(pSymFirst, pSym, info.pGlobalSyms);
+		safe_delete(pSymFirst, pSym, &info);
 		if(bSecondCloned)
-			safe_delete(pSymSecond, pSym, info.pGlobalSyms);
+			safe_delete(pSymSecond, pSym, &info);
 	}
 
 	pSymMap->UpdateIndices();
@@ -316,7 +325,7 @@ Symbol* NodeArray::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym
 		Symbol *pSymbol = pNode->eval(info, runinfo, pSym);
 		Symbol *pClone;
 		if(clone_if_needed(pSymbol, pClone))
-			safe_delete(pSymbol, pSym, info.pGlobalSyms);
+			safe_delete(pSymbol, pSym, &info);
 
 		pSymArr->GetArr().push_back(pClone);
 		pSymArr->UpdateLastNIndices(1);
@@ -384,8 +393,8 @@ void NodeRange::GetRangeIndices(ParseInfo &info, RuntimeInfo& runinfo, SymbolTab
 
 		//G_COUT << "begin: " << iBeginIdx << ", end: " << iEndIdx << std::endl;
 
-		safe_delete(pSymBeg, pSym, info.pGlobalSyms);
-		safe_delete(pSymEnd, pSym, info.pGlobalSyms);
+		safe_delete(pSymBeg, pSym, &info);
+		safe_delete(pSymEnd, pSym, &info);
 	}
 	else
 	{
@@ -508,7 +517,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable
 			if(bCreatedSym /*&& bEvenIndex*/)
 			{
 				pArr = transpose(pArr);
-				safe_delete(pSymbol, pSym, info.pGlobalSyms);
+				safe_delete(pSymbol, pSym, &info);
 				pSymbol = pArr;
 
 				bAlreadyTransposed = 1;
@@ -555,7 +564,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable
 					bCreatedSym = 0;
 				}
 
-				safe_delete(pSymbol, pSym, info.pGlobalSyms);
+				safe_delete(pSymbol, pSym, &info);
 				pSymbol = pSubArr;
 				bCreatedSym = 1;
 			}
@@ -572,7 +581,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable
 				}
 
 				t_int iIdx = pSymExpr->GetValInt();
-				safe_delete(pSymExpr, pSym, info.pGlobalSyms);
+				safe_delete(pSymExpr, pSym, &info);
 
 				// convert negative indices
 				if(iIdx < 0)
@@ -601,7 +610,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable
 				}
 
 				if((void*)pSymbol != (void*)pArr)
-					safe_delete(pSymbol, pSym, info.pGlobalSyms);
+					safe_delete(pSymbol, pSym, &info);
 
 				pSymbol = pArr->GetArr()[iIdx];
 				pArr->UpdateIndex(iIdx);
@@ -646,11 +655,11 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable
 		}
 
 		if((void*)pSymbol != (void*)iterMap->second)
-			safe_delete(pSymbol, pSym, info.pGlobalSyms);
+			safe_delete(pSymbol, pSym, &info);
 
 		pSymbol = iterMap->second;
 		pMap->UpdateIndex(key);
-		safe_delete(pSymExpr, pSym, info.pGlobalSyms);
+		safe_delete(pSymExpr, pSym, &info);
 	}
 	else if(pSymbol->GetType() == SYMBOL_STRING)
 	{
@@ -689,7 +698,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable
 				strNew[iNewIdx] = pStr->GetVal()[iIdx];
 
 			SymbolString *pSubStr = new SymbolString(strNew);
-			safe_delete(pSymbol, pSym, info.pGlobalSyms);
+			safe_delete(pSymbol, pSym, &info);
 			pSymbol = pSubStr;
 		}
 		else								// integer index
@@ -705,7 +714,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable
 			}
 
 			t_int iIdx = pSymExpr->GetValInt();
-			safe_delete(pSymExpr, pSym, info.pGlobalSyms);
+			safe_delete(pSymExpr, pSym, &info);
 
 			// convert negative indices
 			if(iIdx < 0)
@@ -722,7 +731,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable
 
 			t_string strNew;
 			strNew += pStr->GetVal()[iIdx];
-			safe_delete(pSymbol, pSym, info.pGlobalSyms);
+			safe_delete(pSymbol, pSym, &info);
 			pSymbol = new SymbolString(strNew);
 		}
 	}
@@ -774,7 +783,7 @@ Symbol* NodeUnaryOp::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pS
 			Symbol *pSymbolEval = m_pChild->eval(info, runinfo, pSym);
 			Symbol *pClone;
 			if(clone_if_needed(pSymbolEval, pClone))
-				safe_delete(pSymbolEval, pSym, info.pGlobalSyms);
+				safe_delete(pSymbolEval, pSym, &info);
 
 			uminus_inplace(pClone, info, runinfo);
 			return pClone;
@@ -790,7 +799,7 @@ Symbol* NodeUnaryOp::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pS
 			else if(pSymbolEval->GetType() == SYMBOL_INT)
 				pSymbolInt->SetVal(!((SymbolInt*)pSymbolEval)->GetVal());
 
-			safe_delete(pSymbolEval, pSym, info.pGlobalSyms);
+			safe_delete(pSymbolEval, pSym, &info);
 			return pSymbolInt;
 		}
 
@@ -799,7 +808,7 @@ Symbol* NodeUnaryOp::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pS
 			if(m_pChild)
 			{
 				Symbol *pSymbol = m_pChild->eval(info, runinfo, pSym);
-				safe_delete(pSymbol, pSym, info.pGlobalSyms);
+				safe_delete(pSymbol, pSym, &info);
 			}
 			return 0;
 		}
@@ -849,7 +858,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, RuntimeInfo& runinfo, SymbolT
 
 	Symbol *pSymbol;
 	if(clone_if_needed(pSymbolOrg, pSymbol))
-		safe_delete(pSymbolOrg, pSym, info.pGlobalSyms);
+		safe_delete(pSymbolOrg, pSym, &info);
 	pSymbol->SetRval(0);
 
 	if(pLeft->GetType() == NODE_IDENT)		// single variable
@@ -859,7 +868,10 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, RuntimeInfo& runinfo, SymbolT
 
 		Symbol* pSymGlob = 0;
 		if(info.pGlobalSyms)
+		{
+			std::lock_guard<std::mutex> _lck(*info.pmutexGlobalSyms);
 			pSymGlob = info.pGlobalSyms->GetSymbol(strIdent);
+		}
 
 		Symbol* pSymLoc = 0;
 		if(!*pbGlob && pSym)
@@ -874,14 +886,21 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, RuntimeInfo& runinfo, SymbolT
 		if(pSymGlob && !pSymLoc && !*pbGlob && info.pGlobalSyms)
 		{
 			log_warn(linenr(runinfo), "Overwriting global symbol \"", strIdent, "\".");
+			
+			std::lock_guard<std::mutex> _lck(*info.pmutexGlobalSyms);
 			info.pGlobalSyms->InsertSymbol(strIdent, pSymbol);
 		}
 		else
 		{
 			if(*pbGlob && info.pGlobalSyms)
+			{
+				std::lock_guard<std::mutex> _lck(*info.pmutexGlobalSyms);
 				info.pGlobalSyms->InsertSymbol(strIdent, pSymbol);
+			}
 			else if(pSym)
+			{
 				pSym->InsertSymbol(strIdent, pSymbol);
+			}
 		}
 
 		return pSymbol;
@@ -972,7 +991,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, RuntimeInfo& runinfo, SymbolT
 			pSymbol->SetArrIdx(iArrIdx);
 
 			pSymOld->SetArrPtr(0);
-			safe_delete(pSymOld, pSym, info.pGlobalSyms);
+			safe_delete(pSymOld, pSym, &info);
 		}
 		else if(pSymLeft->GetMapPtr())		// map
 		{
@@ -1002,7 +1021,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, RuntimeInfo& runinfo, SymbolT
 			iterMap->second = pSymbol;
 
 			pSymOld->SetMapPtr(0);
-			safe_delete(pSymOld, pSym, info.pGlobalSyms);
+			safe_delete(pSymOld, pSym, &info);
 		}
 		else
 		{
@@ -1013,7 +1032,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, RuntimeInfo& runinfo, SymbolT
 			throw Err(ostrErr.str(),0);
 		}
 
-		//safe_delete(pSymLeft, pSym, info.pGlobalSyms);
+		//safe_delete(pSymLeft, pSym, &info);
 	}
 	return pSymbol;
 }
@@ -1071,7 +1090,7 @@ Symbol* NodeBinaryOp::eval_funcinit(ParseInfo &info, RuntimeInfo& runinfo, Symbo
 		t_string strExecBck = runinfo.strExecFkt;
 
 		Symbol *pSymInitRet = pToRun->eval(info, runinfo, /*pSym*/0);
-		safe_delete(pSymInitRet, pSym, info.pGlobalSyms);
+		safe_delete(pSymInitRet, pSym, &info);
 
 		runinfo.strExecFkt = strExecBck;
 	}
@@ -1111,7 +1130,7 @@ Symbol* NodeBinaryOp::eval_recursive(ParseInfo &info, RuntimeInfo& runinfo, Symb
 
 		//G_COUT << "left: " << m_pLeft->GetType() << std::endl;
 		Symbol *pSymbol = m_pLeft->eval(info, runinfo, pSym);
-		safe_delete(pSymbol, pSym, info.pGlobalSyms);
+		safe_delete(pSymbol, pSym, &info);
 	}
 	if(m_pRight)
 	{
@@ -1119,7 +1138,7 @@ Symbol* NodeBinaryOp::eval_recursive(ParseInfo &info, RuntimeInfo& runinfo, Symb
 
 		//G_COUT << "right: " << m_pRight->GetType() << std::endl;
 		Symbol *pSymbol = m_pRight->eval(info, runinfo, pSym);
-		safe_delete(pSymbol, pSym, info.pGlobalSyms);
+		safe_delete(pSymbol, pSym, &info);
 	}
 	return 0;
 }
@@ -1140,7 +1159,7 @@ Symbol* NodeBinaryOp::eval_sequential(ParseInfo &info, RuntimeInfo& runinfo, Sym
 			break;
 		}
 
-		safe_delete(pSymbol, pSym, info.pGlobalSyms);
+		safe_delete(pSymbol, pSym, &info);
 	}
 
 	return pSymRet;
@@ -1184,8 +1203,8 @@ Symbol* NodeBinaryOp::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *p
 		pSymbol = Op(pSymbolLeft, pSymbolRight, GetType());
 	}
 
-	if(pSymbol!=pSymbolLeft) safe_delete(pSymbolLeft, pSym, info.pGlobalSyms);
-	if(pSymbol!=pSymbolRight) safe_delete(pSymbolRight, pSym, info.pGlobalSyms);
+	if(pSymbol!=pSymbolLeft) safe_delete(pSymbolLeft, pSym, &info);
+	if(pSymbol!=pSymbolRight) safe_delete(pSymbolRight, pSym, &info);
 
 	return pSymbol;
 }
@@ -1259,7 +1278,7 @@ Symbol* NodeFunction::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable* p
 			//G_COUT << "arg: " << pIdent->GetIdent() << std::endl;
 			Symbol* pSymToInsert;
 			if(clone_if_needed(pSymbol, pSymToInsert))
-				safe_delete(pSymbol, pLocalSym, info.pGlobalSyms);
+				safe_delete(pSymbol, pLocalSym, &info);
 			pSymToInsert->SetRval(0);
 			pLocalSym->InsertSymbol(pIdent->GetIdent(), pSymToInsert);
 		}
@@ -1310,8 +1329,8 @@ Symbol* NodeIf::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) c
 	else
 		pSymRet = (m_pElse ? m_pElse->eval(info, runinfo, pSym) : 0);
 
-	safe_delete(pSymExpr, pSym, info.pGlobalSyms);
-	safe_delete(pSymRet, pSym, info.pGlobalSyms);
+	safe_delete(pSymExpr, pSym, &info);
+	safe_delete(pSymRet, pSym, &info);
 
 	return 0;
 }
@@ -1335,8 +1354,8 @@ Symbol* NodeWhile::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym
 		else
 			break;
 
-		safe_delete(pSymRet, pSym, info.pGlobalSyms);
-		safe_delete(pSymExpr, pSym, info.pGlobalSyms);
+		safe_delete(pSymRet, pSym, &info);
+		safe_delete(pSymExpr, pSym, &info);
 
 		if(runinfo.bWantBreak)
 		{
@@ -1367,7 +1386,7 @@ Symbol* NodeFor::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) 
 	if(m_pExprInit)
 	{
 		pSymInit = m_pExprInit->eval(info, runinfo, pSym);
-		safe_delete(pSymInit, pSym, info.pGlobalSyms);
+		safe_delete(pSymInit, pSym, &info);
 	}
 
 	while(1)
@@ -1380,8 +1399,8 @@ Symbol* NodeFor::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) 
 		else
 			break;
 
-		safe_delete(pSymRet, pSym, info.pGlobalSyms);
-		safe_delete(pSymExpr, pSym, info.pGlobalSyms);
+		safe_delete(pSymRet, pSym, &info);
+		safe_delete(pSymExpr, pSym, &info);
 
 		if(runinfo.bWantBreak)
 		{
@@ -1397,7 +1416,7 @@ Symbol* NodeFor::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) 
 		if(m_pExprEnd)
 		{
 			Symbol *pSymEnd = m_pExprEnd->eval(info, runinfo, pSym);
-			safe_delete(pSymEnd, pSym, info.pGlobalSyms);
+			safe_delete(pSymEnd, pSym, &info);
 		}
 	}
 	runinfo.pCurLoop = 0;
@@ -1432,7 +1451,7 @@ Symbol* NodeRangedFor::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo)
 				<< "Range-based for loop needs array." << std::endl;
-		safe_delete(_pArr, pSym, info.pGlobalSyms);
+		safe_delete(_pArr, pSym, &info);
 
 		throw Err(ostrErr.str(),0);
 	}
@@ -1454,7 +1473,7 @@ Symbol* NodeRangedFor::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *
 		pSym->InsertSymbol(strIdent, pSymInArr);
 
 		Symbol *pBodyRet = m_pStmt->eval(info, runinfo, pSym);
-		safe_delete(pBodyRet, pSym, info.pGlobalSyms);
+		safe_delete(pBodyRet, pSym, &info);
 
 
 		// write back symbol in case an assignment has taken place
@@ -1486,6 +1505,6 @@ Symbol* NodeRangedFor::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *
 	pSym->RemoveSymbol(strIter);
 
 	//G_COUT << "ranged for:" << pArr->GetName() << ", " << pArr->GetIdent() << std::endl;
-	safe_delete(_pArr, pSym, info.pGlobalSyms);
+	safe_delete(_pArr, pSym, &info);
 	return 0;
 }

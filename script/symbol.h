@@ -8,6 +8,8 @@
 #define __HERMELIN_SYM__
 
 #include "types.h"
+//#include "info.h"
+struct ParseInfo;
 
 #include "helper/exception.h"
 #include "helper/log.h"
@@ -582,7 +584,7 @@ static Symbol* mat_to_sym(const t_mat<T>& mat)
 }
 
 
-extern void safe_delete(Symbol *&pSym, const SymbolTable* pSymTab, const SymbolTable* pGlobalSymTab);
+extern void safe_delete(Symbol *&pSym, const SymbolTable* pSymTab, ParseInfo* pParseInfo=0);
 extern bool is_tmp_sym(const Symbol* pSym);
 extern bool clone_if_needed(Symbol *pSym, Symbol*& pClone);
 extern Symbol* recycle_or_alloc(const std::initializer_list<const Symbol*>& lstSyms, bool bAlwaysAlloc=0);

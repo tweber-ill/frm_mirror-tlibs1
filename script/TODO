@@ -1,2 +1,3 @@
 * operations on complex matrices
 * constants
+* mutex for handle manager & global function/module table

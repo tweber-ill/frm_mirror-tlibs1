@@ -103,17 +103,11 @@ static Symbol* task_proc(NodeFunction* pFunc, ParseInfo* pinfo, std::vector<Symb
 	arrArgs.SetDontDel(1);
 
 	const NodeFunction *pThreadFunc = 0;
-	RuntimeInfo *pruninfo2 = 0;
-	{
-		//std::lock_guard<std::mutex> _lck(*pinfo->pmutexInterpreter);
-		pThreadFunc = (NodeFunction*)pFunc/*->clone()->optimize()*/;
-		pruninfo2 = new RuntimeInfo();
+	RuntimeInfo *pruninfo2 = new RuntimeInfo();
+	pThreadFunc = (NodeFunction*)pFunc/*->clone()->optimize()*/;
 
-		// TODO
-		//pinfo2->pGlobalSyms = 0;
-		if(pvecSyms) arrArgs.GetArr() = *pvecSyms;
-		arrArgs.UpdateIndices();
-	}
+	if(pvecSyms) arrArgs.GetArr() = *pvecSyms;
+	arrArgs.UpdateIndices();
 
 	pTable->InsertSymbol(T_STR"<args>", &arrArgs);
 	Symbol* pRet = pThreadFunc->eval(*pinfo, *pruninfo2, pTable);
@@ -132,10 +126,7 @@ static void thread_proc(NodeFunction* pFunc, ParseInfo* pinfo, std::vector<Symbo
 {
 	// ignore return value
 	Symbol *pRet = task_proc(pFunc, pinfo, pvecSyms);
-
-	// TODO: check
-	if(pRet) delete pRet;
-	//safe_delete(pRet, 0, pinfo->pGlobalSyms);
+	safe_delete(pRet, 0, pinfo);
 }
 
 static Symbol* fkt_thread_task(const std::vector<Symbol*>& vecSyms,
@@ -368,7 +359,9 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 			HandleThread *pThreadHandle = (HandleThread*)pHandle;
 			std::thread *pThread = pThreadHandle->GetInternalHandle();
 
+			//log_debug("Joining thread ", pThread, "...");
 			pThread->join();
+			//log_debug("Joined thread ", pThread, ".");
 		}
 		else if(pHandle->GetType() == HANDLE_TASK)
 		{

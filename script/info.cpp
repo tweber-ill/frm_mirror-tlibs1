@@ -12,15 +12,17 @@ ParseInfo::ParseInfo()
 	pGlobalSyms = new SymbolTable();
 	phandles = new HandleManager();
 	pmutexGlobal = new std::mutex();
-	pmutexInterpreter = new std::mutex();
+	pmutexGlobalSyms = new std::mutex();
+	pmutexTraceback = new std::mutex();
 }
 
 ParseInfo::~ParseInfo()
 {
-	if(phandles) { delete phandles; phandles=0; }
+	//if(phandles) { delete phandles; phandles=0; }
 	if(pGlobalSyms) { delete pGlobalSyms; pGlobalSyms=0; }
 	if(pmutexGlobal) { delete pmutexGlobal; pmutexGlobal=0; }
-	if(pmutexInterpreter) { delete pmutexInterpreter; pmutexInterpreter=0; }
+	if(pmutexGlobalSyms) { delete pmutexGlobalSyms; pmutexGlobalSyms=0; }
+	if(pmutexTraceback) { delete pmutexTraceback; pmutexTraceback=0; }
 
 	if(pmapModules)
 	{
@@ -42,7 +44,7 @@ void ParseInfo::PushTraceback(std::string&& strTrace)
 
 	t_oneTraceback *pStck = 0;
 	{
-		std::lock_guard<std::mutex> lck(*pmutexInterpreter);
+		std::lock_guard<std::mutex> lck(*pmutexTraceback);
 		pStck = &stckTraceback[std::this_thread::get_id()];
 	}
 
@@ -55,7 +57,7 @@ void ParseInfo::PopTraceback()
 
 	t_oneTraceback *pStck = 0;
 	{
-		std::lock_guard<std::mutex> lck(*pmutexInterpreter);
+		std::lock_guard<std::mutex> lck(*pmutexTraceback);
 		pStck = &stckTraceback[std::this_thread::get_id()];
 	}
 

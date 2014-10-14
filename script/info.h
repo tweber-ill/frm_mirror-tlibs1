@@ -65,15 +65,17 @@ struct ParseInfo
 
 	// global symbol table
 	SymbolTable *pGlobalSyms = nullptr;
+	std::mutex *pmutexGlobalSyms = nullptr;
 
 	HandleManager *phandles = nullptr;
+	
+
 	// mutex for script if no explicit mutex given
 	std::mutex *pmutexGlobal = nullptr;
-	// mutex for interpreter
-	std::mutex *pmutexInterpreter = nullptr;
 
 
 	bool bEnableDebug = 0;
+	std::mutex *pmutexTraceback = nullptr;
 	typedef std::deque<std::string> t_oneTraceback;
 	typedef std::unordered_map<std::thread::id, t_oneTraceback> t_stckTraceback;
 	t_stckTraceback stckTraceback;
