@@ -23,15 +23,41 @@ B_matrix(a,b,c, alpha, beta, gamma)
 	return matrecip;
 }
 
+sample_tt(ki, kf, Q)
+{
+	ctt = (ki^2. + kf^2. - Q^2.)/(2.*ki*kf);
+	if(abs(ctt) > 1.)
+	{
+		print("Error: Scattering triangle not closed!");
+		exit(-1);
+	}
+
+	return acos(ctt);
+}
+
+angle_ki_Q(ki, kf, Q)
+{
+	c = (ki^2. - kf^2. + Q^2.)/(2.*ki*Q);
+	if(abs(c) > 1.)
+	{
+		print("Error: Scattering triangle not closed!");
+		exit(-1);
+	}
+
+	return acos(c);	
+}
+
+
 usage(app)
 {
-        print("\nElastic peak calculation for single crystal");
+        print("\nTAS position calculation for single crystal");
 	print("\nUsage: e.g. " + app + " h=1 k=0 l=0 a=1 ki=1.5 a=5 b=5 c=5 alpha=90 beta=90 gamma=90 orient1=1,0,0 orient2=0,1,0");
         print();
 	print("\th,k,l                 Miller indices in rlu");
         print("\ta,b,c                 lattice constants in A");
         print("\talpha,beta,gamma      lattice angles in deg");
-        print("\tki                    elastic ki (ki=kf) in 1/A");
+        print("\tki                    ki in 1/A");
+        print("\tkf                    kf in 1/A (kf = ki if not given)");
 	print("\torient1               crystal orientation");
 	print("\torient2               crystal orientation");
 	print();
@@ -55,6 +81,7 @@ main(args)
 
 	had_b = 0;
 	had_c = 0;
+	had_kf = 0;
 
 	if(length(args) > 1)
         for(arg : args[1:length(args)])
@@ -84,12 +111,15 @@ main(args)
 			had_b = 1;
 		if(arg_split[0] == "c")
 			had_c = 1;
+		if(arg_split[0] == "kf")
+			had_kf = 1;
 
 		register_var(arg_split[0], arg_val);
 	}
 
 	if(!had_b) b = a;
 	if(!had_c) c = a;
+	if(!had_kf) kf = ki;
 
 
 
@@ -113,7 +143,8 @@ main(args)
 	
 	print("-"*80);
 	print("hkl = " + str(hkl));
-	print("ki = kf = " + ki + " 1/A");
+	print("ki = " + ki + " 1/A");
+	print("kf = " + kf + " 1/A");
 	print("orient1 = " + str(orient1));
 	print("orient2 = " + str(orient2));
 	#print("orientup = " + str(orientup));
@@ -148,12 +179,12 @@ main(args)
 	print("|Q| = " + Q + " 1/A");
 
 
+	ttheta = sample_tt(ki, kf, Q);
+	print("2theta = " + (ttheta/pi*180.) + " deg");
 
-	# Q * lam = 4*pi*sin(theta)
-	# Q * 2*pi/k = 4*pi*sin(theta)
-	# Q/(2*k) = sin(theta)
-	theta = asin(Q/(2.*ki)) / pi * 180.;
-	print("theta = " + theta + " deg");
-	print("2theta = " + 2.*theta + " deg");
+	kiQ = angle_ki_Q(ki, kf, Q);
+	theta = -kiQ - atan2(Q_vec_in_U[0], Q_vec_in_U[1]);
+	print("theta = " + (theta/pi*180.) + " deg");
+
 	print("-"*80);
 }
