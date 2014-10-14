@@ -137,7 +137,7 @@ static Symbol* fkt_double(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size() == 0)
-		return new SymbolDouble(0.);
+		return new SymbolReal(0.);
 
 	// delegate to other "real" function
 	if(vecSyms[0]->GetType() == SYMBOL_COMPLEX)
@@ -401,9 +401,9 @@ static Symbol* fkt_setprec(const std::vector<Symbol*>& vecSyms,
 	int iPrec = pSymbol->GetValInt();
 
 	if(iPrec >= 0)
-		SymbolDouble::SetPrec(iPrec);
+		SymbolReal::SetPrec(iPrec);
 	else
-		SymbolDouble::SetPrec(SymbolDouble::GetDefPrec());
+		SymbolReal::SetPrec(SymbolReal::GetDefPrec());
 
 	return 0;
 }
@@ -462,7 +462,7 @@ static Symbol* fkt_cplx_real(const std::vector<Symbol*>& vecSyms,
 		return 0;
 
 	SymbolComplex *pComplex = (SymbolComplex*)vecSyms[0];
-	return new SymbolDouble(pComplex->GetValReal());
+	return new SymbolReal(pComplex->GetValReal());
 }
 
 static Symbol* fkt_cplx_imag(const std::vector<Symbol*>& vecSyms,
@@ -472,7 +472,7 @@ static Symbol* fkt_cplx_imag(const std::vector<Symbol*>& vecSyms,
 		return 0;
 
 	SymbolComplex *pComplex = (SymbolComplex*)vecSyms[0];
-	return new SymbolDouble(pComplex->GetValImag());
+	return new SymbolReal(pComplex->GetValImag());
 }
 
 static Symbol* fkt_cplx_arg(const std::vector<Symbol*>& vecSyms,
@@ -482,7 +482,7 @@ static Symbol* fkt_cplx_arg(const std::vector<Symbol*>& vecSyms,
 		return 0;
 
 	SymbolComplex *pComplex = (SymbolComplex*)vecSyms[0];
-	return new SymbolDouble(std::arg<t_real>(pComplex->GetVal()));
+	return new SymbolReal(std::arg<t_real>(pComplex->GetVal()));
 }
 
 // --------------------------------------------------------------------------------
@@ -523,7 +523,7 @@ static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
 	}
 	else
 	{
-		pSymVal = new SymbolDouble(0.);
+		pSymVal = new SymbolReal(0.);
 		bOwnVal = 1;
 	}
 

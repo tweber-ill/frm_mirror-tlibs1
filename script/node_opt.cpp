@@ -22,7 +22,7 @@ static Symbol* get_symbol(Node *pNode)
 	if(pNode->GetType() == NODE_INT)
 		return ((NodeInt*)pNode)->GetSym();
 	else if(pNode->GetType() == NODE_DOUBLE)
-		return ((NodeDouble*)pNode)->GetSym();
+		return ((NodeReal*)pNode)->GetSym();
 	else if(pNode->GetType() == NODE_STRING)
 		return ((NodeString*)pNode)->GetSym();
 
@@ -32,7 +32,7 @@ static Symbol* get_symbol(Node *pNode)
 static Node* new_node_for_sym(Symbol* pSym)
 {
 	if(pSym->GetType() == SYMBOL_DOUBLE)
-		return new NodeDouble((SymbolDouble*)pSym);
+		return new NodeReal((SymbolReal*)pSym);
 	if(pSym->GetType() == SYMBOL_INT)
 		return new NodeInt((SymbolInt*)pSym);
 	if(pSym->GetType() == SYMBOL_STRING)
@@ -58,7 +58,7 @@ static bool is_operator(NodeType ty)
 
 Node* NodeBreak::optimize() { return this; }
 Node* NodeContinue::optimize() { return this; }
-Node* NodeDouble::optimize() { return this; }
+Node* NodeReal::optimize() { return this; }
 Node* NodeInt::optimize() { return this; }
 Node* NodeString::optimize() { return this; }
 
@@ -180,7 +180,7 @@ Node* NodeUnaryOp::optimize()
 
 		if(ty == NODE_DOUBLE)
 		{
-			SymbolDouble *pSym = ((NodeDouble*)pChild)->GetSym();
+			SymbolReal *pSym = ((NodeReal*)pChild)->GetSym();
 			pSym->GetVal() = -pSym->GetVal();
 			bSubstNode = 1;
 

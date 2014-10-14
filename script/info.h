@@ -14,7 +14,6 @@
 #include "lexer.h"
 
 
-// TODO
 // stuff that can change during execution
 struct RuntimeInfo
 {
@@ -22,7 +21,7 @@ struct RuntimeInfo
 	t_string strExecFkt;
 	t_string strInitScrFile;
 	SymbolTable *pLocalSymsOverride = nullptr;
-	
+
 	// currently active function
 	const NodeFunction *pCurFunction = nullptr;
 	const NodeCall *pCurCaller = nullptr;
@@ -30,11 +29,11 @@ struct RuntimeInfo
 
 	const Node* pCurLoop = nullptr;
 	bool bWantBreak = 0;
-	bool bWantContinue = 0;	
-	
-	
+	bool bWantContinue = 0;
+
+
 	// implicitely return last symbol in function
-	bool bImplicitRet = 0;	
+	bool bImplicitRet = 0;
 
 
 	bool IsExecDisabled() const

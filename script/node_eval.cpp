@@ -164,7 +164,7 @@ Symbol* NodeCall::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym)
 					log_err(linenr(runinfo), "Parameter \"", strParamName,
 						"\" not in map. Using 0.");
 
-					vecArgSyms.push_back(new SymbolDouble(0.));
+					vecArgSyms.push_back(new SymbolReal(0.));
 					continue;
 				}
 
@@ -217,7 +217,7 @@ Symbol* NodeCall::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym)
 	return pFktRet;
 }
 
-Symbol* NodeDouble::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
+Symbol* NodeReal::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
 	if(runinfo.IsExecDisabled()) return 0;
 	return m_pSymbol;
@@ -593,7 +593,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable
 					unsigned int iOldSize = pArr->GetArr().size();
 					for(unsigned int iRem=0; iRem<iIdx+1-iOldSize; ++iRem)
 					{
-						SymbolDouble *pNewSym = new SymbolDouble(0.);
+						SymbolReal *pNewSym = new SymbolReal(0.);
 						pNewSym->SetConst(1);
 						pArr->GetArr().push_back(pNewSym);
 						//G_COUT << "Inserting: " << iRem << std::endl;
@@ -742,7 +742,7 @@ static void uminus_inplace(Symbol* pSym, ParseInfo& info, RuntimeInfo& runinfo)
 	if(!pSym) return;
 
 	if(pSym->GetType() == SYMBOL_DOUBLE)
-		((SymbolDouble*)pSym)->SetVal(-((SymbolDouble*)pSym)->GetVal());
+		((SymbolReal*)pSym)->SetVal(-((SymbolReal*)pSym)->GetVal());
 	else if(pSym->GetType() == SYMBOL_INT)
 		((SymbolInt*)pSym)->SetVal(-((SymbolInt*)pSym)->GetVal());
 	else if(pSym->GetType() == SYMBOL_COMPLEX)
@@ -786,7 +786,7 @@ Symbol* NodeUnaryOp::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pS
 			SymbolInt *pSymbolInt = new SymbolInt();
 
 			if(pSymbolEval->GetType() == SYMBOL_DOUBLE)
-				pSymbolInt->SetVal(!((SymbolDouble*)pSymbolEval)->GetVal());
+				pSymbolInt->SetVal(!((SymbolReal*)pSymbolEval)->GetVal());
 			else if(pSymbolEval->GetType() == SYMBOL_INT)
 				pSymbolInt->SetVal(!((SymbolInt*)pSymbolEval)->GetVal());
 
@@ -948,7 +948,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, RuntimeInfo& runinfo, SymbolT
 				unsigned int iOldSize = pArr->GetArr().size();
 				for(unsigned int iRem=0; iRem<iArrIdx+1-iOldSize; ++iRem)
 				{
-					SymbolDouble *pNewSym = new SymbolDouble(0.);
+					SymbolReal *pNewSym = new SymbolReal(0.);
 					pNewSym->SetConst(1);
 					pArr->GetArr().push_back(pNewSym);
 					pArr->UpdateLastNIndices(1);
@@ -984,7 +984,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, RuntimeInfo& runinfo, SymbolT
 			// symbol not in map -> insert a zero
 			if(iterMap == pMap->GetMap().end())
 			{
-				SymbolDouble *pNewSym = new SymbolDouble(0.);
+				SymbolReal *pNewSym = new SymbolReal(0.);
 				pNewSym->SetConst(1);
 				iterMap = pMap->GetMap().insert(SymbolMap::t_map::value_type(MapKey, pNewSym)).first;
 			}

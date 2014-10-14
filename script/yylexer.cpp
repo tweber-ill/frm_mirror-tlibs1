@@ -36,7 +36,7 @@ extern "C" int yylex(void* _yylval, void* _pParseObj)
 		return 1;
 	else if(tok.type == LEX_TOKEN_DOUBLE)
 	{
-		yylval.pNode = new NodeDouble(tok.dVal);
+		yylval.pNode = new NodeReal(tok.dVal);
 		return TOK_DOUBLE;
 	}
 	else if(tok.type == LEX_TOKEN_INT)

@@ -118,7 +118,7 @@ static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
 
 		for(unsigned int iRow=0; iRow<iColLen; ++iRow)
 		{
-			SymbolDouble* pSymD = new SymbolDouble();
+			SymbolReal* pSymD = new SymbolReal();
 			pSymD->SetVal(pCol[iRow]);
 
 			pArrCol->GetArr().push_back(pSymD);

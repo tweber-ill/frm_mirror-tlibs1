@@ -90,7 +90,7 @@ public:
 		{
 			m_vecSyms.reserve(m_vecParamNames.size()+1);
 			for(unsigned int i=0; i<m_vecParamNames.size()+1; ++i)
-				m_vecSyms.push_back(new SymbolDouble(mod.m_vecSyms[i]->GetValDouble()));
+				m_vecSyms.push_back(new SymbolReal(mod.m_vecSyms[i]->GetValDouble()));
 		}
 	}
 
@@ -111,10 +111,10 @@ public:
 
 			SymbolArray* pSymParams = new SymbolArray();
 			for(unsigned int i=0; i<m_vecParamNames.size(); ++i)
-				pSymParams->GetArr().push_back(new SymbolDouble(0.));
+				pSymParams->GetArr().push_back(new SymbolReal(0.));
 
 			m_vecSyms.resize(2);
-			m_vecSyms[0] = new SymbolDouble(0.);	// free parameter
+			m_vecSyms[0] = new SymbolReal(0.);	// free parameter
 			m_vecSyms[1] = pSymParams;		// parameter vector
 
 			pSymParams->UpdateIndices();
@@ -127,7 +127,7 @@ public:
 
 			m_vecSyms.reserve(m_vecParamNames.size()+1);
 			for(unsigned int i=0; i<m_vecParamNames.size()+1; ++i)
-				m_vecSyms.push_back(new SymbolDouble(0.));
+				m_vecSyms.push_back(new SymbolReal(0.));
 		}
 
 		/*G_COUT << "free param: " << m_strFreeParam << std::endl;
@@ -157,9 +157,9 @@ public:
 			t_real dVal = vecParams[iParam];
 
 			if(m_bUseVecParams)
-				((SymbolDouble*)((SymbolArray*)m_vecSyms[1])->GetArr()[iParam])->SetVal(dVal);
+				((SymbolReal*)((SymbolArray*)m_vecSyms[1])->GetArr()[iParam])->SetVal(dVal);
 			else
-				((SymbolDouble*)m_vecSyms[iParam+1])->SetVal(dVal);
+				((SymbolReal*)m_vecSyms[iParam+1])->SetVal(dVal);
 		}
 
 		return 1;
@@ -167,7 +167,7 @@ public:
 
 	virtual t_real operator()(t_real x) const
 	{
-		((SymbolDouble*)m_vecSyms[0])->SetVal(x);
+		((SymbolReal*)m_vecSyms[0])->SetVal(x);
 
 		SymbolArray arrArgs;
 		arrArgs.SetDontDel(1);
@@ -569,8 +569,8 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		vecLastParams.push_back(dVal);
 
 		SymbolArray* pArr = new SymbolArray();
-		pArr->GetArr().push_back(new SymbolDouble(dVal));
-		pArr->GetArr().push_back(new SymbolDouble(dErr));
+		pArr->GetArr().push_back(new SymbolReal(dVal));
+		pArr->GetArr().push_back(new SymbolReal(dErr));
 		pArr->UpdateIndices();
 
 		pSymMap->GetMap().insert(SymbolMap::t_map::value_type(strSym, pArr));
@@ -698,8 +698,8 @@ static Symbol* _fkt_param(FktParam whichfkt, const std::vector<Symbol*>& vecSyms
 		if(vecSpl.size() < 2)
 			continue;
 
-		pArrX->GetArr().push_back(new SymbolDouble(vecSpl[0]));
-		pArrY->GetArr().push_back(new SymbolDouble(vecSpl[1]));
+		pArrX->GetArr().push_back(new SymbolReal(vecSpl[0]));
+		pArrY->GetArr().push_back(new SymbolReal(vecSpl[1]));
 	}
 
 	delete pfkt;

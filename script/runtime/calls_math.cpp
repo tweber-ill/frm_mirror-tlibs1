@@ -27,7 +27,7 @@ static inline Symbol* _fkt_linlogspace(const std::vector<Symbol*>& vecSyms,
 	pSymRet->GetArr().reserve(iNum);
 	for(t_int i=0; i<iNum; ++i)
 	{
-		SymbolDouble *pSymD = new SymbolDouble();
+		SymbolReal *pSymD = new SymbolReal();
 		t_real dDiv = (iNum!=1 ? t_real(iNum-1) : 1);
 		pSymD->SetVal(t_real(i)*(dmax-dmin)/dDiv + dmin);
 		if(bLog)
@@ -119,9 +119,9 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 		else if(pThisSym->GetType() == SYMBOL_DOUBLE)
 		{
 			if(!bHadDouble)
-				dRes = ((SymbolDouble*)pThisSym)->GetVal();
+				dRes = ((SymbolReal*)pThisSym)->GetVal();
 			else
-				dRes = math_fkt<fkt, t_real>(dRes, ((SymbolDouble*)pThisSym)->GetVal());
+				dRes = math_fkt<fkt, t_real>(dRes, ((SymbolReal*)pThisSym)->GetVal());
 
 			bHadDouble = 1;
 		}
@@ -135,10 +135,10 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 	else if(bHadInt && bHadDouble)
 	{
 		dRes = math_fkt<fkt, t_real>(dRes, t_real(iRes));
-		return new SymbolDouble(dRes);
+		return new SymbolReal(dRes);
 	}
 	else if(!bHadInt && bHadDouble)
-		return new SymbolDouble(dRes);
+		return new SymbolReal(dRes);
 
 
 	std::ostringstream ostrErr;
@@ -205,7 +205,7 @@ static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 			}
 
 			t_real dResult = FKT(tVal);
-			return new SymbolDouble(dResult);
+			return new SymbolReal(dResult);
 		}
 	}
 
@@ -257,7 +257,7 @@ static Symbol* fkt_math_2args(const std::vector<Symbol*>& vecSyms,
 	}
 
 	t_real dResult = FKT(pFirst->GetValDouble(), pSecond->GetValDouble());
-	return new SymbolDouble(dResult);
+	return new SymbolReal(dResult);
 }
 
 
@@ -301,13 +301,13 @@ static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
 	}
 	else if(vecSyms[0]->GetType() == SYMBOL_DOUBLE)
 	{
-		SymbolDouble* pSymD = (SymbolDouble*)vecSyms[0];
-		return new SymbolDouble(myabs(pSymD->GetVal()));
+		SymbolReal* pSymD = (SymbolReal*)vecSyms[0];
+		return new SymbolReal(myabs(pSymD->GetVal()));
 	}
 	else if(vecSyms[0]->GetType() == SYMBOL_COMPLEX)
 	{
 		SymbolComplex* pSymC = (SymbolComplex*)vecSyms[0];
-		return new SymbolDouble(std::abs<t_real>(pSymC->GetVal()));
+		return new SymbolReal(std::abs<t_real>(pSymC->GetVal()));
 	}
 
 
@@ -333,7 +333,7 @@ static Symbol* fkt_math_cnorm(const std::vector<Symbol*>& vecSyms,
 		cVal.real(vecSyms[0]->GetValDouble());
 
 	t_real dVal = std::norm<t_real>(cVal);
-	return new SymbolDouble(dVal);
+	return new SymbolReal(dVal);
 }
 
 
@@ -474,7 +474,7 @@ static Symbol* fkt_length(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 
 	t_vec<t_real> vec = sym_to_vec<t_vec>(vecSyms[0]);
 	t_real dLen = std::sqrt(ublas::inner_prod(vec, vec));
-	return new SymbolDouble(dLen);
+	return new SymbolReal(dLen);
 }
 
 static Symbol* fkt_mean(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
@@ -492,7 +492,7 @@ static Symbol* fkt_mean(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Ru
 	t_vec<t_real> vecLeft = sym_to_vec<t_vec>(vecSyms[0]);
 	t_real dMean = mean_value(vecLeft);
 
-	return new SymbolDouble(dMean);
+	return new SymbolReal(dMean);
 }
 
 static Symbol* fkt_stddev(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
@@ -510,7 +510,7 @@ static Symbol* fkt_stddev(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 	t_vec<t_real> vecLeft = sym_to_vec<t_vec>(vecSyms[0]);
 	t_real dStd = std_dev(vecLeft);
 
-	return new SymbolDouble(dStd);
+	return new SymbolReal(dStd);
 }
 
 static Symbol* fkt_cross(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
@@ -620,7 +620,7 @@ static Symbol* fkt_determinant(const std::vector<Symbol*>& vecSyms,
 	}
 
 	t_real dDet = determinant<t_mat<t_real>>(mat);
-	return new SymbolDouble(dDet);
+	return new SymbolReal(dDet);
 }
 
 static Symbol* fkt_unitmatrix(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
@@ -668,7 +668,7 @@ static Symbol* fkt_dot(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Run
 	t_vec<t_real> vec1 = sym_to_vec<t_vec>(vecSyms[0]);
 	t_vec<t_real> vec2 = sym_to_vec<t_vec>(vecSyms[1]);
 
-	return new SymbolDouble(ublas::inner_prod(vec1, vec2));
+	return new SymbolReal(ublas::inner_prod(vec1, vec2));
 }
 
 static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
@@ -785,12 +785,12 @@ static Symbol* fkt_eigenvecs(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 
 	for(const t_real dEval : evals_real)
 	{
-		Symbol *pSymReal = new SymbolDouble(dEval);
+		Symbol *pSymReal = new SymbolReal(dEval);
 		pSymEvals_real->GetArr().push_back(pSymReal);
 	}
 	for(const t_real dEval : evals_imag)
 	{
-		Symbol *pSymReal = new SymbolDouble(dEval);
+		Symbol *pSymReal = new SymbolReal(dEval);
 		pSymEvals_imag->GetArr().push_back(pSymReal);
 	}
 
@@ -833,7 +833,7 @@ static Symbol* fkt_eigenvecs_sym(const std::vector<Symbol*>& vecSyms, ParseInfo&
 
 	for(const t_real dEval : evals_real)
 	{
-		Symbol *pSymReal = new SymbolDouble(dEval);
+		Symbol *pSymReal = new SymbolReal(dEval);
 		pSymEvals_real->GetArr().push_back(pSymReal);
 	}
 
@@ -881,7 +881,7 @@ static Symbol* fkt_qr(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Runt
 static Symbol* fkt_rand01(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	t_real dRand = rand01<t_real>();
-	return new SymbolDouble(dRand);
+	return new SymbolReal(dRand);
 }
 
 static Symbol* fkt_rand_real(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
@@ -893,7 +893,7 @@ static Symbol* fkt_rand_real(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 	t_real dMax = vecSyms[1]->GetValDouble();
 
 	t_real dRand = rand_real<t_real>(dMin, dMax);
-	return new SymbolDouble(dRand);
+	return new SymbolReal(dRand);
 }
 
 static Symbol* fkt_rand_int(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
@@ -922,7 +922,7 @@ static Symbol* fkt_rand_norm(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 		dSigma = vecSyms[1]->GetValDouble();
 
 	t_real dRand = rand_norm<t_real>(dMu, dSigma);
-	return new SymbolDouble(dRand);
+	return new SymbolReal(dRand);
 }
 
 static Symbol* fkt_rand_norm_nd(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)

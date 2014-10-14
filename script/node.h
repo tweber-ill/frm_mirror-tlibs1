@@ -372,12 +372,12 @@ public:
 };
 
 
-class NodeDouble : public Node
+class NodeReal : public Node
 {
 public:
-	explicit NodeDouble(SymbolDouble* pSym) : Node(NODE_DOUBLE), m_pSymbol(pSym) {}
-	NodeDouble(t_real dVal);
-	virtual ~NodeDouble()
+	explicit NodeReal(SymbolReal* pSym) : Node(NODE_DOUBLE), m_pSymbol(pSym) {}
+	NodeReal(t_real dVal);
+	virtual ~NodeReal()
 	{
 		if(m_pSymbol) delete m_pSymbol;
 	}
@@ -386,10 +386,10 @@ public:
 	virtual Node* clone() const;
 
 	virtual Node* optimize() override;
-	SymbolDouble* GetSym() { return m_pSymbol; }
+	SymbolReal* GetSym() { return m_pSymbol; }
 
 protected:
-	SymbolDouble *m_pSymbol;
+	SymbolReal *m_pSymbol;
 };
 
 class NodeInt : public Node

@@ -363,8 +363,8 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 
 			if(g_mapBinLogOps_d.find(op) != g_mapBinLogOps_d.end())
 			{
-				pResult->SetVal(g_mapBinLogOps_d[op](((SymbolDouble*)pLeft)->GetVal(),
-								((SymbolDouble*)pRight)->GetVal()));
+				pResult->SetVal(g_mapBinLogOps_d[op](((SymbolReal*)pLeft)->GetVal(),
+								((SymbolReal*)pRight)->GetVal()));
 			}
 			else
 			{
@@ -375,11 +375,11 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 		}
 		else
 		{
-			//log_debug("Left, ", pLeft, ": ", ((SymbolDouble*)pLeft)->GetVal());
-			//log_debug("Right, ", pRight, ": ", ((SymbolDouble*)pRight)->GetVal());
+			//log_debug("Left, ", pLeft, ": ", ((SymbolReal*)pLeft)->GetVal());
+			//log_debug("Right, ", pRight, ": ", ((SymbolReal*)pRight)->GetVal());
 
-			SymbolDouble *pResult = (SymbolDouble*)recycle_or_alloc({pLeft, pRight}, !bOptim);
-			//log_debug("Result, ", pResult, ": ", ((SymbolDouble*)pResult)->GetVal());
+			SymbolReal *pResult = (SymbolReal*)recycle_or_alloc({pLeft, pRight}, !bOptim);
+			//log_debug("Result, ", pResult, ": ", ((SymbolReal*)pResult)->GetVal());
 
 			if(pResult == pLeft) bCleanLeft = 0;
 			if(pResult == pRight) bCleanRight = 0;
@@ -390,8 +390,8 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 
 			if(g_mapBinOps_d.find(op) != g_mapBinOps_d.end())
 			{
-				pResult->SetVal(g_mapBinOps_d[op](((SymbolDouble*)pLeft)->GetVal(),
-						((SymbolDouble*)pRight)->GetVal()));
+				pResult->SetVal(g_mapBinOps_d[op](((SymbolReal*)pLeft)->GetVal(),
+						((SymbolReal*)pRight)->GetVal()));
 			}
 			else
 			{
@@ -575,10 +575,10 @@ t_string Node::linenr(const RuntimeInfo &info) const
 
 //--------------------------------------------------------------------------------
 
-NodeDouble::NodeDouble(t_real dVal)
+NodeReal::NodeReal(t_real dVal)
 	: Node(NODE_DOUBLE)
 {
-	m_pSymbol = new SymbolDouble;
+	m_pSymbol = new SymbolReal;
 	m_pSymbol->SetConst(1);
 	m_pSymbol->SetVal(dVal);
 }
@@ -728,9 +728,9 @@ Node* NodeRangedFor::clone() const
 	return pNode;
 }
 
-Node* NodeDouble::clone() const
+Node* NodeReal::clone() const
 {
-	NodeDouble* pNode = new NodeDouble(m_pSymbol ? m_pSymbol->GetVal() : 0.);
+	NodeReal* pNode = new NodeReal(m_pSymbol ? m_pSymbol->GetVal() : 0.);
 	*((Node*)pNode) = *((Node*)this);
 	return pNode;
 }

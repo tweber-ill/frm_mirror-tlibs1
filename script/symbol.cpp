@@ -19,13 +19,13 @@ Symbol::~Symbol()
 // ----------------------------------------------------------------------------
 
 
-/*std::*/boost::hash<t_real> SymbolDouble::s_hsh;
+/*std::*/boost::hash<t_real> SymbolReal::s_hsh;
 /*std::*/boost::hash<t_int> SymbolInt::s_hsh;
 /*std::*/boost::hash<t_string> SymbolString::s_hsh;
 /*std::*/boost::hash<t_complex> SymbolComplex::s_hsh;
 
-const int SymbolDouble::m_defprec = std::numeric_limits<t_real>::digits10;
-int SymbolDouble::m_prec = m_defprec;
+const int SymbolReal::m_defprec = std::numeric_limits<t_real>::digits10;
+int SymbolReal::m_prec = m_defprec;
 
 const int SymbolComplex::m_defprec = std::numeric_limits<t_real>::digits10;
 int SymbolComplex::m_prec = m_defprec;
@@ -54,7 +54,7 @@ SymbolMapKey::SymbolMapKey(const Symbol* pSym)
 
 
 
-Symbol* SymbolDouble::ToType(SymbolType stype) const
+Symbol* SymbolReal::ToType(SymbolType stype) const
 {
 	Symbol *pNewSym = 0;
 
@@ -91,7 +91,7 @@ Symbol* SymbolDouble::ToType(SymbolType stype) const
 	return pNewSym;
 }
 
-t_string SymbolDouble::print() const
+t_string SymbolReal::print() const
 {
 	t_ostringstream ostr;
 	ostr.precision(m_prec);
@@ -100,9 +100,9 @@ t_string SymbolDouble::print() const
 	return ostr.str();
 }
 
-Symbol* SymbolDouble::clone() const
+Symbol* SymbolReal::clone() const
 {
-	SymbolDouble *pSym = new SymbolDouble;
+	SymbolReal *pSym = new SymbolReal;
 	*pSym = *this;
 	pSym->SetRval(1);
 	pSym->SetConst(0);
@@ -111,21 +111,21 @@ Symbol* SymbolDouble::clone() const
 	return pSym;
 }
 
-void SymbolDouble::assign(Symbol *pSym)
+void SymbolReal::assign(Symbol *pSym)
 {
-	SymbolDouble *pOther = (SymbolDouble*)pSym->ToType(GetType());
+	SymbolReal *pOther = (SymbolReal*)pSym->ToType(GetType());
 	if(!pOther)
 		throw Err("Invalid assignment.");
 
 	this->SetVal(pOther->GetVal());
 }
 
-bool SymbolDouble::IsLessThan(const Symbol& sym) const
+bool SymbolReal::IsLessThan(const Symbol& sym) const
 {
 	return GetValDouble() < sym.GetValDouble();
 }
 
-bool SymbolDouble::IsGreaterThan(const Symbol& sym) const
+bool SymbolReal::IsGreaterThan(const Symbol& sym) const
 {
 	return GetValDouble() > sym.GetValDouble();
 }
@@ -223,7 +223,7 @@ Symbol* SymbolInt::ToType(SymbolType stype) const
 	}
 	else if(stype == SYMBOL_DOUBLE)
 	{
-		SymbolDouble *pNewSymD = new SymbolDouble();
+		SymbolReal *pNewSymD = new SymbolReal();
 		pNewSymD->SetName(this->GetName());
 		pNewSymD->SetVal(t_real(this->GetVal()));
 
@@ -324,7 +324,7 @@ Symbol* SymbolString::ToType(SymbolType stype) const
 	{
 		t_istringstream istr(GetVal());
 
-		SymbolDouble *pNewSymD = new SymbolDouble();
+		SymbolReal *pNewSymD = new SymbolReal();
 		pNewSymD->SetName(this->GetName());
 		t_real dVal;
 		istr >> dVal;
@@ -524,7 +524,7 @@ std::vector<t_real> SymbolArray::ToDoubleArray() const
 
 	for(const Symbol *pSym : m_arr)
 	{
-		t_real dVal = ((SymbolDouble*)pSym->ToType(SYMBOL_DOUBLE))->GetVal();
+		t_real dVal = ((SymbolReal*)pSym->ToType(SYMBOL_DOUBLE))->GetVal();
 		vec.push_back(dVal);
 	}
 
@@ -537,7 +537,7 @@ void SymbolArray::FromDoubleArray(const std::vector<t_real>& vec)
 
 	for(t_real d : vec)
 	{
-		SymbolDouble *pSym = new SymbolDouble;
+		SymbolReal *pSym = new SymbolReal;
 		pSym->SetVal(d);
 		m_arr.push_back(pSym);
 	}

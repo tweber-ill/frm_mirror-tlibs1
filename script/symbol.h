@@ -46,7 +46,7 @@ class SymbolArray;
 class SymbolMap;
 class SymbolString;
 class SymbolInt;
-class SymbolDouble;
+class SymbolReal;
 class SymbolComplex;
 
 
@@ -141,7 +141,7 @@ public:
 	}
 };
 
-class SymbolDouble : public Symbol
+class SymbolReal : public Symbol
 {
 protected:
 	t_real m_dVal;
@@ -151,9 +151,9 @@ protected:
 	static /*std::*/boost::hash<t_real> s_hsh;
 
 public:
-	SymbolDouble() : Symbol(), m_dVal(0.) {}
-	SymbolDouble(t_real dVal) : m_dVal(dVal) {}
-	SymbolDouble(const t_string&) { throw Err("Invalid SymbolDouble constructor."); }
+	SymbolReal() : Symbol(), m_dVal(0.) {}
+	SymbolReal(t_real dVal) : m_dVal(dVal) {}
+	SymbolReal(const t_string&) { throw Err("Invalid SymbolReal constructor."); }
 
 	virtual SymbolType GetType() const override { return SYMBOL_DOUBLE; }
 	virtual t_string GetTypeName() const override { return T_STR"real"; }
@@ -163,7 +163,7 @@ public:
 
 	virtual t_string print() const override;
 	virtual Symbol* clone() const override;
-	virtual Symbol* alloc() const override { return new SymbolDouble(); }
+	virtual Symbol* alloc() const override { return new SymbolReal(); }
 	virtual void assign(Symbol *pSym) override;
 
 	//virtual bool equals(Symbol *pSym) const;
@@ -463,7 +463,7 @@ template<typename T> static Symbol* create_symbol(const T& t)
 { G_CERR << "Error: Invalid symbol creation." << std::endl; return 0; }
 
 template<> Symbol* create_symbol<t_real>(const t_real& t)
-{ return new SymbolDouble(t); }
+{ return new SymbolReal(t); }
 template<> Symbol* create_symbol<t_int>(const t_int& t)
 { return new SymbolInt(t); }
 template<> Symbol* create_symbol<t_string>(const t_string& t)
