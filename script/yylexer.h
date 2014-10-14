@@ -8,7 +8,7 @@
 #define __MIEZE_YYLEXER__
 
 #include "tokens.h"
-#include "parseobj.h"
+#include "info.h"
 
 #ifdef __cplusplus
 extern "C" {

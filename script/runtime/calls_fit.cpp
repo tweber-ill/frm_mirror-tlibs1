@@ -72,11 +72,10 @@ protected:
 public:
 	GenericModel(const GenericModel& mod)
 			: m_pFkt((NodeFunction*)mod.m_pFkt/*->clone()->optimize()*/),
-			  m_pinfo(new ParseInfo(*mod.m_pinfo)),
+			  m_pinfo(mod.m_pinfo),
 			  m_pCallerSymTab(mod.m_pCallerSymTab),
 			  m_pTable(new SymbolTable())
 	{
-		m_pinfo->bDestroyParseInfo = 0;
 		m_strFreeParam = mod.m_strFreeParam;
 		m_vecParamNames = mod.m_vecParamNames;
 		m_bUseVecParams = mod.m_bUseVecParams;
@@ -95,14 +94,13 @@ public:
 		}
 	}
 
-	GenericModel(const NodeFunction *pFkt, ParseInfo& info, SymbolTable *pCallerSymTab,
-			const std::vector<t_string>* pvecParamNames=0)
+	GenericModel(const NodeFunction *pFkt, ParseInfo& info,
+				 SymbolTable *pCallerSymTab, const std::vector<t_string>* pvecParamNames=0)
 				: m_pFkt((NodeFunction*)pFkt/*->clone()->optimize()*/),
-				  m_pinfo(new ParseInfo(info)),
+				  m_pinfo(&info),
 				  m_pCallerSymTab(pCallerSymTab),
 				  m_pTable(new SymbolTable())
 	{
-		m_pinfo->bDestroyParseInfo = 0;
 		std::vector<std::string> vecParams = /*convert_string_vector*/(m_pFkt->GetParamNames());
 		m_strFreeParam = vecParams[0];
 
@@ -142,7 +140,6 @@ public:
 	virtual ~GenericModel()
 	{
 		//if(m_pFkt) { delete m_pFkt; m_pFkt=0; }
-		if(m_pinfo) { delete m_pinfo; m_pinfo=0; }
 		if(m_pTable) { delete m_pTable; m_pTable=0; }
 	}
 
@@ -177,10 +174,10 @@ public:
 		arrArgs.GetArr() = m_vecSyms;
 		arrArgs.UpdateIndices();
 		//m_pFkt->SetArgSyms(&m_vecSyms);
-
+		
+		RuntimeInfo runinfo;
 		m_pTable->InsertSymbol(T_STR"<args>", &arrArgs);
-		Symbol *pSymRet = m_pFkt->eval(*m_pinfo, m_pTable);
-		m_pinfo->bWantReturn = 0;
+		Symbol *pSymRet = m_pFkt->eval(*m_pinfo, runinfo, m_pTable);
 		m_pTable->RemoveSymbolNoDelete(T_STR"<args>");
 
 		t_real dRetVal = 0.;
@@ -255,7 +252,7 @@ static void get_values(const std::vector<t_string>& vecParamNames,
 
 // fit("function", x, y, yerr, params)
 static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	int iDebug = 0;
 	bool bDoMinos = 0;
@@ -264,14 +261,14 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	if(vecSyms.size()<4 || !is_vec(vecSyms[1]) || !is_vec(vecSyms[2]) || !is_vec(vecSyms[3]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Invalid arguments for fit." << std::endl;
+		ostrErr << linenr(runinfo) << "Invalid arguments for fit." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
 	if(vecSyms[0]->GetType() != SYMBOL_STRING)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Need a fit function name." << std::endl;
+		ostrErr << linenr(runinfo) << "Need a fit function name." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -280,7 +277,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	if(!pFkt)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Invalid function \"" << strFkt << "\"." << std::endl;
+		ostrErr << linenr(runinfo) << "Invalid function \"" << strFkt << "\"." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -654,12 +651,12 @@ enum FktParam
 // bezier(x, y, 128)
 // spline(x, y, 128, degree)
 static Symbol* _fkt_param(FktParam whichfkt, const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size() < 2 || !is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Function needs x and y vector arguments." << std::endl;
+		ostrErr << linenr(runinfo) << "Function needs x and y vector arguments." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -684,7 +681,7 @@ static Symbol* _fkt_param(FktParam whichfkt, const std::vector<Symbol*>& vecSyms
 	else
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Unknown parametric function selected." << std::endl;
+		ostrErr << linenr(runinfo) << "Unknown parametric function selected." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -719,24 +716,24 @@ static Symbol* _fkt_param(FktParam whichfkt, const std::vector<Symbol*>& vecSyms
 }
 
 static Symbol* fkt_bezier(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	return _fkt_param(FKT_BEZIER, vecSyms, info, pSymTab);
+	return _fkt_param(FKT_BEZIER, vecSyms, info, runinfo, pSymTab);
 }
 
 static Symbol* fkt_spline(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	return _fkt_param(FKT_SPLINE, vecSyms, info, pSymTab);
+	return _fkt_param(FKT_SPLINE, vecSyms, info, runinfo, pSymTab);
 }
 
 static Symbol* fkt_find_peaks(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size() < 2)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "find_peaks needs x and y arrays." << std::endl;
+		ostrErr << linenr(runinfo) << "find_peaks needs x and y arrays." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -767,11 +764,11 @@ static Symbol* fkt_find_peaks(const std::vector<Symbol*>& vecSyms,
 
 // ["a" : [val0, val1]]  =>  ["a" : val0]
 static Symbol* fkt_map_vec_to_val(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size()<1 || vecSyms[0]->GetType()!=SYMBOL_MAP)
 	{
-		log_err(linenr(info), "Need a map of vectors.");
+		log_err(linenr(runinfo), "Need a map of vectors.");
 		return 0;
 	}
 
@@ -783,7 +780,7 @@ static Symbol* fkt_map_vec_to_val(const std::vector<Symbol*>& vecSyms,
 		iIdx = vecSyms[1]->GetValInt();
 		if(iIdx < 0)
 		{
-			log_warn(linenr(info), "Ignoring negative index.");
+			log_warn(linenr(runinfo), "Ignoring negative index.");
 			iIdx = 0;
 		}
 	}
@@ -810,7 +807,7 @@ static Symbol* fkt_map_vec_to_val(const std::vector<Symbol*>& vecSyms,
 		const std::vector<Symbol*>& arr = ((SymbolArray*)pSym)->GetArr();
 		if(iIdx >= int(arr.size()))
 		{
-			log_warn(linenr(info), "Ignoring invalid index.");
+			log_warn(linenr(runinfo), "Ignoring invalid index.");
 			continue;
 		}
 

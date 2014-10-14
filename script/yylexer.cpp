@@ -12,7 +12,7 @@
 
 #include "tokens.h"
 #include "yylexer.h"
-#include "parseobj.h"
+
 
 extern "C" int yylex(void* _yylval, void* _pParseObj)
 {

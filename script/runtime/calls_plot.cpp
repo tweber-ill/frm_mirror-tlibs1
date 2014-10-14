@@ -177,10 +177,10 @@ static void set_plot_params(GnuPlot& plot, const SymbolMap* pParamMap,
 }
 
 static Symbol* fkt_fileplot(const std::vector<Symbol*>& vecSyms,
-                               	ParseInfo& info, SymbolTable* pSymTab);
+                               	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab);
 
 static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
-			ParseInfo& info, SymbolTable* pSymTab)
+			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	g_plot.Init();
 	unsigned int iNumSyms = vecSyms.size();
@@ -188,7 +188,7 @@ static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 
 	// plot([[x, y, yerr, xerr, mapParams], ...]);
 	if(iNumSyms==1 && is_array_of_array_of_arrays(vecSyms[0]))
-		return fkt_plot(((SymbolArray*)vecSyms[0])->GetArr(), info, pSymTab);
+		return fkt_plot(((SymbolArray*)vecSyms[0])->GetArr(), info, runinfo, pSymTab);
 	// plot([x, y, yerr, xerr, mapParams], [x2, y2, yerr2, xerr2, mapParams2], ...)
 	else if(iNumSyms>=1 && is_array_of_arrays(vecSyms[0]))
 	{
@@ -199,7 +199,7 @@ static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 
 			// ignore non-array arguments
 			if(symType == SYMBOL_ARRAY)
-				fkt_plot(((SymbolArray*)pArr)->GetArr(), info, pSymTab);
+				fkt_plot(((SymbolArray*)pArr)->GetArr(), info, runinfo, pSymTab);
 			else if(symType == SYMBOL_MAP)
 			{
 				pPlotParams = (SymbolMap*)pArr;
@@ -241,7 +241,7 @@ static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 	else
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Invalid call to plot." << std::endl;
+		ostrErr << linenr(runinfo) << "Invalid call to plot." << std::endl;
 		throw Err(ostrErr.str(), 0);
 	}
 
@@ -263,14 +263,14 @@ static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 			for(unsigned int iSym=0; iSym<vecSyms.size(); ++iSym)
 				vecNewSyms.push_back(vecSyms[iSym]);
 
-			fkt_fileplot(vecNewSyms, info, pSymTab);
+			fkt_fileplot(vecNewSyms, info, runinfo, pSymTab);
 		}
 	}
 	return 0;
 }
 
 static Symbol* fkt_plot2d(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	g_plot.Init();
 
@@ -311,7 +311,7 @@ static Symbol* fkt_plot2d(const std::vector<Symbol*>& vecSyms,
 	else
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Invalid call to plot2d." << std::endl;
+		ostrErr << linenr(runinfo) << "Invalid call to plot2d." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -320,14 +320,14 @@ static Symbol* fkt_plot2d(const std::vector<Symbol*>& vecSyms,
 
 
 static Symbol* _fkt_fileplot(const std::vector<Symbol*>& vecSyms, 
-				ParseInfo& info, SymbolTable* pSymTab,
-				Symbol* (*pPltFkt)(const::std::vector<Symbol*>&, ParseInfo&, SymbolTable*))
+				ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab,
+				Symbol* (*pPltFkt)(const::std::vector<Symbol*>&, ParseInfo&, RuntimeInfo&, SymbolTable*))
 {
 	g_plot.Init();
 	if(vecSyms.size() < 1 || vecSyms[0]->GetType()!=SYMBOL_STRING)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info)
+		ostrErr << linenr(runinfo)
 			<< "First argument to fileplot has to be the file name." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
@@ -341,22 +341,22 @@ static Symbol* _fkt_fileplot(const std::vector<Symbol*>& vecSyms,
 	for(unsigned int iSym=1; iSym<vecSyms.size(); ++iSym)
 		vecPlot.push_back(vecSyms[iSym]);
 
-	Symbol* pSymRet = pPltFkt(vecPlot, info, pSymTab);
+	Symbol* pSymRet = pPltFkt(vecPlot, info, runinfo, pSymTab);
 
 	g_plot.UnlockTerminal();
 	return pSymRet;
 }
 
 static Symbol* fkt_fileplot(const std::vector<Symbol*>& vecSyms,
-				ParseInfo& info, SymbolTable* pSymTab)
+				ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	return _fkt_fileplot(vecSyms, info, pSymTab, fkt_plot);
+	return _fkt_fileplot(vecSyms, info, runinfo, pSymTab, fkt_plot);
 } 
 
 static Symbol* fkt_fileplot2d(const std::vector<Symbol*>& vecSyms,
-				ParseInfo& info, SymbolTable* pSymTab)
+				ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	return _fkt_fileplot(vecSyms, info, pSymTab, fkt_plot2d);
+	return _fkt_fileplot(vecSyms, info, runinfo, pSymTab, fkt_plot2d);
 } 
 
 

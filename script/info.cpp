@@ -13,14 +13,10 @@ ParseInfo::ParseInfo()
 	phandles = new HandleManager();
 	pmutexGlobal = new std::mutex();
 	pmutexInterpreter = new std::mutex();
-	//pmutexCrit = new std::mutex();
 }
 
 ParseInfo::~ParseInfo()
 {
-	if(!bDestroyParseInfo)
-		return;
-
 	if(phandles) { delete phandles; phandles=0; }
 	if(pGlobalSyms) { delete pGlobalSyms; pGlobalSyms=0; }
 	if(pmutexGlobal) { delete pmutexGlobal; pmutexGlobal=0; }

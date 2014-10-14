@@ -10,60 +10,60 @@
 #include "calls.h"
 #include "helper/log.h"
 
-Symbol* NodeReturn::eval(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeReturn::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
-	if(info.IsExecDisabled()) return 0;
+	if(runinfo.IsExecDisabled()) return 0;
 	Symbol *pRet = 0;
 
 	if(m_pExpr)
 	{
-		Symbol *pEval = m_pExpr->eval(info, pSym);
+		Symbol *pEval = m_pExpr->eval(info, runinfo, pSym);
 		if(clone_if_needed(pEval, pRet))
 			safe_delete(pEval, pSym, info.pGlobalSyms);
 	}
 	pSym->InsertSymbol(T_STR"<ret>", pRet ? pRet : 0);
 
-	info.bWantReturn = 1;
+	runinfo.bWantReturn = 1;
 	return pRet;
 }
 
-Symbol* NodeBreak::eval(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeBreak::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
-	if(info.IsExecDisabled()) return 0;
+	if(runinfo.IsExecDisabled()) return 0;
 
-	if(info.pCurLoop==0)
+	if(runinfo.pCurLoop==0)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info)
+		ostrErr << linenr(runinfo)
 				<< "Cannot use break outside loop."
 				<< std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
-	info.bWantBreak = 1;
+	runinfo.bWantBreak = 1;
 	return 0;
 }
 
-Symbol* NodeContinue::eval(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeContinue::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
-	if(info.IsExecDisabled()) return 0;
+	if(runinfo.IsExecDisabled()) return 0;
 
-	if(info.pCurLoop==0)
+	if(runinfo.pCurLoop==0)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info)
+		ostrErr << linenr(runinfo)
 				<< "Cannot use continue outside loop."
 				<< std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
-	info.bWantContinue = 1;
+	runinfo.bWantContinue = 1;
 	return 0;
 }
 
-Symbol* NodeIdent::eval(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeIdent::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
-	if(info.IsExecDisabled()) return 0;
+	if(runinfo.IsExecDisabled()) return 0;
 
 	// local symbol
 	Symbol *pSymbol = 0;
@@ -77,7 +77,7 @@ Symbol* NodeIdent::eval(ParseInfo &info, SymbolTable *pSym) const
 
 	if(pSymbol && pSymbolGlob)
 	{
-		log_warn(linenr(info), "Symbol \"", m_strIdent,
+		log_warn(linenr(runinfo), "Symbol \"", m_strIdent,
 			"\" exists in local and global scope, using local one.");
 	}
 
@@ -88,7 +88,7 @@ Symbol* NodeIdent::eval(ParseInfo &info, SymbolTable *pSym) const
 	if(!pSymbol)
 	{
 		// no throw, so null symbol or symbol validity query can be used in script
-		log_err(linenr(info), "Symbol \"", m_strIdent,
+		log_err(linenr(runinfo), "Symbol \"", m_strIdent,
 			"\" not in symbol table.");
 		return 0;
 	}
@@ -98,10 +98,10 @@ Symbol* NodeIdent::eval(ParseInfo &info, SymbolTable *pSym) const
 	return pSymbol;
 }
 
-Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeCall::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
-	if(info.IsExecDisabled()) return 0;
-	info.pCurCaller = this;
+	if(runinfo.IsExecDisabled()) return 0;
+	runinfo.pCurCaller = this;
 
 	if(m_pIdent->GetType() != NODE_IDENT)
 		return 0;
@@ -139,15 +139,15 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 			if(!pChild)
 			{
 				std::ostringstream ostrErr;
-				ostrErr << linenr(info)
+				ostrErr << linenr(runinfo)
 					<< "Invalid symbol to unpack." << std::endl;
 				throw Err(ostrErr.str(),0);
 			}
-			Symbol *pSymChild = pChild->eval(info, pSym);
+			Symbol *pSymChild = pChild->eval(info, runinfo, pSym);
 			if(pSymChild->GetType() != SYMBOL_MAP)
 			{
 				std::ostringstream ostrErr;
-				ostrErr << linenr(info)
+				ostrErr << linenr(runinfo)
 					<< "Cannot unpack non-map." << std::endl;
 				throw Err(ostrErr.str(),0);
 			}
@@ -161,7 +161,7 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 				SymbolMap::t_map::iterator iter = mapSyms.find(SymbolMapKey(strParamName));
 				if(iter == mapSyms.end())
 				{
-					log_err(linenr(info), "Parameter \"", strParamName,
+					log_err(linenr(runinfo), "Parameter \"", strParamName,
 						"\" not in map. Using 0.");
 
 					vecArgSyms.push_back(new SymbolDouble(0.));
@@ -178,7 +178,7 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 		else
 		{
 			//log_debug("type: ", pNode->GetType());
-			Symbol *pSymbol = pNode->eval(info, pSym);
+			Symbol *pSymbol = pNode->eval(info, runinfo, pSym);
 			vecArgSyms.push_back(pSymbol);
 		}
 	}
@@ -189,9 +189,9 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 	{
 		//pFkt->SetArgSyms(&vecArgSyms);
 		pSym->InsertSymbol(T_STR"<args>", &arrArgs);
-		pFktRet = pFkt->eval(info, pSym);
+		pFktRet = pFkt->eval(info, runinfo, pSym);
 		pSym->RemoveSymbolNoDelete(T_STR"<args>");
-		info.bWantReturn = 0;
+		runinfo.bWantReturn = 0;
 	}
 	else				// call system function
 	{
@@ -202,7 +202,7 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 			info.PushTraceback(std::move(strTrace));
 		}
 
-		pFktRet = ext_call(strFkt, vecArgSyms, info, pSym);
+		pFktRet = ext_call(strFkt, vecArgSyms, info, runinfo, pSym);
 
 		if(info.bEnableDebug)
 		{
@@ -217,39 +217,39 @@ Symbol* NodeCall::eval(ParseInfo &info, SymbolTable *pSym) const
 	return pFktRet;
 }
 
-Symbol* NodeDouble::eval(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeDouble::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
-	if(info.IsExecDisabled()) return 0;
+	if(runinfo.IsExecDisabled()) return 0;
 	return m_pSymbol;
 }
 
-Symbol* NodeInt::eval(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeInt::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
-	if(info.IsExecDisabled()) return 0;
+	if(runinfo.IsExecDisabled()) return 0;
 	return m_pSymbol;
 }
 
-Symbol* NodeString::eval(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeString::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
-	if(info.IsExecDisabled()) return 0;
+	if(runinfo.IsExecDisabled()) return 0;
 	return m_pSymbol;
 }
 
-Symbol* NodePair::eval(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodePair::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
-	if(info.IsExecDisabled()) return 0;
+	if(runinfo.IsExecDisabled()) return 0;
 
 	std::ostringstream ostrErr;
-	ostrErr << linenr(info)
+	ostrErr << linenr(runinfo)
 		<< "Pairs should not be evaluated directly." 
 		<< std::endl;
 	throw Err(ostrErr.str(),0);
 	return 0;
 }
 
-Symbol* NodeMap::eval(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeMap::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
-	if(info.IsExecDisabled()) return 0;
+	if(runinfo.IsExecDisabled()) return 0;
 
 	NodeBinaryOp *pMap = (NodeBinaryOp*)m_pMap;
 	std::vector<Node*> vecNodes;
@@ -263,7 +263,7 @@ Symbol* NodeMap::eval(ParseInfo &info, SymbolTable *pSym) const
 		if(pNode->GetType() != NODE_PAIR)
 		{
 			std::ostringstream ostrErr;
-			ostrErr << linenr(info)
+			ostrErr << linenr(runinfo)
 				<< "Maps have to consist of key-value pairs." 
 				<< std::endl;
 			throw Err(ostrErr.str(),0);
@@ -274,9 +274,9 @@ Symbol* NodeMap::eval(ParseInfo &info, SymbolTable *pSym) const
 		Symbol* pSymSecond = 0;
 
 		if(((NodePair*)pNode)->GetFirst())
-			pSymFirst = ((NodePair*)pNode)->GetFirst()->eval(info, pSym);
+			pSymFirst = ((NodePair*)pNode)->GetFirst()->eval(info, runinfo, pSym);
 		if(((NodePair*)pNode)->GetSecond())
-			pSymSecond = ((NodePair*)pNode)->GetSecond()->eval(info, pSym);
+			pSymSecond = ((NodePair*)pNode)->GetSecond()->eval(info, runinfo, pSym);
 
 		bool bSecondCloned = 0;
 		if(pSymFirst && pSymSecond)
@@ -298,9 +298,9 @@ Symbol* NodeMap::eval(ParseInfo &info, SymbolTable *pSym) const
 	return pSymMap;
 }
 
-Symbol* NodeArray::eval(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeArray::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
-	if(info.IsExecDisabled()) return 0;
+	if(runinfo.IsExecDisabled()) return 0;
 
 	NodeBinaryOp *pArr = (NodeBinaryOp*)m_pArr;
 	std::vector<Node*> vecNodes;
@@ -313,7 +313,7 @@ Symbol* NodeArray::eval(ParseInfo &info, SymbolTable *pSym) const
 	{
 		if(!pNode) continue;
 
-		Symbol *pSymbol = pNode->eval(info, pSym);
+		Symbol *pSymbol = pNode->eval(info, runinfo, pSym);
 		Symbol *pClone;
 		if(clone_if_needed(pSymbol, pClone))
 			safe_delete(pSymbol, pSym, info.pGlobalSyms);
@@ -324,16 +324,16 @@ Symbol* NodeArray::eval(ParseInfo &info, SymbolTable *pSym) const
 	return pSymArr;
 }
 
-Symbol* NodeRange::eval(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeRange::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
-	if(info.IsExecDisabled()) return 0;
+	if(runinfo.IsExecDisabled()) return 0;
 
 	std::ostringstream ostrErr;
-	ostrErr << linenr(info) << "Range should not be evaluated directly." << std::endl;
+	ostrErr << linenr(runinfo) << "Range should not be evaluated directly." << std::endl;
 	throw Err(ostrErr.str(), 0);
 }
 
-void NodeRange::GetRangeIndices(ParseInfo &info, SymbolTable *pSym,
+void NodeRange::GetRangeIndices(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym,
 					t_int iMaxLen, t_int& iBeginIdx, t_int& iEndIdx)
 {
 	/*if(!pArr)
@@ -354,12 +354,12 @@ void NodeRange::GetRangeIndices(ParseInfo &info, SymbolTable *pSym,
 		if(m_pBegin==0 || m_pEnd==0)
 		{
 			std::ostringstream ostrErr;
-			ostrErr << linenr(info) << "Invalid range." << std::endl;
+			ostrErr << linenr(runinfo) << "Invalid range." << std::endl;
 			throw Err(ostrErr.str(),0);
 		}
 
-		Symbol *pSymBeg = m_pBegin->eval(info, pSym);
-		Symbol *pSymEnd = m_pEnd->eval(info, pSym);
+		Symbol *pSymBeg = m_pBegin->eval(info, runinfo, pSym);
+		Symbol *pSymEnd = m_pEnd->eval(info, runinfo, pSym);
 
 		iBeginIdx = pSymBeg->GetValInt();
 		iEndIdx = pSymEnd->GetValInt();
@@ -371,13 +371,13 @@ void NodeRange::GetRangeIndices(ParseInfo &info, SymbolTable *pSym,
 
 		if(iBeginIdx<0 || iBeginIdx>=iMaxLen)
 		{
-			log_err(linenr(info), "Lower array index out of bounds: ",
+			log_err(linenr(runinfo), "Lower array index out of bounds: ",
 				iBeginIdx, ". Adjusting to lower limit.");
 			iBeginIdx = 0;
 		}
 		if(iEndIdx<-1 || iEndIdx>iMaxLen)
 		{
-			log_err(linenr(info), "Upper array index out of bounds: ",
+			log_err(linenr(runinfo), "Upper array index out of bounds: ",
 				iEndIdx, ". Adjusting to upper limit.");
 			iEndIdx = iMaxLen;
 		}
@@ -390,7 +390,7 @@ void NodeRange::GetRangeIndices(ParseInfo &info, SymbolTable *pSym,
 	else
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Invalid range operation." << std::endl;
+		ostrErr << linenr(runinfo) << "Invalid range operation." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 }
@@ -467,24 +467,24 @@ SymbolArray* transpose(SymbolArray* pArr, std::vector<unsigned int>* pvecCols=0)
 	return pArrNew;
 }
 
-Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeArrayAccess::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
-	if(info.IsExecDisabled()) return 0;
+	if(runinfo.IsExecDisabled()) return 0;
 
 	if(!m_pIdent /*|| m_pIdent->GetType() != NODE_IDENT*/)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Tried to access non-array." << std::endl;
+		ostrErr << linenr(runinfo) << "Tried to access non-array." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
 	t_string strIdent;
-	Symbol* pSymbol = m_pIdent->eval(info, pSym);
+	Symbol* pSymbol = m_pIdent->eval(info, runinfo, pSym);
 
 	if(!pSymbol)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) 
+		ostrErr << linenr(runinfo) 
 			<< "Symbol for array not found." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
@@ -519,7 +519,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 			{
 				NodeRange *pRange = (NodeRange*)pIndices;
 				t_int iBeginIdx = 0, iEndIdx = 0;
-				pRange->GetRangeIndices(info, pSym, pArr->GetArr().size(), iBeginIdx, iEndIdx);
+				pRange->GetRangeIndices(info, runinfo, pSym, pArr->GetArr().size(), iBeginIdx, iEndIdx);
 
 				t_int iStep = 1;
 				t_int iSize = iEndIdx - iBeginIdx;
@@ -561,11 +561,11 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 			}
 			else								// integer index
 			{
-				Symbol *pSymExpr = pIndices->eval(info, pSym);
+				Symbol *pSymExpr = pIndices->eval(info, runinfo, pSym);
 				if(pSymExpr==0 || pSymExpr->GetType()!=SYMBOL_INT)
 				{
 					std::ostringstream ostrErr;
-					ostrErr << linenr(info)
+					ostrErr << linenr(runinfo)
 							<< "Array index has to be of integer type."
 							<< std::endl;
 					throw Err(ostrErr.str(),0);
@@ -581,7 +581,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 				if(iIdx < 0)
 				{
 					std::ostringstream ostrErr;
-					ostrErr << linenr(info)
+					ostrErr << linenr(runinfo)
 						<< "Invalid array index."
 						<< std::endl;
 					throw Err(ostrErr.str(),0);
@@ -615,20 +615,20 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 		if(m_vecIndices.size()==0)
 		{
 			std::ostringstream ostrErr;
-			ostrErr << linenr(info) << "No key given for map." << std::endl;
+			ostrErr << linenr(runinfo) << "No key given for map." << std::endl;
 			throw Err(ostrErr.str(),0);
 		}
 		else if(m_vecIndices.size()>1)
 		{
-			log_warn(linenr(info), "Multiple keys given for map, using first one.");
+			log_warn(linenr(runinfo), "Multiple keys given for map, using first one.");
 		}
 
 		const Node *pNodeKey = m_vecIndices[0];
-		Symbol *pSymExpr = pNodeKey->eval(info, pSym);
+		Symbol *pSymExpr = pNodeKey->eval(info, runinfo, pSym);
 		if(pSymExpr==0)
 		{
 			std::ostringstream ostrErr;
-			ostrErr << linenr(info) << "Map key is invalid."
+			ostrErr << linenr(runinfo) << "Map key is invalid."
 						<< std::endl;
 			throw Err(ostrErr.str(),0);
 		}
@@ -660,7 +660,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 		if(m_vecIndices.size()!=1)
 		{
 			std::ostringstream ostrErr;
-			ostrErr << linenr(info)
+			ostrErr << linenr(runinfo)
 					<< "Need exactly one string index."
 					<< std::endl;
 			throw(Err(ostrErr.str()),0);
@@ -672,7 +672,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 		{
 			NodeRange *pRange = (NodeRange*)pIndices;
 			t_int iBeginIdx = 0, iEndIdx = 0;
-			pRange->GetRangeIndices(info, pSym, iStrLen, iBeginIdx, iEndIdx);
+			pRange->GetRangeIndices(info, runinfo, pSym, iStrLen, iBeginIdx, iEndIdx);
 
 			t_int iStep = 1;
 			t_int iSize = iEndIdx - iBeginIdx;
@@ -694,11 +694,11 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 		}
 		else								// integer index
 		{
-			Symbol *pSymExpr = pIndices->eval(info, pSym);
+			Symbol *pSymExpr = pIndices->eval(info, runinfo, pSym);
 			if(pSymExpr==0 || pSymExpr->GetType()!=SYMBOL_INT)
 			{
 				std::ostringstream ostrErr;
-				ostrErr << linenr(info)
+				ostrErr << linenr(runinfo)
 						<< "String index has to be of integer type."
 						<< std::endl;
 				throw Err(ostrErr.str(),0);
@@ -714,7 +714,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 			if(iIdx < 0 || iIdx >= iStrLen)
 			{
 				std::ostringstream ostrErr;
-				ostrErr << linenr(info) << "String index out of bounds."
+				ostrErr << linenr(runinfo) << "String index out of bounds."
 					<< std::endl;
 
 				throw Err(ostrErr.str(),0);
@@ -729,7 +729,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 	else
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Symbol \"" << strIdent
+		ostrErr << linenr(runinfo) << "Symbol \"" << strIdent
 				<< "\" is neither an array nor a map." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
@@ -737,7 +737,7 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, SymbolTable *pSym) const
 	return pSymbol;
 }
 
-static void uminus_inplace(Symbol* pSym, ParseInfo& info)
+static void uminus_inplace(Symbol* pSym, ParseInfo& info, RuntimeInfo& runinfo)
 {
 	if(!pSym) return;
 
@@ -750,39 +750,39 @@ static void uminus_inplace(Symbol* pSym, ParseInfo& info)
 	else if(pSym->GetType() == SYMBOL_ARRAY)
 	{
 		for(Symbol* pElem : ((SymbolArray*)pSym)->GetArr())
-			uminus_inplace(pElem, info);
+			uminus_inplace(pElem, info, runinfo);
 	}
 	/*else if(pSym->GetType() == SYMBOL_MAP)
 	{
 		for(SymbolMap::t_map::value_type& pair : ((SymbolMap*)pSym)->GetMap())
-			uminus_inplace(pair.second);
+			uminus_inplace(pair.second, info, runinfo);
 	}*/
 	else
 	{
-		log_err(linenr(info), "Unary minus not defined for ", pSym->GetTypeName(), ".");
+		log_err(linenr(runinfo), "Unary minus not defined for ", pSym->GetTypeName(), ".");
 	}
 }
 
-Symbol* NodeUnaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeUnaryOp::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
-	if(info.IsExecDisabled()) return 0;
+	if(runinfo.IsExecDisabled()) return 0;
 
 	switch(GetType())
 	{
 		case NODE_UMINUS:
 		{
-			Symbol *pSymbolEval = m_pChild->eval(info, pSym);
+			Symbol *pSymbolEval = m_pChild->eval(info, runinfo, pSym);
 			Symbol *pClone;
 			if(clone_if_needed(pSymbolEval, pClone))
 				safe_delete(pSymbolEval, pSym, info.pGlobalSyms);
 
-			uminus_inplace(pClone, info);
+			uminus_inplace(pClone, info, runinfo);
 			return pClone;
 		}
 
 		case NODE_LOG_NOT:
 		{
-			Symbol *pSymbolEval = m_pChild->eval(info, pSym);
+			Symbol *pSymbolEval = m_pChild->eval(info, runinfo, pSym);
 			SymbolInt *pSymbolInt = new SymbolInt();
 
 			if(pSymbolEval->GetType() == SYMBOL_DOUBLE)
@@ -798,7 +798,7 @@ Symbol* NodeUnaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 		{
 			if(m_pChild)
 			{
-				Symbol *pSymbol = m_pChild->eval(info, pSym);
+				Symbol *pSymbol = m_pChild->eval(info, runinfo, pSym);
 				safe_delete(pSymbol, pSym, info.pGlobalSyms);
 			}
 			return 0;
@@ -806,20 +806,20 @@ Symbol* NodeUnaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 
 		case NODE_UNPACK:
 		{
-			log_warn(linenr(info), "Unpack operation only allowed in function call. Ignoring.");
+			log_warn(linenr(runinfo), "Unpack operation only allowed in function call. Ignoring.");
 
 			if(m_pChild)
-				return m_pChild->eval(info, pSym);
+				return m_pChild->eval(info, runinfo, pSym);
 		}
 		default:
-			log_warn(linenr(info), "Unknown node type: ", GetType());
+			log_warn(linenr(runinfo), "Unknown node type: ", GetType());
 			break;
 	}
 
 	return 0;
 }
 
-Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
+Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym,
  				Node *pLeft, Node *pRight, Symbol *pSymRightAlt,
 				const bool *pbGlob) const
 {
@@ -829,7 +829,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 
 	if(pLeft==0 || pRight==0)
 	{
-		log_err(linenr(info), "NULL assignment.");
+		log_err(linenr(runinfo), "NULL assignment.");
 		return 0;
 	}
 
@@ -839,11 +839,11 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 	if(pSymRightAlt)	// use RHS symbol if given instead of RHS node
 		pSymbolOrg = pSymRightAlt;
 	else
-		pSymbolOrg = pRight->eval(info, pSym);
+		pSymbolOrg = pRight->eval(info, runinfo, pSym);
 
 	if(!pSymbolOrg)
 	{
-		log_err(linenr(info), "Invalid rhs expression in assignment.");
+		log_err(linenr(runinfo), "Invalid rhs expression in assignment.");
 		return 0;
 	}
 
@@ -867,13 +867,13 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 
 		if(pSymLoc && pSymGlob)
 		{
-			log_warn(linenr(info), "Symbol \"", strIdent,
+			log_warn(linenr(runinfo), "Symbol \"", strIdent,
 				"\" exists in local and global scope, using local one.");
 		}
 
 		if(pSymGlob && !pSymLoc && !*pbGlob && info.pGlobalSyms)
 		{
-			log_warn(linenr(info), "Overwriting global symbol \"", strIdent, "\".");
+			log_warn(linenr(runinfo), "Overwriting global symbol \"", strIdent, "\".");
 			info.pGlobalSyms->InsertSymbol(strIdent, pSymbol);
 		}
 		else
@@ -890,7 +890,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 	{	// TODO: check that LHS does not want eval!
 		if(pSymbol->GetType() != SYMBOL_ARRAY)
 		{
-			log_err(linenr(info), "Assignment needs an array on the right-hand side.");
+			log_err(linenr(runinfo), "Assignment needs an array on the right-hand side.");
 			return pSymbol;
 		}
 		SymbolArray *pArrRight = (SymbolArray*)pSymbol;
@@ -898,7 +898,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 		std::vector<Node*> vecLeftArgs = ((NodeBinaryOp*)((NodeArray*)pLeft)->GetArr())->flatten(NODE_ARGS);
 		if(vecLeftArgs.size() != pArrRight->GetArr().size())
 		{
-                        log_warn(linenr(info),
+                        log_warn(linenr(runinfo),
 				"Size mismatch between assigned and returned array: ",
 				vecLeftArgs.size(), " != ", pArrRight->GetArr().size(), ".");
 		}
@@ -909,7 +909,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 			Symbol *pSymRight = pArrRight->GetArr()[iArr];
 
 			//std::cout << ((NodeIdent*)pNode)->GetIdent() << std::endl;
-			eval_assign(info, pSym, pNodeLeft, 0, pSymRight, pbGlob);
+			eval_assign(info, runinfo, pSym, pNodeLeft, 0, pSymRight, pbGlob);
 		}
 
 		return pSymbol;
@@ -917,11 +917,11 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 	else								// array or map
 	{
 		//std::cout << "in assign -> else" << std::endl;
-		Symbol *pSymLeft = pLeft->eval(info, pSym);
+		Symbol *pSymLeft = pLeft->eval(info, runinfo, pSym);
 		if(!pSymLeft)
 		{
 			std::ostringstream ostrErr;
-			ostrErr << linenr(info)
+			ostrErr << linenr(runinfo)
 				<< "No array element found." << std::endl;
 			throw Err(ostrErr.str(),0);
 		}
@@ -960,7 +960,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 			if((void*)pSymOld != (void*)pSymLeft)
 			{
 				std::ostringstream ostrErr;
-				ostrErr << linenr(info)
+				ostrErr << linenr(runinfo)
 					<< "Array member mismatch." << std::endl;
 				throw Err(ostrErr.str(),0);
 			}
@@ -993,7 +993,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 			if((void*)pSymOld != (void*)pSymLeft)
 			{
 				std::ostringstream ostrErr;
-				ostrErr << linenr(info) << "Map member mismatch." << std::endl;
+				ostrErr << linenr(runinfo) << "Map member mismatch." << std::endl;
 				throw Err(ostrErr.str(),0);
 			}
 
@@ -1007,7 +1007,7 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 		else
 		{
 			std::ostringstream ostrErr;
-			ostrErr << linenr(info)
+			ostrErr << linenr(runinfo)
 				<< "Trying to access array/map member with no associated array/map."
 				<< std::endl;
 			throw Err(ostrErr.str(),0);
@@ -1018,11 +1018,11 @@ Symbol* NodeBinaryOp::eval_assign(ParseInfo &info, SymbolTable *pSym,
 	return pSymbol;
 }
 
-Symbol* NodeBinaryOp::eval_funcinit(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeBinaryOp::eval_funcinit(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
 	std::vector<NodeFunction*>& vecFuncs = info.vecFuncs;
 
-	//G_COUT << "Executing NODE_FUNCS for " << info.strInitScrFile << std::endl;
+	//G_COUT << "Executing NODE_FUNCS for " << runinfo.strInitScrFile << std::endl;
 	NodeFunction *pToRun = 0;
 
 	//log_debug("# funcs: ", m_vecNodesFlat.size());
@@ -1032,7 +1032,7 @@ Symbol* NodeBinaryOp::eval_funcinit(ParseInfo &info, SymbolTable *pSym) const
 			continue;
 
 		NodeFunction *pNodeFunc = (NodeFunction*)_pNodeFunc;
-		pNodeFunc->SetScrFile(info.strInitScrFile);
+		pNodeFunc->SetScrFile(runinfo.strInitScrFile);
 
 		const t_string& strFktName = pNodeFunc->GetName();
 
@@ -1043,51 +1043,51 @@ Symbol* NodeBinaryOp::eval_funcinit(ParseInfo &info, SymbolTable *pSym) const
 		else if(info.GetFunction(strFktName))
 		{
 			if(strFktName != "main")
-				log_warn(linenr(info),
+				log_warn(linenr(runinfo),
 					"Function \"", strFktName,
-					"\" redefined in \"", info.strInitScrFile, "\".",
+					"\" redefined in \"", runinfo.strInitScrFile, "\".",
 					" Ignoring.");
 		}
 		else
 		{
 			if(has_ext_call(strFktName))
 			{
-				log_warn(linenr(info),
+				log_warn(linenr(runinfo),
 					"Function \"", strFktName,
-					"\" in \"", info.strInitScrFile,
+					"\" in \"", runinfo.strInitScrFile,
 					"\" overwrites a system function.");
 			}
 			vecFuncs.push_back(pNodeFunc);
 
 			if(strFktName != T_STR"__cmd__")
 				log_debug("Imported function \"", strFktName, 
-					"\" from module \"", info.strInitScrFile, "\".");
+					"\" from module \"", runinfo.strInitScrFile, "\".");
 		}
 	}
 
 	// execute general entry point function
 	if(pToRun)
 	{
-		t_string strExecBck = info.strExecFkt;
+		t_string strExecBck = runinfo.strExecFkt;
 
-		Symbol *pSymInitRet = pToRun->eval(info, /*pSym*/0);
+		Symbol *pSymInitRet = pToRun->eval(info, runinfo, /*pSym*/0);
 		safe_delete(pSymInitRet, pSym, info.pGlobalSyms);
 
-		info.strExecFkt = strExecBck;
+		runinfo.strExecFkt = strExecBck;
 	}
 
 	// execute named entry point function
-	if(info.strExecFkt != T_STR"")
+	if(runinfo.strExecFkt != T_STR"")
 	{
 		for(NodeFunction* pFkt : vecFuncs)
 		{
-			if(pFkt->GetName() == info.strExecFkt)
+			if(pFkt->GetName() == runinfo.strExecFkt)
 			{
 				if(pSym && pFkt->GetArgVec().size() == 0)
 					pSym->RemoveSymbolNoDelete(T_STR"<args>");
 
-				//log_info("Executing ", info.strExecFkt);
-				Symbol *pSymRet = pFkt->eval(info, pSym);
+				//log_info("Executing ", runinfo.strExecFkt);
+				Symbol *pSymRet = pFkt->eval(info, runinfo, pSym);
 				if(pSym)
 					pSym->RemoveSymbolNoDelete(T_STR"<args>");
 
@@ -1095,46 +1095,46 @@ Symbol* NodeBinaryOp::eval_funcinit(ParseInfo &info, SymbolTable *pSym) const
 			}
 		}
 
-		log_err(linenr(info), "Function \"", info.strExecFkt, "\" not defined.");
+		log_err(linenr(runinfo), "Function \"", runinfo.strExecFkt, "\" not defined.");
 	}
 	return 0;
 }
 
-Symbol* NodeBinaryOp::eval_recursive(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeBinaryOp::eval_recursive(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
 	// prefer eval_sequential
-	log_warn(linenr(info), "Non-optimal statement list.");
+	log_warn(linenr(runinfo), "Non-optimal statement list.");
 
 	if(m_pLeft)
 	{
-		if(info.IsExecDisabled()) return 0;
+		if(runinfo.IsExecDisabled()) return 0;
 
 		//G_COUT << "left: " << m_pLeft->GetType() << std::endl;
-		Symbol *pSymbol = m_pLeft->eval(info, pSym);
+		Symbol *pSymbol = m_pLeft->eval(info, runinfo, pSym);
 		safe_delete(pSymbol, pSym, info.pGlobalSyms);
 	}
 	if(m_pRight)
 	{
-		if(info.IsExecDisabled()) return 0;
+		if(runinfo.IsExecDisabled()) return 0;
 
 		//G_COUT << "right: " << m_pRight->GetType() << std::endl;
-		Symbol *pSymbol = m_pRight->eval(info, pSym);
+		Symbol *pSymbol = m_pRight->eval(info, runinfo, pSym);
 		safe_delete(pSymbol, pSym, info.pGlobalSyms);
 	}
 	return 0;
 }
 
-Symbol* NodeBinaryOp::eval_sequential(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeBinaryOp::eval_sequential(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
 	Symbol *pSymRet = 0;
 
 	for(std::size_t iNode=0; iNode<m_vecNodesFlat.size(); ++iNode)
 	{
-		if(info.IsExecDisabled()) break;
+		if(runinfo.IsExecDisabled()) break;
 
 		Node *pNode = m_vecNodesFlat[iNode];
-		Symbol *pSymbol = pNode->eval(info, pSym);
-		if(info.bImplicitRet && iNode==m_vecNodesFlat.size()-1)
+		Symbol *pSymbol = pNode->eval(info, runinfo, pSym);
+		if(runinfo.bImplicitRet && iNode==m_vecNodesFlat.size()-1)
 		{
 			pSymRet = pSymbol /*? pSymbol->clone() : 0*/;
 			break;
@@ -1146,29 +1146,29 @@ Symbol* NodeBinaryOp::eval_sequential(ParseInfo &info, SymbolTable *pSym) const
 	return pSymRet;
 }
 
-Symbol* NodeBinaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeBinaryOp::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
-	if(info.IsExecDisabled()) return 0;
+	if(runinfo.IsExecDisabled()) return 0;
 	const bool bIsFunctionRoot = (GetType()==NODE_FUNC || GetType()==NODE_FUNCS);
 
 	if(!bIsFunctionRoot && m_vecNodesFlat.size())
-		return eval_sequential(info, pSym);
+		return eval_sequential(info, runinfo, pSym);
 
 	switch(GetType())
 	{
 		case NODE_STMTS:
 		//case NODE_ARGS:
-			return eval_recursive(info, pSym);
+			return eval_recursive(info, runinfo, pSym);
 
-		case NODE_ASSIGN: return eval_assign(info, pSym);
+		case NODE_ASSIGN: return eval_assign(info, runinfo, pSym);
 
 		// should only be called once per module
-		case NODE_FUNCS: return eval_funcinit(info, pSym);
+		case NODE_FUNCS: return eval_funcinit(info, runinfo, pSym);
 
 		default: break;
 	};
 
-	Symbol *pSymbolLeft = m_pLeft->eval(info, pSym);
+	Symbol *pSymbolLeft = m_pLeft->eval(info, runinfo, pSym);
 	Symbol *pSymbolRight = 0;
 	Symbol *pSymbol = 0;
 
@@ -1180,7 +1180,7 @@ Symbol* NodeBinaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 		pSymbol = new SymbolInt(1);
 	else
 	{
-		pSymbolRight = m_pRight->eval(info, pSym);
+		pSymbolRight = m_pRight->eval(info, runinfo, pSym);
 		pSymbol = Op(pSymbolLeft, pSymbolRight, GetType());
 	}
 
@@ -1191,16 +1191,16 @@ Symbol* NodeBinaryOp::eval(ParseInfo &info, SymbolTable *pSym) const
 }
 
 
-Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
+Symbol* NodeFunction::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable* pTableSup) const
 {
-	if(info.IsExecDisabled()) return 0;
-	info.pCurFunction = this;
+	if(runinfo.IsExecDisabled()) return 0;
+	runinfo.pCurFunction = this;
 
 	const t_string& strName = GetName();
 	//G_COUT << "in fkt " << strName << std::endl;
 
 	bool bOverrideSymTab = 0;
-	if(info.pLocalSymsOverride && strName == info.strExecFkt)
+	if(runinfo.pLocalSymsOverride && strName == runinfo.strExecFkt)
 		bOverrideSymTab = 1;
 
 	std::unique_ptr<SymbolTable> ptrLocalSym(bOverrideSymTab ? 0 : new SymbolTable);
@@ -1208,7 +1208,7 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 
 	// externally supplied symbol table
 	if(bOverrideSymTab)
-		pLocalSym = info.pLocalSymsOverride;
+		pLocalSym = runinfo.pLocalSymsOverride;
 
 	SymbolArray* pArgs = 0;
 	if(pTableSup)
@@ -1221,7 +1221,7 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 
 		if(m_vecArgs.size() != pVecArgSyms->size())
 		{
-			log_warn(linenr(info), "Function \"",
+			log_warn(linenr(runinfo), "Function \"",
 					strName, "\"", " takes ",
 					m_vecArgs.size(), " arguments, but ",
 					pVecArgSyms->size(), " given.");
@@ -1239,10 +1239,10 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 				pSymbol = (*pVecArgSyms)[iArg];
 			if(pSymbol==0 && pDefArg)		// default argument
 			{
-				pSymbol = pDefArg->eval(info, pTableSup);
+				pSymbol = pDefArg->eval(info, runinfo, pTableSup);
 
 				if(iArg < pVecArgSyms->size() && pSymbol)
-					log_warn(linenr(info),
+					log_warn(linenr(runinfo),
 						"Given argument \"", pIdent->GetIdent(), 
 						"\" for function \"", 
 						strName, "\" not valid. ", 
@@ -1250,7 +1250,7 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 			}
 			if(pSymbol==0)
 			{
-				log_err(linenr(info), "Argument \"",
+				log_err(linenr(runinfo), "Argument \"",
 					pIdent->GetIdent(), "\" for function \"",
 					strName, "\" not given. Ignoring.");
 				continue;
@@ -1276,7 +1276,7 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 	Symbol *pRet = 0;
 	if(m_pStmts)
 	{
-		pRet = m_pStmts->eval(info, pLocalSym);
+		pRet = m_pStmts->eval(info, runinfo, pLocalSym);
 		if(!pRet)
 		{
 			pRet = pLocalSym->GetSymbol(T_STR"<ret>");
@@ -1296,19 +1296,19 @@ Symbol* NodeFunction::eval(ParseInfo &info, SymbolTable* pTableSup) const
 }
 
 
-Symbol* NodeIf::eval(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeIf::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
-	if(info.IsExecDisabled()) return 0;
+	if(runinfo.IsExecDisabled()) return 0;
 
 	Symbol *pSymExpr = 0;
 	Symbol *pSymRet = 0;
 	if(m_pExpr)
-		pSymExpr = m_pExpr->eval(info, pSym);
+		pSymExpr = m_pExpr->eval(info, runinfo, pSym);
 
 	if(pSymExpr && pSymExpr->IsNotZero())
-		pSymRet = (m_pIf ? m_pIf->eval(info, pSym) : 0);
+		pSymRet = (m_pIf ? m_pIf->eval(info, runinfo, pSym) : 0);
 	else
-		pSymRet = (m_pElse ? m_pElse->eval(info, pSym) : 0);
+		pSymRet = (m_pElse ? m_pElse->eval(info, runinfo, pSym) : 0);
 
 	safe_delete(pSymExpr, pSym, info.pGlobalSyms);
 	safe_delete(pSymRet, pSym, info.pGlobalSyms);
@@ -1317,112 +1317,112 @@ Symbol* NodeIf::eval(ParseInfo &info, SymbolTable *pSym) const
 }
 
 
-Symbol* NodeWhile::eval(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeWhile::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
-	if(info.IsExecDisabled()) return 0;
+	if(runinfo.IsExecDisabled()) return 0;
 
 	if(!m_pExpr) return 0;
 	if(!m_pStmt) return 0;
 
-	info.pCurLoop = this;
+	runinfo.pCurLoop = this;
 	while(1)
 	{
 		Symbol *pSymRet = 0;
-		Symbol *pSymExpr = m_pExpr->eval(info, pSym);
+		Symbol *pSymExpr = m_pExpr->eval(info, runinfo, pSym);
 
 		if(pSymExpr && pSymExpr->IsNotZero())
-			pSymRet = m_pStmt->eval(info, pSym);
+			pSymRet = m_pStmt->eval(info, runinfo, pSym);
 		else
 			break;
 
 		safe_delete(pSymRet, pSym, info.pGlobalSyms);
 		safe_delete(pSymExpr, pSym, info.pGlobalSyms);
 
-		if(info.bWantBreak)
+		if(runinfo.bWantBreak)
 		{
-			info.bWantBreak = 0;
+			runinfo.bWantBreak = 0;
 			break;
 		}
-		if(info.bWantContinue)
+		if(runinfo.bWantContinue)
 		{
-			info.bWantContinue = 0;
+			runinfo.bWantContinue = 0;
 			continue;
 		}
 	}
-	info.pCurLoop = 0;
+	runinfo.pCurLoop = 0;
 
 	return 0;
 }
 
-Symbol* NodeFor::eval(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeFor::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
-	if(info.IsExecDisabled()) return 0;
+	if(runinfo.IsExecDisabled()) return 0;
 
 	if(!m_pExprCond) return 0;
 	if(!m_pStmt) return 0;
 
-	info.pCurLoop = this;
+	runinfo.pCurLoop = this;
 
 	Symbol *pSymInit = 0;
 	if(m_pExprInit)
 	{
-		pSymInit = m_pExprInit->eval(info, pSym);
+		pSymInit = m_pExprInit->eval(info, runinfo, pSym);
 		safe_delete(pSymInit, pSym, info.pGlobalSyms);
 	}
 
 	while(1)
 	{
 		Symbol *pSymRet = 0;
-		Symbol *pSymExpr = m_pExprCond->eval(info, pSym);
+		Symbol *pSymExpr = m_pExprCond->eval(info, runinfo, pSym);
 
 		if(pSymExpr && pSymExpr->IsNotZero())
-			pSymRet = m_pStmt->eval(info, pSym);
+			pSymRet = m_pStmt->eval(info, runinfo, pSym);
 		else
 			break;
 
 		safe_delete(pSymRet, pSym, info.pGlobalSyms);
 		safe_delete(pSymExpr, pSym, info.pGlobalSyms);
 
-		if(info.bWantBreak)
+		if(runinfo.bWantBreak)
 		{
-			info.bWantBreak = 0;
+			runinfo.bWantBreak = 0;
 			break;
 		}
-		if(info.bWantContinue)
+		if(runinfo.bWantContinue)
 		{
-			info.bWantContinue = 0;
+			runinfo.bWantContinue = 0;
 			continue;
 		}
 
 		if(m_pExprEnd)
 		{
-			Symbol *pSymEnd = m_pExprEnd->eval(info, pSym);
+			Symbol *pSymEnd = m_pExprEnd->eval(info, runinfo, pSym);
 			safe_delete(pSymEnd, pSym, info.pGlobalSyms);
 		}
 	}
-	info.pCurLoop = 0;
+	runinfo.pCurLoop = 0;
 
 	return 0;
 }
 
-Symbol* NodeRangedFor::eval(ParseInfo &info, SymbolTable *pSym) const
+Symbol* NodeRangedFor::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
-	if(info.IsExecDisabled()) return 0;
+	if(runinfo.IsExecDisabled()) return 0;
 	if(!m_pIdent || !m_pExpr || !m_pStmt) return 0;
 
 	if(m_pIdent->GetType() != NODE_IDENT)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) 
+		ostrErr << linenr(runinfo) 
 			<< "Range-based for loop needs identifier." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
-	Symbol *_pArr = m_pExpr->eval(info, pSym);
+	Symbol *_pArr = m_pExpr->eval(info, runinfo, pSym);
 	if(!_pArr)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info)
+		ostrErr << linenr(runinfo)
 			<< "Invalid array for loop." << std::endl;
 		return 0;
 	}
@@ -1430,7 +1430,7 @@ Symbol* NodeRangedFor::eval(ParseInfo &info, SymbolTable *pSym) const
 	if(_pArr->GetType() != SYMBOL_ARRAY)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info)
+		ostrErr << linenr(runinfo)
 				<< "Range-based for loop needs array." << std::endl;
 		safe_delete(_pArr, pSym, info.pGlobalSyms);
 
@@ -1447,13 +1447,13 @@ Symbol* NodeRangedFor::eval(ParseInfo &info, SymbolTable *pSym) const
 	t_string strIter = T_STR"<cur_iter_" + strIdent + T_STR">";
 	pSym->InsertSymbol(strIter, pSymIter);
 
-	info.pCurLoop = this;
+	runinfo.pCurLoop = this;
 	for(unsigned int iArr=0; iArr<pArr->GetArr().size(); ++iArr)
 	{
 		Symbol *pSymInArr = pArr->GetArr()[iArr];
 		pSym->InsertSymbol(strIdent, pSymInArr);
 
-		Symbol *pBodyRet = m_pStmt->eval(info, pSym);
+		Symbol *pBodyRet = m_pStmt->eval(info, runinfo, pSym);
 		safe_delete(pBodyRet, pSym, info.pGlobalSyms);
 
 
@@ -1470,18 +1470,18 @@ Symbol* NodeRangedFor::eval(ParseInfo &info, SymbolTable *pSym) const
 
 		++pSymIter->GetVal();
 
-		if(info.bWantBreak)
+		if(runinfo.bWantBreak)
 		{
-			info.bWantBreak = 0;
+			runinfo.bWantBreak = 0;
 			break;
 		}
-		if(info.bWantContinue)
+		if(runinfo.bWantContinue)
 		{
-			info.bWantContinue = 0;
+			runinfo.bWantContinue = 0;
 			continue;
 		}
 	}
-	info.pCurLoop = 0;
+	runinfo.pCurLoop = 0;
 
 	pSym->RemoveSymbol(strIter);
 

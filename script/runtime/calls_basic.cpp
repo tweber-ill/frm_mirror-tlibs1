@@ -10,7 +10,7 @@
 #include "../types.h"
 #include "../calls.h"
 
-#include "../parseobj.h"
+#include "../info.h"
 #include "../script_helper.h"
 #include "../helper/string.h"
 
@@ -31,118 +31,18 @@
 #include <boost/tr1/regex.hpp>
 
 
-extern const t_string& get_type_name(SymbolType ty)
-{
-	static const t_string strInvalid = "invalid";
-
-	static const std::unordered_map<SymbolType, t_string, EnumDirectHash<SymbolType>> mapTypes =
-		{
-			{SYMBOL_DOUBLE, "real"},
-			{SYMBOL_INT, "int"},
-			{SYMBOL_STRING, "string"},
-			{SYMBOL_ARRAY, "vector"},
-			{SYMBOL_MAP, "map"},
-
-			{SYMBOL_SCALAR, "scalar"},
-			{SYMBOL_CONTAINER, "container"},
-
-			{SYMBOL_ANY, "any"},
-		};
-
-	auto iter = mapTypes.find(ty);
-	if(iter == mapTypes.end())
-		return strInvalid;
-
-	return iter->second;
-}
-extern const t_string& get_type_name(unsigned int ty)
-{
-	return get_type_name(SymbolType(ty));
-}
-
-extern bool check_args(ParseInfo& info, 
-			const std::vector<Symbol*>& vecSyms, 
-			const std::initializer_list<unsigned int>& lstTypes, 
-			const std::initializer_list<bool> &lstOptional, 
-			const char* pcFkt, const char* pcErr)
-{
-	const std::size_t iSyms = vecSyms.size();
-	const std::size_t iTypes = lstTypes.size();
-	const std::size_t iTotalOpt = lstOptional.size();
-	std::size_t iCompulsory = 0;
-	for(bool bOpt : lstOptional)
-		if(!bOpt) ++iCompulsory;
-
-	if(iSyms < iCompulsory)
-	{
-		std::ostringstream ostrErr;
-		ostrErr << linenr(info) 
-				<< "Function \"" << pcFkt << "\""
-				<< " requires " << iCompulsory
-				<< " arguments, but only "
-				<< iSyms << " were given.";
-		if(pcErr) ostrErr << " " << pcErr;
-		ostrErr << std::endl;
-		throw Err(ostrErr.str(),0);
-	}
-
-
-	std::vector<Symbol*>::const_iterator iterSym = vecSyms.begin();
-	std::initializer_list<unsigned int>::iterator iterTypes = lstTypes.begin();
-	std::initializer_list<bool>::iterator iterOptional = lstOptional.begin();
-
-	std::size_t iCurSym = 0;
-	for(; iterSym!=vecSyms.end(); ++iterSym, ++iterTypes, ++iterOptional, ++iCurSym)
-	{
-		// ignore remaining symbols
-		if(iCurSym >= iTypes || iCurSym >= iTotalOpt)
-			break;
-
-		if(!*iterSym)
-		{
-			std::ostringstream ostrErr;
-			ostrErr << linenr(info)
-					<< "Argument " << (iCurSym+1) 
-					<< " of function \"" << pcFkt << "\""
-					<< " is invalid.";
-			if(pcErr) ostrErr << " " << pcErr;
-			ostrErr << std::endl;
-
-			throw Err(ostrErr.str(),0);
-		}
-
-		if(!(*iterTypes & (*iterSym)->GetType()))
-		{
-			std::ostringstream ostrErr;
-			ostrErr << linenr(info)
-					<< "Argument " << (iCurSym+1)
-					<< " of function \"" << pcFkt << "\""
-					<< " has wrong type. "
-					<< "Expected " << get_type_name(*iterTypes)
-					<< ", received " << get_type_name((*iterSym)->GetType()) 
-					<< ".";
-			if(pcErr) ostrErr << " " << pcErr;
-			ostrErr << std::endl;
-
-			throw Err(ostrErr.str(),0);
-		}
-	}
-
-	return 1;
-}
-
 static Symbol* fkt_version(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, SymbolTable* pSymTab)
+							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	extern const t_char* g_pcVersion;
 	return new SymbolString(g_pcVersion);
 }
 
 static Symbol* fkt_traceback(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, SymbolTable* pSymTab)
+							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!info.bEnableDebug)
-		log_warn(linenr(info), "Debugging is disabled.");
+		log_warn(linenr(runinfo), "Debugging is disabled.");
 
 	ParseInfo::t_stckTraceback& mapstck = info.stckTraceback;
 	typedef typename ParseInfo::t_stckTraceback::value_type::second_type t_stck;
@@ -165,7 +65,7 @@ static Symbol* fkt_traceback(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_is_valid(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	for(const Symbol* pSym : vecSyms)
 	{
@@ -176,25 +76,25 @@ static Symbol* fkt_is_valid(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_is_rval(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ANY}, {0}, "is_rval", "Symbol needed."))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ANY}, {0}, "is_rval", "Symbol needed."))
 		return 0;
 
 	return new SymbolInt(vecSyms[0]->IsRval());
 }
 
 static Symbol* fkt_null(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	return 0;
 }
 
 // call("fkt", [arg1, arg2, ...]);
 static Symbol* fkt_call(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_STRING, SYMBOL_ARRAY}, {0,1}, "call", "Function name needed."))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING, SYMBOL_ARRAY}, {0,1}, "call", "Function name needed."))
 		return 0;
 
 	const t_string& strFkt = ((SymbolString*)vecSyms[0])->GetVal();
@@ -208,20 +108,21 @@ static Symbol* fkt_call(const std::vector<Symbol*>& vecSyms,
 	if(pFkt)	// user function
 	{
 		pSymTab->InsertSymbol(T_STR"<args>", pArr);
-		pSymRet = pFkt->eval(info, pSymTab);
-		info.bWantReturn = 0;
+		pSymRet = pFkt->eval(info, runinfo, pSymTab);
+		runinfo.bWantReturn = 0;
 		pSymTab->RemoveSymbolNoDelete(T_STR"<args>");
 	}
 	else		// system function
 	{
-		pSymRet = ext_call(strFkt, pArr ? pArr->GetArr() : std::vector<Symbol*>(), info, pSymTab);
+		pSymRet = ext_call(strFkt, pArr ? pArr->GetArr() : std::vector<Symbol*>(), 
+						   info, runinfo, pSymTab);
 	}
 
 	return pSymRet;
 }
 
 static Symbol* fkt_int(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size() == 0)
 		return new SymbolInt(0);
@@ -230,25 +131,25 @@ static Symbol* fkt_int(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_cplx_real(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab);
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab);
 
 static Symbol* fkt_double(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size() == 0)
 		return new SymbolDouble(0.);
 
 	// delegate to other "real" function
 	if(vecSyms[0]->GetType() == SYMBOL_COMPLEX)
-		return fkt_cplx_real(vecSyms, info, pSymTab);
+		return fkt_cplx_real(vecSyms, info, runinfo, pSymTab);
 
 	return vecSyms[0]->ToType(SYMBOL_DOUBLE);
 }
 
 static Symbol* fkt_double_vec(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ARRAY}, {0}, "real_vec"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY}, {0}, "real_vec"))
 		return 0;
 
 	SymbolArray* pSymRet = new SymbolArray();
@@ -259,11 +160,11 @@ static Symbol* fkt_double_vec(const std::vector<Symbol*>& vecSyms,
 		Symbol *pSymCast = 0;
 
 		if(pSym->GetType() == SYMBOL_ARRAY)
-			pSymCast = fkt_double_vec(((SymbolArray*)pSym)->GetArr(), info, pSymTab);
+			pSymCast = fkt_double_vec(((SymbolArray*)pSym)->GetArr(), info, runinfo, pSymTab);
 		else
 		{
 			std::vector<Symbol*> vecSymTmp{pSym};
-			pSymCast = fkt_double(vecSymTmp, info, pSymTab);
+			pSymCast = fkt_double(vecSymTmp, info, runinfo, pSymTab);
 		}
 
 		if(pSymCast)
@@ -275,7 +176,7 @@ static Symbol* fkt_double_vec(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_str(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	SymbolString *pSymRet = new SymbolString;
 	for(const Symbol *pSym : vecSyms)
@@ -288,7 +189,7 @@ static Symbol* fkt_str(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_output(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	t_ostream& ostr = G_COUT;
 
@@ -301,17 +202,17 @@ static Symbol* fkt_output(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_print(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	fkt_output(vecSyms, info, pSymTab);
+	fkt_output(vecSyms, info, runinfo, pSymTab);
 	G_COUT << std::endl;
 	return 0;
 }
 
 static Symbol* fkt_input(const std::vector<Symbol*>& vecSyms,
-		ParseInfo& info, SymbolTable* pSymTab)
+		ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	fkt_output(vecSyms, info, pSymTab);
+	fkt_output(vecSyms, info, runinfo, pSymTab);
 
 	SymbolString* pSymStr = new SymbolString();
 	std::getline(G_CIN, pSymStr->GetVal());
@@ -319,9 +220,9 @@ static Symbol* fkt_input(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_sleep(const std::vector<Symbol*>& vecSyms,
-		ParseInfo& info, SymbolTable* pSymTab)
+		ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_DOUBLE|SYMBOL_INT}, {0}, "sleep", "Number of ms needed."))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_DOUBLE|SYMBOL_INT}, {0}, "sleep", "Number of ms needed."))
 		return 0;
 
 	t_real dMillis = vecSyms[0]->GetValDouble();
@@ -334,7 +235,7 @@ static Symbol* fkt_sleep(const std::vector<Symbol*>& vecSyms,
 
 
 extern int yyparse(void*);
-static bool _import_file(const t_string& strFile, ParseInfo& info, SymbolTable* pSymTab)
+static bool _import_file(const t_string& strFile, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	ParseInfo::t_mods::iterator iterMod = info.pmapModules->find(strFile);
 	if(iterMod != info.pmapModules->end())
@@ -358,7 +259,7 @@ static bool _import_file(const t_string& strFile, ParseInfo& info, SymbolTable* 
 	if(!par.pLexer->IsOk())
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Lexer returned with errors" 
+		ostrErr << linenr(runinfo) << "Lexer returned with errors" 
 			<< " for file \"" << _strFile << "\"."<< std::endl;
 		throw Err(ostrErr.str(),0);
 	}
@@ -371,7 +272,7 @@ static bool _import_file(const t_string& strFile, ParseInfo& info, SymbolTable* 
 	if(iParseRet != 0)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Parser returned with error code " 
+		ostrErr << linenr(runinfo) << "Parser returned with error code " 
 			<< iParseRet 
 			<< "for file \"" << _strFile << "\"." << std::endl;
 		throw Err(ostrErr.str(),0);
@@ -383,34 +284,34 @@ static bool _import_file(const t_string& strFile, ParseInfo& info, SymbolTable* 
 
 	info.pmapModules->insert(ParseInfo::t_mods::value_type(strFile, pRoot));
 
-	t_string strExecOld = info.strExecFkt;
-	t_string strFileOld = info.strInitScrFile;
-	info.strExecFkt = T_STR"";
-	info.strInitScrFile = strFile;
-	pRoot->eval(info);
-	info.strExecFkt = strExecOld;
-	info.strInitScrFile = strFileOld;
+	t_string strExecOld = runinfo.strExecFkt;
+	t_string strFileOld = runinfo.strInitScrFile;
+	runinfo.strExecFkt = T_STR"";
+	runinfo.strInitScrFile = strFile;
+	pRoot->eval(info, runinfo);
+	runinfo.strExecFkt = strExecOld;
+	runinfo.strInitScrFile = strFileOld;
 
 	return 1;
 }
 
 static Symbol* fkt_import(const std::vector<Symbol*>& vecSyms,
-			ParseInfo& info, SymbolTable* pSymTab)
+			ParseInfo& info, RuntimeInfo& runinfo, SymbolTable* pSymTab)
 {
 	for(Symbol *pSym : vecSyms)
 		if(pSym && pSym->GetType()==SYMBOL_STRING)
 		{
 			const t_string& strFile = ((SymbolString*)pSym)->GetVal();
-			bool bOk = _import_file(strFile, info, pSymTab);
+			bool bOk = _import_file(strFile, info, runinfo, pSymTab);
 		}
 
 	return 0;
 }
 
 static Symbol* fkt_has_var(const std::vector<Symbol*>& vecSyms,
-			ParseInfo& info, SymbolTable* pSymTab)
+			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_STRING}, {0}, "has_var", "Symbol name needed."))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING}, {0}, "has_var", "Symbol name needed."))
 		return 0;
 
 	const t_string& strVar = ((SymbolString*)vecSyms[0])->GetVal();
@@ -429,13 +330,13 @@ static Symbol* fkt_has_var(const std::vector<Symbol*>& vecSyms,
 
 // register a variable in the symbol table
 static Symbol* fkt_register_var(const std::vector<Symbol*>& vecSyms,
-			ParseInfo& info, SymbolTable* pSymTab)
+			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	bool bUseGlobal = 0;
 
 	if(vecSyms.size() == 2)
 	{
-		if(!check_args(info, vecSyms, {SYMBOL_STRING, SYMBOL_ANY}, {0,0}, "register_var", "Symbol name and symbol needed."))
+		if(!check_args(runinfo, vecSyms, {SYMBOL_STRING, SYMBOL_ANY}, {0,0}, "register_var", "Symbol name and symbol needed."))
 			return 0;
 
 		const t_string& strVar = ((SymbolString*)vecSyms[0])->GetVal();
@@ -448,7 +349,7 @@ static Symbol* fkt_register_var(const std::vector<Symbol*>& vecSyms,
 	}
 	else if(vecSyms.size() == 1)
 	{
-		if(!check_args(info, vecSyms, {SYMBOL_MAP}, {0}, "register_var", "Map needed."))
+		if(!check_args(runinfo, vecSyms, {SYMBOL_MAP}, {0}, "register_var", "Map needed."))
 			return 0;
 
 		SymbolMap::t_map& varmap = ((SymbolMap*)vecSyms[0])->GetMap();
@@ -467,22 +368,22 @@ static Symbol* fkt_register_var(const std::vector<Symbol*>& vecSyms,
 			vecDummy[0] = &symKey;
 			vecDummy[1] = pSymVal;
 
-			fkt_register_var(vecDummy, info, pSymTab);
+			fkt_register_var(vecDummy, info, runinfo, pSymTab);
 		}
 	}
 	else
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Invalid call to register_var." << std::endl;
+		ostrErr << linenr(runinfo) << "Invalid call to register_var." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 	return 0;
 }
 
 static Symbol* fkt_typeof(const std::vector<Symbol*>& vecSyms,
-			ParseInfo& info, SymbolTable* pSymTab)
+			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ANY}, {0}, "typeof"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ANY}, {0}, "typeof"))
 		return 0;
 
 	Symbol *pSymbol = vecSyms[0];
@@ -491,9 +392,9 @@ static Symbol* fkt_typeof(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_setprec(const std::vector<Symbol*>& vecSyms,
-			ParseInfo& info, SymbolTable* pSymTab)
+			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_SCALAR}, {0}, "set_prec"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_SCALAR}, {0}, "set_prec"))
 		return 0;
 
 	Symbol *pSymbol = vecSyms[0];
@@ -512,7 +413,7 @@ static Symbol* fkt_setprec(const std::vector<Symbol*>& vecSyms,
 // map
 
 static Symbol* fkt_map(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size()>=1 && vecSyms[0]->GetType()==SYMBOL_MAP)
 		return vecSyms[0]->clone();
@@ -526,7 +427,7 @@ static Symbol* fkt_map(const std::vector<Symbol*>& vecSyms,
 // --------------------------------------------------------------------------------
 // complex
 static Symbol* fkt_complex(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size() == 0)
 		return new SymbolComplex(0., 0.);
@@ -541,7 +442,7 @@ static Symbol* fkt_complex(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_complex_polar(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	t_real tRho = 0.;
 	t_real tTheta = 0.;
@@ -555,9 +456,9 @@ static Symbol* fkt_complex_polar(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_cplx_real(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_COMPLEX}, {0}, "real"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_COMPLEX}, {0}, "real"))
 		return 0;
 
 	SymbolComplex *pComplex = (SymbolComplex*)vecSyms[0];
@@ -565,9 +466,9 @@ static Symbol* fkt_cplx_real(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_cplx_imag(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_COMPLEX}, {0}, "imag"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_COMPLEX}, {0}, "imag"))
 		return 0;
 
 	SymbolComplex *pComplex = (SymbolComplex*)vecSyms[0];
@@ -575,9 +476,9 @@ static Symbol* fkt_cplx_imag(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_cplx_arg(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_COMPLEX}, {0}, "carg"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_COMPLEX}, {0}, "carg"))
 		return 0;
 
 	SymbolComplex *pComplex = (SymbolComplex*)vecSyms[0];
@@ -592,7 +493,7 @@ static Symbol* fkt_cplx_arg(const std::vector<Symbol*>& vecSyms,
 // array
 
 static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size()<1)
 		return new SymbolArray();
@@ -605,7 +506,7 @@ static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
 	if(pSymSize->GetType() != SYMBOL_INT)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "\"num\" in vec(num, val=0) has to be integer." << std::endl;
+		ostrErr << linenr(runinfo) << "\"num\" in vec(num, val=0) has to be integer." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -640,9 +541,9 @@ static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_array_size(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, SymbolTable* pSymTab)
+							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_CONTAINER}, {0}, "vec_size"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_CONTAINER}, {0}, "vec_size"))
 		return 0;
 
 	Symbol *pSymArr = vecSyms[0];
@@ -657,7 +558,7 @@ static Symbol* fkt_array_size(const std::vector<Symbol*>& vecSyms,
 	else
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "vec_size needs a vector type argument." << std::endl;
+		ostrErr << linenr(runinfo) << "vec_size needs a vector type argument." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -717,9 +618,9 @@ static int pos_in_array(const SymbolArray* pSymArr, const Symbol *pSym)
 }
 
 static Symbol* fkt_find(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, SymbolTable* pSymTab)
+							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_CONTAINER, SYMBOL_ANY}, {0,0}, "find"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_CONTAINER, SYMBOL_ANY}, {0,0}, "find"))
 		return 0;
 
 	const Symbol *pContainer = vecSyms[0];
@@ -733,7 +634,7 @@ static Symbol* fkt_find(const std::vector<Symbol*>& vecSyms,
 	else if(pContainer->GetType() == SYMBOL_MAP)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Find not yet implemented for map." << std::endl;
+		ostrErr << linenr(runinfo) << "Find not yet implemented for map." << std::endl;
 		throw Err(ostrErr.str(),0);
 
 		// TODO: Implement and also adapt fkt_contains
@@ -743,7 +644,7 @@ static Symbol* fkt_find(const std::vector<Symbol*>& vecSyms,
 		if(pContainee->GetType() != SYMBOL_STRING)
 		{
 			std::ostringstream ostrErr;
-			ostrErr << linenr(info)
+			ostrErr << linenr(runinfo)
 				<< "Second argument to find has to be of string type."
 				<< std::endl;
 			throw Err(ostrErr.str(),0);
@@ -757,10 +658,10 @@ static Symbol* fkt_find(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_contains(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, SymbolTable* pSymTab)
+							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	int iIdx = -1;
-	Symbol *pFind = fkt_find(vecSyms, info, pSymTab);
+	Symbol *pFind = fkt_find(vecSyms, info, runinfo, pSymTab);
 	if(pFind)
 	{
 		iIdx = pFind->GetValInt();
@@ -771,9 +672,9 @@ static Symbol* fkt_contains(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, SymbolTable* pSymTab)
+							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ANY}, {0}, "cur_iter"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ANY}, {0}, "cur_iter"))
 		return 0;
 
 	const t_string& strIdent = vecSyms[0]->GetIdent();
@@ -781,7 +682,7 @@ static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
 	if(strIdent == T_STR"")
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "No identifier given for cur_iter." << std::endl;
+		ostrErr << linenr(runinfo) << "No identifier given for cur_iter." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -793,7 +694,7 @@ static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
 	if(!pSymIter || pSymIter->GetType()!=SYMBOL_INT)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "cur_iter could not determine iteration index \""
+		ostrErr << linenr(runinfo) << "cur_iter could not determine iteration index \""
 					<< strIter << "\"." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
@@ -825,12 +726,12 @@ static void _rearrangearr(std::vector<Symbol*>& vecSyms, const std::vector<unsig
 }
 
 static Symbol* fkt_sort(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size()<1 || vecSyms[0]->GetType()!=SYMBOL_ARRAY)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) 
+		ostrErr << linenr(runinfo) 
 			<< "Arguments to sort have to be arrays." 
 			<< std::endl;
 		throw Err(ostrErr.str(),0);
@@ -874,13 +775,13 @@ static Symbol* fkt_sort(const std::vector<Symbol*>& vecSyms,
 		const Symbol* pSym = vecSyms[iElem];
 		if(pSym->GetType() != SYMBOL_ARRAY)
 		{
-			log_err(linenr(info), "Arguments to sort have to be arrays. Ignoring.");
+			log_err(linenr(runinfo), "Arguments to sort have to be arrays. Ignoring.");
 			continue;
 		}
 
 		if(((SymbolArray*)pSym)->GetArr().size() != vecSortedIndices.size())
 		{
-			log_err(linenr(info), "Array size mismatch in sort. Ignoring.");
+			log_err(linenr(runinfo), "Array size mismatch in sort. Ignoring.");
 			continue;
 		}
 
@@ -896,7 +797,7 @@ static Symbol* fkt_sort(const std::vector<Symbol*>& vecSyms,
 
 
 static Symbol* fkt_zip(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	SymbolArray* pArrRet = new SymbolArray();
 	std::vector<Symbol*>* pVec = &pArrRet->GetArr();
@@ -907,7 +808,7 @@ static Symbol* fkt_zip(const std::vector<Symbol*>& vecSyms,
 	{
 		if(pSym->GetType() != SYMBOL_ARRAY)
 		{
-			log_err(linenr(info), "Symbol \"", pSym->GetName(),
+			log_err(linenr(runinfo), "Symbol \"", pSym->GetName(),
 				"\" is of type ", pSym->GetTypeName(),
 				", but zip needs vectors. Ignoring.");
 			continue;
@@ -949,9 +850,9 @@ static Symbol* fkt_zip(const std::vector<Symbol*>& vecSyms,
 // --------------------------------------------------------------------------------
 // string operations
 static Symbol* fkt_trim(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ANY}, {0}, "trim"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ANY}, {0}, "trim"))
 		return 0;
 
 	if(vecSyms[0]->GetType() == SYMBOL_ARRAY)
@@ -962,7 +863,7 @@ static Symbol* fkt_trim(const std::vector<Symbol*>& vecSyms,
 		for(Symbol* pSymArr : ((SymbolArray*)vecSyms[0])->GetArr())
 		{
 			std::vector<Symbol*> vecDummy = { pSymArr };
-			pArr->GetArr().push_back(fkt_trim(vecDummy, info, pSymTab));
+			pArr->GetArr().push_back(fkt_trim(vecDummy, info, runinfo, pSymTab));
 		}
 
 		pArr->UpdateIndices();
@@ -983,9 +884,9 @@ static Symbol* fkt_trim(const std::vector<Symbol*>& vecSyms,
 
 // split(string, delim)
 static Symbol* fkt_split(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_STRING, SYMBOL_STRING}, {0, 1}, "split"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING, SYMBOL_STRING}, {0, 1}, "split"))
 		return 0;
 
 	static const std::string strDefaultDelim = " ";
@@ -1016,7 +917,7 @@ static Symbol* fkt_split(const std::vector<Symbol*>& vecSyms,
 
 // tokens(string, delim)
 static Symbol* fkt_tokens(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	t_string *pstrInput = 0;
 	t_string strDelim = T_STR" \t\n";
@@ -1032,7 +933,7 @@ static Symbol* fkt_tokens(const std::vector<Symbol*>& vecSyms,
 	if(!pstrInput)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Called tokens with invalid arguments." << std::endl;
+		ostrErr << linenr(runinfo) << "Called tokens with invalid arguments." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -1049,9 +950,9 @@ static Symbol* fkt_tokens(const std::vector<Symbol*>& vecSyms,
 
 
 static Symbol* fkt_replace(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_STRING, SYMBOL_STRING, SYMBOL_STRING}, {0,0,0}, "replace"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING, SYMBOL_STRING, SYMBOL_STRING}, {0,0,0}, "replace"))
 		return 0;
 
 	t_string str = ((SymbolString*)vecSyms[0])->GetVal();
@@ -1066,9 +967,9 @@ static Symbol* fkt_replace(const std::vector<Symbol*>& vecSyms,
 
 // replace_regex(str, regex, repl);
 static Symbol* fkt_replace_regex(const std::vector<Symbol*>& vecSyms,
-				ParseInfo& info, SymbolTable* pSymTab)
+				ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_STRING, SYMBOL_STRING, SYMBOL_STRING}, {0,0,0}, "regex_replace"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING, SYMBOL_STRING, SYMBOL_STRING}, {0,0,0}, "regex_replace"))
 		return 0;
 
 	const t_string& str = ((SymbolString*)vecSyms[0])->GetVal();
@@ -1084,7 +985,7 @@ static Symbol* fkt_replace_regex(const std::vector<Symbol*>& vecSyms,
 	}
 	catch(const std::exception& ex)
 	{
-		log_err(linenr(info), "Regex evaluation failed with error: ", ex.what()); 
+		log_err(linenr(runinfo), "Regex evaluation failed with error: ", ex.what()); 
 		return 0;
 	}
 
@@ -1092,9 +993,9 @@ static Symbol* fkt_replace_regex(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_find_regex(const std::vector<Symbol*>& vecSyms,
-				ParseInfo& info, SymbolTable* pSymTab)
+				ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_STRING, SYMBOL_STRING}, {0,0}, "regex_find"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING, SYMBOL_STRING}, {0,0}, "regex_find"))
 		return 0;
 
 	const t_string& strOrg = ((SymbolString*)vecSyms[0])->GetVal();
@@ -1136,7 +1037,7 @@ static Symbol* fkt_find_regex(const std::vector<Symbol*>& vecSyms,
 	}
 	catch(const std::exception& ex)
 	{
-		log_err(linenr(info), "Regex evaluation failed with error: ", ex.what());
+		log_err(linenr(runinfo), "Regex evaluation failed with error: ", ex.what());
 		return 0;
 	}
 
@@ -1160,9 +1061,9 @@ static Symbol* fkt_find_regex(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_match_regex(const std::vector<Symbol*>& vecSyms,
-				ParseInfo& info, SymbolTable* pSymTab)
+				ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_STRING, SYMBOL_STRING}, {0,0}, "regex_match"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING, SYMBOL_STRING}, {0,0}, "regex_match"))
 		return 0;
 
 	const t_string& str = ((SymbolString*)vecSyms[0])->GetVal();
@@ -1182,7 +1083,7 @@ static Symbol* fkt_match_regex(const std::vector<Symbol*>& vecSyms,
 	}
 	catch(const std::exception& ex)
 	{
-		log_err(linenr(info), "Regex evaluation failed with error: ", ex.what());
+		log_err(linenr(runinfo), "Regex evaluation failed with error: ", ex.what());
 		return 0;
 	}
 
@@ -1190,9 +1091,9 @@ static Symbol* fkt_match_regex(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_subfind_regex(const std::vector<Symbol*>& vecSyms,
-				ParseInfo& info, SymbolTable* pSymTab)
+				ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_STRING, SYMBOL_STRING, SYMBOL_INT}, {0,0,1}, "regex_subfind"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING, SYMBOL_STRING, SYMBOL_INT}, {0,0,1}, "regex_subfind"))
 		return 0;
 
 	const t_string& str = ((SymbolString*)vecSyms[0])->GetVal();
@@ -1220,7 +1121,7 @@ static Symbol* fkt_subfind_regex(const std::vector<Symbol*>& vecSyms,
 	}
 	catch(const std::exception& ex)
 	{
-		log_err(linenr(info), "Regex evaluation failed with error: ", ex.what());
+		log_err(linenr(runinfo), "Regex evaluation failed with error: ", ex.what());
 		return 0;
 	}
 
@@ -1236,9 +1137,9 @@ static Symbol* fkt_subfind_regex(const std::vector<Symbol*>& vecSyms,
 // map operations
 
 static Symbol* fkt_has_key(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_MAP, SYMBOL_ANY}, {0,0}, "has_key"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_MAP, SYMBOL_ANY}, {0,0}, "has_key"))
 		return 0;
 
 	const SymbolMap* pMap = (SymbolMap*)vecSyms[0];

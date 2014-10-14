@@ -19,9 +19,9 @@
 // --------------------------------------------------------------------------------
 // file operations
 static Symbol* fkt_file_exists(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, SymbolTable* pSymTab)
+							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_STRING}, {0}, "file_exists"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING}, {0}, "file_exists"))
 		return 0;
 
 	const t_string& strFile = ((SymbolString*)vecSyms[0])->GetVal();
@@ -32,9 +32,9 @@ static Symbol* fkt_file_exists(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_read_file(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, SymbolTable* pSymTab)
+							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_STRING}, {0}, "read_file"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING}, {0}, "read_file"))
 		return 0;
 
 	const t_string& strFile = ((SymbolString*)vecSyms[0])->GetVal();
@@ -54,9 +54,9 @@ static Symbol* fkt_read_file(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_write_file(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, SymbolTable* pSymTab)
+							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_STRING, SYMBOL_ANY}, {0,0}, "write_file"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING, SYMBOL_ANY}, {0,0}, "write_file"))
 		return 0;
 
 	const t_string& strFile = ((SymbolString*)vecSyms[0])->GetVal();
@@ -91,9 +91,9 @@ static Symbol* fkt_write_file(const std::vector<Symbol*>& vecSyms,
 // loading and saving of .dat files
 
 static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, SymbolTable* pSymTab)
+							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_STRING}, {0}, "loadtxt"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING}, {0}, "loadtxt"))
 		return 0;
 
 	const t_string& strFile = ((SymbolString*)vecSyms[0])->GetVal();
@@ -103,7 +103,7 @@ static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
 	bool bLoaded = dat.Load(WSTR_TO_STR(strFile).c_str());
 	if(!bLoaded)
 	{
-		log_err(linenr(info), "loadtxt could not open \"", strFile, "\".");
+		log_err(linenr(runinfo), "loadtxt could not open \"", strFile, "\".");
 		return pArr;
 	}
 
@@ -222,9 +222,9 @@ static std::string get_2darr_strval(const SymbolArray* pArr,
 }
 
 static Symbol* fkt_savetxt(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, SymbolTable* pSymTab)
+							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_STRING, SYMBOL_ARRAY}, {0,0}, "savetxt"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING, SYMBOL_ARRAY}, {0,0}, "savetxt"))
 		return 0;
 
 	const t_string& strFile = ((SymbolString*)vecSyms[0])->GetVal();
@@ -233,7 +233,7 @@ static Symbol* fkt_savetxt(const std::vector<Symbol*>& vecSyms,
 	t_ofstream ofstr(WSTR_TO_STR(strFile).c_str());
 	if(!ofstr.is_open())
 	{
-		log_err(linenr(info), "Cannot open \"", strFile, "\".");
+		log_err(linenr(runinfo), "Cannot open \"", strFile, "\".");
 		return 0;
 	}
 

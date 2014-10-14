@@ -5,11 +5,11 @@
  */
 
 %{
-	#include "parseobj.h"
+	#include "info.h"
+	#include "yylexer.h"
 	
 	#include <iostream>
 	#include <math.h>
-	#include "yylexer.h"
 
 	static inline void set_linenr(void* dollardollar, void* pParseObj)
 	{

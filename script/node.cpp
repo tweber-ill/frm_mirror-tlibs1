@@ -539,7 +539,7 @@ NodeFunction* ParseInfo::GetFunction(const t_string& strName)
 
 
 
-t_string Node::linenr(const ParseInfo &info) const
+t_string Node::linenr(const RuntimeInfo &info) const
 {
 	t_ostringstream ostrDetail;
 

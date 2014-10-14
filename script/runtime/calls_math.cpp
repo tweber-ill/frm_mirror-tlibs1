@@ -14,9 +14,9 @@
 #include "../helper/log.h"
 
 static inline Symbol* _fkt_linlogspace(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab, bool bLog)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab, bool bLog)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_SCALAR, SYMBOL_SCALAR, SYMBOL_INT}, {0,0,0}, "linspace"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_SCALAR, SYMBOL_SCALAR, SYMBOL_INT}, {0,0,0}, "linspace"))
 		return 0;
 
 	t_int iNum = vecSyms[2]->GetValInt();
@@ -43,15 +43,15 @@ static inline Symbol* _fkt_linlogspace(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_linspace(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	return _fkt_linlogspace(vecSyms, info, pSymTab, false);
+	return _fkt_linlogspace(vecSyms, info, runinfo, pSymTab, false);
 }
 
 static Symbol* fkt_logspace(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	return _fkt_linlogspace(vecSyms, info, pSymTab, true);
+	return _fkt_linlogspace(vecSyms, info, runinfo, pSymTab, true);
 }
 
 
@@ -79,12 +79,12 @@ const T& math_fkt(const T& t1, const T& t2)
 
 template<MathFkts fkt>
 static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size() < 1)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "fkt_math_for_every needs at least one argument" << std::endl;
+		ostrErr << linenr(runinfo) << "fkt_math_for_every needs at least one argument" << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -102,7 +102,7 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 		{
 			pThisSym = fkt_math_for_every<fkt>(
 					((SymbolArray*)pSym)->GetArr(),
-					info, pSymTab);
+					info, runinfo, pSymTab);
 
 			bCleanSym = 1;
 		}
@@ -142,7 +142,7 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 
 
 	std::ostringstream ostrErr;
-	ostrErr << linenr(info) << "No valid arguments given for fkt_math_for_every." << std::endl;
+	ostrErr << linenr(runinfo) << "No valid arguments given for fkt_math_for_every." << std::endl;
 	throw Err(ostrErr.str(), 0);
 	//return 0;
 }
@@ -150,9 +150,9 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 
 template<t_real (*FKT)(t_real), t_complex (*FKT_C)(const t_complex&)=nullptr>
 static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ANY}, {0}, "fkt_math_1arg"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ANY}, {0}, "fkt_math_1arg"))
 		return 0;
 
 	if(vecSyms[0]->GetType() == SYMBOL_ARRAY)
@@ -165,7 +165,7 @@ static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 			std::vector<Symbol*> vecDummy;
 			vecDummy.push_back(pArrElem);
 
-			pArrRet->GetArr().push_back(fkt_math_1arg<FKT, FKT_C>(vecDummy, info, pSymTab));
+			pArrRet->GetArr().push_back(fkt_math_1arg<FKT, FKT_C>(vecDummy, info, runinfo, pSymTab));
 		}
 
 		pArrRet->UpdateIndices();
@@ -177,7 +177,7 @@ static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 		{
 			if(FKT_C == nullptr)
 			{
-				log_err(linenr(info), "Undefined complex function.");
+				log_err(linenr(runinfo), "Undefined complex function.");
 				return 0;
 			}
 
@@ -188,7 +188,7 @@ static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 		{
 			if(FKT == nullptr)
 			{
-				log_err(linenr(info), "Undefined real function.");
+				log_err(linenr(runinfo), "Undefined real function.");
 				return 0;
 			}
 
@@ -215,9 +215,9 @@ static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 // TODO: for arrays
 template<t_real (*FKT)(t_real, t_real), t_complex (*FKT_C)(const t_complex&, const t_complex&)=nullptr>
 static Symbol* fkt_math_2args(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ANY, SYMBOL_ANY}, {0,0}, "fkt_math_2args"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ANY, SYMBOL_ANY}, {0,0}, "fkt_math_2args"))
 		return 0;
 
 	Symbol* pFirst = vecSyms[0];
@@ -237,7 +237,7 @@ static Symbol* fkt_math_2args(const std::vector<Symbol*>& vecSyms,
 	{
 		if(FKT_C == nullptr)
 		{
-			log_err(linenr(info), "Undefined complex function.");
+			log_err(linenr(runinfo), "Undefined complex function.");
 			return 0;
 		}
 
@@ -252,7 +252,7 @@ static Symbol* fkt_math_2args(const std::vector<Symbol*>& vecSyms,
 	// real
 	if(FKT == nullptr)
 	{
-		log_err(linenr(info), "Undefined real function.");
+		log_err(linenr(runinfo), "Undefined real function.");
 		return 0;
 	}
 
@@ -273,9 +273,9 @@ template<> t_real myabs(t_real t) { return ::fabs(t); }
 
 // TODO: integrate with fkt_math_1arg
 static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ANY}, {0}, "abs"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ANY}, {0}, "abs"))
 		return 0;
 
 	if(vecSyms[0]->GetType() == SYMBOL_ARRAY)
@@ -288,7 +288,7 @@ static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
 			std::vector<Symbol*> vecDummy;
 			vecDummy.push_back(pArrElem);
 
-			pArrRet->GetArr().push_back(fkt_math_abs(vecDummy, info, pSymTab));
+			pArrRet->GetArr().push_back(fkt_math_abs(vecDummy, info, runinfo, pSymTab));
 		}
 
 		pArrRet->UpdateIndices();
@@ -312,7 +312,7 @@ static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
 
 
 	std::ostringstream ostrErr;
-	ostrErr << linenr(info) << "abs received unsupported symbol type." << std::endl;
+	ostrErr << linenr(runinfo) << "abs received unsupported symbol type." << std::endl;
 	throw Err(ostrErr.str(),0);
 	//return 0;
 }
@@ -320,9 +320,9 @@ static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
 
 // complex norm = abs^2
 static Symbol* fkt_math_cnorm(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab)
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ANY}, {0}, "cnorm"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ANY}, {0}, "cnorm"))
 		return 0;
 
 	t_complex cVal(0., 0.);
@@ -339,9 +339,9 @@ static Symbol* fkt_math_cnorm(const std::vector<Symbol*>& vecSyms,
 
 template<bool (*FKT)(t_real)>
 static Symbol* fkt_math_1arg_bret(const std::vector<Symbol*>& vecSyms,
-				ParseInfo& info, SymbolTable* pSymTab)
+				ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ANY}, {0}, "fkt_math_1arg_bret"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ANY}, {0}, "fkt_math_1arg_bret"))
 		return 0;
 
 	if(vecSyms[0]->GetType() == SYMBOL_ARRAY)
@@ -354,7 +354,7 @@ static Symbol* fkt_math_1arg_bret(const std::vector<Symbol*>& vecSyms,
 			std::vector<Symbol*> vecDummy;
 			vecDummy.push_back(pArrElem);
 
-			pArrRet->GetArr().push_back(fkt_math_1arg_bret<FKT>(vecDummy, info, pSymTab));
+			pArrRet->GetArr().push_back(fkt_math_1arg_bret<FKT>(vecDummy, info, runinfo, pSymTab));
 		}
 
 		pArrRet->UpdateIndices();
@@ -374,7 +374,7 @@ static Symbol* fkt_math_1arg_bret(const std::vector<Symbol*>& vecSyms,
 // FFT
 
 static Symbol* _fkt_fft(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, SymbolTable* pSymTab,
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab,
 						bool bInv)
 {
 	bool (Fourier::*pFkt)(const t_real*, const t_real*, t_real*, t_real*)
@@ -411,7 +411,7 @@ static Symbol* _fkt_fft(const std::vector<Symbol*>& vecSyms,
 	if(!bArgsOk)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "fft received invalid arguments." << std::endl;
+		ostrErr << linenr(runinfo) << "fft received invalid arguments." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -443,10 +443,10 @@ static Symbol* _fkt_fft(const std::vector<Symbol*>& vecSyms,
 	return pRet;
 }
 
-static Symbol* fkt_fft(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
-{ return _fkt_fft(vecSyms, info, pSymTab, false); }
-static Symbol* fkt_ifft(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
-{ return _fkt_fft(vecSyms, info, pSymTab, true); }
+static Symbol* fkt_fft(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+{ return _fkt_fft(vecSyms, info, runinfo, pSymTab, false); }
+static Symbol* fkt_ifft(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+{ return _fkt_fft(vecSyms, info, runinfo, pSymTab, true); }
 
 // --------------------------------------------------------------------------------
 
@@ -460,15 +460,15 @@ template<typename T=t_real> using t_mat = ublas::matrix<T>;
 template<typename T=t_real> using t_stdvec = std::vector<T>;
 
 
-static Symbol* fkt_length(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+static Symbol* fkt_length(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ARRAY}, {0}, "len"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY}, {0}, "len"))
 		return 0;
 
 	if(!is_vec(vecSyms[0]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "len needs a vector argument." << std::endl;
+		ostrErr << linenr(runinfo) << "len needs a vector argument." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -477,15 +477,15 @@ static Symbol* fkt_length(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 	return new SymbolDouble(dLen);
 }
 
-static Symbol* fkt_mean(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+static Symbol* fkt_mean(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ARRAY}, {0}, "mean"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY}, {0}, "mean"))
 		return 0;
 
 	if(!is_vec(vecSyms[0]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Mean value needs vector arguments." << std::endl;
+		ostrErr << linenr(runinfo) << "Mean value needs vector arguments." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -495,15 +495,15 @@ static Symbol* fkt_mean(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Sy
 	return new SymbolDouble(dMean);
 }
 
-static Symbol* fkt_stddev(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+static Symbol* fkt_stddev(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ARRAY}, {0}, "stddev"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY}, {0}, "stddev"))
 		return 0;
 
 	if(!is_vec(vecSyms[0]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Standard deviation needs vector arguments." << std::endl;
+		ostrErr << linenr(runinfo) << "Standard deviation needs vector arguments." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -513,15 +513,15 @@ static Symbol* fkt_stddev(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 	return new SymbolDouble(dStd);
 }
 
-static Symbol* fkt_cross(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+static Symbol* fkt_cross(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ARRAY, SYMBOL_ARRAY}, {0,0}, "cross"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY, SYMBOL_ARRAY}, {0,0}, "cross"))
 		return 0;
 
 	if(!is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Cross product needs vector arguments." << std::endl;
+		ostrErr << linenr(runinfo) << "Cross product needs vector arguments." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -531,7 +531,7 @@ static Symbol* fkt_cross(const std::vector<Symbol*>& vecSyms, ParseInfo& info, S
 	if(vecLeft.size()!=3 || vecRight.size()!=3)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Cross product needs 3-vectors." << std::endl;
+		ostrErr << linenr(runinfo) << "Cross product needs 3-vectors." << std::endl;
 		throw Err(ostrErr.str(), 0);
 	}
 
@@ -541,12 +541,12 @@ static Symbol* fkt_cross(const std::vector<Symbol*>& vecSyms, ParseInfo& info, S
 
 // matrix(rows, cols)
 // matrix(dim)
-static Symbol* fkt_matrix(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+static Symbol* fkt_matrix(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size()<1)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Need size of matrix." << std::endl;
+		ostrErr << linenr(runinfo) << "Need size of matrix." << std::endl;
 		throw Err(ostrErr.str(), 0);
 	}
 
@@ -562,9 +562,9 @@ static Symbol* fkt_matrix(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 }
 
 static Symbol* fkt_transpose(const std::vector<Symbol*>& vecSyms, 
-				ParseInfo& info, SymbolTable* pSymTab)
+				ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ARRAY}, {0}, "trans"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY}, {0}, "trans"))
 		return 0;
 
 	bool bIsMat = 0;
@@ -572,7 +572,7 @@ static Symbol* fkt_transpose(const std::vector<Symbol*>& vecSyms,
 	if(!bIsMat)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Transpose needs a matrix." << std::endl;
+		ostrErr << linenr(runinfo) << "Transpose needs a matrix." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -581,9 +581,9 @@ static Symbol* fkt_transpose(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_inverse(const std::vector<Symbol*>& vecSyms, 
-				ParseInfo& info, SymbolTable* pSymTab)
+				ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ARRAY}, {0}, "inv"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY}, {0}, "inv"))
 		return 0;
 
 	bool bIsMat = 0;
@@ -591,14 +591,14 @@ static Symbol* fkt_inverse(const std::vector<Symbol*>& vecSyms,
 	if(!bIsMat)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Inverse needs a matrix." << std::endl;
+		ostrErr << linenr(runinfo) << "Inverse needs a matrix." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
 	t_mat<t_real> mat_inv;
 	if(!inverse(mat, mat_inv))
 	{
-		log_warn(linenr(info), "Matrix inversion failed.");
+		log_warn(linenr(runinfo), "Matrix inversion failed.");
 		return 0;
 	}
 
@@ -606,16 +606,16 @@ static Symbol* fkt_inverse(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_determinant(const std::vector<Symbol*>& vecSyms,
-                                ParseInfo& info, SymbolTable* pSymTab)
+                                ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ARRAY}, {0}, "det"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY}, {0}, "det"))
 		return 0;
 
 	bool bIsMat = 0;
 	t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0], &bIsMat);
 	if(!bIsMat || mat.size1()!=mat.size2())
 	{
-		log_err(linenr(info), "Determinant needs a square matrix.");
+		log_err(linenr(runinfo), "Determinant needs a square matrix.");
 		return 0;
 	}
 
@@ -623,9 +623,9 @@ static Symbol* fkt_determinant(const std::vector<Symbol*>& vecSyms,
 	return new SymbolDouble(dDet);
 }
 
-static Symbol* fkt_unitmatrix(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+static Symbol* fkt_unitmatrix(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_INT}, {0}, "unity"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_INT}, {0}, "unity"))
 		return 0;
 
 	t_int iSize = vecSyms[0]->GetValInt();
@@ -634,15 +634,15 @@ static Symbol* fkt_unitmatrix(const std::vector<Symbol*>& vecSyms, ParseInfo& in
 	return mat_to_sym<t_mat>(mat);
 }
 
-static Symbol* fkt_outerproduct(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+static Symbol* fkt_outerproduct(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ARRAY, SYMBOL_ARRAY}, {0,0}, "outer_prod"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY, SYMBOL_ARRAY}, {0,0}, "outer_prod"))
 		return 0;
 
 	if(!is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Outer product needs two vector arguments." << std::endl;
+		ostrErr << linenr(runinfo) << "Outer product needs two vector arguments." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -653,15 +653,15 @@ static Symbol* fkt_outerproduct(const std::vector<Symbol*>& vecSyms, ParseInfo& 
 	return mat_to_sym<t_mat>(mat);
 }
 
-static Symbol* fkt_dot(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+static Symbol* fkt_dot(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ARRAY, SYMBOL_ARRAY}, {0,0}, "dot"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY, SYMBOL_ARRAY}, {0,0}, "dot"))
 		return 0;
 
 	if(!is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Inner product needs two vector arguments." << std::endl;
+		ostrErr << linenr(runinfo) << "Inner product needs two vector arguments." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -671,9 +671,9 @@ static Symbol* fkt_dot(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Sym
 	return new SymbolDouble(ublas::inner_prod(vec1, vec2));
 }
 
-static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ANY, SYMBOL_ANY}, {0,0}, "prod"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ANY, SYMBOL_ANY}, {0,0}, "prod"))
 		return 0;
 
 	Symbol* pRet = 0;
@@ -684,7 +684,7 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 	// dot product
 	if(bFirstIsVec && bSecondIsVec)
 	{
-		pRet = fkt_dot(vecSyms, info, pSymTab);
+		pRet = fkt_dot(vecSyms, info, runinfo, pSymTab);
 	}
 	else
 	{
@@ -697,7 +697,7 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 		{
 			if(iRows1 != iCols2 || iCols1 != iRows2)
 			{
-				log_err(linenr(info), "Row and column counts of matrices do not match.");
+				log_err(linenr(runinfo), "Row and column counts of matrices do not match.");
 				return 0;
 			}
 
@@ -728,7 +728,7 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 	if(!pRet)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Invalid call to prod." << std::endl;
+		ostrErr << linenr(runinfo) << "Invalid call to prod." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 	return pRet;
@@ -741,15 +741,15 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 // --------------------------------------------------------------------------------
 // advanced linalg stuff
 
-static Symbol* fkt_eigenvecs(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+static Symbol* fkt_eigenvecs(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ARRAY}, {0}, "eigenvecs"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY}, {0}, "eigenvecs"))
 		return 0;
 
 	if(!is_mat(vecSyms[0]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Invalid call to eigenvecs." << std::endl;
+		ostrErr << linenr(runinfo) << "Invalid call to eigenvecs." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -798,15 +798,15 @@ static Symbol* fkt_eigenvecs(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 	return pSymRet;
 }
 
-static Symbol* fkt_eigenvecs_sym(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+static Symbol* fkt_eigenvecs_sym(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ARRAY}, {0}, "eigenvecs_sym"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY}, {0}, "eigenvecs_sym"))
 		return 0;
 
 	if(!is_mat(vecSyms[0]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Invalid call to eigenvecs_sym." << std::endl;
+		ostrErr << linenr(runinfo) << "Invalid call to eigenvecs_sym." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -841,15 +841,15 @@ static Symbol* fkt_eigenvecs_sym(const std::vector<Symbol*>& vecSyms, ParseInfo&
 	return pSymRet;
 }
 
-static Symbol* fkt_qr(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+static Symbol* fkt_qr(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ARRAY}, {0}, "qr"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY}, {0}, "qr"))
 		return 0;
 
 	if(!is_mat(vecSyms[0]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Invalid call to qr." << std::endl;
+		ostrErr << linenr(runinfo) << "Invalid call to qr." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 
@@ -878,15 +878,15 @@ static Symbol* fkt_qr(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Symb
 // rand stuff
 
 
-static Symbol* fkt_rand01(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+static Symbol* fkt_rand01(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	t_real dRand = rand01<t_real>();
 	return new SymbolDouble(dRand);
 }
 
-static Symbol* fkt_rand_real(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+static Symbol* fkt_rand_real(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_SCALAR, SYMBOL_SCALAR}, {0,0}, "rand_real"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_SCALAR, SYMBOL_SCALAR}, {0,0}, "rand_real"))
 		return 0;
 
 	t_real dMin = vecSyms[0]->GetValDouble();
@@ -896,9 +896,9 @@ static Symbol* fkt_rand_real(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 	return new SymbolDouble(dRand);
 }
 
-static Symbol* fkt_rand_int(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+static Symbol* fkt_rand_int(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_SCALAR, SYMBOL_SCALAR}, {0,0}, "rand_int"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_SCALAR, SYMBOL_SCALAR}, {0,0}, "rand_int"))
 		return 0;
 
 	t_int iMin = vecSyms[0]->GetValInt();
@@ -908,9 +908,9 @@ static Symbol* fkt_rand_int(const std::vector<Symbol*>& vecSyms, ParseInfo& info
 	return new SymbolInt(iRand);
 }
 
-static Symbol* fkt_rand_norm(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+static Symbol* fkt_rand_norm(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_SCALAR, SYMBOL_SCALAR}, {0,0}, "rand_norm"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_SCALAR, SYMBOL_SCALAR}, {0,0}, "rand_norm"))
 		return 0;
 
 	t_real dMu = 0.;
@@ -925,9 +925,9 @@ static Symbol* fkt_rand_norm(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 	return new SymbolDouble(dRand);
 }
 
-static Symbol* fkt_rand_norm_nd(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+static Symbol* fkt_rand_norm_nd(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ARRAY, SYMBOL_ARRAY}, {0,0}, "rand_norm_nd"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY, SYMBOL_ARRAY}, {0,0}, "rand_norm_nd"))
 		return 0;
 
 	t_stdvec<t_real> vecMu = sym_to_vec<t_stdvec>(vecSyms[0]);
@@ -935,7 +935,7 @@ static Symbol* fkt_rand_norm_nd(const std::vector<Symbol*>& vecSyms, ParseInfo& 
 
 	if(vecMu.size() != vecSigma.size())
 	{
-		log_err(linenr(info), "Mu and sigma arrays have different sizes.");
+		log_err(linenr(runinfo), "Mu and sigma arrays have different sizes.");
 		return 0;
 	}
 
@@ -950,9 +950,10 @@ static Symbol* fkt_rand_norm_nd(const std::vector<Symbol*>& vecSyms, ParseInfo& 
 // --------------------------------------------------------------------------------
 // minmax
 
-static Symbol* fkt_minmax_elem(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+static Symbol* fkt_minmax_elem(const std::vector<Symbol*>& vecSyms, 
+						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(info, vecSyms, {SYMBOL_ARRAY}, {0}, "minmax_elem"))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY}, {0}, "minmax_elem"))
 		return 0;
 
 	const Symbol *pSymMin=0, *pSymMax=0;
@@ -980,13 +981,13 @@ static Symbol* fkt_minmax_elem(const std::vector<Symbol*>& vecSyms, ParseInfo& i
 	return new SymbolArray({new SymbolInt(iIdxMin), new SymbolInt(iIdxMax)});
 }
 
-static Symbol* fkt_minmax(const std::vector<Symbol*>& vecSyms, ParseInfo& info, SymbolTable* pSymTab)
+static Symbol* fkt_minmax(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	SymbolArray* pElem = (SymbolArray*)fkt_minmax_elem(vecSyms, info, pSymTab);
+	SymbolArray* pElem = (SymbolArray*)fkt_minmax_elem(vecSyms, info, runinfo, pSymTab);
 	if(!pElem || pElem->GetArr().size()!=2)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(info) << "Invalid input for minmax." << std::endl;
+		ostrErr << linenr(runinfo) << "Invalid input for minmax." << std::endl;
 		throw Err(ostrErr.str(),0);
 	}
 

@@ -16,7 +16,6 @@
 #include <array>
 #include <algorithm>
 
-#include "parseobj.h"
 #include "script_helper.h"
 #include "globals.h"
 #include "calls.h"
@@ -52,11 +51,13 @@ static inline int interactive(bool bShowSymbols=0, unsigned int uiDebugLevel=3)
 	static const t_char* pcCmdFunc = T_STR"__cmd__";
 
 	ParseInfo info;
+	RuntimeInfo runinfo;
+	
 	std::unique_ptr<SymbolTable> ptrLocalSym(new SymbolTable);
-	info.pLocalSymsOverride = ptrLocalSym.get();
-	info.bImplicitRet = 1;
-	info.strExecFkt = pcCmdFunc;
-	info.strInitScrFile = "<interactive>";
+	runinfo.pLocalSymsOverride = ptrLocalSym.get();
+	runinfo.bImplicitRet = 1;
+	runinfo.strExecFkt = pcCmdFunc;
+	runinfo.strInitScrFile = "<interactive>";
 
 	init_global_syms(info.pGlobalSyms);
 
@@ -78,7 +79,7 @@ static inline int interactive(bool bShowSymbols=0, unsigned int uiDebugLevel=3)
 			if(!std::getline(std::cin, strLine))
 				break;
 
-			info.EnableExec();
+			runinfo.EnableExec();
 
 			t_string strInput = t_string(pcCmdFunc) + "() { " + strLine + " }";
 			Lexer lex(strInput);
@@ -103,15 +104,15 @@ static inline int interactive(bool bShowSymbols=0, unsigned int uiDebugLevel=3)
 			}
 
 			par.pRoot = par.pRoot->optimize();
-			Symbol *pSymRet = par.pRoot->eval(info, 0);
+			Symbol *pSymRet = par.pRoot->eval(info, runinfo, 0);
 
 			if(bShowSymbols)
-				info.pLocalSymsOverride->print();
+				runinfo.pLocalSymsOverride->print();
 
 			if(pSymRet)
 			{
 				std::cout << pSymRet->print() << std::endl;
-				safe_delete(pSymRet, info.pLocalSymsOverride, info.pGlobalSyms);
+				safe_delete(pSymRet, runinfo.pLocalSymsOverride, info.pGlobalSyms);
 			}
 
 			remove_cmdfunc();
@@ -205,6 +206,8 @@ static inline int script_main(int argc, char** argv)
 
 	ParseObj par;
 	ParseInfo info;
+	RuntimeInfo runinfo;
+	
 	info.bEnableDebug = (uiDebugLevel>=4);
 
 
@@ -255,14 +258,14 @@ static inline int script_main(int argc, char** argv)
 	SymbolTable *pTableSup = new SymbolTable();
 
 	info.pmapModules->insert(ParseInfo::t_mods::value_type(strFile, par.pRoot));
-	info.strExecFkt = T_STR"main";
+	runinfo.strExecFkt = T_STR"main";
 	//info.pvecExecArg = &vecMainArgs;
-	info.strInitScrFile = strFile;
+	runinfo.strInitScrFile = strFile;
 
 	SymbolArray arrMainArgs;
 	arrMainArgs.GetArr().push_back(parrMainArgs);
 	pTableSup->InsertSymbol(T_STR"<args>", &arrMainArgs);
-	par.pRoot->eval(info, pTableSup);
+	par.pRoot->eval(info, runinfo, pTableSup);
 	pTableSup->RemoveSymbolNoDelete(T_STR"<args>");
 	delete pTableSup;
 

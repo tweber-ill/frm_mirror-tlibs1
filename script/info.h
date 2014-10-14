@@ -10,27 +10,55 @@
 #include "node.h"
 #include "handles.h"
 #include "symbol.h"
+#include "types.h"
+#include "lexer.h"
+
 
 // TODO
 // stuff that can change during execution
 struct RuntimeInfo
 {
+	// function to execute, e.g. "main" (with external local symbol table)
+	t_string strExecFkt;
+	t_string strInitScrFile;
+	SymbolTable *pLocalSymsOverride = nullptr;
+	
+	// currently active function
+	const NodeFunction *pCurFunction = nullptr;
+	const NodeCall *pCurCaller = nullptr;
+	bool bWantReturn = 0;
+
+	const Node* pCurLoop = nullptr;
+	bool bWantBreak = 0;
+	bool bWantContinue = 0;	
+	
+	
+	// implicitely return last symbol in function
+	bool bImplicitRet = 0;	
+
+
+	bool IsExecDisabled() const
+	{
+		return bWantReturn || bWantBreak || bWantContinue;
+	}
+	void EnableExec()
+	{
+		bWantReturn = bWantBreak = bWantContinue = 0;
+	}
+
+
+	RuntimeInfo() = default;
+	RuntimeInfo(const RuntimeInfo&) = delete;
+	~RuntimeInfo() = default;
 };
 
-// stuff that is fixed after parsing
+
+// stuff that is (more or less) fixed after parsing
 struct ParseInfo
 {
 	// external imported modules
 	typedef std::unordered_map<t_string, Node*> t_mods;
 	t_mods *pmapModules = nullptr;
-
-	// function to execute, e.g. "main" (with external local symbol table)
-	t_string strExecFkt;
-	t_string strInitScrFile;
-	SymbolTable *pLocalSymsOverride = nullptr;
-
-	// implicitely return last symbol in function
-	bool bImplicitRet = 0;
 
 	// all functions from all modules
 	typedef std::vector<NodeFunction*> t_funcs;
@@ -44,18 +72,6 @@ struct ParseInfo
 	std::mutex *pmutexGlobal = nullptr;
 	// mutex for interpreter
 	std::mutex *pmutexInterpreter = nullptr;
-
-	// currently active function
-	const NodeFunction *pCurFunction = nullptr;
-	const NodeCall *pCurCaller = nullptr;
-	bool bWantReturn = 0;
-
-	const Node* pCurLoop = nullptr;
-	bool bWantBreak = 0;
-	bool bWantContinue = 0;
-
-	bool bDestroyParseInfo = true;
-
 
 
 	bool bEnableDebug = 0;
@@ -72,15 +88,17 @@ struct ParseInfo
 	~ParseInfo();
 
 	NodeFunction* GetFunction(const t_string& strName);
+};
 
-	bool IsExecDisabled() const
-	{
-		return bWantReturn || bWantBreak || bWantContinue;
-	}
-	void EnableExec()
-	{
-		bWantReturn = bWantBreak = bWantContinue = 0;
-	}
+
+struct ParseObj
+{
+	Lexer* pLexer;
+	Node* pRoot;
+
+	// only used during parsing/lexing for yyerror(), NOT during exec
+	unsigned int iCurLine;
+	t_string strCurFile;
 };
 
 #endif
