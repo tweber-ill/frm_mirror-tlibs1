@@ -116,6 +116,11 @@ main(args)
 
 		register_var(arg_split[0], arg_val);
 	}
+	else
+	{
+		usage(args[0]);
+		return 0;
+	}
 
 	if(!had_b) b = a;
 	if(!had_c) c = a;
@@ -178,13 +183,22 @@ main(args)
 	Q = len(Q_vec_in_U);
 	print("|Q| = " + Q + " 1/A");
 
+	E = (hbar*ki*1e10)^2. / (2.*m_n) - (hbar*kf*1e10)^2. / (2.*m_n);
+	E /= q_e;
+	E *= 1000.;
+	print("E = " + E + " meV");
+
+	print("-"*80);
+
 
 	ttheta = sample_tt(ki, kf, Q);
 	print("2theta = " + (ttheta/pi*180.) + " deg");
 
 	kiQ = angle_ki_Q(ki, kf, Q);
 	theta = -kiQ - atan2(Q_vec_in_U[0], Q_vec_in_U[1]);
-	print("theta = " + (theta/pi*180.) + " deg");
+	theta_takin = pi + theta;
+	print("theta = " + (theta/pi*180.) + " deg" + 
+		"\t(theta_takin = " + (theta_takin/pi*180) + " deg)");
 
 	print("-"*80);
 }
