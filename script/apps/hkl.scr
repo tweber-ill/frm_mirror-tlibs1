@@ -48,6 +48,86 @@ angle_ki_Q(ki, kf, Q)
 }
 
 
+hkl2tas(a,b,c, alpha,beta,gamma, orient1,orient2, h,k,l, ki,kf)
+{
+        orientup = cross(orient1, orient2);
+        orient2 = cross(orientup, orient1);
+
+        orient1 /= len(orient1);
+        orient2 /= len(orient2);
+        orientup /= len(orientup);
+
+        hkl = [h,k,l];
+
+	
+	print("-"*80);
+	print("a = " + a + " A");
+	print("b = " + b + " A");
+	print("c = " + c + " A");
+	print("alpha = " + alpha + " deg");
+	print("beta = " + beta + " deg");
+	print("gamma = " + gamma + " deg");
+	
+	print("-"*80);
+	print("hkl = " + str(hkl));
+	print("ki = " + ki + " 1/A");
+	print("kf = " + kf + " 1/A");
+	print("orient1 = " + str(orient1));
+	print("orient2 = " + str(orient2));
+	#print("orientup = " + str(orientup));
+
+
+
+	print("-"*80);
+
+	U = [orient1, orient2, orientup];
+	B = B_matrix(a,b,c, alpha/180.*pi,beta/180.*pi,gamma/180.*pi);
+	UB = prod(U, B);
+
+	print("U = " + str(U));
+	print("B = " + str(B));
+	print("UB = " + str(UB));
+	print("-"*80);
+
+	Q_vec = prod(B, hkl);
+	Q_vec_in_U = prod(UB, hkl);
+	#Q_vec_in_U = prod(U, Q_vec);
+
+	print("Q = " + str(Q_vec) + " 1/A");
+	print("Q_plane = " + str(Q_vec_in_U) + " 1/A");
+
+	if(abs(Q_vec_in_U[2]) > 1e-6)
+	{
+		print("Error: Position not in scattering plane.");
+		exit(-1);
+	}
+
+	Q = len(Q_vec_in_U);
+	print("|Q| = " + Q + " 1/A");
+
+	E = (hbar*ki*1e10)^2. / (2.*m_n) - (hbar*kf*1e10)^2. / (2.*m_n);
+	E /= q_e;
+	E *= 1000.;
+	print("E = " + E + " meV");
+
+	print("-"*80);
+
+
+	ttheta = sample_tt(ki, kf, Q);
+	print("2theta = " + (ttheta/pi*180.) + " deg");
+
+	kiQ = angle_ki_Q(ki, kf, Q);
+	theta = -kiQ - atan2(Q_vec_in_U[0], Q_vec_in_U[1]);
+	theta_takin = pi + theta;
+	print("theta = " + (theta/pi*180.) + " deg" + 
+		"\t(theta_takin = " + (theta_takin/pi*180) + " deg)");
+
+	print("-"*80);
+
+	return [theta, ttheta];
+}
+
+
 usage(app)
 {
         print("\nTAS position calculation for single crystal");
@@ -127,78 +207,5 @@ main(args)
 	if(!had_kf) kf = ki;
 
 
-
-        orientup = cross(orient1, orient2);
-        orient2 = cross(orientup, orient1);
-
-        orient1 /= len(orient1);
-        orient2 /= len(orient2);
-        orientup /= len(orientup);
-
-        hkl = [h,k,l];
-
-	
-	print("-"*80);
-	print("a = " + a + " A");
-	print("b = " + b + " A");
-	print("c = " + c + " A");
-	print("alpha = " + alpha + " deg");
-	print("beta = " + beta + " deg");
-	print("gamma = " + gamma + " deg");
-	
-	print("-"*80);
-	print("hkl = " + str(hkl));
-	print("ki = " + ki + " 1/A");
-	print("kf = " + kf + " 1/A");
-	print("orient1 = " + str(orient1));
-	print("orient2 = " + str(orient2));
-	#print("orientup = " + str(orientup));
-
-
-
-	print("-"*80);
-
-	U = [orient1, orient2, orientup];
-	B = B_matrix(a,b,c, alpha/180.*pi,beta/180.*pi,gamma/180.*pi);
-	UB = prod(U, B);
-
-	print("U = " + str(U));
-	print("B = " + str(B));
-	print("UB = " + str(UB));
-	print("-"*80);
-
-	Q_vec = prod(B, hkl);
-	Q_vec_in_U = prod(UB, hkl);
-	#Q_vec_in_U = prod(U, Q_vec);
-
-	print("Q = " + str(Q_vec) + " 1/A");
-	print("Q_plane = " + str(Q_vec_in_U) + " 1/A");
-
-	if(abs(Q_vec_in_U[2]) > 1e-6)
-	{
-		print("Error: Reflex not in scattering plane.");
-		exit(-1);
-	}
-
-	Q = len(Q_vec_in_U);
-	print("|Q| = " + Q + " 1/A");
-
-	E = (hbar*ki*1e10)^2. / (2.*m_n) - (hbar*kf*1e10)^2. / (2.*m_n);
-	E /= q_e;
-	E *= 1000.;
-	print("E = " + E + " meV");
-
-	print("-"*80);
-
-
-	ttheta = sample_tt(ki, kf, Q);
-	print("2theta = " + (ttheta/pi*180.) + " deg");
-
-	kiQ = angle_ki_Q(ki, kf, Q);
-	theta = -kiQ - atan2(Q_vec_in_U[0], Q_vec_in_U[1]);
-	theta_takin = pi + theta;
-	print("theta = " + (theta/pi*180.) + " deg" + 
-		"\t(theta_takin = " + (theta_takin/pi*180) + " deg)");
-
-	print("-"*80);
+	hkl2tas(a,b,c, alpha,beta,gamma, orient1,orient2, h,k,l, ki,kf);
 }
