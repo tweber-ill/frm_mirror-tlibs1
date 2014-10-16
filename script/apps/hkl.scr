@@ -117,8 +117,8 @@ hkl2tas(a,b,c, alpha,beta,gamma, orient1,orient2, h,k,l, ki,kf)
 	print("2theta = " + (ttheta/pi*180.) + " deg");
 
 	kiQ = angle_ki_Q(ki, kf, Q);
-	theta = -kiQ - atan2(Q_vec_in_U[0], Q_vec_in_U[1]);
-	theta_takin = pi + theta;
+	theta = -kiQ - atan2(Q_vec_in_U[1], Q_vec_in_U[0]) + pi;
+	theta_takin = theta - pi/2.;
 	print("theta = " + (theta/pi*180.) + " deg" + 
 		"\t(theta_takin = " + (theta_takin/pi*180) + " deg)");
 
