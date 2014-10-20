@@ -7,11 +7,11 @@
 #include "../helper/flags.h"
 #include "../helper/log.h"
 #include "calls_basic.h"
-#include "../types.h"
-#include "../calls.h"
+#include "../lang/types.h"
+#include "../lang/calls.h"
 
-#include "../info.h"
-#include "../script_helper.h"
+#include "../lang/info.h"
+#include "../lang/script_helper.h"
 #include "../helper/string.h"
 
 #include <sstream>

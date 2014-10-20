@@ -5,10 +5,11 @@
  */
 
 #include "types.h"
-#include "helper/flags.h"
-#include "helper/string.h"
-#include "helper/spec_char.h"
-#include "helper/log.h"
+
+#include "../helper/flags.h"
+#include "../helper/string.h"
+#include "../helper/spec_char.h"
+#include "../helper/log.h"
 
 #include <iostream>
 #include <fstream>

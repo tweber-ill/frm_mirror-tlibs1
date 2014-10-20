@@ -8,7 +8,7 @@
 #include "node.h"
 #include "info.h"
 #include "calls.h"
-#include "helper/log.h"
+#include "../helper/log.h"
 
 Symbol* NodeReturn::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {
@@ -1382,10 +1382,9 @@ Symbol* NodeFor::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) 
 
 	runinfo.pCurLoop = this;
 
-	Symbol *pSymInit = 0;
 	if(m_pExprInit)
 	{
-		pSymInit = m_pExprInit->eval(info, runinfo, pSym);
+		Symbol *pSymInit = m_pExprInit->eval(info, runinfo, pSym);
 		safe_delete(pSymInit, pSym, &info);
 	}
 

@@ -4,7 +4,7 @@ CC = gcc
 DEBUG = 0
 
 ifeq (${DEBUG}, 0)
-	OPT_FLAGS = -O3 -march=native -DNDEBUG -Wall
+	OPT_FLAGS = -O3 -fexpensive-optimizations -march=native -DNDEBUG -Wall
 	STRIP = strip
 else
 	OPT_FLAGS = -ggdb -DDEBUG -rdynamic -Wall
@@ -46,26 +46,26 @@ hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/nod
 	${CC} ${FLAGS} -o $@ $+ ${LIBS}
 	${STRIP} $@
 
-obj/script.o: script.yy
-	${YY} --defines=tokens.h script.yy
-	${CC} ${FLAGS} -x c++ -c -o obj/script.o script.tab.cc
-obj/lexer.o: lexer.cpp lexer.h
+obj/script.o: lang/script.yy
+	${YY} --defines=tokens.h --output-file=script.cc lang/script.yy
+	${CC} ${FLAGS} -x c++ -c -o obj/script.o script.cc
+obj/lexer.o: lang/lexer.cpp lang/lexer.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/yylexer.o: yylexer.cpp yylexer.h obj/script.o
+obj/yylexer.o: lang/yylexer.cpp lang/yylexer.h obj/script.o
 	${CC} ${FLAGS} -c -o $@ $<
-obj/main.o: main.cpp
+obj/main.o: lang/main.cpp
 	${CC} ${FLAGS} -c -o $@ $<
-obj/info.o: info.cpp info.h
+obj/info.o: lang/info.cpp lang/info.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/node.o: node.cpp node.h
+obj/node.o: lang/node.cpp lang/node.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/node_eval.o: node_eval.cpp node.h
+obj/node_eval.o: lang/node_eval.cpp lang/node.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/symbol.o: symbol.cpp symbol.h
+obj/symbol.o: lang/symbol.cpp lang/symbol.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/node_opt.o: node_opt.cpp node.h
+obj/node_opt.o: lang/node_opt.cpp lang/node.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/calls.o: calls.cpp calls.h
+obj/calls.o: lang/calls.cpp lang/calls.h
 	${CC} ${FLAGS} -c -o $@ $<
 obj/calls_basic.o: runtime/calls_basic.cpp runtime/calls_basic.h
 	${CC} ${FLAGS} -c -o $@ $<
@@ -80,7 +80,7 @@ obj/calls_thread.o: runtime/calls_thread.cpp runtime/calls_thread.h
 obj/calls_fit.o: runtime/calls_fit.cpp runtime/calls_fit.h
 	${CC} ${FLAGS} -c -o $@ $<
 	${CC} ${FLAGS} -c -o obj/calls_fit.o runtime/calls_fit.cpp
-obj/handles.o: handles.cpp handles.h
+obj/handles.o: lang/handles.cpp lang/handles.h
 	${CC} ${FLAGS} -c -o $@ $<
 obj/gnuplot.o: helper/gnuplot.cpp helper/gnuplot.h
 	${CC} ${FLAGS} -c -o $@ $<
@@ -96,9 +96,9 @@ obj/rand.o: helper/rand.cpp helper/rand.h
 	${CC} ${FLAGS} -c -o $@ $<
 obj/fourier.o: helper/fourier.cpp helper/fourier.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/script_helper.o: script_helper.cpp script_helper.h
+obj/script_helper.o: lang/script_helper.cpp lang/script_helper.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/globals.o: globals.cpp globals.h
+obj/globals.o: lang/globals.cpp lang/globals.h
 	${CC} ${FLAGS} -c -o $@ $<
 obj/flags.o: helper/flags.cpp helper/flags.h
 	${CC} ${FLAGS} -c -o $@ $<
@@ -119,6 +119,7 @@ obj/linalg2.o: helper/linalg2.cpp helper/linalg2.h
 clean:
 	rm -f obj/*.o
 	rm -f hermelin
+	rm -f script.cc
 	rm -f script.tab.cc
 	rm -f tokens.h
 	rm -f *.hh

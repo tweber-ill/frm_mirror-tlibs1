@@ -5,7 +5,7 @@
  */
 
 #include "script_helper.h"
-#include "helper/log.h"
+#include "../helper/log.h"
 #include <fstream>
 #include <iostream>
 

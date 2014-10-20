@@ -7,7 +7,7 @@
 #ifndef __MIEZE_YYLEXER__
 #define __MIEZE_YYLEXER__
 
-#include "tokens.h"
+#include "../tokens.h"
 #include "info.h"
 
 #ifdef __cplusplus

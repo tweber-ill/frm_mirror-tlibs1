@@ -4,9 +4,9 @@
  * @date dec 2013
  */
 
-#include "../types.h"
+#include "../lang/types.h"
 #include "calls_plot.h"
-#include "../calls.h"
+#include "../lang/calls.h"
 #include "../helper/gnuplot.h"
 #include "../helper/string.h"
 

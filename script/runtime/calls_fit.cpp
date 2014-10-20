@@ -4,12 +4,12 @@
  * @date jan 2014
  */
 
-#include "../types.h"
+#include "../lang/types.h"
 #include "../helper/string.h"
 #include "../helper/log.h"
 #include "calls_fit.h"
-#include "../calls.h"
-#include "../node.h"
+#include "../lang/calls.h"
+#include "../lang/node.h"
 
 
 template<typename T> using t_stdvec = std::vector<T>;
@@ -74,12 +74,11 @@ public:
 			: m_pFkt((NodeFunction*)mod.m_pFkt/*->clone()->optimize()*/),
 			  m_pinfo(mod.m_pinfo),
 			  m_pCallerSymTab(mod.m_pCallerSymTab),
-			  m_pTable(new SymbolTable())
+			  m_pTable(new SymbolTable()),
+			  m_strFreeParam(mod.m_strFreeParam),
+			  m_vecParamNames(mod.m_vecParamNames),
+			  m_bUseVecParams(mod.m_bUseVecParams)
 	{
-		m_strFreeParam = mod.m_strFreeParam;
-		m_vecParamNames = mod.m_vecParamNames;
-		m_bUseVecParams = mod.m_bUseVecParams;
-
 		if(m_bUseVecParams)
 		{
 			m_vecSyms.resize(2);

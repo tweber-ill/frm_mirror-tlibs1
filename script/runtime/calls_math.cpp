@@ -4,9 +4,9 @@
  * @date 2013
  */
 
-#include "../types.h"
+#include "../lang/types.h"
 #include "calls_math.h"
-#include "../calls.h"
+#include "../lang/calls.h"
 #include "../helper/fourier.h"
 #include "../helper/linalg.h"
 #include "../helper/linalg2.h"

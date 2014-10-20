@@ -5,12 +5,12 @@
  */
 
 #include "types.h"
-#include "helper/log.h"
+#include "../helper/log.h"
 
 #include <iostream>
 #include <string.h>
 
-#include "tokens.h"
+#include "../tokens.h"
 #include "yylexer.h"
 
 

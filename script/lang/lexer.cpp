@@ -12,9 +12,9 @@
 #include <tuple>
 #include <unordered_map>
 
-#include "helper/string.h"
-#include "helper/spec_char.h"
-#include "helper/log.h"
+#include "../helper/string.h"
+#include "../helper/spec_char.h"
+#include "../helper/log.h"
 
 Lexer::Lexer() : m_bOk(1),
 		m_strWhitespace(T_STR" \t\r"), m_strSep(T_STR"=+-*/%^{}[]();,\":\n!<>&|"),

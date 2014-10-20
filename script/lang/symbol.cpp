@@ -6,7 +6,7 @@
 
 #include "symbol.h"
 #include "info.h"
-#include "helper/log.h"
+#include "../helper/log.h"
 #include <set>
 #include <limits>
 

@@ -5,7 +5,7 @@
  */
 
 #include "node.h"
-#include "helper/log.h"
+#include "../helper/log.h"
 
 static bool is_symbol_node(const Node *pNode)
 {

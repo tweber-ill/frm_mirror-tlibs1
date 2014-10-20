@@ -5,8 +5,8 @@
  */
 
 %{
-	#include "info.h"
-	#include "yylexer.h"
+	#include "lang/info.h"
+	#include "lang/yylexer.h"
 	
 	#include <iostream>
 	#include <math.h>

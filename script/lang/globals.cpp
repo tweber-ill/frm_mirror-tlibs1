@@ -5,13 +5,13 @@
  */
 
 #include "globals.h"
-#include "runtime/calls_basic.h"
-#include "runtime/calls_plot.h"
-#include "runtime/calls_math.h"
-#include "runtime/calls_fit.h"
-#include "runtime/calls_file.h"
-#include "runtime/calls_thread.h"
-#include "helper/neutrons.hpp"
+#include "../runtime/calls_basic.h"
+#include "../runtime/calls_plot.h"
+#include "../runtime/calls_math.h"
+#include "../runtime/calls_fit.h"
+#include "../runtime/calls_file.h"
+#include "../runtime/calls_thread.h"
+#include "../helper/neutrons.hpp"
 #include <boost/units/systems/si/codata/electron_constants.hpp>
 
 int yydebug = 0;

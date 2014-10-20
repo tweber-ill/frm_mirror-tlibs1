@@ -4,12 +4,12 @@
  * @date dec-2013
  */
 
-#include "../types.h"
+#include "../lang/types.h"
 #include "../helper/string.h"
 #include "../helper/file.h"
 #include "../helper/log.h"
 #include "calls_file.h"
-#include "../calls.h"
+#include "../lang/calls.h"
 #include "../loader/loadtxt.h"
 #include <sstream>
 #include <fstream>
