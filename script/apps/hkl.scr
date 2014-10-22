@@ -82,12 +82,22 @@ B_matrix(a,b,c, alpha, beta, gamma)
 
 	matreal = [veca, vecb, vecc];
 	matrecip = 2.*pi * inv(matreal);
+	#print("B_real = " + str(trans(matreal)));
 
 	return matrecip;
 }
 
-U_matrix(orient1, orient2)
+UB_matrix(B, orient1, orient2)
 {
+	orient = trans([orient1, orient2]);
+	orientB = prod(B, orient);
+
+	#print("orient = " + str(orient));
+	#print("orientB = " + str(orientB));
+
+	orient1 = orientB[:,0];
+	orient2 = orientB[:,1];
+
 	orientup = cross(orient1, orient2);
 	orient2 = cross(orientup, orient1);
 
@@ -96,7 +106,8 @@ U_matrix(orient1, orient2)
 	orientup /= len(orientup);
 
 	U = [orient1, orient2, orientup];
-	return U;
+	UB = prod(U, B);
+	return [U, UB];
 }
 # -----------------------------------------------------------------------------
 
@@ -111,7 +122,7 @@ ki_kf_to_E(ki, kf)
 }
 
 
-print_sample(a,b,c, alpha,beta,gamma, U)
+print_sample(a,b,c, alpha,beta,gamma)
 {
 	print("-"*80);
 	print("a = " + a + " A");
@@ -120,10 +131,6 @@ print_sample(a,b,c, alpha,beta,gamma, U)
 	print("alpha = " + alpha + " deg");
 	print("beta = " + beta + " deg");
 	print("gamma = " + gamma + " deg");
-	print("-"*80);
-	print("orient1 = " + str(U[0]));
-	print("orient2 = " + str(U[1]));
-	print("orientup = " + str(U[2]));
 	print("-"*80);
 }
 
@@ -137,19 +144,25 @@ tas2hkl(a,b,c, alpha,beta,gamma, orient1,orient2, theta_m, theta_a, theta_s, tth
 	kiQ = angle_ki_Q(ki, kf, Q);
 	Qorient1 = pi - theta_s - kiQ;
 
-	U = U_matrix(orient1, orient2);
 	B = B_matrix(a,b,c, alpha/180.*pi,beta/180.*pi,gamma/180.*pi);
-	UB = prod(U, B);
+	[U, UB] = UB_matrix(B, orient1, orient2);
 	UB_inv = inv(UB);
 
-	print_sample(a,b,c, alpha,beta,gamma, U);
+	print_sample(a,b,c, alpha,beta,gamma);
 	print("dm = " + dm + " A");
 	print("da = " + da + " A");
 	print("ki = " + ki + " 1/A");
 	print("kf = " + kf + " 1/A");
+
 	print("-"*80);
 	print("E = " + E + " meV");
 	print("Q = " + Q + " 1/A");
+
+	print("-"*80);
+	print("U = " + str(U));
+	print("B = " + str(B));
+	print("UB = " + str(UB));
+	print("-"*80);
 
 	s = sin(Qorient1);
 	c = cos(Qorient1);
@@ -164,11 +177,10 @@ hkl2tas(a,b,c, alpha,beta,gamma, orient1,orient2, h,k,l, ki,kf, dm,da)
 {
 	hkl = [h,k,l];
 
-	U = U_matrix(orient1, orient2);
 	B = B_matrix(a,b,c, alpha/180.*pi,beta/180.*pi,gamma/180.*pi);
-	UB = prod(U, B);
+	[U, UB] = UB_matrix(B, orient1, orient2);
 
-	print_sample(a,b,c, alpha,beta,gamma, U);
+	print_sample(a,b,c, alpha,beta,gamma);
 	print("dm = " + dm + " A");
 	print("da = " + da + " A");
 	print("ki = " + ki + " 1/A");
@@ -181,20 +193,17 @@ hkl2tas(a,b,c, alpha,beta,gamma, orient1,orient2, h,k,l, ki,kf, dm,da)
 	print("UB = " + str(UB));
 	print("-"*80);
 
-	Q_vec = prod(B, hkl);
-	Q_vec_in_U = prod(UB, hkl);
-	#Q_vec_in_U = prod(U, Q_vec);
+	Q_vec = prod(UB, hkl);
 
 	print("Q = " + str(Q_vec) + " 1/A");
-	print("Q_plane = " + str(Q_vec_in_U) + " 1/A");
 
-	if(abs(Q_vec_in_U[2]) > 1e-6)
+	if(abs(Q_vec[2]) > 1e-6)
 	{
 		print("Error: Position not in scattering plane.");
 		exit(-1);
 	}
 
-	Q = len(Q_vec_in_U);
+	Q = len(Q_vec);
 	print("|Q| = " + Q + " 1/A");
 
 	E = ki_kf_to_E(ki, kf);
@@ -214,7 +223,7 @@ hkl2tas(a,b,c, alpha,beta,gamma, orient1,orient2, h,k,l, ki,kf, dm,da)
 	print("2theta = " + (ttheta/pi*180.) + " deg");
 
 	kiQ = angle_ki_Q(ki, kf, Q);
-	theta = -kiQ - atan2(Q_vec_in_U[1], Q_vec_in_U[0]) + pi;
+	theta = -kiQ - atan2(Q_vec[1], Q_vec[0]) + pi;
 	theta_takin = theta - pi/2.;
 	print("theta = " + (theta/pi*180.) + " deg" + 
 		"\t(theta_takin = " + (theta_takin/pi*180) + " deg)");
@@ -230,7 +239,7 @@ usage(app)
         print("\nTAS position calculation for single crystal");
 	print("\nExample usage:");
 	print("\t* hkl->tas: " + app + " h=1 k=1 l=0 ki=1.4 kf=1.5 a=5 b=5 c=5 alpha=90 beta=90 gamma=90 orient1=1,0,0 orient2=0,1,0");
-	print("\t* tas->hkl: " + app + " th_s=80.2 tt_s=75.5 tt_m=84 tt_a=77.3 ki=1.4 kf=1.5 a=5 b=5 c=5 alpha=90 beta=90 gamma=90 orient1=1,0,0 orient2=0,1,0");
+	print("\t* tas->hkl: " + app + " th_s=80.2 tt_s=75.5 tt_m=84 tt_a=77.3 a=5 b=5 c=5 alpha=90 beta=90 gamma=90 orient1=1,0,0 orient2=0,1,0");
 	print();
         print("\ta,b,c                 lattice constants in A");
         print("\talpha,beta,gamma      lattice angles in deg");

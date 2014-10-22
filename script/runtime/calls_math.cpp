@@ -695,9 +695,11 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 		// matrix product
 		if(bFirstIsMat && bSecondIsMat)
 		{
-			if(iRows1 != iCols2 || iCols1 != iRows2)
+			if(iCols1!=iRows2 /*|| iCols1!=iRows2*/)
 			{
-				log_err(linenr(runinfo), "Row and column counts of matrices do not match.");
+				log_err(linenr(runinfo), "Row and column counts of matrices do not match: ",
+							"Rows: ", iRows1, ", ", iRows2, 
+							", columns: ", iCols1, ", ", iCols2, ".");
 				return 0;
 			}
 
