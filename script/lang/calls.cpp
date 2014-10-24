@@ -30,6 +30,7 @@ extern const t_string& get_type_name(SymbolType ty)
 		{
 			{SYMBOL_DOUBLE, "real"},
 			{SYMBOL_INT, "int"},
+			{SYMBOL_COMPLEX, "complex"},
 			{SYMBOL_STRING, "string"},
 			{SYMBOL_ARRAY, "vector"},
 			{SYMBOL_MAP, "map"},
