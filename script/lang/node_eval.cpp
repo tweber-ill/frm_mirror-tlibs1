@@ -1406,10 +1406,11 @@ Symbol* NodeFor::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) 
 			runinfo.bWantBreak = 0;
 			break;
 		}
+
 		if(runinfo.bWantContinue)
 		{
 			runinfo.bWantContinue = 0;
-			continue;
+			//continue;
 		}
 
 		if(m_pExprEnd)

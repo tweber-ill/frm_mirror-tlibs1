@@ -47,4 +47,3 @@ E2lam(E_meV)
 	return k2lam(E2k(E_meV));
 	
 }
-
