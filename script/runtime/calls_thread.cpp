@@ -111,7 +111,7 @@ static Symbol* task_proc(NodeFunction* pFunc, ParseInfo* pinfo, std::vector<Symb
 
 	pTable->InsertSymbol(T_STR"<args>", &arrArgs);
 	Symbol* pRet = pThreadFunc->eval(*pinfo, *pruninfo2, pTable);
-	//pTable->RemoveSymbolNoDelete(T_STR"<ret>");
+	pTable->RemoveSymbolNoDelete(T_STR"<ret>");
 	pTable->RemoveSymbolNoDelete(T_STR"<args>");
 
 	if(pTable) delete pTable;

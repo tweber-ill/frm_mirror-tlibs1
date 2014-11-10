@@ -99,9 +99,9 @@ Symbol* NodeIdent::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym
 
 	if(pSymbol == pSymbolGlob)
 		info.pmutexGlobalSyms->lock();
-	
+
 	pSymbol->SetIdent(m_strIdent);
-	
+
 	if(pSymbol == pSymbolGlob)
 		info.pmutexGlobalSyms->unlock();
 	return pSymbol;
@@ -1343,6 +1343,7 @@ Symbol* NodeWhile::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym
 	if(!m_pExpr) return 0;
 	if(!m_pStmt) return 0;
 
+	const Node* pLastLoop = runinfo.pCurLoop;
 	runinfo.pCurLoop = this;
 	while(1)
 	{
@@ -1368,7 +1369,7 @@ Symbol* NodeWhile::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym
 			continue;
 		}
 	}
-	runinfo.pCurLoop = 0;
+	runinfo.pCurLoop = pLastLoop;
 
 	return 0;
 }
@@ -1380,6 +1381,7 @@ Symbol* NodeFor::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) 
 	if(!m_pExprCond) return 0;
 	if(!m_pStmt) return 0;
 
+	const Node* pLastLoop = runinfo.pCurLoop;
 	runinfo.pCurLoop = this;
 
 	if(m_pExprInit)
@@ -1419,7 +1421,7 @@ Symbol* NodeFor::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) 
 			safe_delete(pSymEnd, pSym, &info);
 		}
 	}
-	runinfo.pCurLoop = 0;
+	runinfo.pCurLoop = pLastLoop;
 
 	return 0;
 }
@@ -1466,6 +1468,7 @@ Symbol* NodeRangedFor::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *
 	t_string strIter = T_STR"<cur_iter_" + strIdent + T_STR">";
 	pSym->InsertSymbol(strIter, pSymIter);
 
+	const Node* pLastLoop = runinfo.pCurLoop;
 	runinfo.pCurLoop = this;
 	for(unsigned int iArr=0; iArr<pArr->GetArr().size(); ++iArr)
 	{
@@ -1483,6 +1486,7 @@ Symbol* NodeRangedFor::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *
 			pArr->GetArr()[iArr] = pNewSym;
 			//delete pSymInArr;
 			pSymInArr = pNewSym;
+			pArr->UpdateIndices();
 		}
 		pSym->RemoveSymbolNoDelete(strIdent);
 
@@ -1500,7 +1504,7 @@ Symbol* NodeRangedFor::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *
 			continue;
 		}
 	}
-	runinfo.pCurLoop = 0;
+	runinfo.pCurLoop = pLastLoop;
 
 	pSym->RemoveSymbol(strIter);
 

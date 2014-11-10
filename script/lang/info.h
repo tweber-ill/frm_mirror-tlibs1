@@ -68,7 +68,7 @@ struct ParseInfo
 	std::mutex *pmutexGlobalSyms = nullptr;
 
 	HandleManager *phandles = nullptr;
-	
+
 
 	// mutex for script if no explicit mutex given
 	std::mutex *pmutexGlobal = nullptr;

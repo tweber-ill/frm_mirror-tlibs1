@@ -867,9 +867,9 @@ bool is_mat(const Symbol* pSym, unsigned int *piNumCols, unsigned int *piNumRows
 void safe_delete(Symbol *&pSym, const SymbolTable* pSymTab, ParseInfo* pParseInfo)
 {
 	if(!pSym) return;
-	
+
 	const SymbolTable* pSymTabGlob = 0;
-	if(pParseInfo) 
+	if(pParseInfo)
 		pSymTabGlob = pParseInfo->pGlobalSyms;
 
 
