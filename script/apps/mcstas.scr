@@ -77,7 +77,8 @@ mccompile(instr)
 		return 0;
 	}
 
-	exec("strip " + instr_out);
+	if(use_cpp_opt)
+		exec("strip " + instr_out);
 
 	print("="*80);
 	print("\n");
