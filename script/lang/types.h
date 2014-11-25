@@ -12,7 +12,7 @@
 #include <fstream>
 #include <sstream>
 #include <complex>
-#include <type_traits>
+#include "../helper/traits.h"
 
 
 typedef double t_real;
@@ -28,16 +28,6 @@ struct EnumDirectHash
 		return static_cast<std::size_t>(ty);
 	}
 };
-
-template<class T>
-struct remove_constref
-{
-	typedef typename std::remove_const<
-		typename std::remove_reference<T>::type
-		>::type type;
-};
-
-
 
 //#define USE_WCHAR
 

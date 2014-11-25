@@ -58,6 +58,7 @@ main(args)
 
 
 	q = linspace(-pi/a, pi/a, 256);
+#	q *= 6.;
 #	q = linspace(-pi/a/10., pi/a/10., 256);
 	beta = v2beta(v, a, m);
 	om = phonon_disp(v, m, q, a);

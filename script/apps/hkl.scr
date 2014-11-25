@@ -135,9 +135,9 @@ print_sample(a,b,c, alpha,beta,gamma)
 	print("a = " + a + " A");
 	print("b = " + b + " A");
 	print("c = " + c + " A");
-	print("alpha = " + alpha + " deg");
-	print("beta = " + beta + " deg");
-	print("gamma = " + gamma + " deg");
+	print("alpha = " + (alpha/pi*180.) + " deg");
+	print("beta = " + (beta/pi*180.) + " deg");
+	print("gamma = " + (gamma/pi*180.) + " deg");
 	print("-"*80);
 }
 
@@ -151,7 +151,7 @@ tas2hkl(a,b,c, alpha,beta,gamma, orient1,orient2, theta_m, theta_a, theta_s, tth
 	kiQ = angle_ki_Q(ki, kf, Q);
 	Qorient1 = pi - theta_s - kiQ;
 
-	B = B_matrix(a,b,c, alpha/180.*pi,beta/180.*pi,gamma/180.*pi);
+	B = B_matrix(a,b,c, alpha,beta,gamma);
 	[U, UB] = UB_matrix(B, orient1, orient2);
 	UB_inv = inv(UB);
 
@@ -184,7 +184,7 @@ hkl2tas(a,b,c, alpha,beta,gamma, orient1,orient2, h,k,l, ki,kf, dm,da)
 {
 	hkl = [h,k,l];
 
-	B = B_matrix(a,b,c, alpha/180.*pi,beta/180.*pi,gamma/180.*pi);
+	B = B_matrix(a,b,c, alpha,beta,gamma);
 	[U, UB] = UB_matrix(B, orient1, orient2);
 
 	print_sample(a,b,c, alpha,beta,gamma);
@@ -343,13 +343,13 @@ main(args)
 	if(had_hkl)
 	{
 		print("\nCalculating hkl->tas\n");
-		[theta_m, theta_a, theta_s, ttheta_s] = hkl2tas(a,b,c, alpha,beta,gamma, orient1,orient2, h,k,l, ki,kf, dm,da);
+		[theta_m, theta_a, theta_s, ttheta_s] = hkl2tas(a,b,c, alpha/180.*pi,beta/180.*pi,gamma/180.*pi, orient1,orient2, h,k,l, ki,kf, dm,da);
 		#tas2hkl(a,b,c, alpha,beta,gamma, orient1,orient2, theta_m, theta_a, theta_s, ttheta_s, dm,da);
 	}
 	else if(had_angles)
 	{
 		print("\nCalculating tas->hkl\n");
-		tas2hkl(a,b,c, alpha,beta,gamma, orient1,orient2, tt_m/2./180.*pi, tt_a/2./180.*pi, th_s/180.*pi, tt_s/180.*pi, dm,da);
+		tas2hkl(a,b,c, alpha/180.*pi,beta/180.*pi,gamma/180.*pi, orient1,orient2, tt_m/2./180.*pi, tt_a/2./180.*pi, th_s/180.*pi, tt_s/180.*pi, dm,da);
 	}
 	else
 	{
