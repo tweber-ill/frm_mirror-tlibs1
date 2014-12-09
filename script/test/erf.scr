@@ -1,17 +1,32 @@
-main()
+f(x)
 {
-	x = linspace(-3, 3, 128);
-	y1 = erf(x);
-	y2 = tanh(x);
+	const_size = 1.5;
+	slope_scale = 1.;
 
-	opt = ["style":"line", "legend":"erf(x)"];
-	opt2 = ["style":"line", "legend":"tanh(x)"];
+	x0 = 2.;
+	amp = 1.5;
 
-	plot([[x,y1,opt], [x,y2,opt2]], ["term":"x11"]);
+	x -= x0;
+
+	fkt = "erf";
+	#fkt = "tanh";
+
+	if(x<-const_size/2.)
+		return call(fkt, [x*slope_scale + 3. + const_size/2.]) * amp*0.5 + amp*0.5;
+	else if(x>=-const_size/2. and x<=const_size/2.)
+		return amp;
+	else
+		return call(fkt, [-x*slope_scale + 3. + const_size/2.]) * amp*0.5 + amp*0.5;
 }
 
-
-S(x)
+main()
 {
-	return 1./(1. + exp(-x));
+	xs = linspace(-7, 7, 128);
+	ys = vec(128);
+	for(x : xs)
+		ys[cur_iter(x)] = f(x);
+
+	opt = ["style":"line", "legend":"f(x)"];
+
+	plot([[xs,ys,opt]], ["term":"x11"]);
 }
