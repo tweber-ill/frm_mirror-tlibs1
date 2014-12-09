@@ -5,6 +5,7 @@
 
 __init__() 
 {
+	import("apps/neutrons.scr");
 }
 
 
@@ -38,7 +39,7 @@ mieze_f1f2(L1, L2, Ls, lam_A, tau_ps)
 	tau = tau_ps * 1e-12;
 	v = lam2v(lam_A);
 
-	f1 = L2/L1 / (2. * Ls * 2.*pi*hbar) * (m_n *v^3 * tau);
+	f1 = L2/L1 / (2. * Ls * 2.*pi*hbar) * (m_n * v^3 * tau);
 	f2 = (L1/L2 + 1.)*f1;
 
 	return [f1, f2];
