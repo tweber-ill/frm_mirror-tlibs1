@@ -629,7 +629,7 @@ static Symbol* fkt_unitmatrix(const std::vector<Symbol*>& vecSyms, ParseInfo& in
 		return 0;
 
 	t_int iSize = vecSyms[0]->GetValInt();
-	t_mat<t_real> mat = unit_matrix<t_real>(iSize);
+	t_mat<t_real> mat = unit_matrix<t_mat<t_real>>(iSize);
 
 	return mat_to_sym<t_mat>(mat);
 }

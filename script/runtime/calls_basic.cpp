@@ -27,8 +27,8 @@
 #include <chrono>
 #include <thread>
 
-//#include <regex>
-#include <boost/tr1/regex.hpp>
+#include <regex>
+//#include <boost/tr1/regex.hpp>
 
 
 static Symbol* fkt_version(const std::vector<Symbol*>& vecSyms,
@@ -989,8 +989,8 @@ static Symbol* fkt_replace_regex(const std::vector<Symbol*>& vecSyms,
 	try
 	{
 		//std::cout << "Regex: " << strRegex << std::endl;
-		std::tr1::basic_regex<t_char> rex(strRegex, std::tr1::regex::ECMAScript);
-		strRet = std::tr1::regex_replace(str, rex, strRepl);
+		std::basic_regex<t_char> rex(strRegex, std::regex::ECMAScript);
+		strRet = std::regex_replace(str, rex, strRepl);
 	}
 	catch(const std::exception& ex)
 	{
@@ -1021,14 +1021,14 @@ static Symbol* fkt_find_regex(const std::vector<Symbol*>& vecSyms,
 	try
 	{
 		t_string str = strOrg;
-		std::tr1::basic_regex<t_char> rex(strRegex, std::tr1::regex::ECMAScript);
-		std::tr1::smatch mRes;
+		std::basic_regex<t_char> rex(strRegex, std::regex::ECMAScript);
+		std::smatch mRes;
 
 		int iPos = 0;
 		while(1)
 		{
 			//std::cout << "Input: " << str << std::endl;
-			if(!std::tr1::regex_search(str, mRes, rex) || mRes.empty())
+			if(!std::regex_search(str, mRes, rex) || mRes.empty())
 				break;
 			if(!mRes.length())
 				break;
@@ -1081,9 +1081,9 @@ static Symbol* fkt_match_regex(const std::vector<Symbol*>& vecSyms,
 
 	try
 	{
-		std::tr1::basic_regex<t_char> rex(strRegex, std::tr1::regex::ECMAScript);
-		std::tr1::smatch mRes;
-		bMatch = std::tr1::regex_match(str, mRes, rex);
+		std::basic_regex<t_char> rex(strRegex, std::regex::ECMAScript);
+		std::smatch mRes;
+		bMatch = std::regex_match(str, mRes, rex);
 
 		/*std::cout << "match and submatches: ";
 		for(const auto& strMatch : mRes)
@@ -1115,15 +1115,15 @@ static Symbol* fkt_subfind_regex(const std::vector<Symbol*>& vecSyms,
 
 	try
 	{
-		std::tr1::basic_regex<t_char> rex(strRegex, std::tr1::regex::ECMAScript);
-		std::tr1::smatch mRes;
+		std::basic_regex<t_char> rex(strRegex, std::regex::ECMAScript);
+		std::smatch mRes;
 
 		if(bSearch)
-			std::tr1::regex_search(str, mRes, rex);
+			std::regex_search(str, mRes, rex);
 		else
-			std::tr1::regex_match(str, mRes, rex);
+			std::regex_match(str, mRes, rex);
 
-		for(const std::tr1::ssub_match& strMatch : mRes)
+		for(const std::ssub_match& strMatch : mRes)
 		{
 			pSymRet->GetArr().push_back(new SymbolString(strMatch));
 		}

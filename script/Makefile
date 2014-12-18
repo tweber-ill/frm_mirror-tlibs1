@@ -12,18 +12,18 @@ else
 endif
 
 DEFINES = -DNO_QT -DNO_COMP
-INCS = 
-FLAGS = -std=c++11 -fopenmp ${OPT_FLAGS} ${DEFINES} ${INCS}
+INCS =
+FLAGS = -std=c++14 -fopenmp ${OPT_FLAGS} ${DEFINES} ${INCS}
 #FLAGS += -Wall -Wpedantic
 
 LIBS = -L/usr/local/lib
 
 # Boost
-LIBS = -lboost_iostreams -lboost_regex
+LIBS = -lboost_iostreams
 
 # Minuit
 INCS += -I/usr/include/root
-LIBS += -L/usr/lib64/root -lMinuit2 
+LIBS += -L/usr/lib64/root -lMinuit2
 
 # std
 LIBS += -lstdc++ -lm
