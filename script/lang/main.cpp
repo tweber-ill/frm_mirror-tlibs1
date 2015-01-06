@@ -16,6 +16,7 @@
 #include <cmath>
 #include <array>
 #include <algorithm>
+#include <boost/version.hpp>
 
 #include "script_helper.h"
 #include "globals.h"
@@ -31,16 +32,21 @@ static inline void usage(const char* pcProg)
 	G_COUT << "This is the " << g_pcVersion << ".\n";
 	G_COUT << "Written by Tobias Weber, 2013-2014.\n";
 	G_COUT << "Built on " << __DATE__ << ", " << __TIME__;
-	G_COUT << " with CC version " << __VERSION__ << ".\n\n";
+	//G_COUT << " with CC version " << __VERSION__ << ".\n\n";
+	G_COUT << " with " << BOOST_COMPILER << ".\n\n";
 	G_COUT << "Usage: " << pcProg << " [arguments to hermelin]"
 		<< " <script file> [arguments to script]"
 		<< "\n";
-	G_COUT << "\nArguments to hermelin:" << "\n";
-	G_COUT << "\t-h, --help            This message.\n";
-	G_COUT << "\t-i, --interactive     Interactive mode.\n";
-	G_COUT << "\t-t, --timing          Show timing information.\n";
-	G_COUT << "\t-s, --symbols         Show symbol tables.\n";
-	G_COUT << "\t-d[0-4]               Verbosity (0=none, 1=errors, 2=warnings, 3=infos, 4=debug).\n";
+
+	G_COUT << "\n" <<
+	R"RAW(Arguments to hermelin:
+	-h, --help            This message.
+	-i, --interactive     Interactive mode.
+	-t, --timing          Show timing information.
+	-s, --symbols         Show symbol tables.
+	-d[0-4]               Verbosity (0=none, 1=errors, 2=warnings, 3=infos, 4=debug).
+	)RAW";
+
 	G_COUT << std::endl;
 }
 
@@ -53,7 +59,7 @@ static inline int interactive(bool bShowSymbols=0, unsigned int uiDebugLevel=3)
 
 	ParseInfo info;
 	RuntimeInfo runinfo;
-	
+
 	std::unique_ptr<SymbolTable> ptrLocalSym(new SymbolTable);
 	runinfo.pLocalSymsOverride = ptrLocalSym.get();
 	runinfo.bImplicitRet = 1;
@@ -208,7 +214,7 @@ static inline int script_main(int argc, char** argv)
 	ParseObj par;
 	ParseInfo info;
 	RuntimeInfo runinfo;
-	
+
 	info.bEnableDebug = (uiDebugLevel>=4);
 
 
