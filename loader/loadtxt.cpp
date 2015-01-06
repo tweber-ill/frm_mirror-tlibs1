@@ -112,7 +112,7 @@ void LoadTxt::StrTrim(std::string& str)
 			trim(strVal);
 
 			// if key is "Param" then the value itself is a "Key = Value" pair!
-			if(is_equal(strKey, std::string("param"), false))
+			if(str_is_equal(strKey, std::string("param"), false))
 			{
 				std::size_t iParamSep = strVal.find("=");
 				if(iParamSep != std::string::npos && iParamSep < strVal.length())
@@ -163,7 +163,7 @@ bool LoadTxt::Load(const char* pcFile)
 
 
 	std::string strExt = get_fileext(std::string(pcFile));
-	if(is_equal(strExt, std::string("sqw")))
+	if(str_is_equal(strExt, std::string("sqw")))
 	{
 		m_mapComm["type"].push_back("array_2d");
 		m_mapComm["subtype"].push_back("tobisown");		// 1 data block
@@ -172,7 +172,7 @@ bool LoadTxt::Load(const char* pcFile)
 		bHasAxesLines = true;
 		bTranspose = true;
 	}
-	else if(is_equal(strExt, std::string("res")))
+	else if(str_is_equal(strExt, std::string("res")))
 	{
 		bIsResData = true;
 	}
