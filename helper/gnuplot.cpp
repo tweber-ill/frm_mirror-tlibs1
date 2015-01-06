@@ -85,12 +85,12 @@ void GnuPlot::SetFileTerminal(const char* pcFile)
 
 	//std::cout << "File: " << strFile << "\nExtension: " << strExt << std::endl;
 
-	if(is_equal(strExt, std::string("pdf"), 0))
+	if(str_is_equal(strExt, std::string("pdf"), 0))
 	{
 		//(*m_postr) << "set term pdfcairo enhanced color font \"Helvetica\"\n";
 		(*m_postr) << "set term pdf enhanced color\n";
 	}
-	else if(is_equal(strExt, std::string("ps"), 0))
+	else if(str_is_equal(strExt, std::string("ps"), 0))
 	{
 		//(*m_postr) << "set term postscript eps enhanced color \"Helvetica\" 24\n";
 		(*m_postr) << "set term postscript eps enhanced color\n";
