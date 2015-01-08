@@ -5,9 +5,9 @@
  */
 
 #include "../lang/types.h"
-#include "../helper/string.h"
-#include "../helper/log.h"
-#include "../helper/interpolation.h"
+#include "../../string/string.h"
+#include "../../helper/log.h"
+#include "../../math/interpolation.h"
 #include "calls_fit.h"
 #include "../lang/calls.h"
 #include "../lang/node.h"
@@ -18,8 +18,7 @@ template<typename T> using t_stdvec = std::vector<T>;
 // --------------------------------------------------------------------------------
 // fitting
 
-#include "../fitter/fitter.h"
-#include "../fitter/chi2.h"
+#include "../../math/minuit.h"
 #include <algorithm>
 #include <exception>
 
@@ -54,7 +53,7 @@ convert_string_vector(const std::vector<std::string>& vecStr)
 	return vecRet;
 }*/
 
-class GenericModel : public FunctionModel
+class GenericModel : public MinuitFuncModel
 {
 protected:
 	const NodeFunction *m_pFkt = 0;
@@ -142,7 +141,7 @@ public:
 		if(m_pTable) { delete m_pTable; m_pTable=0; }
 	}
 
-	virtual bool SetParams(const std::vector<t_real>& vecParams)
+	virtual bool SetParams(const std::vector<t_real>& vecParams) override
 	{
 		if(vecParams.size() != m_vecParamNames.size())
 		{
@@ -164,7 +163,7 @@ public:
 		return 1;
 	}
 
-	virtual t_real operator()(t_real x) const
+	virtual t_real operator()(t_real x) const override
 	{
 		((SymbolReal*)m_vecSyms[0])->SetVal(x);
 
@@ -173,7 +172,7 @@ public:
 		arrArgs.GetArr() = m_vecSyms;
 		arrArgs.UpdateIndices();
 		//m_pFkt->SetArgSyms(&m_vecSyms);
-		
+
 		RuntimeInfo runinfo;
 		m_pTable->InsertSymbol(T_STR"<args>", &arrArgs);
 		Symbol *pSymRet = m_pFkt->eval(*m_pinfo, runinfo, m_pTable);
@@ -197,18 +196,18 @@ public:
 		return dRetVal;
 	}
 
-	virtual GenericModel* copy() const
+	virtual GenericModel* copy() const override
 	{ return new GenericModel(*this); }
-	virtual std::string print(bool bFillInSyms=true) const
+	virtual std::string print(bool bFillInSyms=true) const override
 	{ return "<not implemented>"; }
-	virtual const char* GetModelName() const
+	virtual const char* GetModelName() const override
 	{ return "generic fitter model"; }
-	virtual std::vector<std::string> GetParamNames() const
+	virtual std::vector<std::string> GetParamNames() const override
 	{ return m_vecParamNames; }
 
-	virtual std::vector<t_real> GetParamValues() const
+	virtual std::vector<t_real> GetParamValues() const override
 	{ throw Err("Called invalid function in generic fitter model"); }
-	virtual std::vector<t_real> GetParamErrors() const
+	virtual std::vector<t_real> GetParamErrors() const override
 	{ throw Err("Called invalid function in generic fitter model"); }
 };
 

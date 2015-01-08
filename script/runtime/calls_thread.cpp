@@ -5,9 +5,9 @@
  */
 
 #include "../lang/types.h"
-#include "../helper/flags.h"
-#include "../helper/string.h"
-#include "../helper/log.h"
+#include "../../helper/flags.h"
+#include "../../string/string.h"
+#include "../../helper/log.h"
 #include "calls_thread.h"
 #include "../lang/calls.h"
 #include <thread>

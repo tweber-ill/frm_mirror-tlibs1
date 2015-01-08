@@ -11,7 +11,7 @@
 #include "../runtime/calls_fit.h"
 #include "../runtime/calls_file.h"
 #include "../runtime/calls_thread.h"
-#include "../helper/neutrons.hpp"
+#include "../../math/neutrons.hpp"
 #include <boost/units/systems/si/codata/electron_constants.hpp>
 
 int yydebug = 0;

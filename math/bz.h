@@ -7,10 +7,10 @@
 #ifndef __BZ_H__
 #define __BZ_H__
 
-#include "exception.h"
+#include "../helper/exception.h"
 #include "math.h"
 #include "geo.h"
-#include "log.h"
+#include "../helper/log.h"
 #include <vector>
 
 

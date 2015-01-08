@@ -5,9 +5,9 @@
  */
 
 #include "gl.h"
-#include "log.h"
-#include "misc.h"
-#include "string.h"
+#include "../helper/log.h"
+#include "../helper/misc.h"
+#include "../string/string.h"
 
 #include <iomanip>
 #include <GL/glu.h>

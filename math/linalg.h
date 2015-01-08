@@ -8,11 +8,11 @@
 #ifndef __TAZ_LINALG_H__
 #define __TAZ_LINALG_H__
 
-#include "flags.h"
-#include "exception.h"
+#include "../helper/flags.h"
+#include "../helper/exception.h"
 #include "math.h"
-#include "log.h"
-#include "traits.h"
+#include "../helper/log.h"
+#include "../helper/traits.h"
 
 #include <initializer_list>
 #include <cmath>

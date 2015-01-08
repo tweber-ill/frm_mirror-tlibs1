@@ -15,8 +15,8 @@
 
 #include "math.h"
 #include "geo.h"
-#include "misc.h"
-#include "log.h"
+#include "../helper/misc.h"
+#include "../helper/log.h"
 #include "funcmod.h"
 
 

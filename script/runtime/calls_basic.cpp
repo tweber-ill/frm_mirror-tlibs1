@@ -4,15 +4,15 @@
  * @date dec-2013
  */
 
-#include "../helper/flags.h"
-#include "../helper/log.h"
+#include "../../helper/flags.h"
+#include "../../helper/log.h"
 #include "calls_basic.h"
 #include "../lang/types.h"
 #include "../lang/calls.h"
 
 #include "../lang/info.h"
 #include "../lang/script_helper.h"
-#include "../helper/string.h"
+#include "../../string/string.h"
 
 #include <sstream>
 #include <iostream>

@@ -5,12 +5,12 @@
  */
 
 #include "../lang/types.h"
-#include "../helper/string.h"
-#include "../helper/file.h"
-#include "../helper/log.h"
+#include "../../string/string.h"
+#include "../../file/file.h"
+#include "../../helper/log.h"
 #include "calls_file.h"
 #include "../lang/calls.h"
-#include "../loader/loadtxt.h"
+#include "../../file/loadtxt.h"
 #include <sstream>
 #include <fstream>
 #include <iomanip>

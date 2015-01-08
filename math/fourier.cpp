@@ -6,9 +6,9 @@
  */
 
 #include "fourier.h"
-#include "misc.h"
+#include "../helper/misc.h"
 #include "math.h"
-#include "log.h"
+#include "../helper/log.h"
 
 #include <iostream>
 #include <string.h>

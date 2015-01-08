@@ -13,8 +13,7 @@
 #include <algorithm>
 #include <iterator>
 #include <tuple>
-#include "math.h"
-//#include "../data/data.h"
+#include "../math/math.h"
 
 // deletes an object when going out of scope
 template<class T> class autodeleter

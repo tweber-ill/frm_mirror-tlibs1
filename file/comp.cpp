@@ -5,8 +5,8 @@
  */
 
 #include "comp.h"
-#include "string.h"
-#include "log.h"
+#include "../string/string.h"
+#include "../helper/log.h"
 
 #include <fstream>
 #include <list>

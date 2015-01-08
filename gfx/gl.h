@@ -12,8 +12,8 @@
 #include <unordered_map>
 #include <GL/gl.h>
 
-#include "linalg.h"
-#include "geo.h"
+#include "../math/linalg.h"
+#include "../math/geo.h"
 
 typedef ublas::matrix<double, ublas::row_major, ublas::bounded_array<double,4*4>> t_mat4;
 typedef ublas::matrix<double, ublas::row_major, ublas::bounded_array<double,3*3>> t_mat3;

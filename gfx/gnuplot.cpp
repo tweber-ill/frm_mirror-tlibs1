@@ -4,11 +4,11 @@
  * @date 24-dec-2013
  */
 
-#include "flags.h"
+#include "../helper/flags.h"
 #include "gnuplot.h"
-#include "misc.h"
-#include "string.h"
-#include "log.h"
+#include "../helper/misc.h"
+#include "../string/string.h"
+#include "../helper/log.h"
 
 #include <cstdio>
 #include <sstream>

@@ -9,7 +9,7 @@
 
 #include "math.h"
 #include "linalg.h"
-#include "exception.h"
+#include "../helper/exception.h"
 
 #include <boost/units/unit.hpp>
 #include <boost/units/quantity.hpp>

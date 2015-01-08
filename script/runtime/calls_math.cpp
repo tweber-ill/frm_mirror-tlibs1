@@ -7,11 +7,11 @@
 #include "../lang/types.h"
 #include "calls_math.h"
 #include "../lang/calls.h"
-#include "../helper/fourier.h"
-#include "../helper/linalg.h"
-#include "../helper/linalg2.h"
-#include "../helper/rand.h"
-#include "../helper/log.h"
+#include "../../math/fourier.h"
+#include "../../math/linalg.h"
+#include "../../math/linalg2.h"
+#include "../../math/rand.h"
+#include "../../helper/log.h"
 
 static inline Symbol* _fkt_linlogspace(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab, bool bLog)

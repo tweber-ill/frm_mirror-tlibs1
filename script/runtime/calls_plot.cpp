@@ -7,8 +7,8 @@
 #include "../lang/types.h"
 #include "calls_plot.h"
 #include "../lang/calls.h"
-#include "../helper/gnuplot.h"
-#include "../helper/string.h"
+#include "../../gfx/gnuplot.h"
+#include "../../string/string.h"
 
 
 // --------------------------------------------------------------------------------

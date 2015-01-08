@@ -8,11 +8,11 @@
 #ifndef __TAZ_GEO_H__
 #define __TAZ_GEO_H__
 
-#include "flags.h"
-#include "exception.h"
+#include "../helper/flags.h"
+#include "../helper/exception.h"
 #include "linalg.h"
 #include "linalg2.h"
-#include "log.h"
+#include "../helper/log.h"
 
 #include <iostream>
 #include <cmath>

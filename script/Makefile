@@ -40,7 +40,7 @@ hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/nod
 		obj/string.o obj/loadtxt.o obj/rand.o obj/fourier.o obj/script_helper.o \
 		obj/calls_basic.o obj/info.o \
 		obj/calls_plot.o obj/calls_math.o obj/calls_file.o obj/calls_thread.o \
-		obj/calls_fit.o obj/globals.o obj/flags.o obj/fitter.o obj/chi2.o \
+		obj/calls_fit.o obj/globals.o obj/flags.o obj/minuit.o \
 		obj/interpolation.o obj/spec_char.o obj/linalg2.o \
 		obj/log.o obj/node_opt.o
 	${CC} ${FLAGS} -o $@ $+ ${LIBS}
@@ -82,35 +82,33 @@ obj/calls_fit.o: runtime/calls_fit.cpp runtime/calls_fit.h
 	${CC} ${FLAGS} -c -o obj/calls_fit.o runtime/calls_fit.cpp
 obj/handles.o: lang/handles.cpp lang/handles.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/gnuplot.o: helper/gnuplot.cpp helper/gnuplot.h
+obj/gnuplot.o: ../gfx/gnuplot.cpp ../gfx/gnuplot.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/file.o: helper/file.cpp helper/file.h
+obj/file.o: ../file/file.cpp ../file/file.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/string.o: helper/string.cpp helper/string.h
+obj/string.o: ../string/string.cpp ../string/string.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/spec_char.o: helper/spec_char.cpp helper/spec_char.h
+obj/spec_char.o: ../string/spec_char.cpp ../string/spec_char.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/loadtxt.o: loader/loadtxt.cpp loader/loadtxt.h
+obj/loadtxt.o: ../file/loadtxt.cpp ../file/loadtxt.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/rand.o: helper/rand.cpp helper/rand.h
+obj/rand.o: ../math/rand.cpp ../math/rand.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/fourier.o: helper/fourier.cpp helper/fourier.h
+obj/fourier.o: ../math/fourier.cpp ../math/fourier.h
 	${CC} ${FLAGS} -c -o $@ $<
 obj/script_helper.o: lang/script_helper.cpp lang/script_helper.h
 	${CC} ${FLAGS} -c -o $@ $<
 obj/globals.o: lang/globals.cpp lang/globals.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/flags.o: helper/flags.cpp helper/flags.h
+obj/flags.o: ../helper/flags.cpp ../helper/flags.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/log.o: helper/log.cpp helper/log.h
+obj/log.o: ../helper/log.cpp ../helper/log.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/fitter.o: fitter/fitter.cpp fitter/fitter.h
+obj/minuit.o: ../math/minuit.cpp ../math/minuit.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/chi2.o: fitter/chi2.cpp fitter/chi2.h
+obj/interpolation.o: ../math/interpolation.cpp ../math/interpolation.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/interpolation.o: helper/interpolation.cpp helper/interpolation.h
-	${CC} ${FLAGS} -c -o $@ $<
-obj/linalg2.o: helper/linalg2.cpp helper/linalg2.h
+obj/linalg2.o: ../math/linalg2.cpp ../math/linalg2.h
 	${CC} ${FLAGS} -c -o $@ $<
 
 

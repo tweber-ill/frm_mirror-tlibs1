@@ -5,7 +5,7 @@
  */
 
 #include "xml.h"
-#include "../helper/string.h"
+#include "../string/string.h"
 #include "../helper/misc.h"
 
 #include <QtXmlPatterns/QXmlQuery>

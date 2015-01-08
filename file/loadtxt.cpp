@@ -6,10 +6,10 @@
  */
 
 #include "loadtxt.h"
-#include "../helper/file.h"
-#include "../helper/string.h"
+#include "../file/file.h"
+#include "../string/string.h"
 #include "../helper/misc.h"
-#include "../helper/math.h"
+#include "../math/math.h"
 #include "../helper/log.h"
 
 #include <string>

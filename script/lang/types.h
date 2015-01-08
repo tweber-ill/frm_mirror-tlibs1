@@ -12,7 +12,7 @@
 #include <fstream>
 #include <sstream>
 #include <complex>
-#include "../helper/traits.h"
+#include "../../helper/traits.h"
 
 
 typedef double t_real;

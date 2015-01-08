@@ -5,7 +5,7 @@
  */
 
 #include "rand.h"
-#include "log.h"
+#include "../helper/log.h"
 
 #include <cstdlib>
 #include <exception>

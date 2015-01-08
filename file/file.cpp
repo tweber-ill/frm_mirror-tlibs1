@@ -4,9 +4,9 @@
  * @date 07-mar-2013
  */
 
-#include "file.h"
-#include "rand.h"
-#include "string.h"
+#include "../file/file.h"
+#include "../math/rand.h"
+#include "../string/string.h"
 
 #include <unistd.h>
 #include <fcntl.h>
