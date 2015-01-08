@@ -108,7 +108,7 @@ obj/fitter.o: fitter/fitter.cpp fitter/fitter.h
 	${CC} ${FLAGS} -c -o $@ $<
 obj/chi2.o: fitter/chi2.cpp fitter/chi2.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/interpolation.o: fitter/models/interpolation.cpp fitter/models/interpolation.h
+obj/interpolation.o: helper/interpolation.cpp helper/interpolation.h
 	${CC} ${FLAGS} -c -o $@ $<
 obj/linalg2.o: helper/linalg2.cpp helper/linalg2.h
 	${CC} ${FLAGS} -c -o $@ $<

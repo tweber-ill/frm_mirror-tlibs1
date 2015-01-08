@@ -7,6 +7,7 @@
 #include "../lang/types.h"
 #include "../helper/string.h"
 #include "../helper/log.h"
+#include "../helper/interpolation.h"
 #include "calls_fit.h"
 #include "../lang/calls.h"
 #include "../lang/node.h"
@@ -18,7 +19,6 @@ template<typename T> using t_stdvec = std::vector<T>;
 // fitting
 
 #include "../fitter/fitter.h"
-#include "../fitter/models/interpolation.h"
 #include "../fitter/chi2.h"
 #include <algorithm>
 #include <exception>
@@ -636,9 +636,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 // --------------------------------------------------------------------------------
 // interpolation
 
-#include "../fitter/models/interpolation.h"
 namespace ublas = boost::numeric::ublas;
-
 
 enum FktParam
 {
