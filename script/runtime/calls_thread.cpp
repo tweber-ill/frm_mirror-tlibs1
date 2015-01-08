@@ -32,13 +32,13 @@ static inline Symbol* fkt_exec(const std::vector<Symbol*>& vecSyms,
 	//int iRet = system(strExec.c_str());
 
 	std::string _strExec = WSTR_TO_STR(strExec);
-	FILE *pPipe = (FILE*)::my_popen(_strExec.c_str(), "w");
+	FILE *pPipe = (FILE*)tl::my_popen(_strExec.c_str(), "w");
 
 //	fflush(pPipe);
 	if(pPipe)
 	{
 		bOk = 1;
-		int iRet = ::my_pclose(pPipe);
+		int iRet = tl::my_pclose(pPipe);
 		if(iRet == -1)
 		{
 			bOk = 0;
@@ -139,7 +139,7 @@ static Symbol* fkt_thread_task(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Need thread proc identifier." << std::endl;
-		throw Err(ostrErr.str(), 0);
+		throw tl::Err(ostrErr.str(), 0);
 	}
 
 	Symbol* _pSymIdent = vecSyms[0];
@@ -147,7 +147,7 @@ static Symbol* fkt_thread_task(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Thread proc identifier needs to be a string." << std::endl;
-		throw Err(ostrErr.str(), 0);
+		throw tl::Err(ostrErr.str(), 0);
 	}
 
 	SymbolString *pSymIdent = (SymbolString*)_pSymIdent;
@@ -159,7 +159,7 @@ static Symbol* fkt_thread_task(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Thread proc \"" << strIdent << "\" not defined." << std::endl;
-		throw Err(ostrErr.str(), 0);
+		throw tl::Err(ostrErr.str(), 0);
 	}
 
 	std::vector<Symbol*>* vecThreadSymsClone = clone_symbols(&vecSyms, 1);
@@ -261,7 +261,7 @@ static Symbol* fkt_begin_critical(const std::vector<Symbol*>& vecSyms,
 						<< iHandle << ") does not exist"
 						<< " or is not a mutex handle. Ignoring." 
 						<< std::endl;
-					throw Err(ostrErr.str(), 0);
+					throw tl::Err(ostrErr.str(), 0);
 					//continue;
 				}
 
@@ -273,7 +273,7 @@ static Symbol* fkt_begin_critical(const std::vector<Symbol*>& vecSyms,
 				std::ostringstream ostrErr;
 				ostrErr << linenr(runinfo) << "Invalid mutex handle: "
 						<< pSym->print() << " Ignoring." << std::endl;
-				throw Err(ostrErr.str(), 0);
+				throw tl::Err(ostrErr.str(), 0);
 			}
 		}
 	}
@@ -308,7 +308,7 @@ static Symbol* fkt_end_critical(const std::vector<Symbol*>& vecSyms,
 					ostrErr << linenr(runinfo) << "Handle (" 
 						<< iHandle << ") does not exist"
 						<< " or is not a mutex handle." << std::endl;
-					throw Err(ostrErr.str(), 0);
+					throw tl::Err(ostrErr.str(), 0);
 					//continue;
 				}
 
@@ -320,7 +320,7 @@ static Symbol* fkt_end_critical(const std::vector<Symbol*>& vecSyms,
 				std::ostringstream ostrErr;
 				ostrErr << linenr(runinfo) << "Invalid mutex handle: "
 						<< pSym->print() << std::endl;
-				throw Err(ostrErr.str(), 0);
+				throw tl::Err(ostrErr.str(), 0);
 			}
 		}
 	}
@@ -336,7 +336,7 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "join needs at least one argument." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	Symbol *pRet = 0;
@@ -353,7 +353,7 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 		{
 			std::ostringstream ostrErr;
 			ostrErr << linenr(runinfo) << "join needs thread handles." << std::endl;
-			throw Err(ostrErr.str(), 0);
+			throw tl::Err(ostrErr.str(), 0);
 			//continue;
 		}
 
@@ -365,7 +365,7 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 			std::ostringstream ostrErr;
 			ostrErr << linenr(runinfo) << "Handle (" 
 				<< iHandle << ") does not exist." << std::endl;
-			throw Err(ostrErr.str(), 0);
+			throw tl::Err(ostrErr.str(), 0);
 			//continue;
 		}
 
@@ -393,7 +393,7 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 			std::ostringstream ostrErr;
 			ostrErr << linenr(runinfo) << "Handle (" 
 				<< iHandle << ") is invalid." << std::endl;
-			throw Err(ostrErr.str(), 0);
+			throw tl::Err(ostrErr.str(), 0);
 		}
 		
 		info.phandles->CloseHandle(iHandle);
@@ -416,7 +416,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 		ostrErr << linenr(runinfo) 
 			<< "nthread needs at least 3 arguments: N, func, arg." 
 			<< std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	Symbol* _pSymN = vecSyms[0];
@@ -424,7 +424,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Number of threads has to be integer." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	SymbolInt *pSymN = (SymbolInt*)_pSymN;
@@ -437,7 +437,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Thread proc identifier needs to be a string." << std::endl;
-		throw Err(ostrErr.str(), 0);
+		throw tl::Err(ostrErr.str(), 0);
 	}
 
 	SymbolString *pSymIdent = (SymbolString*)_pSymIdent;
@@ -450,7 +450,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Thread arg has to be an array." << std::endl;
-		throw Err(ostrErr.str(), 0);
+		throw tl::Err(ostrErr.str(), 0);
 	}
 
 	SymbolArray *pSymArr = (SymbolArray*)_pSymArr;
@@ -464,7 +464,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Thread proc \"" << strIdent 
 			<< "\" not defined." << std::endl;
-		throw Err(ostrErr.str(), 0);
+		throw tl::Err(ostrErr.str(), 0);
 	}
 
 
@@ -474,7 +474,7 @@ static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
 	if(iNumThreads > int(vecArr.size()))
 	{
 		iNumThreads = vecArr.size();
-		log_warn(linenr(runinfo), "More threads requested in nthread than necessary, ",
+		tl::log_warn(linenr(runinfo), "More threads requested in nthread than necessary, ",
 					"reducing to array size (", iNumThreads, ").");
 	}
 

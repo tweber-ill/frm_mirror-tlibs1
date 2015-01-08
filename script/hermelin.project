@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CodeLite_Project Name="hermelin" InternalType="">
   <Plugins>
+    <Plugin Name="qmake">
+      <![CDATA[00020001N0005Debug0000000000000001N0007Release000000000000]]>
+    </Plugin>
     <Plugin Name="CMakePlugin">
       <![CDATA[[{
   "name": "Debug",
@@ -22,84 +25,9 @@
   "parentProject": ""
  }]]]>
     </Plugin>
-    <Plugin Name="qmake">
-      <![CDATA[00020001N0005Debug0000000000000001N0007Release000000000000]]>
-    </Plugin>
   </Plugins>
   <Description/>
   <Dependencies/>
-  <VirtualDirectory Name="fitter">
-    <File Name="fitter/functions.cpp"/>
-    <File Name="fitter/fitter.h"/>
-    <File Name="fitter/fitter.cpp"/>
-    <File Name="fitter/parser.h"/>
-    <File Name="fitter/functions.h"/>
-    <File Name="fitter/chi2.h"/>
-    <File Name="fitter/parser.cpp"/>
-    <File Name="fitter/chi2.cpp"/>
-    <VirtualDirectory Name="models">
-      <File Name="fitter/models/freefit-nd.cpp"/>
-      <File Name="fitter/models/freefit.h"/>
-      <File Name="fitter/models/gauss.h"/>
-      <File Name="fitter/models/msin.cpp"/>
-      <File Name="fitter/models/msin.h"/>
-      <File Name="fitter/models/gauss-nd.h"/>
-      <File Name="fitter/models/interpolation.h"/>
-      <File Name="fitter/models/gauss-nd.cpp"/>
-      <File Name="fitter/models/freefit-nd.h"/>
-      <File Name="fitter/models/freefit.cpp"/>
-      <File Name="fitter/models/gauss.cpp"/>
-      <File Name="fitter/models/interpolation.cpp"/>
-    </VirtualDirectory>
-  </VirtualDirectory>
-  <VirtualDirectory Name="helper">
-    <File Name="helper/fourier.h"/>
-    <File Name="helper/string_map.cpp"/>
-    <File Name="helper/spec_char.cpp"/>
-    <File Name="helper/rand.h"/>
-    <File Name="helper/linalg2.h"/>
-    <File Name="helper/blob.h"/>
-    <File Name="helper/fourier.cpp"/>
-    <File Name="helper/comp.cpp"/>
-    <File Name="helper/linalg2.cpp"/>
-    <File Name="helper/string.h"/>
-    <File Name="helper/log.h"/>
-    <File Name="helper/flags.cpp"/>
-    <File Name="helper/lattice.cpp"/>
-    <File Name="helper/string_map.h"/>
-    <File Name="helper/linalg.h"/>
-    <File Name="helper/gnuplot.cpp"/>
-    <File Name="helper/lattice.h"/>
-    <File Name="helper/formulas.h"/>
-    <File Name="helper/flags.h"/>
-    <File Name="helper/rand.cpp"/>
-    <File Name="helper/spec_char.h"/>
-    <File Name="helper/blob.cpp"/>
-    <File Name="helper/xml.cpp"/>
-    <File Name="helper/misc.h"/>
-    <File Name="helper/gnuplot.h"/>
-    <File Name="helper/linalg.cpp"/>
-    <File Name="helper/string.cpp"/>
-    <File Name="helper/geo.h"/>
-    <File Name="helper/neutrons.hpp"/>
-    <File Name="helper/mieze.hpp"/>
-    <File Name="helper/formulas.cpp"/>
-    <File Name="helper/file.cpp"/>
-    <File Name="helper/math.h"/>
-    <File Name="helper/file.h"/>
-    <File Name="helper/exception.h"/>
-    <File Name="helper/log.cpp"/>
-    <File Name="helper/comp.h"/>
-    <File Name="helper/xml.h"/>
-  </VirtualDirectory>
-  <VirtualDirectory Name="loader">
-    <File Name="loader/loadcasc.cpp"/>
-    <File Name="loader/loadnicos.cpp"/>
-    <File Name="loader/loadcasc.h"/>
-    <File Name="loader/loadtxt.cpp"/>
-    <File Name="loader/loadnicos.h"/>
-    <File Name="loader/loadtxt.h"/>
-  </VirtualDirectory>
   <VirtualDirectory Name="runtime">
     <File Name="runtime/calls_file.h"/>
     <File Name="runtime/calls_plot.h"/>
@@ -226,4 +154,60 @@
       </Completion>
     </Configuration>
   </Settings>
+  <VirtualDirectory Name="file">
+    <File Name="../file/comp.cpp"/>
+    <File Name="../file/xml.cpp"/>
+    <File Name="../file/file.cpp"/>
+    <File Name="../file/loadtxt.cpp"/>
+    <File Name="../file/file.h"/>
+    <File Name="../file/loadtxt.h"/>
+    <File Name="../file/comp.h"/>
+    <File Name="../file/xml.h"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="gfx">
+    <File Name="../gfx/gl.cpp"/>
+    <File Name="../gfx/gl.h"/>
+    <File Name="../gfx/gnuplot.cpp"/>
+    <File Name="../gfx/gnuplot.h"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="helper">
+    <File Name="../helper/log.h"/>
+    <File Name="../helper/flags.cpp"/>
+    <File Name="../helper/flags.h"/>
+    <File Name="../helper/misc.h"/>
+    <File Name="../helper/exception.h"/>
+    <File Name="../helper/log.cpp"/>
+    <File Name="../helper/traits.h"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="math">
+    <File Name="../math/fourier.h"/>
+    <File Name="../math/rand.h"/>
+    <File Name="../math/linalg2.h"/>
+    <File Name="../math/fourier.cpp"/>
+    <File Name="../math/linalg2.cpp"/>
+    <File Name="../math/linalg.h"/>
+    <File Name="../math/lattice.h"/>
+    <File Name="../math/minuit.h"/>
+    <File Name="../math/rand.cpp"/>
+    <File Name="../math/interpolation.h"/>
+    <File Name="../math/bz.h"/>
+    <File Name="../math/quat.h"/>
+    <File Name="../math/geo.h"/>
+    <File Name="../math/neutrons.hpp"/>
+    <File Name="../math/mieze.hpp"/>
+    <File Name="../math/funcmod.h"/>
+    <File Name="../math/math.h"/>
+    <File Name="../math/minuit.cpp"/>
+    <File Name="../math/interpolation.cpp"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="net">
+    <File Name="../net/tcp.h"/>
+    <File Name="../net/tcp.cpp"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="string">
+    <File Name="../string/spec_char.cpp"/>
+    <File Name="../string/string.h"/>
+    <File Name="../string/spec_char.h"/>
+    <File Name="../string/string.cpp"/>
+  </VirtualDirectory>
 </CodeLite_Project>

@@ -155,7 +155,7 @@ protected:
 public:
 	SymbolReal() : Symbol(), m_dVal(0.) {}
 	SymbolReal(t_real dVal) : m_dVal(dVal) {}
-	SymbolReal(const t_string&) { throw Err("Invalid SymbolReal constructor."); }
+	SymbolReal(const t_string&) { throw tl::Err("Invalid SymbolReal constructor."); }
 
 	virtual SymbolType GetType() const override { return SYMBOL_DOUBLE; }
 	virtual t_string GetTypeName() const override { return T_STR"real"; }
@@ -236,7 +236,7 @@ public:
 	SymbolString(const t_char* pcStr) : m_strVal(pcStr) {}
 	template<typename _t_string = t_string>
 	SymbolString(_t_string&& str) : m_strVal(std::forward<_t_string>(str)) {}
-	SymbolString(t_real dVal) { throw Err("Invalid SymbolString constructor."); }
+	SymbolString(t_real dVal) { throw tl::Err("Invalid SymbolString constructor."); }
 
 	virtual SymbolType GetType() const override { return SYMBOL_STRING; }
 	virtual t_string GetTypeName() const override { return T_STR"string"; }
@@ -276,7 +276,7 @@ public:
 	SymbolComplex(t_real dReal, t_real dImag) : m_val(dReal, dImag) {}
 	SymbolComplex(const t_complex& val) : m_val(val) {}
 	SymbolComplex(t_complex&& val) : m_val(val) {}
-	SymbolComplex(const t_string&) { throw Err("Invalid SymbolComplex constructor."); }
+	SymbolComplex(const t_string&) { throw tl::Err("Invalid SymbolComplex constructor."); }
 
 	virtual SymbolType GetType() const override { return SYMBOL_COMPLEX; }
 	virtual t_string GetTypeName() const override { return T_STR"complex"; }
@@ -294,8 +294,8 @@ public:
 	virtual bool IsGreaterThan(const Symbol&) const override;
 	virtual bool IsNotZero() const override { return m_val != t_complex(0.,0.); }
 
-	virtual t_int GetValInt() const override { throw Err("Cannot convert complex to scalar type."); /*return t_int(GetValReal());*/ }
-	virtual t_real GetValDouble() const override { throw Err("Cannot convert complex to scalar type."); /*return GetValReal();*/ }
+	virtual t_int GetValInt() const override { throw tl::Err("Cannot convert complex to scalar type."); /*return t_int(GetValReal());*/ }
+	virtual t_real GetValDouble() const override { throw tl::Err("Cannot convert complex to scalar type."); /*return GetValReal();*/ }
 
 	static const int GetDefPrec() { return m_defprec; }
 	static const int GetPrec() { return m_prec; }

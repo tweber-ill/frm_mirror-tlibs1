@@ -46,6 +46,8 @@
 #include <sstream>
 #include <string>
 
+namespace tl {
+
 enum TxtType
 {
 	MCSTAS_DATA = 0,
@@ -346,5 +348,7 @@ class Data3D : public McData
 		double GetIntensity() const;
 		double GetIntensityError() const;
 };
+
+}
 
 #endif

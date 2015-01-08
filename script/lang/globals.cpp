@@ -31,10 +31,13 @@ static inline void init_funcs()
 
 static inline void init_constants(SymbolTable *pSymTab)
 {
+	namespace units = boost::units;
+	namespace co = boost::units::si::constants::codata;
+
 	pSymTab->InsertSymbol(T_STR"pi", new SymbolReal(M_PI));
 
 	// hbar in eVs
-	pSymTab->InsertSymbol(T_STR"hbar_eVs", new SymbolReal(co::hbar / one_eV / units::si::second));
+	pSymTab->InsertSymbol(T_STR"hbar_eVs", new SymbolReal(co::hbar / tl::one_eV / units::si::second));
 	// hbar in Js
 	pSymTab->InsertSymbol(T_STR"hbar", new SymbolReal(co::hbar / units::si::joule / units::si::second));
 	// neutron mass
@@ -46,7 +49,7 @@ static inline void init_constants(SymbolTable *pSymTab)
 	// Boltzmann const
 	pSymTab->InsertSymbol(T_STR"k_B", new SymbolReal(co::k_B * units::si::kelvin/units::si::joules));
 	// Boltzmann const in eV/K
-	pSymTab->InsertSymbol(T_STR"k_B_eVperK", new SymbolReal(co::k_B * units::si::kelvin/one_eV));
+	pSymTab->InsertSymbol(T_STR"k_B_eVperK", new SymbolReal(co::k_B * units::si::kelvin/tl::one_eV));
 	// Avogadro const
 	pSymTab->InsertSymbol(T_STR"N_A", new SymbolReal(co::N_A * units::si::moles));
 	// speed of light

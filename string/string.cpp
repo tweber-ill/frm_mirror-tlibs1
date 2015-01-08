@@ -9,6 +9,7 @@
 #include <locale>
 //#include <codecvt>
 
+namespace tl {
 
 template<> const std::string& get_dir_seps()
 {
@@ -50,4 +51,6 @@ std::string wstr_to_str(const std::wstring& str)
 	//return conv.toBytes(str);
 
 	return std::string(str.begin(), str.end());
+}
+
 }

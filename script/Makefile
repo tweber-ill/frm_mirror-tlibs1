@@ -11,7 +11,7 @@ else
 	STRIP = echo debug version: no stripping of
 endif
 
-DEFINES = -DNO_QT -DNO_COMP
+DEFINES = -DNO_QT -DNO_COMP -DUSE_FFTW
 INCS =
 FLAGS = -std=c++14 -fopenmp ${OPT_FLAGS} ${DEFINES} ${INCS}
 #FLAGS += -Wall -Wpedantic
@@ -20,6 +20,9 @@ LIBS = -L/usr/local/lib
 
 # Boost
 LIBS = -lboost_iostreams
+
+# FFTW
+LIBS += -lfftw3
 
 # Minuit
 INCS += -I/usr/include/root

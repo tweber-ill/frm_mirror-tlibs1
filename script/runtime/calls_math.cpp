@@ -13,6 +13,8 @@
 #include "../../math/rand.h"
 #include "../../helper/log.h"
 
+namespace ublas = boost::numeric::ublas;
+
 static inline Symbol* _fkt_linlogspace(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab, bool bLog)
 {
@@ -74,7 +76,7 @@ const T& math_fkt(const T& t1, const T& t2)
 
 	std::ostringstream ostrErr;
 	ostrErr << "Error: Invalid function selected in math_fkt." << std::endl;
-	throw Err(ostrErr.str(),0);
+	throw tl::Err(ostrErr.str(),0);
 }
 
 template<MathFkts fkt>
@@ -85,7 +87,7 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "fkt_math_for_every needs at least one argument" << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	t_real dRes = 0.;
@@ -143,7 +145,7 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 
 	std::ostringstream ostrErr;
 	ostrErr << linenr(runinfo) << "No valid arguments given for fkt_math_for_every." << std::endl;
-	throw Err(ostrErr.str(), 0);
+	throw tl::Err(ostrErr.str(), 0);
 	//return 0;
 }
 
@@ -177,7 +179,7 @@ static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 		{
 			if(FKT_C == nullptr)
 			{
-				log_err(linenr(runinfo), "Undefined complex function.");
+				tl::log_err(linenr(runinfo), "Undefined complex function.");
 				return 0;
 			}
 
@@ -188,7 +190,7 @@ static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 		{
 			if(FKT == nullptr)
 			{
-				log_err(linenr(runinfo), "Undefined real function.");
+				tl::log_err(linenr(runinfo), "Undefined real function.");
 				return 0;
 			}
 
@@ -237,7 +239,7 @@ static Symbol* fkt_math_2args(const std::vector<Symbol*>& vecSyms,
 	{
 		if(FKT_C == nullptr)
 		{
-			log_err(linenr(runinfo), "Undefined complex function.");
+			tl::log_err(linenr(runinfo), "Undefined complex function.");
 			return 0;
 		}
 
@@ -252,7 +254,7 @@ static Symbol* fkt_math_2args(const std::vector<Symbol*>& vecSyms,
 	// real
 	if(FKT == nullptr)
 	{
-		log_err(linenr(runinfo), "Undefined real function.");
+		tl::log_err(linenr(runinfo), "Undefined real function.");
 		return 0;
 	}
 
@@ -313,7 +315,7 @@ static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
 
 	std::ostringstream ostrErr;
 	ostrErr << linenr(runinfo) << "abs received unsupported symbol type." << std::endl;
-	throw Err(ostrErr.str(),0);
+	throw tl::Err(ostrErr.str(),0);
 	//return 0;
 }
 
@@ -377,8 +379,8 @@ static Symbol* _fkt_fft(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab,
 						bool bInv)
 {
-	bool (Fourier::*pFkt)(const t_real*, const t_real*, t_real*, t_real*)
-						= (bInv ? &Fourier::ifft : &Fourier::fft);
+	bool (tl::Fourier::*pFkt)(const t_real*, const t_real*, t_real*, t_real*)
+						= (bInv ? &tl::Fourier::ifft : &tl::Fourier::fft);
 
 	bool bArgsOk=1;
 	std::vector<t_real> vecRealIn, vecImagIn;
@@ -412,7 +414,7 @@ static Symbol* _fkt_fft(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "fft received invalid arguments." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	if(vecRealIn.size() != vecImagIn.size())
@@ -426,7 +428,7 @@ static Symbol* _fkt_fft(const std::vector<Symbol*>& vecSyms,
 	vecRealOut.resize(vecRealIn.size());
 	vecImagOut.resize(vecImagIn.size());
 
-	Fourier fourier(vecRealIn.size());
+	tl::Fourier fourier(vecRealIn.size());
 	(fourier.*pFkt)(vecRealIn.data(), vecImagIn.data(),
 			vecRealOut.data(), vecImagOut.data());
 
@@ -469,7 +471,7 @@ static Symbol* fkt_length(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "len needs a vector argument." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	t_vec<t_real> vec = sym_to_vec<t_vec>(vecSyms[0]);
@@ -486,11 +488,11 @@ static Symbol* fkt_mean(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Ru
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Mean value needs vector arguments." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	t_vec<t_real> vecLeft = sym_to_vec<t_vec>(vecSyms[0]);
-	t_real dMean = mean_value(vecLeft);
+	t_real dMean = tl::mean_value(vecLeft);
 
 	return new SymbolReal(dMean);
 }
@@ -504,11 +506,11 @@ static Symbol* fkt_stddev(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Standard deviation needs vector arguments." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	t_vec<t_real> vecLeft = sym_to_vec<t_vec>(vecSyms[0]);
-	t_real dStd = std_dev(vecLeft);
+	t_real dStd = tl::std_dev(vecLeft);
 
 	return new SymbolReal(dStd);
 }
@@ -522,7 +524,7 @@ static Symbol* fkt_cross(const std::vector<Symbol*>& vecSyms, ParseInfo& info, R
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Cross product needs vector arguments." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	t_vec<t_real> vecLeft = sym_to_vec<t_vec>(vecSyms[0]);
@@ -532,10 +534,10 @@ static Symbol* fkt_cross(const std::vector<Symbol*>& vecSyms, ParseInfo& info, R
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Cross product needs 3-vectors." << std::endl;
-		throw Err(ostrErr.str(), 0);
+		throw tl::Err(ostrErr.str(), 0);
 	}
 
-	t_vec<t_real> vecCross = cross_3(vecLeft, vecRight);
+	t_vec<t_real> vecCross = tl::cross_3(vecLeft, vecRight);
 	return vec_to_sym<t_vec>(vecCross);
 }
 
@@ -547,7 +549,7 @@ static Symbol* fkt_matrix(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Need size of matrix." << std::endl;
-		throw Err(ostrErr.str(), 0);
+		throw tl::Err(ostrErr.str(), 0);
 	}
 
 	t_int iRows = vecSyms[0]->GetValInt();
@@ -573,7 +575,7 @@ static Symbol* fkt_transpose(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Transpose needs a matrix." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	t_mat<t_real> mat_trans = ublas::trans(mat);
@@ -592,13 +594,13 @@ static Symbol* fkt_inverse(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Inverse needs a matrix." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	t_mat<t_real> mat_inv;
-	if(!inverse(mat, mat_inv))
+	if(!tl::inverse(mat, mat_inv))
 	{
-		log_warn(linenr(runinfo), "Matrix inversion failed.");
+		tl::log_warn(linenr(runinfo), "Matrix inversion failed.");
 		return 0;
 	}
 
@@ -615,11 +617,11 @@ static Symbol* fkt_determinant(const std::vector<Symbol*>& vecSyms,
 	t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0], &bIsMat);
 	if(!bIsMat || mat.size1()!=mat.size2())
 	{
-		log_err(linenr(runinfo), "Determinant needs a square matrix.");
+		tl::log_err(linenr(runinfo), "Determinant needs a square matrix.");
 		return 0;
 	}
 
-	t_real dDet = determinant<t_mat<t_real>>(mat);
+	t_real dDet = tl::determinant<t_mat<t_real>>(mat);
 	return new SymbolReal(dDet);
 }
 
@@ -629,7 +631,7 @@ static Symbol* fkt_unitmatrix(const std::vector<Symbol*>& vecSyms, ParseInfo& in
 		return 0;
 
 	t_int iSize = vecSyms[0]->GetValInt();
-	t_mat<t_real> mat = unit_matrix<t_mat<t_real>>(iSize);
+	t_mat<t_real> mat = tl::unit_matrix<t_mat<t_real>>(iSize);
 
 	return mat_to_sym<t_mat>(mat);
 }
@@ -643,7 +645,7 @@ static Symbol* fkt_outerproduct(const std::vector<Symbol*>& vecSyms, ParseInfo& 
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Outer product needs two vector arguments." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	t_vec<t_real> vec1 = sym_to_vec<t_vec>(vecSyms[0]);
@@ -662,7 +664,7 @@ static Symbol* fkt_dot(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Run
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Inner product needs two vector arguments." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	t_vec<t_real> vec1 = sym_to_vec<t_vec>(vecSyms[0]);
@@ -697,7 +699,7 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 		{
 			if(iCols1!=iRows2 /*|| iCols1!=iRows2*/)
 			{
-				log_err(linenr(runinfo), "Row and column counts of matrices do not match: ",
+				tl::log_err(linenr(runinfo), "Row and column counts of matrices do not match: ",
 							"Rows: ", iRows1, ", ", iRows2, 
 							", columns: ", iCols1, ", ", iCols2, ".");
 				return 0;
@@ -731,7 +733,7 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Invalid call to prod." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 	return pRet;
 }
@@ -752,7 +754,7 @@ static Symbol* fkt_eigenvecs(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Invalid call to eigenvecs." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0]);
@@ -760,7 +762,7 @@ static Symbol* fkt_eigenvecs(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 	std::vector<t_vec<t_real>> evecs_real, evecs_imag;
 	std::vector<t_real> evals_real, evals_imag;
 
-	bool bOk = eigenvec<t_real>(mat, evecs_real, evecs_imag, evals_real, evals_imag);
+	bool bOk = tl::eigenvec<t_real>(mat, evecs_real, evecs_imag, evals_real, evals_imag);
 	if(!bOk) return 0;
 
 	SymbolArray* pSymRet = new SymbolArray();
@@ -809,7 +811,7 @@ static Symbol* fkt_eigenvecs_sym(const std::vector<Symbol*>& vecSyms, ParseInfo&
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Invalid call to eigenvecs_sym." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0]);
@@ -817,7 +819,7 @@ static Symbol* fkt_eigenvecs_sym(const std::vector<Symbol*>& vecSyms, ParseInfo&
 	std::vector<t_vec<t_real>> evecs_real;
 	std::vector<t_real> evals_real;
 
-	bool bOk = eigenvec_sym<t_real>(mat, evecs_real, evals_real);
+	bool bOk = tl::eigenvec_sym<t_real>(mat, evecs_real, evals_real);
 	if(!bOk) return 0;
 
 	SymbolArray* pSymRet = new SymbolArray();
@@ -852,13 +854,13 @@ static Symbol* fkt_qr(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Runt
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Invalid call to qr." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0]);
 
 	ublas::matrix<t_real> Q, R;
-	bool bOk = qr<t_real>(mat, Q, R);
+	bool bOk = tl::qr<t_real>(mat, Q, R);
 	if(!bOk) return 0;
 
 	Symbol *pQ = mat_to_sym<t_mat>(Q);
@@ -882,7 +884,7 @@ static Symbol* fkt_qr(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Runt
 
 static Symbol* fkt_rand01(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	t_real dRand = rand01<t_real>();
+	t_real dRand = tl::rand01<t_real>();
 	return new SymbolReal(dRand);
 }
 
@@ -894,7 +896,7 @@ static Symbol* fkt_rand_real(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 	t_real dMin = vecSyms[0]->GetValDouble();
 	t_real dMax = vecSyms[1]->GetValDouble();
 
-	t_real dRand = rand_real<t_real>(dMin, dMax);
+	t_real dRand = tl::rand_real<t_real>(dMin, dMax);
 	return new SymbolReal(dRand);
 }
 
@@ -906,7 +908,7 @@ static Symbol* fkt_rand_int(const std::vector<Symbol*>& vecSyms, ParseInfo& info
 	t_int iMin = vecSyms[0]->GetValInt();
 	t_int iMax = vecSyms[1]->GetValInt();
 
-	t_int iRand = rand_int<t_int>(iMin, iMax);
+	t_int iRand = tl::rand_int<t_int>(iMin, iMax);
 	return new SymbolInt(iRand);
 }
 
@@ -923,7 +925,7 @@ static Symbol* fkt_rand_norm(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 	if(vecSyms.size() >= 2)
 		dSigma = vecSyms[1]->GetValDouble();
 
-	t_real dRand = rand_norm<t_real>(dMu, dSigma);
+	t_real dRand = tl::rand_norm<t_real>(dMu, dSigma);
 	return new SymbolReal(dRand);
 }
 
@@ -937,11 +939,11 @@ static Symbol* fkt_rand_norm_nd(const std::vector<Symbol*>& vecSyms, ParseInfo& 
 
 	if(vecMu.size() != vecSigma.size())
 	{
-		log_err(linenr(runinfo), "Mu and sigma arrays have different sizes.");
+		tl::log_err(linenr(runinfo), "Mu and sigma arrays have different sizes.");
 		return 0;
 	}
 
-	t_stdvec<t_real> vecResult = rand_norm_nd<t_stdvec<t_real>, t_real, t_stdvec<t_real>>(vecMu, vecSigma);
+	t_stdvec<t_real> vecResult = tl::rand_norm_nd<t_stdvec<t_real>, t_real, t_stdvec<t_real>>(vecMu, vecSigma);
 	return vec_to_sym<t_stdvec>(vecResult);
 }
 // --------------------------------------------------------------------------------
@@ -990,7 +992,7 @@ static Symbol* fkt_minmax(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Invalid input for minmax." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	int iIdxMin = pElem->GetArr()[0]->GetValInt();
@@ -1009,12 +1011,12 @@ static Symbol* fkt_minmax(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 
 extern void init_ext_math_calls()
 {
-	init_rand();
+	tl::init_rand();
 
 	t_mapFkts mapFkts =
 	{
 		// math stuff
-		t_mapFkts::value_type(T_STR"sign", fkt_math_1arg< sign<t_real> >),
+		t_mapFkts::value_type(T_STR"sign", fkt_math_1arg< tl::sign<t_real> >),
 		t_mapFkts::value_type(T_STR"sqrt", fkt_math_1arg< std::sqrt, std::sqrt<t_real> >),
 		t_mapFkts::value_type(T_STR"cbrt", fkt_math_1arg< std::cbrt >),
 		t_mapFkts::value_type(T_STR"exp", fkt_math_1arg< std::exp, std::exp<t_real> >),

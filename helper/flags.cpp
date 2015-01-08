@@ -9,6 +9,8 @@
 #include <mutex>
 #include <cstdio>
 
+namespace tl {
+
 void *my_popen(const char* pcCmd, const char* pcType)
 {
 	static std::mutex s_mutex;
@@ -23,4 +25,6 @@ void *my_popen(const char* pcCmd, const char* pcType)
 int my_pclose(void *pPipe)
 {
 	return ::pclose((FILE*)pPipe);
+}
+
 }

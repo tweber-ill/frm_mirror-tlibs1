@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CodeLite_Workspace Name="script" Database="/home/tweber/Projekte/miezetools/script/.codelite/script.tags">
-  <Project Name="hermelin" Path="hermelin.project" Active="Yes"/>
   <Environment>
     <![CDATA[]]>
   </Environment>
+  <Project Name="hermelin" Path="hermelin.project" Active="Yes"/>
   <BuildMatrix>
     <WorkspaceConfiguration Name="Debug" Selected="no">
       <Project Name="hermelin" ConfigName="Debug"/>

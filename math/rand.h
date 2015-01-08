@@ -13,6 +13,7 @@
 #include <type_traits>
 #include <future>
 
+namespace tl {
 
 extern std::mt19937/*_64*/ g_randeng;
 
@@ -87,6 +88,7 @@ t_vec rand_norm_nd(const t_initlst& vecMu, const t_initlst& vecSigma)
 		vecRet[i] = vecFut[i].get();
 
 	return vecRet;
+}
 }
 
 #endif

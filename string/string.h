@@ -15,6 +15,8 @@
 #include <map>
 #include "../helper/exception.h"
 
+namespace tl {
+
 template<class t_str=std::string>
 t_str insert_before(const t_str& str,
 					const t_str& strChar,
@@ -201,8 +203,8 @@ split_first(const t_str& str, const t_str& strSep, bool bTrim=0)
 
 	if(bTrim)
 	{
-		::trim(str1);
-		::trim(str2);
+		trim(str1);
+		trim(str2);
 	}
 
 	return std::pair<t_str, t_str>(str1, str2);
@@ -319,4 +321,5 @@ std::string group_numbers(T tNum)
 extern std::wstring str_to_wstr(const std::string& str);
 extern std::string wstr_to_str(const std::wstring& str);
 
+}
 #endif

@@ -14,6 +14,8 @@
 
 #include <QtCore/QBuffer>
 
+namespace tl {
+
 class Xml
 {
 protected:
@@ -58,5 +60,7 @@ public:
 
 	static bool SaveMap(const char* pcFile, const std::map<std::string, std::string>& mapXml);
 };
+
+}
 
 #endif

@@ -15,6 +15,7 @@
 
 // --------------------------------------------------------------------------------
 
+namespace tl {
 
 void FontMap::draw_tile(unsigned char* pcBuf,
 				unsigned int iW, unsigned int iH,
@@ -456,7 +457,7 @@ std::string FontMap::get_font_file(const std::string& strFind)
 	return strFile;
 }
 
-
+}
 
 
 

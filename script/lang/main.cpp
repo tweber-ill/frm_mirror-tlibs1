@@ -93,7 +93,7 @@ static inline int interactive(bool bShowSymbols=0, unsigned int uiDebugLevel=3)
 
 			if(!lex.IsOk())
 			{
-				log_err("Lexer returned with errors.");
+				tl::log_err("Lexer returned with errors.");
 				continue;
 			}
 
@@ -105,7 +105,7 @@ static inline int interactive(bool bShowSymbols=0, unsigned int uiDebugLevel=3)
 			int iParseRet = yyparse(&par);
 			if(iParseRet != 0)
 			{
-				log_err("Parser returned with error code ", iParseRet, ".");
+				tl::log_err("Parser returned with error code ", iParseRet, ".");
 				remove_cmdfunc();
 				continue;
 			}
@@ -132,7 +132,7 @@ static inline int interactive(bool bShowSymbols=0, unsigned int uiDebugLevel=3)
 		}
 		catch(const std::exception& ex)
 		{
-			log_crit(ex.what());
+			tl::log_crit(ex.what());
 			remove_cmdfunc();
 		}
 	}
@@ -161,7 +161,7 @@ static inline int script_main(int argc, char** argv)
 	for(iStartArg=1; iStartArg<unsigned(argc); ++iStartArg)
 	{
 		t_string strArg = STR_TO_WSTR(argv[iStartArg]);
-		trim(strArg);
+		tl::trim(strArg);
 
 		// end of arguments to hermelin
 		if(strArg[0] != T_STR'-')
@@ -183,7 +183,7 @@ static inline int script_main(int argc, char** argv)
 		else if(strArg=="-d4") uiDebugLevel = 4;
 	}
 
-	const std::array<Log*, 5> arrLogs{&log_crit, &log_err, &log_warn, &log_info, &log_debug};
+	const std::array<tl::Log*, 5> arrLogs{&tl::log_crit, &tl::log_err, &tl::log_warn, &tl::log_info, &tl::log_debug};
 	for(unsigned int iLog=0; iLog<arrLogs.size(); ++iLog)
 		arrLogs[iLog]->SetEnabled(uiDebugLevel>=iLog);
 
@@ -196,7 +196,7 @@ static inline int script_main(int argc, char** argv)
 
 	if(iStartArg >= unsigned(argc))
 	{
-		log_err("No input file given.");
+		tl::log_err("No input file given.");
 		return -1;
 	}
 
@@ -227,7 +227,7 @@ static inline int script_main(int argc, char** argv)
 
 	if(!par.pLexer->IsOk())
 	{
-		log_err("Lexer returned with errors.");
+		tl::log_err("Lexer returned with errors.");
 		return -3;
 	}
 
@@ -242,7 +242,7 @@ static inline int script_main(int argc, char** argv)
 
 	if(iParseRet != 0)
 	{
-		log_err("Parser returned with error code ", iParseRet, ".");
+		tl::log_err("Parser returned with error code ", iParseRet, ".");
 		return -4;
 	}
 
@@ -279,14 +279,14 @@ static inline int script_main(int argc, char** argv)
 
 	if(bShowSymbols)
 	{
-		log_info("================================================================================");
-		log_info("Global symbols:");
+		tl::log_info("================================================================================");
+		tl::log_info("Global symbols:");
 		info.pGlobalSyms->print();
 
 		std::ostringstream ostrFkts;
 		for(const NodeFunction* pFunc : info.vecFuncs)
 			ostrFkts << pFunc->GetName() << ", ";
-		log_info("Script functions: ", ostrFkts.str());
+		tl::log_info("Script functions: ", ostrFkts.str());
 
 
 		const t_mapFkts* pExtFkts = get_ext_calls();
@@ -294,8 +294,8 @@ static inline int script_main(int argc, char** argv)
 		std::ostringstream ostrSysFkts;
 		for(const auto& fktpair : *pExtFkts)
 			ostrSysFkts << fktpair.first << ", ";
-		log_info("System functions: ", ostrSysFkts.str());
-		log_info("================================================================================");
+		tl::log_info("System functions: ", ostrSysFkts.str());
+		tl::log_info("================================================================================");
 	}
 
 	return 0;
@@ -312,8 +312,8 @@ typedef std::chrono::system_clock::duration t_dur_sys;
 
 int main(int argc, char** argv)
 {
-	const std::array<Log*, 5> arrLogs{&log_crit, &log_err, &log_warn, &log_info, &log_debug};
-	for(Log* pLog : arrLogs)
+	const std::array<tl::Log*, 5> arrLogs{&tl::log_crit, &tl::log_err, &tl::log_warn, &tl::log_info, &tl::log_debug};
+	for(tl::Log* pLog : arrLogs)
 	{
 		pLog->SetShowDate(0);
 		pLog->SetShowThread(0);
@@ -325,12 +325,12 @@ int main(int argc, char** argv)
 
 	try
 	{
-		init_spec_chars();
+		tl::init_spec_chars();
 		iRet = script_main(argc, argv);
 	}
 	catch(const std::exception& ex)
 	{
-		log_crit(ex.what());
+		tl::log_crit(ex.what());
 	}
 
 	if(g_bShowTiming && iRet==0)
@@ -351,11 +351,11 @@ int main(int argc, char** argv)
 		std::strftime(cStart, sizeof cStart, "%a %Y-%b-%d %H:%M:%S %Z", &tmStart);
 		std::strftime(cStop, sizeof cStop, "%a %Y-%b-%d %H:%M:%S %Z", &tmStop);
 
-		log_info("================================================================================");
-		log_info("Script start time:     ", cStart);
-		log_info("Script stop time:      ", cStop);
-		log_info("Script execution time: ", dDur, " s");
-		log_info("================================================================================");
+		tl::log_info("================================================================================");
+		tl::log_info("Script start time:     ", cStart);
+		tl::log_info("Script stop time:      ", cStop);
+		tl::log_info("Script execution time: ", dDur, " s");
+		tl::log_info("================================================================================");
 	}
 
 	return iRet;

@@ -16,6 +16,8 @@
 	#define M_PI (3.141592653589793238462643383279502884197169)
 #endif
 
+namespace tl {
+
 template<typename INT=int> bool is_even(INT i) { return (i%2 == 0); }
 template<typename INT=int> bool is_odd(INT i) { return !is_even<INT>(i); }
 
@@ -164,6 +166,8 @@ std::vector<T> quadratic_solve(T a, T b, T c)
 	}
 
 	return vec;
+}
+
 }
 
 #endif

@@ -21,6 +21,9 @@
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/copy.hpp>
 
+
+namespace tl {
+
 namespace ios = boost::iostreams;
 
 
@@ -280,3 +283,6 @@ bool comp_mem_to_mem_fix(const void* pvIn, unsigned int iLenIn, void* pvOut, uns
 {
 	return __comp_mem_to_mem_fix(pvIn, iLenIn, pvOut, iLenOut, comp, 0);
 }
+
+}
+

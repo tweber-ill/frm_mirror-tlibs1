@@ -53,7 +53,7 @@ convert_string_vector(const std::vector<std::string>& vecStr)
 	return vecRet;
 }*/
 
-class GenericModel : public MinuitFuncModel
+class GenericModel : public tl::MinuitFuncModel
 {
 protected:
 	const NodeFunction *m_pFkt = 0;
@@ -145,7 +145,7 @@ public:
 	{
 		if(vecParams.size() != m_vecParamNames.size())
 		{
-			log_err("Parameter array length mismatch.");
+			tl::log_err("Parameter array length mismatch.");
 			return 0;
 		}
 
@@ -206,9 +206,9 @@ public:
 	{ return m_vecParamNames; }
 
 	virtual std::vector<t_real> GetParamValues() const override
-	{ throw Err("Called invalid function in generic fitter model"); }
+	{ throw tl::Err("Called invalid function in generic fitter model"); }
 	virtual std::vector<t_real> GetParamErrors() const override
-	{ throw Err("Called invalid function in generic fitter model"); }
+	{ throw tl::Err("Called invalid function in generic fitter model"); }
 };
 
 
@@ -260,14 +260,14 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Invalid arguments for fit." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	if(vecSyms[0]->GetType() != SYMBOL_STRING)
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Need a fit function name." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	const t_string& strFkt = ((SymbolString*)vecSyms[0])->GetVal();
@@ -276,7 +276,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Invalid function \"" << strFkt << "\"." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 
@@ -381,7 +381,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	unsigned int iSize = std::min<unsigned int>(vecX.size(), vecY.size());
 	iSize = std::min<unsigned int>(iSize, vecYErr.size());
 
-	Chi2Function chi2fkt(&mod, iSize, vecX.data(), vecY.data(), vecYErr.data());
+	tl::Chi2Function chi2fkt(&mod, iSize, vecX.data(), vecY.data(), vecYErr.data());
 	chi2fkt.SetSigma(dSigma);
 
 
@@ -517,7 +517,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 					case 'n':			// nop
 						break;
 					default:
-						log_err("Unknow fitting step operation \'", cOp, "\'.");
+						tl::log_err("Unknow fitting step operation \'", cOp, "\'.");
 						break;
 				}
 			} // ops
@@ -602,24 +602,24 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 			std::ostringstream ostrMini;
 			ostrMini << mini;
 
-			log_info("result of user-defined fit step ", (++uiMini));
-			log_info(STR_TO_WSTR(ostrMini.str()));
+			tl::log_info("result of user-defined fit step ", (++uiMini));
+			tl::log_info(STR_TO_WSTR(ostrMini.str()));
 		}
 
 		if(bDoMinos)
 		{
-			log_info("Minos error analysis");
+			tl::log_info("Minos error analysis");
 			for(unsigned int iParam=0; iParam<iParamSize; ++iParam)
 			{
-				log_info(vecParamNames[iParam], ": lower error: ",
+				tl::log_info(vecParamNames[iParam], ": lower error: ",
 					vecMinosErrs[iParam].first, ", upper error: ",
 					vecMinosErrs[iParam].second);
 			}
 		}
 
 		double dChi2 = chi2fkt(vecLastParams);
-		log_info("Chi^2 = ", dChi2);
-		log_info("Chi^2 / ndf = ", dChi2 / double(vecLastParams.size()));
+		tl::log_info("Chi^2 = ", dChi2);
+		tl::log_info("Chi^2 / ndf = ", dChi2 / double(vecLastParams.size()));
 	}
 
 	SymbolInt *pSymFitValid = new SymbolInt(bValidFit);
@@ -653,7 +653,7 @@ static Symbol* _fkt_param(FktParam whichfkt, const std::vector<Symbol*>& vecSyms
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Function needs x and y vector arguments." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	unsigned int ideg = 3;
@@ -669,16 +669,16 @@ static Symbol* _fkt_param(FktParam whichfkt, const std::vector<Symbol*>& vecSyms
 
 	unsigned int iSize = std::min(vecX.size(), vecY.size());
 
-	FunctionModel_param* pfkt = 0;
+	tl::FunctionModel_param* pfkt = 0;
 	if(whichfkt == FKT_SPLINE)
-		pfkt = new BSpline(iSize, vecX.data(), vecY.data(), ideg);
+		pfkt = new tl::BSpline(iSize, vecX.data(), vecY.data(), ideg);
 	else if(whichfkt == FKT_BEZIER)
-		pfkt = new Bezier(iSize, vecX.data(), vecY.data());
+		pfkt = new tl::Bezier(iSize, vecX.data(), vecY.data());
 	else
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Unknown parametric function selected." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	SymbolArray* pArrX = new SymbolArray();
@@ -730,7 +730,7 @@ static Symbol* fkt_find_peaks(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "find_peaks needs x and y arrays." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	const unsigned int iOrder = 5;
@@ -740,7 +740,7 @@ static Symbol* fkt_find_peaks(const std::vector<Symbol*>& vecSyms,
 	const unsigned int iLen = std::min(vecX.size(), vecY.size());
 
 	std::vector<t_real> vecMaximaX, vecMaximaSize, vecMaximaWidth;
-	::find_peaks<t_real>(iLen, vecX.data(), vecY.data(), iOrder,
+	tl::find_peaks<t_real>(iLen, vecX.data(), vecY.data(), iOrder,
 						vecMaximaX, vecMaximaSize, vecMaximaWidth);
 
 	SymbolArray* pArrX = (SymbolArray*)vec_to_sym<t_stdvec>(vecMaximaX);
@@ -764,7 +764,7 @@ static Symbol* fkt_map_vec_to_val(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size()<1 || vecSyms[0]->GetType()!=SYMBOL_MAP)
 	{
-		log_err(linenr(runinfo), "Need a map of vectors.");
+		tl::log_err(linenr(runinfo), "Need a map of vectors.");
 		return 0;
 	}
 
@@ -776,7 +776,7 @@ static Symbol* fkt_map_vec_to_val(const std::vector<Symbol*>& vecSyms,
 		iIdx = vecSyms[1]->GetValInt();
 		if(iIdx < 0)
 		{
-			log_warn(linenr(runinfo), "Ignoring negative index.");
+			tl::log_warn(linenr(runinfo), "Ignoring negative index.");
 			iIdx = 0;
 		}
 	}
@@ -803,7 +803,7 @@ static Symbol* fkt_map_vec_to_val(const std::vector<Symbol*>& vecSyms,
 		const std::vector<Symbol*>& arr = ((SymbolArray*)pSym)->GetArr();
 		if(iIdx >= int(arr.size()))
 		{
-			log_warn(linenr(runinfo), "Ignoring invalid index.");
+			tl::log_warn(linenr(runinfo), "Ignoring invalid index.");
 			continue;
 		}
 

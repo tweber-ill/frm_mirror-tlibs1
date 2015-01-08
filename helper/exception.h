@@ -10,6 +10,7 @@
 #include <exception>
 #include <string>
 
+namespace tl {
 class Err : public std::exception
 {
 	protected:
@@ -31,5 +32,6 @@ class Err : public std::exception
 			return m_strErr.c_str();
 		}
 };
+}
 
 #endif

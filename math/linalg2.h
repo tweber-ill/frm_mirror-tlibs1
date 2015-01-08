@@ -12,6 +12,7 @@
 #include "math.h"
 #include "linalg.h"
 
+namespace tl {
 
 template<typename T=double>
 bool qr(const ublas::matrix<T>& M, ublas::matrix<T>& Q, ublas::matrix<T>& R)
@@ -99,6 +100,7 @@ void sort_eigenvecs(std::vector<ublas::vector<T> >& evecs,
 		evecs[i] = myevecs[i].vec;
 		evals[i] = myevecs[i].val;
 	}
+}
 }
 
 #endif

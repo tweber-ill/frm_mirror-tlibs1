@@ -23,10 +23,10 @@
 #include <boost/numeric/ublas/lu.hpp>
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/numeric/ublas/exception.hpp>
-namespace ublas = boost::numeric::ublas;
 
-//#include <boost/math/quaternion.hpp>
-//namespace math = boost::math;
+namespace tl {
+
+namespace ublas = boost::numeric::ublas;
 
 
 template<class matrix_type=ublas::matrix<double> >
@@ -1053,9 +1053,11 @@ ublas::matrix<T> covariance(const std::vector<ublas::vector<T>>& vecVals,
 
 
 // --------------------------------------------------------------------------------
-
+}
 
 #include <boost/math/common_factor_rt.hpp>
+
+namespace tl{
 
 template<class t_vec=ublas::vector<int>>
 t_vec get_gcd_vec(const t_vec& vec)
@@ -1083,6 +1085,8 @@ t_vec get_gcd_vec(const t_vec& vec)
 		return vec;
 
 	return vec/igcd_total;
+}
+
 }
 
 #endif

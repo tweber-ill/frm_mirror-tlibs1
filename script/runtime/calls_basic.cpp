@@ -42,7 +42,7 @@ static Symbol* fkt_traceback(const std::vector<Symbol*>& vecSyms,
 							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!info.bEnableDebug)
-		log_warn(linenr(runinfo), "Debugging is disabled.");
+		tl::log_warn(linenr(runinfo), "Debugging is disabled.");
 
 	ParseInfo::t_stckTraceback& mapstck = info.stckTraceback;
 	typedef typename ParseInfo::t_stckTraceback::value_type::second_type t_stck;
@@ -261,7 +261,7 @@ static bool _import_file(const t_string& strFile, ParseInfo& info, RuntimeInfo &
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Lexer returned with errors" 
 			<< " for file \"" << _strFile << "\"."<< std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	int iParseRet = yyparse(&par);
@@ -275,7 +275,7 @@ static bool _import_file(const t_string& strFile, ParseInfo& info, RuntimeInfo &
 		ostrErr << linenr(runinfo) << "Parser returned with error code " 
 			<< iParseRet 
 			<< "for file \"" << _strFile << "\"." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	Node *pRoot = par.pRoot;
@@ -384,7 +384,7 @@ static Symbol* fkt_register_var(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Invalid call to register_var." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 	return 0;
 }
@@ -516,7 +516,7 @@ static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "\"num\" in vec(num, val=0) has to be integer." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	t_int iVal = ((SymbolInt*)pSymSize)->GetVal();
@@ -568,7 +568,7 @@ static Symbol* fkt_array_size(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "vec_size needs a vector type argument." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	return pSymRet;
@@ -644,7 +644,7 @@ static Symbol* fkt_find(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Find not yet implemented for map." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 
 		// TODO: Implement and also adapt fkt_contains
 	}
@@ -656,7 +656,7 @@ static Symbol* fkt_find(const std::vector<Symbol*>& vecSyms,
 			ostrErr << linenr(runinfo)
 				<< "Second argument to find has to be of string type."
 				<< std::endl;
-			throw Err(ostrErr.str(),0);
+			throw tl::Err(ostrErr.str(),0);
 		}
 
 		int iPos = pos_in_string((SymbolString*)pContainer, (SymbolString*)pContainee);
@@ -692,7 +692,7 @@ static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "No identifier given for cur_iter." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 
@@ -705,7 +705,7 @@ static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "cur_iter could not determine iteration index \""
 					<< strIter << "\"." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	return pSymIter;
@@ -743,7 +743,7 @@ static Symbol* fkt_sort(const std::vector<Symbol*>& vecSyms,
 		ostrErr << linenr(runinfo) 
 			<< "Arguments to sort have to be arrays." 
 			<< std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	const SymbolArray* pArr = (SymbolArray*)vecSyms[0];
@@ -784,13 +784,13 @@ static Symbol* fkt_sort(const std::vector<Symbol*>& vecSyms,
 		const Symbol* pSym = vecSyms[iElem];
 		if(pSym->GetType() != SYMBOL_ARRAY)
 		{
-			log_err(linenr(runinfo), "Arguments to sort have to be arrays. Ignoring.");
+			tl::log_err(linenr(runinfo), "Arguments to sort have to be arrays. Ignoring.");
 			continue;
 		}
 
 		if(((SymbolArray*)pSym)->GetArr().size() != vecSortedIndices.size())
 		{
-			log_err(linenr(runinfo), "Array size mismatch in sort. Ignoring.");
+			tl::log_err(linenr(runinfo), "Array size mismatch in sort. Ignoring.");
 			continue;
 		}
 
@@ -817,7 +817,7 @@ static Symbol* fkt_zip(const std::vector<Symbol*>& vecSyms,
 	{
 		if(pSym->GetType() != SYMBOL_ARRAY)
 		{
-			log_err(linenr(runinfo), "Symbol \"", pSym->GetName(),
+			tl::log_err(linenr(runinfo), "Symbol \"", pSym->GetName(),
 				"\" is of type ", pSym->GetTypeName(),
 				", but zip needs vectors. Ignoring.");
 			continue;
@@ -881,7 +881,7 @@ static Symbol* fkt_trim(const std::vector<Symbol*>& vecSyms,
 	else if(vecSyms[0]->GetType() == SYMBOL_STRING)
 	{
 		t_string str = ((SymbolString*)vecSyms[0])->GetVal();
-		::trim(str);
+		tl::trim(str);
 		return new SymbolString(str);
 	}
 
@@ -943,11 +943,11 @@ static Symbol* fkt_tokens(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Called tokens with invalid arguments." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	std::vector<t_string> vecTokens;
-	::get_tokens<t_string>(*pstrInput, strDelim, vecTokens);
+	tl::get_tokens<t_string>(*pstrInput, strDelim, vecTokens);
 
 	SymbolArray* pArr = new SymbolArray;
 	for(const t_string& strTok : vecTokens)
@@ -968,7 +968,7 @@ static Symbol* fkt_replace(const std::vector<Symbol*>& vecSyms,
 	const t_string& strOld = ((SymbolString*)vecSyms[1])->GetVal();
 	const t_string& strNew = ((SymbolString*)vecSyms[2])->GetVal();
 
-	find_all_and_replace(str, strOld, strNew);
+	tl::find_all_and_replace(str, strOld, strNew);
 
 	return new SymbolString(str);
 }
@@ -994,7 +994,7 @@ static Symbol* fkt_replace_regex(const std::vector<Symbol*>& vecSyms,
 	}
 	catch(const std::exception& ex)
 	{
-		log_err(linenr(runinfo), "Regex evaluation failed with error: ", ex.what()); 
+		tl::log_err(linenr(runinfo), "Regex evaluation failed with error: ", ex.what()); 
 		return 0;
 	}
 
@@ -1046,7 +1046,7 @@ static Symbol* fkt_find_regex(const std::vector<Symbol*>& vecSyms,
 	}
 	catch(const std::exception& ex)
 	{
-		log_err(linenr(runinfo), "Regex evaluation failed with error: ", ex.what());
+		tl::log_err(linenr(runinfo), "Regex evaluation failed with error: ", ex.what());
 		return 0;
 	}
 
@@ -1092,7 +1092,7 @@ static Symbol* fkt_match_regex(const std::vector<Symbol*>& vecSyms,
 	}
 	catch(const std::exception& ex)
 	{
-		log_err(linenr(runinfo), "Regex evaluation failed with error: ", ex.what());
+		tl::log_err(linenr(runinfo), "Regex evaluation failed with error: ", ex.what());
 		return 0;
 	}
 
@@ -1130,7 +1130,7 @@ static Symbol* fkt_subfind_regex(const std::vector<Symbol*>& vecSyms,
 	}
 	catch(const std::exception& ex)
 	{
-		log_err(linenr(runinfo), "Regex evaluation failed with error: ", ex.what());
+		tl::log_err(linenr(runinfo), "Regex evaluation failed with error: ", ex.what());
 		return 0;
 	}
 

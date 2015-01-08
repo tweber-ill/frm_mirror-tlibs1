@@ -19,6 +19,8 @@
 
 #include "../helper/misc.h"
 
+namespace tl {
+
 std::ostream& operator<<(std::ostream& ostr, const MinuitFuncModel& fkt)
 {
 	ostr << fkt.print();
@@ -85,3 +87,6 @@ double Chi2Function_nd::chi2(const std::vector<double>& vecParams) const
 	}
 	return dChi2;
 }
+
+}
+

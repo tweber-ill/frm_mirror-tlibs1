@@ -24,6 +24,8 @@
 	#include <cufft.h>
 #endif
 
+namespace tl {
+
 //------------------------------------------------------------------------------
 // fft using fftw
 #ifdef USE_FFTW
@@ -234,7 +236,7 @@ bool Fourier::ifft(const double *pRealIn, const double *pImagIn,
 	// if we don't have the fftw available, use dft instead
 	idft<double>(pRealIn, pImagIn, pRealOut, pImagOut, m_iSize);
 
-	return true;	
+	return true;
 }
 
 #endif	// USE_CUDA
@@ -279,7 +281,7 @@ bool Fourier::shift_sin(double dNumOsc, const double* pDatIn,
 	// since the signal is real we can take the first half of the fft data
 	// and multiply by two.
 	c *= 2.;
-	c = ::phase_correction_0<double>(c, dPhase);
+	c = tl::phase_correction_0<double>(c, dPhase);
 
 	pDatFFT_real[iNumOsc] = c.real();
 	pDatFFT_imag[iNumOsc] = c.imag();
@@ -325,7 +327,7 @@ bool Fourier::phase_correction_0(const double* pDatIn, double *pDataOut,
 		if(i<iSize/2)
 		{
 			c *= 2.;
-			c = ::phase_correction_0<double>(c, dPhase*double(i));
+			c = tl::phase_correction_0<double>(c, dPhase*double(i));
 		}
 		else
 		{
@@ -368,14 +370,14 @@ bool Fourier::phase_correction_1(const double* pDatIn,
 		return false;
 
 	for(unsigned int i=1; i<iSize; ++i)
-	{	
+	{
 		std::complex<double> c(pDatFFT_real[i], pDatFFT_imag[i]);
 		if(i<iSize/2)
 		{
 			double dX = double(i)/double(iSize);
-			
+
 			c *= 2.;
-			c = ::phase_correction_1<double>(c,
+			c = tl::phase_correction_1<double>(c,
 							dPhaseOffs*double(i), dPhaseSlope*double(i),
 							dX);
 		}
@@ -444,4 +446,6 @@ bool Fourier::get_contrast(double dNumOsc, const double* pDatIn,
 		dPh += 2.*M_PI;
 
 	return true;
+}
+
 }

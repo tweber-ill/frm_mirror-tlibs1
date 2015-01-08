@@ -13,8 +13,8 @@
 
 Symbol::~Symbol()
 {
-	//log_debug("Deleting ", this, ", name: ", GetName(), ", ident: ", GetIdent());
-	//log_backtrace();
+	//tl::log_debug("Deleting ", this, ", name: ", GetName(), ", ident: ", GetIdent());
+	//tl::log_backtrace();
 }
 
 // ----------------------------------------------------------------------------
@@ -116,7 +116,7 @@ void SymbolReal::assign(Symbol *pSym)
 {
 	SymbolReal *pOther = (SymbolReal*)pSym->ToType(GetType());
 	if(!pOther)
-		throw Err("Invalid assignment.");
+		throw tl::Err("Invalid assignment.");
 
 	this->SetVal(pOther->GetVal());
 }
@@ -183,7 +183,7 @@ void SymbolComplex::assign(Symbol *pSym)
 {
 	SymbolComplex *pOther = (SymbolComplex*)pSym->ToType(GetType());
 	if(!pOther)
-		throw Err("Invalid assignment.");
+		throw tl::Err("Invalid assignment.");
 
 	this->SetVal(pOther->GetVal());
 }
@@ -273,7 +273,7 @@ void SymbolInt::assign(Symbol *pSym)
 {
 	SymbolInt *pOther = (SymbolInt*)pSym->ToType(GetType());
 	if(!pOther)
-		throw Err("Invalid assignment.");
+		throw tl::Err("Invalid assignment.");
 
 	this->SetVal(pOther->GetVal());
 }
@@ -359,7 +359,7 @@ void SymbolString::assign(Symbol *pSym)
 {
 	SymbolString *pOther = (SymbolString*)pSym->ToType(GetType());
 	if(!pOther)
-		throw Err("Invalid assignment.");
+		throw tl::Err("Invalid assignment.");
 
 	this->SetVal(pOther->GetVal());
 }
@@ -421,7 +421,7 @@ Symbol* SymbolArray::ToType(SymbolType stype) const
 		pNewSym = pNewSymS;
 	}
 	else
-		log_err("Cannot convert array to type ", stype, ".");
+		tl::log_err("Cannot convert array to type ", stype, ".");
 
 	return pNewSym;
 }
@@ -461,7 +461,7 @@ void SymbolArray::assign(Symbol *pSym)
 {
 	SymbolArray *pOther = (SymbolArray*)pSym->ToType(GetType());
 	if(!pOther)
-		throw Err("Invalid assignment.");
+		throw tl::Err("Invalid assignment.");
 
 	this->m_arr = pOther->GetArr();
 }
@@ -474,7 +474,7 @@ void SymbolArray::UpdateIndex(unsigned int iIdx, bool bOverwrite)
 	if(!bOverwrite && m_arr[iIdx]->GetArrPtr())
 		return;
 
-	//if(m_arr[iIdx]->GetArrPtr()) log_warn("Overwriting array ownership.");
+	//if(m_arr[iIdx]->GetArrPtr()) tl::log_warn("Overwriting array ownership.");
 
 	m_arr[iIdx]->SetArrPtr(this);
 	m_arr[iIdx]->SetArrIdx(iIdx);
@@ -495,7 +495,7 @@ void SymbolArray::UpdateLastNIndices(unsigned int N, bool bOverwrite)
 		if(!bOverwrite && (*iter)->GetArrPtr())
 			continue;
 
-		//if((*iter)->GetArrPtr()) log_warn("Overwriting array ownership.");
+		//if((*iter)->GetArrPtr()) tl::log_warn("Overwriting array ownership.");
 
 		(*iter)->SetArrPtr(this);
 		(*iter)->SetArrIdx(iLast-i);
@@ -589,7 +589,7 @@ Symbol* SymbolMap::ToType(SymbolType stype) const
 		pNewSym = pNewSymS;
 	}
 	else
-		log_err("Cannot convert map to other type.");
+		tl::log_err("Cannot convert map to other type.");
 
 	return pNewSym;
 }
@@ -636,7 +636,7 @@ void SymbolMap::assign(Symbol *pSym)
 
 	SymbolMap *pOther = (SymbolMap*)pSym->ToType(GetType());
 	if(!pOther)
-		throw Err("Invalid assignment.");
+		throw tl::Err("Invalid assignment.");
 
 	this->m_map = pOther->m_map;
 }
@@ -726,7 +726,7 @@ SymbolTable::SymbolTable()
 
 SymbolTable::~SymbolTable()
 {
-	//log_debug("Deleting symbol table with ", m_syms.size(), " elements.");
+	//tl::log_debug("Deleting symbol table with ", m_syms.size(), " elements.");
 	std::set<Symbol*> setDeleted;
 
 	for(t_syms::iterator iter=m_syms.begin(); iter!=m_syms.end(); ++iter)
@@ -738,7 +738,7 @@ SymbolTable::~SymbolTable()
 		{
 			setDeleted.insert(pSym);
 
-			//log_debug("SymbolTable: Deleted ", iter->first, ", type ", pSym->GetTypeName());
+			//tl::log_debug("SymbolTable: Deleted ", iter->first, ", type ", pSym->GetTypeName());
 			delete pSym;
 			iter->second = 0;
 		}
@@ -760,7 +760,7 @@ void SymbolTable::print() const
 		else
 			strSym = T_STR"<null>";
 
-		log_info(val.first, " = ", strSym);
+		tl::log_info(val.first, " = ", strSym);
 	}
 }
 
@@ -894,8 +894,8 @@ void safe_delete(Symbol *&pSym, const SymbolTable* pSymTab, ParseInfo* pParseInf
 
 	if(!bIsInTable && !bIsInGlobTable)
 	{
-		//log_debug("safe_deleting ", (void*)pSym, ", type: ", pSym->GetTypeName(), ", val: ", pSym->print());
-		//log_backtrace();
+		//tl::log_debug("safe_deleting ", (void*)pSym, ", type: ", pSym->GetTypeName(), ", val: ", pSym->print());
+		//tl::log_backtrace();
 
 		delete pSym;
 		pSym = 0;
@@ -928,7 +928,7 @@ bool clone_if_needed(Symbol *pSym, Symbol*& pClone)
 	else
 		pClone = pSym;
 
-	//log_debug("Cloned: ", bNeedClone);
+	//tl::log_debug("Cloned: ", bNeedClone);
 	return bNeedClone;
 }
 
@@ -947,7 +947,7 @@ Symbol* recycle_or_alloc(const std::initializer_list<const Symbol*>& lstSyms, bo
 		{
 			if(is_tmp_sym(pSym))
 			{
-				//log_debug("Recycling ", pSym, ", ", pSym->GetType(), ": ", pSym->GetIdent(), " = ", pSym->print());
+				//tl::log_debug("Recycling ", pSym, ", ", pSym->GetType(), ": ", pSym->GetIdent(), " = ", pSym->print());
 				pSymTmp = const_cast<Symbol*>(pSym);
 				pSymTmp->ClearIndices();
 				pSymTmp->SetRval(1);

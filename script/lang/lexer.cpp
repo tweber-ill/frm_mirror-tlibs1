@@ -121,7 +121,7 @@ void Lexer::ReplaceEscapes(t_string& str)
 		return;
 	//std::cout << "string: " << str << std::endl;
 
-	const t_mapSpecChars& mapSpec = get_spec_chars();
+	const tl::t_mapSpecChars& mapSpec = tl::get_spec_chars();
 
 	static bool s_bEscapesInited = 0;
 	static std::unordered_map<t_string, t_string> s_mapstrSpecial;
@@ -146,7 +146,7 @@ void Lexer::ReplaceEscapes(t_string& str)
 	};
 
 	if(!s_bEscapesInited)
-		for(const t_mapSpecChars::value_type& pair : mapSpec)
+		for(const tl::t_mapSpecChars::value_type& pair : mapSpec)
 		{
 			const t_string strKey = T_STR("\\{") + pair.first + T_STR("}");
 			const t_string& strVal = T_STR(pair.second.strUTF8);
@@ -156,10 +156,10 @@ void Lexer::ReplaceEscapes(t_string& str)
 		}
 
 	for(const auto& pair : s_mapstrSpecial)
-		find_all_and_replace(str, pair.first, pair.second);
+		tl::find_all_and_replace(str, pair.first, pair.second);
 
 	for(const t_tupstr& tup : s_vecstrEscapes)
-		find_all_and_replace(str, std::get<0>(tup), std::get<1>(tup));
+		tl::find_all_and_replace(str, std::get<0>(tup), std::get<1>(tup));
 
 
 
@@ -237,7 +237,7 @@ void Lexer::load(const t_string& _strInput)
 	//G_COUT << strInput << std::endl;
 
 	// Lexer cannot yet handle \" directly -> replace it
-	find_all_and_replace(strInput, t_string(T_STR"\\\""), t_string(T_STR"\'"));
+	tl::find_all_and_replace(strInput, t_string(T_STR"\\\""), t_string(T_STR"\'"));
 
 	std::vector<t_string> vecStr = GetStringTable(strInput);
 
@@ -270,7 +270,7 @@ void Lexer::load(const t_string& _strInput)
 				if(iStringIdx >= vecStr.size())
 				{
 					m_bOk = 0;
-					log_err("String index exceeds string table size.");
+					tl::log_err("String index exceeds string table size.");
 					continue;
 				}
 				tokStr.strVal = vecStr[iStringIdx];
@@ -332,7 +332,7 @@ void Lexer::load(const t_string& _strInput)
 			if(m_strFile != T_STR"")
 				strFile = t_string(T_STR" in \"") + m_strFile + T_STR"\"";
 
-			log_err("Error in line ", iCurLine, strFile,  ": ",
+			tl::log_err("Error in line ", iCurLine, strFile,  ": ",
 				"Unknown token: \"", str, "\".");
 			continue;
 		}

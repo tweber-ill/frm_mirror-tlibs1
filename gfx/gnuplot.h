@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 
+namespace tl {
 enum LineStyle
 {
 	STYLE_POINTS,
@@ -98,6 +99,6 @@ public:
 
 	void SetLegendOpts(const std::string& strOpts) { m_strLegendOpts = strOpts; }
 };
-
+}
 
 #endif

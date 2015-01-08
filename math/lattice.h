@@ -12,6 +12,7 @@
 #include "neutrons.hpp"
 #include <ostream>
 
+namespace tl {
 
 template<typename T=double>
 bool reciprocal(const ublas::matrix<T>& matReal, ublas::matrix<T>& matRecip)
@@ -402,4 +403,7 @@ std::ostream& operator<<(std::ostream& ostr, const Lattice<T>& lat)
 */
 	return ostr;
 }
+
+}
+
 #endif

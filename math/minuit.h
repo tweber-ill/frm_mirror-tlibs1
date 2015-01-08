@@ -17,6 +17,7 @@
 
 #include "funcmod.h"
 
+namespace tl {
 
 class MinuitFuncModel : public FunctionModel
 {
@@ -131,7 +132,7 @@ class Chi2Function_nd : public ROOT::Minuit2::FCNBase
 			return chi2(vecParams);
 		}
 };
-
+}
 
 #endif
 

@@ -16,7 +16,7 @@
 
 //#define DEFAULT_TERM T_STR"qt";
 #define DEFAULT_TERM T_STR"x11";
-static GnuPlot g_plot;
+static tl::GnuPlot g_plot;
 
 static inline bool is_array_of_arrays(const Symbol* pSym)
 {
@@ -105,8 +105,8 @@ static XYLimits get_plot_limits(const SymbolMap* pParamMap)
 }
 
 
-static void set_plot_params(GnuPlot& plot, const SymbolMap* pParamMap, 
-				PlotObj* pCurPlotObj=0, XYLimits* pLimits=0)
+static void set_plot_params(tl::GnuPlot& plot, const SymbolMap* pParamMap, 
+				tl::PlotObj* pCurPlotObj=0, XYLimits* pLimits=0)
 {
 	bool bHasVal = 0;
 	t_string strTitle = pParamMap->GetStringVal(T_STR"title", &bHasVal);
@@ -124,11 +124,11 @@ static void set_plot_params(GnuPlot& plot, const SymbolMap* pParamMap,
 		if(bHasVal)
 		{
 			if(strStyle == T_STR"line" || strStyle == T_STR"lines")
-				pCurPlotObj->linestyle = STYLE_LINES_SOLID;
+				pCurPlotObj->linestyle = tl::STYLE_LINES_SOLID;
 			else if(strStyle == T_STR"line_dashed" || strStyle == T_STR"lines_dashed")
-				pCurPlotObj->linestyle = STYLE_LINES_DASHED;
+				pCurPlotObj->linestyle = tl::STYLE_LINES_DASHED;
 			else if(strStyle == T_STR"point" || strStyle == T_STR"points")
-				pCurPlotObj->linestyle = STYLE_POINTS;
+				pCurPlotObj->linestyle = tl::STYLE_POINTS;
 		}
 
 		t_string strLegend = pParamMap->GetStringVal(T_STR"legend", &bHasVal);
@@ -221,7 +221,7 @@ static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 			vecXErr = ((SymbolArray*)vecSyms[3])->ToDoubleArray();
 
 
-		PlotObj obj;
+		tl::PlotObj obj;
 		obj.vecX = vecX;
 		obj.vecY = vecY;
 		obj.vecErrX = vecXErr;
@@ -242,7 +242,7 @@ static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Invalid call to plot." << std::endl;
-		throw Err(ostrErr.str(), 0);
+		throw tl::Err(ostrErr.str(), 0);
 	}
 
 	if(pPlotParams)
@@ -312,7 +312,7 @@ static Symbol* fkt_plot2d(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Invalid call to plot2d." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	return 0;
@@ -329,7 +329,7 @@ static Symbol* _fkt_fileplot(const std::vector<Symbol*>& vecSyms,
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo)
 			<< "First argument to fileplot has to be the file name." << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	const t_string& strFile = ((SymbolString*)vecSyms[0])->GetVal();

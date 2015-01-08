@@ -13,6 +13,7 @@
 #include "../helper/log.h"
 #include <vector>
 
+namespace tl {
 
 template<typename T=double>
 class Brillouin2D
@@ -194,5 +195,7 @@ class Brillouin2D
 			//	std::cout << vecPair.first << ", " << vecPair.second << std::endl;
 		}
 };
+
+}
 
 #endif

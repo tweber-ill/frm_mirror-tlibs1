@@ -14,6 +14,8 @@ extern "C"
 	//#include <mkl_lapacke.h>
 }
 
+namespace tl {
+
 template<>
 bool eigenvec<double>(const ublas::matrix<double>& mat,
 				std::vector<ublas::vector<double> >& evecs_real,
@@ -245,4 +247,6 @@ bool qr<double>(const ublas::matrix<double>& M,
 
 	//std::cout << "Q = " << Q << std::endl;
 	return (iInfo==0);
+}
+
 }

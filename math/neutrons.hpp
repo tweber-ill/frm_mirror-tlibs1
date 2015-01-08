@@ -23,11 +23,15 @@
 #include <boost/units/systems/si/codata/neutron_constants.hpp>
 #include <boost/units/systems/si/codata/electromagnetic_constants.hpp>
 #include <boost/units/systems/si/codata/physico-chemical_constants.hpp>
-namespace units = boost::units;
-namespace co = boost::units::si::constants::codata;
 
 #include <boost/units/base_units/metric/angstrom.hpp>
 #include <boost/units/cmath.hpp>
+
+namespace tl {
+
+namespace units = boost::units;
+namespace co = boost::units::si::constants::codata;
+
 
 static const auto one_meV = 1e-3 * co::e * units::si::volts;
 static const auto one_eV = co::e * units::si::volts;
@@ -570,7 +574,7 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 	{
 		double dApparentKf = dKf - dq;
 
-		if(::float_equal(dApparentKf, dKi, dQSensitivity))
+		if(float_equal(dApparentKf, dKi, dQSensitivity))
 		{
 			result.bAType = 1;
 			result.bAKfSmallerKi = 0;
@@ -581,7 +585,7 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 	{
 		double dApparentKf = dKf + dq;
 
-		if(::float_equal(dApparentKf, dKi, dQSensitivity))
+		if(float_equal(dApparentKf, dKi, dQSensitivity))
 		{
 			result.bAType = 1;
 			result.bAKfSmallerKi = 1;
@@ -593,7 +597,7 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 	{
 		double dApparentKi = dKi + dq;
 
-		if(::float_equal(dApparentKi, dKf, dQSensitivity))
+		if(float_equal(dApparentKi, dKf, dQSensitivity))
 		{
 			result.bMType = 1;
 			result.bMKfSmallerKi = 0;
@@ -604,7 +608,7 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 	{
 		double dApparentKi = dKi - dq;
 
-		if(::float_equal(dApparentKi, dKf, dQSensitivity))
+		if(float_equal(dApparentKi, dKf, dQSensitivity))
 		{
 			result.bMType = 1;
 			result.bMKfSmallerKi = 1;
@@ -616,5 +620,7 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 
 
 // --------------------------------------------------------------------------------
+
+}
 
 #endif

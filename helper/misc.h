@@ -15,6 +15,8 @@
 #include <tuple>
 #include "../math/math.h"
 
+namespace tl
+{
 // deletes an object when going out of scope
 template<class T> class autodeleter
 {
@@ -264,4 +266,5 @@ T nextpow2(T val)
 	return std::pow(2., std::ceil(std::log2(val)));
 }
 
+}
 #endif

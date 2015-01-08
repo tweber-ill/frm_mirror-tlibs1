@@ -19,6 +19,7 @@
 #include "../helper/log.h"
 #include "funcmod.h"
 
+namespace tl {
 
 // see:
 // http://mathworld.wolfram.com/BernsteinPolynomial.html
@@ -146,9 +147,9 @@ void find_peaks(unsigned int iLen, const T* px, const T* py, unsigned int iOrder
 		pSplineY[iSpline] = vec[1];
 	}
 
-	::diff(iNumSpline, pSplineX, pSplineY, pSplineDiff);
-	::diff(iNumSpline, pSplineX, pSplineDiff, pSplineDiff2);
-	std::vector<unsigned int> vecZeroes = ::find_zeroes<T>(iNumSpline, pSplineDiff);
+	tl::diff(iNumSpline, pSplineX, pSplineY, pSplineDiff);
+	tl::diff(iNumSpline, pSplineX, pSplineDiff, pSplineDiff2);
+	std::vector<unsigned int> vecZeroes = tl::find_zeroes<T>(iNumSpline, pSplineDiff);
 
 
 	for(unsigned int iZeroIdx = 0; iZeroIdx<vecZeroes.size(); ++iZeroIdx)
@@ -206,7 +207,7 @@ void find_peaks(unsigned int iLen, const T* px, const T* py, unsigned int iOrder
 		vecMaximaWidth.push_back(dWidth);
 	}
 
-	::sort_3<std::vector<double>::iterator>(vecMaximaSize.begin(), vecMaximaSize.end(), vecMaximaWidth.begin(), vecMaximaX.begin());
+	tl::sort_3<std::vector<double>::iterator>(vecMaximaSize.begin(), vecMaximaSize.end(), vecMaximaWidth.begin(), vecMaximaX.begin());
 	std::reverse(vecMaximaSize.begin(), vecMaximaSize.end());
 	std::reverse(vecMaximaWidth.begin(), vecMaximaWidth.end());
 	std::reverse(vecMaximaX.begin(), vecMaximaX.end());
@@ -224,6 +225,8 @@ void find_peaks(unsigned int iLen, const T* px, const T* py, unsigned int iOrder
 	delete[] pSplineY;
 	delete[] pSplineDiff;
 	delete[] pSplineDiff2;
+}
+
 }
 
 #endif

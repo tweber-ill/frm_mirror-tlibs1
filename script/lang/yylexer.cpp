@@ -18,7 +18,7 @@ extern "C" int yylex(void* _yylval, void* _pParseObj)
 {
 	if(_yylval==0 || _pParseObj==0)
 	{
-		log_err("Invalid lval or parseobj in lexer.");
+		tl::log_err("Invalid lval or parseobj in lexer.");
 		return 0;
 	}
 
@@ -81,7 +81,7 @@ extern "C" int yylex(void* _yylval, void* _pParseObj)
 		}
 	}
 
-	log_err("line ", pParseObj->iCurLine,
+	tl::log_err("line ", pParseObj->iCurLine,
 		" in \"", pParseObj->strCurFile,
 		"\": Invalid token: ", tok.type, 
 		".");
@@ -102,5 +102,5 @@ extern "C" void yyerror(void *_pParseObj, const char* pc)
 		strLine = ostrLine.str();
 	}
 
-	log_err(strLine, ": ", pc, ".");
+	tl::log_err(strLine, ": ", pc, ".");
 }

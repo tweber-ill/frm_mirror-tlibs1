@@ -14,6 +14,8 @@
 #include <sstream>
 #include <iomanip>
 
+namespace tl {
+
 namespace ios = boost::iostreams;
 
 GnuPlot::~GnuPlot() { DeInit(); }
@@ -390,3 +392,5 @@ void GnuPlot::SetColorBarRange(double dMin, double dMax, bool bCyclic)
 
 bool GnuPlot::IsReady() const { return m_postr!=0; }
 std::ostream& GnuPlot::GetStream() { return *m_postr; }
+
+}

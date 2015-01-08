@@ -20,6 +20,8 @@
 #include <boost/algorithm/minmax_element.hpp>
 #include <limits>
 
+namespace tl {
+
 static bool CleanString(std::string& strLine)
 {
 	bool bModified = 0;
@@ -148,7 +150,7 @@ void LoadTxt::StrTrim(std::string& str)
 		// second: remove the comment from the string
 		str = str.substr(0, iFirstComment);
 	}
-	::trim(str);
+	trim(str);
 }
 
 
@@ -357,7 +359,7 @@ bool LoadTxt::Save(const char* pcFile, bool bSaveComments) const
 
 	ofstr << std::scientific;
 	//ofstr.precision(16);
-	
+
 	if(bSaveComments)
 	{
 		for(const auto& pairComm : m_mapComm)
@@ -416,15 +418,15 @@ void LoadTxt::GetMinMax(double& dMin, double& dMax) const
 {
 	dMin = std::numeric_limits<double>::max();
 	dMax = -dMin;
-	
+
 	for(unsigned int uiCol=0; uiCol<GetColCnt(); ++uiCol)
 	{
 		const double* pCol = GetColumn(uiCol);
 		std::pair<const double*, const double*> minmax = boost::minmax_element(pCol, pCol+GetColLen());
-		
+
 		double dColMin = *minmax.first;
 		double dColMax = *minmax.second;
-		
+
 		dMin = std::min(dMin, dColMin);
 		dMax = std::max(dMax, dColMax);
 	}
@@ -504,7 +506,7 @@ bool McData::IsOwnDataFile() const
 	bool bExists = GetString("subtype", strVal);
 	if(bExists && strVal == "tobisown")
 		return true;
-		
+
 	return false;
 }
 
@@ -512,7 +514,7 @@ bool McData::GetLogScale(bool &bXLog, bool &bYLog) const
 {
 	// default to no log if field not found
 	bXLog = bYLog = 0;
-	
+
 	std::string strVal;
 	if(GetString("xylog", strVal))
 	{
@@ -689,10 +691,10 @@ void Data1D::CalcLimits(double& dXMin, double& dXMax, int iCol) const
 
 	const double *pX = GetColumn(iCol);
 	unsigned int uiDim = GetDim();
-	
+
 	std::pair<const double*, const double*> pair_minmax =
 								boost::minmax_element(pX, pX+uiDim);
-	
+
 	dXMin = *pair_minmax.first;
 	dXMax = *pair_minmax.second;
 }
@@ -705,11 +707,11 @@ bool Data1D::GetColLabel(unsigned int iCol, std::string& strLabel) const
 }
 
 bool Data1D::GetLabels(std::string& strLabelX, std::string& strLabelY) const
-{	
+{
 	// first see if explicit column labels exist
 	int iX=0, iY=1, iYErr=2;
 	GetColumnIndices(iX,iY,iYErr);
-	
+
 	bool bHasX = GetColLabel(iX, strLabelX);
 	bool bHasY = GetColLabel(iY, strLabelY);
 
@@ -724,7 +726,7 @@ bool Data1D::GetLabels(std::string& strLabelX, std::string& strLabelY) const
 	if(!bHasY)
 		if(!GetString("ylabel", strLabelY))
 			bOk = false;
-	
+
 	return bOk;
 }
 
@@ -853,7 +855,7 @@ void Data2D::ForEach(unsigned int iBlockIdx, double (*pfkt)(double))
 {
 	if(iBlockIdx>=m_iNumBlocks)
 		return;
-	
+
 	for(unsigned int iY=0; iY<GetYDim(); ++iY)
 		for(unsigned int iX=0; iX<GetXDim(); ++iX)
 		{
@@ -883,7 +885,7 @@ void Data2D::Mod0to2Pi(unsigned int uiBlock)
 {
 	if(uiBlock>=m_iNumBlocks)
 		return;
-	
+
 	for(unsigned int iY=0; iY<GetYDim(); ++iY)
 		for(unsigned int iX=0; iX<GetXDim(); ++iX)
 		{
@@ -909,7 +911,7 @@ double Data2D::GetBlockVal(unsigned int iBlock, unsigned int iX, unsigned int iY
 		return 0.;
 	if(iX>=m_iXDim || iY>=m_iYDim)
 		return 0.;
-	
+
 	const double* pcol = m_data.GetColumn(iX) + m_iYDim*iBlock;
 	return pcol[iY];
 }
@@ -918,15 +920,15 @@ void Data2D::GetBlockMinMax(unsigned int iBlock, double& dMin, double& dMax) con
 {
 	dMin = std::numeric_limits<double>::max();
 	dMax = -dMin;
-	
+
 	for(unsigned int uiCol=0; uiCol<m_iXDim; ++uiCol)
 	{
 		const double* pCol = m_data.GetColumn(uiCol) + m_iYDim*iBlock;
 		std::pair<const double*, const double*> minmax = boost::minmax_element(pCol, pCol+m_iYDim);
-		
+
 		double dColMin = *minmax.first;
 		double dColMax = *minmax.second;
-		
+
 		dMin = std::min(dMin, dColMin);
 		dMax = std::max(dMax, dColMax);
 	}
@@ -954,12 +956,12 @@ bool Data2D::GetLimits(double& dXMin, double& dXMax,
 	{
 		std::istringstream istr(strVal);
 		istr >> dXMin >> dXMax >> dYMin >> dYMax >> dZMin >> dZMax;
-		
+
 		return true;
 	}
 
 	bool bOk = false;
-	
+
 	// if not found look for these fields
 	if(GetString("xlimits", strVal))
 	{
@@ -969,7 +971,7 @@ bool Data2D::GetLimits(double& dXMin, double& dXMax,
 
 		bOk = true;
 	}
-	
+
 	if(GetString("ylimits", strVal))
 	{
 		std::istringstream istr(strVal);
@@ -978,7 +980,7 @@ bool Data2D::GetLimits(double& dXMin, double& dXMax,
 
 		bOk = true;
 	}
-	
+
 	if(GetString("zlimits", strVal))
 	{
 		std::istringstream istr(strVal);
@@ -990,7 +992,7 @@ bool Data2D::GetLimits(double& dXMin, double& dXMax,
 		if(m_bRecalcZLimits)
 			GetValMinMax(dZMin, dZMax);
 	}
-	
+
 	return bOk;
 }
 
@@ -1037,7 +1039,7 @@ bool Data2D::ExtractColOrRow(int iCol, int iRow, const char* pcOutFile, const Da
 
 	std::string strLabX="x", strLabY="y", strLabZ="z";
 	GetLabels(strLabX, strLabY, strLabZ);
-	
+
 	double dXMin, dXMax, dYMin, dYMax, dZMin, dZMax;
 	GetLimits(dXMin, dXMax, dYMin, dYMax, dZMin, dZMax);
 
@@ -1194,7 +1196,7 @@ const double* Data3D::GetBlockT(unsigned int iBlock, unsigned int iX, unsigned i
 		return 0;
 	if(iX>=m_iXDim || iY>=m_iYDim)
 		return 0;
-	
+
 	const double* pcol = m_data.GetColumn(iX) + m_iYDim*m_iTDim*iBlock;
 	return pcol + iY*m_iTDim;
 }
@@ -1249,23 +1251,23 @@ bool Data3D::GetLimits(double& dXMin, double& dXMax,
 
 		bOk = true;
 	}
-	
+
 	return bOk;
 }
 
 bool Data3D::GetLabels(std::string& strLabelX, std::string& strLabelY, std::string& strLabelT) const
 {
 	bool bOk = true;
-	
+
 	if(!GetString("xlabel", strLabelX))
 		bOk = false;
-	
+
 	if(!GetString("ylabel", strLabelY))
 		bOk = false;
 
 	if(!GetString("zlabel", strLabelT))
 		bOk = false;
-	
+
 	return bOk;
 }
 
@@ -1284,7 +1286,7 @@ bool Data3D::SaveTChan(const char* pcFile, unsigned int iX, unsigned int iY) con
 {
 	double dXMin, dXMax, dYMin, dYMax, dTMin, dTMax;
 	bool bHasLimits = GetLimits(dXMin, dXMax, dYMin, dYMax, dTMin, dTMax);
-	
+
 	double *px = new double[GetTDim()];
 	autodeleter<double> _adel(px, true);
 
@@ -1420,4 +1422,6 @@ double Data3D::GetIntensityError() const
 				dErr += GetErr(iX, iY, iT)*GetErr(iX, iY, iT);
 	dErr = sqrt(dErr);
 	return dErr;
+}
+
 }

@@ -7,6 +7,10 @@
 #ifndef __FUNC_MOD_H__
 #define __FUNC_MOD_H__
 
+#include <boost/numeric/ublas/vector.hpp>
+
+namespace tl {
+
 // parametric function
 template<class t_vec = boost::numeric::ublas::vector<double>, class T = typename t_vec::value_type>
 class FunctionModel_param_gen
@@ -41,12 +45,10 @@ template<class T = double> class FunctionModel_nd_gen
 		virtual const char* GetModelName() const = 0;
 };
 
-
-
-#include <boost/numeric/ublas/vector.hpp>
-
 typedef class FunctionModel_param_gen<boost::numeric::ublas::vector<double>> FunctionModel_param;
 typedef class FunctionModel_gen<double> FunctionModel;
 typedef class FunctionModel_nd_gen<double> FunctionModel_nd;
+
+}
 
 #endif

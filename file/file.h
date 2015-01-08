@@ -10,6 +10,8 @@
 #include <iostream>
 #include <string>
 
+namespace tl {
+
 template<typename t_char=char>
 std::streampos get_file_size(std::basic_istream<t_char>& istr)
 {
@@ -54,5 +56,7 @@ public:
 
 	static int mkstemp(std::string& strFile);
 };
+
+}
 
 #endif

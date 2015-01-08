@@ -16,7 +16,7 @@ t_char* load_file(const char* pcFile)
 
 	if(!ifstr.is_open())
 	{
-		log_err("Cannot open \"", pcFile, "\".");
+		tl::log_err("Cannot open \"", pcFile, "\".");
 		return 0;
 	}
 
@@ -29,7 +29,7 @@ t_char* load_file(const char* pcFile)
 	pcInput[iFileLen] = 0;
 
 	if(ifstr.fail())
-		log_err("Failed loading file \"", pcFile, "\".");
+		tl::log_err("Failed loading file \"", pcFile, "\".");
 
 	return pcInput;
 }

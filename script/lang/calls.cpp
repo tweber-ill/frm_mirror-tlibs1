@@ -75,7 +75,7 @@ extern bool check_args(RuntimeInfo& runinfo,
 				<< iSyms << " were given.";
 		if(pcErr) ostrErr << " " << pcErr;
 		ostrErr << std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 
@@ -100,7 +100,7 @@ extern bool check_args(RuntimeInfo& runinfo,
 			if(pcErr) ostrErr << " " << pcErr;
 			ostrErr << std::endl;
 
-			throw Err(ostrErr.str(),0);
+			throw tl::Err(ostrErr.str(),0);
 		}
 
 		if(!(*iterTypes & (*iterSym)->GetType()))
@@ -116,7 +116,7 @@ extern bool check_args(RuntimeInfo& runinfo,
 			if(pcErr) ostrErr << " " << pcErr;
 			ostrErr << std::endl;
 
-			throw Err(ostrErr.str(),0);
+			throw tl::Err(ostrErr.str(),0);
 		}
 	}
 
@@ -138,7 +138,7 @@ extern Symbol* ext_call(const t_string& strFkt,
 			<< "Tried to call unknown function \""
 			<< strFkt << "\"."
 			<< std::endl;
-		throw Err(ostrErr.str(),0);
+		throw tl::Err(ostrErr.str(),0);
 	}
 
 	return (*iter).second(vecSyms, info, runinfo, pSymTab);

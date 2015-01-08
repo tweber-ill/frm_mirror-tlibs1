@@ -20,6 +20,8 @@
 #endif
 
 
+namespace tl {
+
 bool dir_exists(const char* pcDir)
 {
 #ifndef NO_QT
@@ -109,4 +111,6 @@ const std::string& TmpFile::GetFileName() const
 void TmpFile::SetPrefix(const char* pcStr)
 {
 	m_strPrefix = pcStr;
+}
+
 }

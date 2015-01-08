@@ -15,6 +15,8 @@
 #include "../math/linalg.h"
 #include "../math/geo.h"
 
+namespace tl {
+
 typedef ublas::matrix<double, ublas::row_major, ublas::bounded_array<double,4*4>> t_mat4;
 typedef ublas::matrix<double, ublas::row_major, ublas::bounded_array<double,3*3>> t_mat3;
 typedef ublas::vector<double, ublas::bounded_array<double,4>> t_vec4;
@@ -338,5 +340,6 @@ class GlFontMap : public FontMap
 
 // --------------------------------------------------------------------------------
 
+}
 
 #endif

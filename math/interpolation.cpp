@@ -9,6 +9,8 @@
 //#include <boost/algorithm/minmax_element.hpp>
 #include <limits>
 
+namespace tl {
+
 namespace ublas = boost::numeric::ublas;
 
 
@@ -36,7 +38,7 @@ Bezier::~Bezier()
 
 ublas::vector<double> Bezier::operator()(double t) const
 {
-	return ::bezier<double>(m_pvecs, m_iN, t);
+	return tl::bezier<double>(m_pvecs, m_iN, t);
 }
 
 
@@ -90,7 +92,7 @@ boost::numeric::ublas::vector<double> BSpline::operator()(double t) const
 		return vecNull;
 	}
 
-	boost::numeric::ublas::vector<double> vec =  ::bspline<double>(m_pvecs, m_iN, t, m_vecKnots);
+	boost::numeric::ublas::vector<double> vec = tl::bspline<double>(m_pvecs, m_iN, t, m_vecKnots);
 
 	// remove epsilon dependence
 	if(t<=0.) vec = m_pvecs[0];
@@ -98,3 +100,6 @@ boost::numeric::ublas::vector<double> BSpline::operator()(double t) const
 
 	return vec;
 }
+
+}
+

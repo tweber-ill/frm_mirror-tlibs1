@@ -21,6 +21,8 @@ script/script.tab.cc
 script/script.cc
 script/.clang/*
 script/.codelite/*
+script/Debug/*
+script/Release/*
 .clang/*
 .codelite/*
 .settings/*

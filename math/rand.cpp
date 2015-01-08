@@ -12,6 +12,7 @@
 #include <time.h>
 #include <sys/time.h>
 
+namespace tl {
 
 std::mt19937/*_64*/ g_randeng;
 
@@ -56,3 +57,6 @@ unsigned int simple_rand(unsigned int iMax)
 {
 	return rand() % iMax;
 }
+
+}
+

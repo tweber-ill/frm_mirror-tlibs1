@@ -10,6 +10,8 @@
 #include <string>
 #include <unordered_map>
 
+namespace tl {
+
 struct SpecChar
 {
 	std::string strUTF8;
@@ -30,5 +32,7 @@ extern const std::string& get_spec_char_utf8(const std::string& strChar);
 extern const std::wstring& get_spec_char_utf16(const std::string& strChar);
 
 extern const t_mapSpecChars& get_spec_chars();
+
+}
 
 #endif

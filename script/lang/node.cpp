@@ -10,17 +10,17 @@
 #include "../../math/math.h"
 #include "../../helper/log.h"
 
-template<typename T> typename remove_constref<T>::type plus_op(T a, T b) { return a+b; }
-template<typename T> typename remove_constref<T>::type minus_op(T a, T b) { return a-b; }
-template<typename T> typename remove_constref<T>::type mult_op(T a, T b) { return a*b; }
-template<typename T> typename remove_constref<T>::type div_op(T a, T b) { return a/b; }
-template<typename T> typename remove_constref<T>::type mod_op(T a, T b) { return a%b; }
+template<typename T> typename tl::remove_constref<T>::type plus_op(T a, T b) { return a+b; }
+template<typename T> typename tl::remove_constref<T>::type minus_op(T a, T b) { return a-b; }
+template<typename T> typename tl::remove_constref<T>::type mult_op(T a, T b) { return a*b; }
+template<typename T> typename tl::remove_constref<T>::type div_op(T a, T b) { return a/b; }
+template<typename T> typename tl::remove_constref<T>::type mod_op(T a, T b) { return a%b; }
 template<> t_real mod_op(t_real a, t_real b) { return ::fmod(a,b); }
 
 template<typename T> bool log_or_op(T a, T b) { return a||b; }
 template<typename T> bool log_and_op(T a, T b) { return a&&b; }
 template<typename T> bool log_eq_op(T a, T b) { return a==b; }
-template<> bool log_eq_op(t_real a, t_real b) { return ::float_equal(a,b); }
+template<> bool log_eq_op(t_real a, t_real b) { return tl::float_equal(a,b); }
 template<typename T> bool log_neq_op(T a, T b) { return !log_eq_op(a,b); }
 template<typename T> bool log_leq_op(T a, T b) { return a<=b; }
 template<typename T> bool log_geq_op(T a, T b) { return a>=b; }
@@ -150,8 +150,8 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 			bool bRecycledLeft = (pSymMap == pLeft);
 			bool bRecycledRight = (pSymMap == pRight);
 
-			//log_debug(bRecycledLeft ? "Recycled left map: " : "Not recycled left map: ", pLeft);
-			//log_debug(bRecycledRight ? "Recycled right map: " : "Not recycled right map: ", pRight);
+			//tl::log_debug(bRecycledLeft ? "Recycled left map: " : "Not recycled left map: ", pLeft);
+			//tl::log_debug(bRecycledRight ? "Recycled right map: " : "Not recycled right map: ", pRight);
 
 			const SymbolMap::t_map& mapLeft = ((SymbolMap*)pSymLeft)->GetMap();
 			const SymbolMap::t_map& mapRight = ((SymbolMap*)pSymRight)->GetMap();
@@ -192,8 +192,8 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
                         bRecycledLeftArr = (pSymResult == pLeft);
                         bRecycledRightArr = (pSymResult == pRight);
 
-			//log_debug(bRecycledLeftArr ? "Recycled left array: " : "Not recycled left array: ", pLeft);
-			//log_debug(bRecycledRightArr ? "Recycled right array: " : "Not recycled right array: ", pRight);
+			//tl::log_debug(bRecycledLeftArr ? "Recycled left array: " : "Not recycled left array: ", pLeft);
+			//tl::log_debug(bRecycledRightArr ? "Recycled right array: " : "Not recycled right array: ", pRight);
 		}
 
 		// (vector op vector) piecewise operation
@@ -203,7 +203,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 			const std::vector<Symbol*>& vecRight = ((SymbolArray*)pSymRight)->GetArr();
 
 			if(vecLeft.size() != vecRight.size())
-				log_warn("Array size mismatch: ", 
+				tl::log_warn("Array size mismatch: ", 
 					vecLeft.size(), " != ", vecRight.size(),
 					", using minimum size.");
 
@@ -232,8 +232,8 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 
 			for(unsigned int iElem=0; iElem<iArrSize; ++iElem)
 			{
-				//log_debug("Temp Left: ", is_tmp_sym(vecLeft[iElem]));
-				//log_debug("Temp Right: ", is_tmp_sym(pSymRight));
+				//tl::log_debug("Temp Left: ", is_tmp_sym(vecLeft[iElem]));
+				//tl::log_debug("Temp Right: ", is_tmp_sym(pSymRight));
 
 				Symbol *pOpResult = Op(vecLeft[iElem], pSymRight, op, false);
 				pSymResult->GetArr().push_back(pOpResult);
@@ -253,14 +253,14 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 			for(unsigned int iElem=0; iElem<iArrSize; ++iElem)
 			{
 				//((Symbol*)pSymLeft)->SetConst(1);
-				//log_debug("Temp Left ", pSymLeft->GetIdent(), " = ", pSymLeft->print(), ", ", pSymLeft->GetType(), ", is_tmp: ", is_tmp_sym(pSymLeft));
-				//log_debug("Temp Right: ", is_tmp_sym(vecRight[iElem]));
+				//tl::log_debug("Temp Left ", pSymLeft->GetIdent(), " = ", pSymLeft->print(), ", ", pSymLeft->GetType(), ", is_tmp: ", is_tmp_sym(pSymLeft));
+				//tl::log_debug("Temp Right: ", is_tmp_sym(vecRight[iElem]));
 
 				Symbol *pOpResult = Op(pSymLeft, vecRight[iElem], op, false);
 				pSymResult->GetArr().push_back(pOpResult);
 				pSymResult->UpdateLastNIndices(1);
 
-				//log_debug(pSymResult->print());
+				//tl::log_debug(pSymResult->print());
 			}
 		}
 
@@ -347,7 +347,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 	// pLeft and pRight have to be of equal type from here on.
 	if(pLeft->GetType() != pRight->GetType())
 	{
-		log_err("Type mismatch. ", 
+		tl::log_err("Type mismatch. ", 
 			"Left: ", pLeft->GetTypeName(),
 			"Right: ", pRight->GetTypeName());
 		return 0;
@@ -370,26 +370,26 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 			}
 			else
 			{
-				log_err("Operator \"", op, "\" not defined for real type.");
+				tl::log_err("Operator \"", op, "\" not defined for real type.");
 				pResult->SetVal(0);
 			}
 			pRes = pResult;
 		}
 		else
 		{
-			//log_debug("Left, ", pLeft, ": ", ((SymbolReal*)pLeft)->GetVal());
-			//log_debug("Right, ", pRight, ": ", ((SymbolReal*)pRight)->GetVal());
+			//tl::log_debug("Left, ", pLeft, ": ", ((SymbolReal*)pLeft)->GetVal());
+			//tl::log_debug("Right, ", pRight, ": ", ((SymbolReal*)pRight)->GetVal());
 
 			SymbolReal *pResult = (SymbolReal*)recycle_or_alloc({pLeft, pRight}, !bOptim);
 #ifdef DEBUG
 			pResult->SetName(T_STR"<op_result>");
 #endif
-			//log_debug("Result, ", pResult, ": ", ((SymbolReal*)pResult)->GetVal());
+			//tl::log_debug("Result, ", pResult, ": ", ((SymbolReal*)pResult)->GetVal());
 
 			if(pResult == pLeft) bCleanLeft = 0;
 			if(pResult == pRight) bCleanRight = 0;
-			//if(!bCleanLeft) log_debug("Recycled left double: ", pLeft, " = ", pLeft->print());
-			//if(!bCleanRight) log_debug("Recycled right double: ", pLeft, " = ", pRight->print());
+			//if(!bCleanLeft) tl::log_debug("Recycled left double: ", pLeft, " = ", pLeft->print());
+			//if(!bCleanRight) tl::log_debug("Recycled right double: ", pLeft, " = ", pRight->print());
 
 			if(g_mapBinOps_d.find(op) != g_mapBinOps_d.end())
 			{
@@ -398,7 +398,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 			}
 			else
 			{
-				log_err("Operator \"", op, "\" not defined for real type.");
+				tl::log_err("Operator \"", op, "\" not defined for real type.");
 			}
 			pRes = pResult;
 		}
@@ -411,7 +411,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 #ifdef DEBUG
 			pResult->SetName(T_STR"<op_logical_result>");
 #endif
-			
+
 			if(g_mapBinLogOps_i.find(op) != g_mapBinLogOps_i.end())
 			{
 				pResult->SetVal(g_mapBinLogOps_i[op](((SymbolInt*)pLeft)->GetVal(),
@@ -419,7 +419,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 			}
 			else
 			{
-				log_err("Operator \"", op, "\" not defined for int type.");
+				tl::log_err("Operator \"", op, "\" not defined for int type.");
 			}
 			pRes = pResult;
 		}
@@ -439,7 +439,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 			}
 			else
 			{
-				log_err("Operator \"", op, "\" not defined for int type.");
+				tl::log_err("Operator \"", op, "\" not defined for int type.");
 			}
 			pRes = pResult;
 		}
@@ -460,7 +460,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 			}
 			else
 			{
-				log_err("Operator \"", op, "\" not defined for complex type.");
+				tl::log_err("Operator \"", op, "\" not defined for complex type.");
 				pResult->SetVal(0);
 			}
 			pRes = pResult;
@@ -481,7 +481,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 			}
 			else
 			{
-				log_err("Operator \"", op, "\" not defined for complex type.");
+				tl::log_err("Operator \"", op, "\" not defined for complex type.");
 			}
 			pRes = pResult;
 		}
@@ -494,7 +494,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 #ifdef DEBUG
 			pResult->SetName(T_STR"<op_logical_result>");
 #endif
-			
+
 			if(g_mapBinLogOps_s.find(op) != g_mapBinLogOps_s.end())
 			{
 				pResult->SetVal(g_mapBinLogOps_s[op](((SymbolString*)pLeft)->GetVal(),
@@ -502,21 +502,21 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 			}
 			else
 			{
-				log_err("Operator \"", op, "\" not defined for string type.");
+				tl::log_err("Operator \"", op, "\" not defined for string type.");
 			}
 			pRes = pResult;
 		}
 		else
 		{
-			//log_debug("Left, ", pLeft, ": ", ((SymbolString*)pLeft)->GetVal());
-			//log_debug("Right, ", pRight, ": ", ((SymbolString*)pRight)->GetVal());
+			//tl::log_debug("Left, ", pLeft, ": ", ((SymbolString*)pLeft)->GetVal());
+			//tl::log_debug("Right, ", pRight, ": ", ((SymbolString*)pRight)->GetVal());
 			SymbolString *pResult = (SymbolString*)recycle_or_alloc({pLeft, pRight}, !bOptim);
 #ifdef DEBUG
 			pResult->SetName(T_STR"<op_result>");
 #endif
 			if(pResult == pLeft) bCleanLeft = 0;
 			if(pResult == pRight) bCleanRight = 0;
-			//log_debug("Result, ", pResult, ": ", ((SymbolString*)pResult)->GetVal());
+			//tl::log_debug("Result, ", pResult, ": ", ((SymbolString*)pResult)->GetVal());
 
 
 			if(g_mapBinOps_s.find(op) != g_mapBinOps_s.end())
@@ -526,7 +526,7 @@ Symbol* Node::Op(const Symbol *pSymLeft, const Symbol *pSymRight, NodeType op, b
 			}
 			else
 			{
-				log_err("Operator \"", op, "\" not defined for string type.");
+				tl::log_err("Operator \"", op, "\" not defined for string type.");
 			}
 			pRes = pResult;
 		}

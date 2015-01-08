@@ -18,6 +18,7 @@
 #include <list>
 #include <vector>
 
+namespace tl {
 
 Xml::Xml() : m_bOK(0)
 {}
@@ -209,4 +210,6 @@ bool Xml::SaveMap(const char* pcFile, const std::map<std::string, std::string>& 
 
 	ofstr << node;
 	return true;
+}
+
 }

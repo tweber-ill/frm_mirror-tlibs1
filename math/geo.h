@@ -21,6 +21,10 @@
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/numeric/ublas/exception.hpp>
+
+
+namespace tl {
+
 namespace ublas = boost::numeric::ublas;
 namespace math = boost::math;
 
@@ -107,7 +111,7 @@ public:
 		vecD[1] = plane2.GetD();
 
 		ublas::vector<T> vec0(3);
-		if(!::solve_linear(M, vecD, vec0))
+		if(!tl::solve_linear(M, vecD, vec0))
 			return 0;
 
 		lineRet = Line<T>(vec0, vecDir);
@@ -228,7 +232,7 @@ public:
 		matDenom(3,0) = xp0[2];	matDenom(3,1) = xp1[2];	matDenom(3,2) = xp2[2];	matDenom(3,3) = dirl[2];
 
 		T denom = determinant(matDenom);
-		if(::float_equal(denom, 0.))
+		if(tl::float_equal(denom, 0.))
 			return false;
 
 		ublas::matrix<T> matNum(N+1,N+1);
@@ -266,7 +270,7 @@ public:
 		}
 
 		ublas::matrix<T> inv;
-		if(!::inverse(mat, inv))
+		if(!tl::inverse(mat, inv))
 		{
 			//log_warn("Could not invert matrix ", mat, ".");
 			return false;
@@ -600,6 +604,8 @@ std::vector<unsigned int> find_zeroes(unsigned int N, const T* pIn)
 	}
 
 	return vecIndices;
+}
+
 }
 
 #endif

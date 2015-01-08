@@ -98,12 +98,12 @@ static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
 
 	const t_string& strFile = ((SymbolString*)vecSyms[0])->GetVal();
 	SymbolArray *pArr = new SymbolArray();
-	LoadTxt dat;
+	tl::LoadTxt dat;
 
 	bool bLoaded = dat.Load(WSTR_TO_STR(strFile).c_str());
 	if(!bLoaded)
 	{
-		log_err(linenr(runinfo), "loadtxt could not open \"", strFile, "\".");
+		tl::log_err(linenr(runinfo), "loadtxt could not open \"", strFile, "\".");
 		return pArr;
 	}
 
@@ -207,7 +207,7 @@ static std::string get_2darr_strval(const SymbolArray* pArr,
 
 	if(!bFoundCol)
 	{
-		log_err("Invalid column index: ", iCol, ".");
+		tl::log_err("Invalid column index: ", iCol, ".");
 		return "0";
 	}
 
@@ -233,7 +233,7 @@ static Symbol* fkt_savetxt(const std::vector<Symbol*>& vecSyms,
 	t_ofstream ofstr(WSTR_TO_STR(strFile).c_str());
 	if(!ofstr.is_open())
 	{
-		log_err(linenr(runinfo), "Cannot open \"", strFile, "\".");
+		tl::log_err(linenr(runinfo), "Cannot open \"", strFile, "\".");
 		return 0;
 	}
 

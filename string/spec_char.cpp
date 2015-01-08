@@ -7,6 +7,8 @@
 #include "spec_char.h"
 #include <iostream>
 
+namespace tl {
+
 static t_mapSpecChars *g_pmapSpecChars = 0;
 
 void init_spec_chars()
@@ -154,3 +156,6 @@ const t_mapSpecChars& get_spec_chars()
 
 	return *g_pmapSpecChars;
 }
+
+}
+

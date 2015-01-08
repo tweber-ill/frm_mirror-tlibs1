@@ -11,6 +11,8 @@
         #undef __STRICT_ANSI__
 #endif
 
+namespace tl {
+
 // normal popen is not thread-safe on all systems
 void *my_popen(const char* pcCmd, const char* pcType="w");
 int my_pclose(void*);
@@ -34,5 +36,7 @@ int my_pclose(void*);
 		}
 	}
 #endif
+
+}
 
 #endif

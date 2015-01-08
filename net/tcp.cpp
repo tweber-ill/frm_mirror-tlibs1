@@ -11,6 +11,7 @@
 #include <boost/tokenizer.hpp>
 #include <iostream>
 
+namespace tl {
 
 static inline bool get_cmd_tokens(const std::string& str, const std::string& strDelim, 
 				std::vector<std::string>& vecStr, std::string& strRemainder)
@@ -232,3 +233,5 @@ void TcpClient::add_connect(const t_sigConn::slot_type& conn)
 	m_sigConn.connect(conn);
 }
 // --------------------------------------------------------------------------------
+
+}

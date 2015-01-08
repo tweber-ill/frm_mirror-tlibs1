@@ -10,6 +10,8 @@
 #include <type_traits>
 
 
+namespace tl {
+
 // -----------------------------------------------------------------------------
 template<class T, bool bScalar=std::is_scalar<T>::value>
 struct underlying_value_type
@@ -26,7 +28,9 @@ struct underlying_value_type<T, 0>
 {
 	typedef typename T::value_type value_type;
 };
+
 // -----------------------------------------------------------------------------
+}
 
 
 
@@ -39,6 +43,8 @@ struct underlying_value_type<T, 0>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/math/quaternion.hpp>
 
+
+namespace tl {
 typedef std::integral_constant<int, 0> dim_0d_type;
 typedef std::integral_constant<int, 1> dim_1d_type;
 typedef std::integral_constant<int, 2> dim_2d_type;
@@ -81,5 +87,6 @@ struct remove_constref
 			>::type type;
 };
 
+}
 
 #endif

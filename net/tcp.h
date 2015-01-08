@@ -18,6 +18,7 @@
 #include <boost/asio.hpp>
 #include <boost/signals2.hpp>
 
+namespace tl {
 
 namespace sys = boost::system;
 namespace asio = boost::asio;
@@ -67,5 +68,7 @@ protected:
 	void flush_write();
 	void read_loop();
 };
+
+}
 
 #endif

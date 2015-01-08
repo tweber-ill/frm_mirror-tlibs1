@@ -8,6 +8,7 @@
 #include <chrono>
 #include <thread>
 
+namespace tl {
 std::recursive_mutex Log::s_mtx;
 
 std::string Log::get_timestamp()
@@ -135,6 +136,7 @@ void log_backtrace()
 void log_backtrace() {}
 #endif
 
+}
 
 /*
 #include <thread>

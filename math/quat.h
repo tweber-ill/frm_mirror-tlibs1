@@ -9,9 +9,11 @@
  #define __TAZ_QUAT_H__
 
 #include <boost/math/quaternion.hpp>
-namespace math = boost::math;
-
 #include "linalg.h"
+
+namespace tl {
+
+namespace math = boost::math;
 
 // algo from:
 // http://www.j3d.org/matrix_faq/matrfaq_latest.html#Q55
@@ -217,4 +219,5 @@ struct vec_angle_unsigned_impl<QUAT, LinalgType::QUATERNION>
 	}
 };
 
+}
 #endif
