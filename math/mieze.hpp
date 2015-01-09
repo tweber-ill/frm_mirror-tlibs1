@@ -33,6 +33,7 @@ namespace co = boost::units::si::constants::codata;
 #include <boost/numeric/ublas/matrix.hpp>
 namespace ublas = boost::numeric::ublas;
 
+namespace tl {
 
 //------------------------------------------------------------------------------
 // MIEZE time (eq. 117 from [Keller, Golub, G��hler, 2000])
@@ -160,7 +161,7 @@ Y mieze_reduction_det_d(const units::quantity<units::unit<units::length_dimensio
 	using namespace co;
 
 	const quantity<unit<mass_dimension, Sys>, Y> mn = co::m_n;
-	quantity<unit<velocity_dimension, Sys> > v0 = ::lam2p(lam)/mn;
+	quantity<unit<velocity_dimension, Sys> > v0 = lam2p(lam)/mn;
 
 	const quantity<unit<frequency_dimension, Sys>, Y> omegaM = 2.*M_PI*fM;
 
@@ -458,5 +459,6 @@ mieze_det_misaligned_df2(const units::quantity<units::unit<units::length_dimensi
 }
 
 //------------------------------------------------------------------------------
+}
 
 #endif

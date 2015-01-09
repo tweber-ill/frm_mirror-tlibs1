@@ -53,7 +53,7 @@ std::string Xml::QueryString(const char* pcAdr, const char* pcDef, bool *pbOk)
 	if(!m_bOK) return pcDef;
 
 	std::string strAdr(pcAdr);
-	::trim(strAdr);
+	trim(strAdr);
 	if(strAdr.length()==0)
 	{
 		if(pbOk) *pbOk=0;
@@ -88,7 +88,7 @@ std::string Xml::QueryString(const char* pcAdr, const char* pcDef, bool *pbOk)
 
 	if(pbOk) *pbOk = true;
 	std::string strOut = strlstOut.at(0).toStdString();
-	::trim(strOut);
+	trim(strOut);
 
 	return strOut;
 }

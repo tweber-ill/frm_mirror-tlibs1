@@ -70,7 +70,7 @@ LoadTxt::LoadTxt(const char* pcFile, bool bOnlyHeader, bool bVerbose)
 
 LoadTxt::~LoadTxt() { Unload(); }
 
-const TxtType LoadTxt::GetFileType() const
+TxtType LoadTxt::GetFileType() const
 {
 	for(const std::string& strComm : m_vecComments)
 	{

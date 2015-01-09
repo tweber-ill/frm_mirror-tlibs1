@@ -6,12 +6,12 @@
  */
 
 #include "fourier.h"
-#include "../helper/misc.h"
 #include "math.h"
 #include "../helper/log.h"
 
 #include <iostream>
-#include <string.h>
+#include <cstring>
+#include <memory>
 
 #ifdef USE_FFTW
 	#include <fftw3.h>
@@ -251,16 +251,14 @@ bool Fourier::shift_sin(double dNumOsc, const double* pDatIn,
 	dNumOsc = double(iNumOsc);			// consider only full oscillations
 
 	//double dShiftSamples = dPhase/(2.*M_PI) * dSize;
+	
+	std::unique_ptr<double[]> dMem(new double[3*iSize]);
+	double *pdMem = dMem.get();
+	double *pZero = pdMem;
+	double *pDatFFT_real = pdMem + iSize;
+	double *pDatFFT_imag = pdMem + 2*iSize;
 
-	double *pZero = new double[iSize];
 	memset(pZero, 0, sizeof(double)*iSize);
-
-	double *pDatFFT_real = new double[iSize];
-	double *pDatFFT_imag = new double[iSize];
-
-	autodeleter<double> _a0(pZero, true);
-	autodeleter<double> _a1(pDatFFT_real, true);
-	autodeleter<double> _a2(pDatFFT_imag, true);
 
 	if(!fft(pDatIn, pZero, pDatFFT_real, pDatFFT_imag))
 		return false;
@@ -308,15 +306,13 @@ bool Fourier::phase_correction_0(const double* pDatIn, double *pDataOut,
 {
 	unsigned int iSize = m_iSize;
 
-	double *pZero = new double[iSize];
+	std::unique_ptr<double[]> dMem(new double[3*iSize]);
+	double *pdMem = dMem.get();
+	double *pZero = pdMem;
+	double *pDatFFT_real = pdMem + iSize;
+	double *pDatFFT_imag = pdMem + 2*iSize;
+
 	memset(pZero, 0, sizeof(double)*iSize);
-
-	double *pDatFFT_real = new double[iSize];
-	double *pDatFFT_imag = new double[iSize];
-
-	autodeleter<double> _a0(pZero, true);
-	autodeleter<double> _a1(pDatFFT_real, true);
-	autodeleter<double> _a2(pDatFFT_imag, true);
 
 	if(!fft(pDatIn, pZero, pDatFFT_real, pDatFFT_imag))
 		return false;
@@ -356,15 +352,13 @@ bool Fourier::phase_correction_1(const double* pDatIn,
 {
 	unsigned int iSize = m_iSize;
 
-	double *pZero = new double[iSize];
+	std::unique_ptr<double[]> dMem(new double[3*iSize]);
+	double *pdMem = dMem.get();
+	double *pZero = pdMem;
+	double *pDatFFT_real = pdMem + iSize;
+	double *pDatFFT_imag = pdMem + 2*iSize;
+
 	memset(pZero, 0, sizeof(double)*iSize);
-
-	double *pDatFFT_real = new double[iSize];
-	double *pDatFFT_imag = new double[iSize];
-
-	autodeleter<double> _a0(pZero, true);
-	autodeleter<double> _a1(pDatFFT_real, true);
-	autodeleter<double> _a2(pDatFFT_imag, true);
 
 	if(!fft(pDatIn, pZero, pDatFFT_real, pDatFFT_imag))
 		return false;
@@ -411,15 +405,13 @@ bool Fourier::get_contrast(double dNumOsc, const double* pDatIn,
 	const int iNumOsc = int(dNumOsc);
 	dNumOsc = double(iNumOsc);			// consider only full oscillations
 
-	double *pZero = new double[iSize];
+	std::unique_ptr<double[]> dMem(new double[3*iSize]);
+	double *pdMem = dMem.get();
+	double *pZero = pdMem;
+	double *pDatFFT_real = pdMem + iSize;
+	double *pDatFFT_imag = pdMem + 2*iSize;
+
 	memset(pZero, 0, sizeof(double)*iSize);
-
-	double *pDatFFT_real = new double[iSize];
-	double *pDatFFT_imag = new double[iSize];
-
-	autodeleter<double> _a0(pZero, true);
-	autodeleter<double> _a1(pDatFFT_real, true);
-	autodeleter<double> _a2(pDatFFT_imag, true);
 
 	if(!fft(pDatIn, pZero, pDatFFT_real, pDatFFT_imag))
 		return false;

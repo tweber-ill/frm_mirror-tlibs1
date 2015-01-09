@@ -135,7 +135,7 @@ class LoadTxt
 		}
 
 		const std::string& GetFileName() const { return m_strFileName; }
-		const TxtType GetFileType() const;
+		TxtType GetFileType() const;
 
 		const std::vector<std::string>& GetAuxStrings() const { return m_vecAuxStrings; }
 
