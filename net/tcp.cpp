@@ -2,7 +2,7 @@
  * TcpClient
  * @author tweber
  * @date aug-2014
- * based on chat client by M. Kohlhoff:
+ * based on chat client by C. M. Kohlhoff:
  * 	www.boost.org/doc/libs/1_56_0/doc/html/boost_asio/example/cpp11/chat/chat_client.cpp
  */
 

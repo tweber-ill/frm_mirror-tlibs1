@@ -92,7 +92,7 @@ void gl_mv_pt(const t_vec& vec, t_vec& vecOut)
 	glGetDoublev(GL_MODELVIEW_MATRIX, dMatMV);
 	t_mat matMV = from_gl_array<t_mat>(dMatMV);
 	t_mat matMV_inv;
-	::inverse(matMV, matMV_inv);
+	tl::inverse(matMV, matMV_inv);
 
 	vecOut = ublas::prod(matMV_inv, vec);
 }
@@ -263,6 +263,8 @@ public:
 };
 
 // --------------------------------------------------------------------------------
+}
+
 
 #define DEF_FONT "/usr/share/fonts/dejavu/DejaVuSansMono.ttf"
 //#define DEF_FONT "/usr/share/fonts/gnu-free/FreeMono.ttf"
@@ -271,6 +273,7 @@ public:
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+namespace tl {
 class FontMap
 {
 	protected:

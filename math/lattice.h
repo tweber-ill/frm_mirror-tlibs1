@@ -105,9 +105,9 @@ Lattice<T>::Lattice(const Lattice<T>& lattice)
 template<typename T>
 void Lattice<T>::RotateEuler(T dPhi, T dTheta, T dPsi)
 {
-	ublas::matrix<T> mat1 = ::rotation_matrix_3d_z(dPhi);
-	ublas::matrix<T> mat2 = ::rotation_matrix_3d_x(dTheta);
-	ublas::matrix<T> mat3 = ::rotation_matrix_3d_z(dPsi);
+	ublas::matrix<T> mat1 = rotation_matrix_3d_z(dPhi);
+	ublas::matrix<T> mat2 = rotation_matrix_3d_x(dTheta);
+	ublas::matrix<T> mat3 = rotation_matrix_3d_z(dPsi);
 
 	ublas::matrix<T> mat21 = ublas::prod(mat2,mat1);
 	ublas::matrix<T> mat = ublas::prod(mat3, mat21);
@@ -156,9 +156,9 @@ void Lattice<T>::RotateEulerRecip(const ublas::vector<T>& vecRecipX,
 
 
 	// rotate around real vectors
-	ublas::matrix<T> mat1 = ::rotation_matrix(vecZ, dPhi);
-	ublas::matrix<T> mat2 = ::rotation_matrix(vecX, dTheta);
-	ublas::matrix<T> mat3 = ::rotation_matrix(vecZ, dPsi);
+	ublas::matrix<T> mat1 = rotation_matrix(vecZ, dPhi);
+	ublas::matrix<T> mat2 = rotation_matrix(vecX, dTheta);
+	ublas::matrix<T> mat3 = rotation_matrix(vecZ, dPsi);
 
 	ublas::matrix<T> mat21 = ublas::prod(mat2,mat1);
 	ublas::matrix<T> mat = ublas::prod(mat3, mat21);
@@ -181,7 +181,7 @@ template<typename T> T Lattice<T>::GetC() const { return ublas::norm_2(m_vecs[2]
 template<typename T>
 T Lattice<T>::GetVol() const
 {
-	return ::get_volume(column_matrix({m_vecs[0], m_vecs[1], m_vecs[2]}));
+	return get_volume(column_matrix({m_vecs[0], m_vecs[1], m_vecs[2]}));
 }
 
 /*
@@ -256,19 +256,19 @@ ublas::matrix<T> get_UB(const Lattice<T>& lattice_real,
 	using t_mat = ublas::matrix<T>;
 
 	t_mat matB = lattice_real.GetRecip()/*.GetAligned()*/.GetMetric();
-	t_mat matOrient = ::column_matrix({_vec1, _vec2});
+	t_mat matOrient = column_matrix({_vec1, _vec2});
 	t_mat matOrientB = ublas::prod(matB, matOrient);
 
-	t_vec vec1 = ::get_column(matOrientB, 0);
-	t_vec vec2 = ::get_column(matOrientB, 1);
-	t_vec vecUp = ::cross_3(vec1, vec2);
-	vec2 = ::cross_3(vecUp, vec1);
+	t_vec vec1 = get_column(matOrientB, 0);
+	t_vec vec2 = get_column(matOrientB, 1);
+	t_vec vecUp = cross_3(vec1, vec2);
+	vec2 = cross_3(vecUp, vec1);
 
 	vec1 /= ublas::norm_2(vec1);
 	vec2 /= ublas::norm_2(vec2);
 	vecUp /= ublas::norm_2(vecUp);
 
-	t_mat matU = ::row_matrix({vec1, vec2, vecUp});
+	t_mat matU = row_matrix({vec1, vec2, vecUp});
 	t_mat matUB = ublas::prod(matU, matB);
 
 	/*std::cout << "orient = " << matOrient << std::endl;
@@ -299,7 +299,7 @@ void get_tas_angles(const Lattice<T>& lattice_real,
 	{
 		t_mat matUB = get_UB(lattice_real, _vec1, _vec2);
 
-		t_vec vechkl = ::make_vec({dh, dk, dl});
+		t_vec vechkl = make_vec({dh, dk, dl});
 		t_vec vecQ = ublas::prod(matUB, vechkl);
 		T dQ = ublas::norm_2(vecQ);
 
@@ -350,11 +350,11 @@ void get_hkl_from_tas_angles(const Lattice<T>& lattice_real,
 		tt_s = -tt_s;
 	}
 
-	T ki = ::get_mono_k(th_m*units::si::radians, dm*angstrom, bSense_m)*angstrom;
-	T kf = ::get_mono_k(th_a*units::si::radians, da*angstrom, bSense_a)*angstrom;
-	T E = ::get_energy_transfer(ki/angstrom, kf/angstrom) / one_meV;
-	T Q = ::get_sample_Q(ki/angstrom, kf/angstrom, tt_s*units::si::radians)*angstrom;
-	T kiQ = ::get_angle_ki_Q(ki/angstrom, kf/angstrom, Q/angstrom, /*bSense_s*/1) / units::si::radians;
+	T ki = get_mono_k(th_m*units::si::radians, dm*angstrom, bSense_m)*angstrom;
+	T kf = get_mono_k(th_a*units::si::radians, da*angstrom, bSense_a)*angstrom;
+	T E = get_energy_transfer(ki/angstrom, kf/angstrom) / one_meV;
+	T Q = get_sample_Q(ki/angstrom, kf/angstrom, tt_s*units::si::radians)*angstrom;
+	T kiQ = get_angle_ki_Q(ki/angstrom, kf/angstrom, Q/angstrom, /*bSense_s*/1) / units::si::radians;
 
 	th_s += M_PI/2.;					// theta here
 	T Qvec1 = M_PI - th_s - kiQ;		// a3 convention
@@ -362,10 +362,10 @@ void get_hkl_from_tas_angles(const Lattice<T>& lattice_real,
 
 	t_mat matUB = get_UB(lattice_real, _vec1, _vec2);
 	t_mat matUBinv;
-	if(!::inverse(matUB, matUBinv))
+	if(!inverse(matUB, matUBinv))
 		throw Err("Cannot invert UB.");
 
-	t_mat rot = ::rotation_matrix_3d_z(Qvec1);
+	t_mat rot = rotation_matrix_3d_z(Qvec1);
 	t_vec vecQ = ublas::prod(rot, make_vec({Q,0.,0.}));
 	t_vec vechkl = ublas::prod(matUBinv, vecQ);
 
