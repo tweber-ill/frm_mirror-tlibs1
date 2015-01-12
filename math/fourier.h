@@ -11,7 +11,6 @@
 #include <complex>
 #include "math.h"
 //#define USE_FFTW
-//#define USE_CUDA
 
 namespace tl {
 
@@ -113,9 +112,6 @@ class Fourier
 		unsigned int m_iSize;
 		void *m_pIn, *m_pOut;
 		void *m_pPlan, *m_pPlan_inv;
-#ifdef USE_CUDA
-		void *m_pTmp;
-#endif
 
 
 	public:
