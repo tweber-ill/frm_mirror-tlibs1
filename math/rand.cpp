@@ -2,6 +2,7 @@
  * random numbers
  * @author tweber
  * @date 16-aug-2013
+ * @license GPLv2 or GPLv3
  */
 
 #include "rand.h"

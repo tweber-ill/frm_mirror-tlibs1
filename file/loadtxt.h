@@ -3,6 +3,7 @@
  *
  * @author: Tobias Weber
  * @date: April 2012
+ * @license GPLv2 or GPLv3
  */
 
 /*

@@ -2,6 +2,7 @@
  * file helper
  * @author tweber
  * @date 07-mar-2013
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __MIEZE_FILE_HELPER__

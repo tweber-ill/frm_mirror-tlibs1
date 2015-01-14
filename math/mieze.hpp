@@ -1,7 +1,8 @@
 /*
  * MIEZE formulas
- * Author: Tobias Weber
- * Date: May 2012, 29-may-2013
+ * @author Tobias Weber
+ * @date May 2012, 29-may-2013
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __MIEZE_FORMULAS__

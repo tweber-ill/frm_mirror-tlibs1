@@ -2,6 +2,7 @@
  * Calculation of first Brillouin zone
  * @author Tobias Weber
  * @date jun-2014
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __BZ_H__

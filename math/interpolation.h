@@ -3,6 +3,7 @@
  *
  * @author: Tobias Weber
  * @date: 25-04-2013
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __INTERPOLATION_H__
@@ -21,16 +22,14 @@
 
 namespace tl {
 
-// see:
-// http://mathworld.wolfram.com/BernsteinPolynomial.html
+// see: http://mathworld.wolfram.com/BernsteinPolynomial.html
 template<typename T> T bernstein(int i, int n, T t)
 {
 	T bino = boost::math::binomial_coefficient<T>(n, i);
 	return bino * pow(t, i) * pow(1-t, n-i);
 }
 
-// see:
-// http://mathworld.wolfram.com/BezierCurve.html
+// see: http://mathworld.wolfram.com/BezierCurve.html
 template<typename T>
 boost::numeric::ublas::vector<T> bezier(const boost::numeric::ublas::vector<T>* P, unsigned int N, T t)
 {
@@ -47,8 +46,7 @@ boost::numeric::ublas::vector<T> bezier(const boost::numeric::ublas::vector<T>* 
 }
 
 
-// see:
-// http://mathworld.wolfram.com/B-Spline.html
+// see: http://mathworld.wolfram.com/B-Spline.html
 template<typename T> T bspline_base(int i, int j, T t, const std::vector<T>& knots)
 {
 	if(j==0)
@@ -71,8 +69,7 @@ template<typename T> T bspline_base(int i, int j, T t, const std::vector<T>& kno
 }
 
 
-// see:
-// http://mathworld.wolfram.com/B-Spline.html
+// see: http://mathworld.wolfram.com/B-Spline.html
 template<typename T>
 boost::numeric::ublas::vector<T> bspline(const boost::numeric::ublas::vector<T>* P, unsigned int N, T t, const std::vector<T>& knots)
 {

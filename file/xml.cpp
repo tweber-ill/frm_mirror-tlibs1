@@ -2,6 +2,7 @@
  * xml helper
  * @author tweber
  * @date 23-apr-2013
+ * @license GPLv2 or GPLv3
  */
 
 #include "xml.h"

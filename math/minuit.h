@@ -1,8 +1,9 @@
 /*
  * Minuit interface
  *
- * Author: Tobias Weber
- * Date: April 2012
+ * @author Tobias Weber
+ * @date April 2012
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __MINUIT_IFACE_H__

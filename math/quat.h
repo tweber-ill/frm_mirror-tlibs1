@@ -3,6 +3,7 @@
  *
  * @author: tweber
  * @date: 2013, 3-dec-2014
+ * @license GPLv2 or GPLv3
  */
 
  #ifndef __TAZ_QUAT_H__

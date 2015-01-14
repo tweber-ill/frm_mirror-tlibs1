@@ -3,6 +3,7 @@
  *
  * @author: tweber
  * @date: 30-apr-2013
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __TAZ_GEO_H__
@@ -490,24 +491,6 @@ public:
 };
 
 
-/*
- * this is a 1:1 C++ reimplementation of 'rc_int' from 'mcresplot' and 'rescal5'
- * integrate over row/column iIdx
- */
-template<class T = double>
-ublas::matrix<T> ellipsoid_gauss_int(const ublas::matrix<T>& mat, unsigned int iIdx)
-{
-	ublas::vector<T> b(mat.size1());
-	for(unsigned int i=0; i<mat.size1(); ++i)
-		b[i] = 2.*mat(i,iIdx);
-	b = remove_elem(b, iIdx);
-	ublas::matrix<T> bb = outer_prod(b,b)/4.;
-
-	ublas::matrix<T> m = remove_elems(mat, iIdx);
-	m -= bb/mat(iIdx, iIdx);
-	return m;
-}
-
 template<class T=double>
 class QuadEllipsoid : public Quadric<T>
 {
@@ -548,13 +531,6 @@ public:
 	// only valid in principal axis system
 	T GetRadius(unsigned int i) const { return 1./std::sqrt(this->m_Q(i,i)); }
 	T GetVolume() const { return get_ellipsoid_volume(this->m_Q); }
-
-	void GaussInt(unsigned int iIdx)
-	{
-		ublas::matrix<T> m_Qint = ellipsoid_gauss_int(this->m_Q, iIdx);
-		this->RemoveElems(iIdx);
-		this->m_Q = m_Qint;
-	}
 };
 
 

@@ -2,6 +2,7 @@
  * Exception
  * @author tweber
  * @date 04-mar-2014
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __MY_EXCEPT_H__

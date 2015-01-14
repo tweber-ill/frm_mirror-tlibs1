@@ -2,6 +2,7 @@
  * Simple logger
  * @author tweber
  * @date 12-sep-2014
+ * @license GPLv2 or GPLv3
  */
 
 #include "log.h"

@@ -3,6 +3,7 @@
  *
  * @author: tweber
  * @date: 30-apr-2013
+ * @license GPLv2 or GPLv3
  */
 
 #include "linalg2.h"

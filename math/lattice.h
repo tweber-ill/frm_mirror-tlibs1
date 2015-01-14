@@ -2,6 +2,7 @@
  * Bravais Lattice Calculations
  * @author tweber
  * @date 13-feb-2014
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __LATTICE_H__

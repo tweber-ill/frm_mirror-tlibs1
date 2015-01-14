@@ -2,6 +2,7 @@
  * Compiler- and system-specific stuff
  * @author tweber
  * @date 2013
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __COMPILER_FLAGS_H__

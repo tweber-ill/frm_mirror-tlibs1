@@ -105,9 +105,8 @@ typename vec_type::value_type vec_len(const vec_type& vec)
 }
 
 
-/*
- * remove an element from a vector
- */
+
+// remove an element from a vector
 template<class vector_type>
 vector_type remove_elem(const vector_type& vec, unsigned int iIdx)
 {

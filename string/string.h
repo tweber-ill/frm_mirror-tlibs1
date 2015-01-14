@@ -2,6 +2,7 @@
  * string helper
  * @author tweber
  * @date 06-mar-2013
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __MIEZE_STRINGS__

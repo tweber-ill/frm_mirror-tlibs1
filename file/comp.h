@@ -2,6 +2,7 @@
  * Compression
  * @author tweber
  * @date 15-aug-2013
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __M_COMP_H__

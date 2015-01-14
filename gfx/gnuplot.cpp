@@ -2,6 +2,7 @@
  * invoke gnuplot
  * @autor tweber
  * @date 24-dec-2013
+ * @license GPLv2 or GPLv3
  */
 
 #include "../helper/flags.h"

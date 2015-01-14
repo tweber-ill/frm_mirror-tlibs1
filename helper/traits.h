@@ -2,6 +2,7 @@
  * Custom type traits
  * @author Tobias Weber
  * @date 19-nov-2014
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __MY_TRAITS_H__

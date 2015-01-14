@@ -3,6 +3,7 @@
  *
  * @author: Tobias Weber
  * @date: 25-04-2013
+ * @license GPLv2 or GPLv3
  */
 
 #include "interpolation.h"

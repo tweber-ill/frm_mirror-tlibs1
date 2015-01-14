@@ -2,6 +2,7 @@
  * Special chars
  * @author tweber
  * @date 09-mar-14
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __SPEC_CHAR_H__

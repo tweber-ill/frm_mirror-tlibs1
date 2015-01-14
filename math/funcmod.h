@@ -2,6 +2,7 @@
  * abstract function model base classes
  * @author tweber
  * @date 2013
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __FUNC_MOD_H__

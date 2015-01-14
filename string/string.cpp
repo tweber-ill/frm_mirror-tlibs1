@@ -2,6 +2,7 @@
  * string helper
  * @author tweber
  * @date 25-apr-2013
+ * @license GPLv2 or GPLv3
  */
 #include "string.h"
 #include "../helper/misc.h"

@@ -2,6 +2,7 @@
  * Compiler- and system-specific stuff
  * @author tweber
  * @date jan-2014
+ * @license GPLv2 or GPLv3
  */
 
 #include "flags.h"
