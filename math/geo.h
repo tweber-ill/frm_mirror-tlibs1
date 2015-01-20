@@ -335,6 +335,7 @@ protected:
 	ublas::vector<T> m_vecOffs = ublas::zero_vector<T>(3);
 
 public:
+	Quadric() {}
 	Quadric(unsigned int iDim)
 		: m_Q(ublas::zero_matrix<T>(iDim,iDim))/*, m_r(ublas::zero_vector<T>(iDim))*/
 	{}
@@ -342,6 +343,8 @@ public:
 	Quadric(const ublas::matrix<T>& Q, /*const ublas::vector<T>& r,*/ T s)
 			: m_Q(Q), /*m_r(r),*/ m_s(s) {}
 	virtual ~Quadric() {}
+	
+	void SetDim(unsigned int iDim) { m_Q.resize(iDim, iDim, 1); }
 
 	const Quadric<T>& operator=(const Quadric<T>& quad)
 	{
@@ -379,7 +382,7 @@ public:
 
 	T operator()(const ublas::vector<T>& _x) const
 	{
-		ublas::vector<T> x = x-m_vecOffs;
+		ublas::vector<T> x = _x-m_vecOffs;
 
 		ublas::vector<T> vecQ = ublas::prod(m_Q, x);
 		T dQ = ublas::inner_prod(x, vecQ);
@@ -405,7 +408,8 @@ public:
 
 	// Q = O D O^T
 	// O: eigenvecs, D: eigenvals
-	bool GetPrincipalAxes(ublas::matrix<T>& matEvecs, std::vector<T>& vecEvals) const
+	bool GetPrincipalAxes(ublas::matrix<T>& matEvecs, std::vector<T>& vecEvals,
+						Quadric<T>* pquadPrincipal=nullptr) const
 	{
 		std::vector<ublas::vector<T> > evecs;
 		if(!eigenvec_sym(m_Q, evecs, vecEvals))
@@ -418,6 +422,12 @@ public:
 			[](double d) -> double { return 1./std::sqrt(d); });
 
 		matEvecs = column_matrix(evecs);
+
+		if(pquadPrincipal)
+		{
+			pquadPrincipal->SetDim(vecEvals.size());
+			pquadPrincipal->SetQ(diag_matrix(vecEvals));
+		}
 		return true;
 	}
 
@@ -464,6 +474,7 @@ class QuadSphere : public Quadric<T>
 protected:
 
 public:
+	QuadSphere() {}
 	QuadSphere(unsigned int iDim) : Quadric<T>(iDim) {}
 
 	QuadSphere(T r) : Quadric<T>(3)
@@ -497,6 +508,7 @@ class QuadEllipsoid : public Quadric<T>
 protected:
 
 public:
+	QuadEllipsoid() {}
 	QuadEllipsoid(unsigned int iDim) : Quadric<T>(iDim) {}
 
 	QuadEllipsoid(T a, T b) : Quadric<T>(2)
