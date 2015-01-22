@@ -1086,6 +1086,43 @@ t_vec get_gcd_vec(const t_vec& vec)
 	return vec/igcd_total;
 }
 
+
+// --------------------------------------------------------------------------------
+
+// Householder reflection matrix
+template<class t_mat = ublas::matrix<double>,
+	class t_vec = ublas::vector<typename t_mat::value_type>,
+	typename T = typename t_mat::value_type>
+	t_mat reflection_matrix(const t_vec& vecNorm)
+{
+	t_mat mat = -T(2) * ublas::outer_prod(vecNorm, vecNorm);
+	mat /= ublas::inner_prod(vecNorm, vecNorm);
+	
+	for(std::size_t i=0; i<vecNorm.size(); ++i)
+		mat(i,i) += T(1);
+		
+	return mat;
+}
+
+// Householder reflection
+template<class t_vec = ublas::vector<double>,
+	class t_mat = ublas::matrix<typename t_vec::value_type>,
+	typename T = typename t_mat::value_type>
+	t_vec reflection(const t_vec& vec, const t_vec& vecNorm)
+{
+	t_mat mat = reflection_matrix<t_mat, t_vec, T>(vecNorm);
+	return ublas::prod(mat, vec);
+}
+
+/* TODO
+template<class t_mat = ublas::matrix<double>,
+	class t_vec = ublas::vector<typename t_mat::value_type>,
+	typename T = typename t_mat::value_type>
+bool qr(const t_mat& M, t_mat& Q, t_mat& R)
+{
+}
+*/
+
 }
 
 #endif
