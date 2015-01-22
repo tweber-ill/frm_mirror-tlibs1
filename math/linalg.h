@@ -1114,14 +1114,79 @@ template<class t_vec = ublas::vector<double>,
 	return ublas::prod(mat, vec);
 }
 
-/* TODO
+// add a nxn unit matrix to the upper left of a matrix
+template<class t_mat = ublas::matrix<double>,
+	typename T = typename t_mat::value_type>
+	t_mat insert_unity(const t_mat& M, std::size_t n)
+{
+	if(M.size1()!=M.size2())
+		throw Err("Non-square matrix not yet supported.");
+	
+	std::size_t m = M.size1();
+	t_mat M2 = t_mat(m+n, m+n);
+	
+	for(std::size_t iR=0; iR<m+n; ++iR)
+		for(std::size_t jR=0; jR<m+n; ++jR)
+		{
+			if(iR<n || jR<n)
+				M2(iR, jR) = (iR==jR ? 1 : 0);
+			else
+				M2(iR, jR) = M(iR-n, jR-n);
+		}
+
+	return M2;
+}
+
 template<class t_mat = ublas::matrix<double>,
 	class t_vec = ublas::vector<typename t_mat::value_type>,
 	typename T = typename t_mat::value_type>
-bool qr(const t_mat& M, t_mat& Q, t_mat& R)
+bool qr_decomp(const t_mat& M, t_mat& Q, t_mat& R)
 {
+	std::size_t m = M.size1();
+	std::size_t n = M.size2();
+
+	t_mat A = M;
+	std::vector<t_mat> vecRefls;
+
+	for(std::size_t i=0; i<std::min(m-1,n); ++i)
+	{
+		t_vec vec0 = get_column(A, 0);
+		//vec0 = ublas::subrange(vec0, i, vec0.size());
+
+		t_vec vecE0 = ublas::zero_vector<T>(vec0.size());
+		vecE0[0] = ublas::norm_2(vec0);
+
+		t_vec vecReflNorm = vec0-vecE0;
+		t_mat matRefl = reflection_matrix(vecReflNorm);
+
+		A = ublas::prod(matRefl, A);
+		A = submatrix(A,0,0);
+
+		t_mat matReflM = insert_unity(matRefl, m-matRefl.size1());
+		//std::cout << "refl: " << matReflM << std::endl;
+		vecRefls.push_back(matReflM);
+	}
+
+	if(vecRefls.size() == 0)
+		return false;
+
+	Q = unit_matrix(m);
+	for(const t_mat& matRefl : vecRefls)
+	{
+		t_mat matReflT = ublas::trans(matRefl);
+		Q = ublas::prod(Q, matReflT);
+	}
+
+	/*R = vecRefls[vecRefls.size()-1];
+	for(int i=vecRefls.size()-2; i>=0; --i)
+		R = ublas::prod(R, vecRefls[i]);
+	R = ublas::prod(R, M);*/
+	
+	t_mat QT = ublas::trans(Q);
+	R = ublas::prod(QT, M);
+
+	return true;
 }
-*/
 
 }
 

@@ -12,5 +12,20 @@ int main()
 	std::cout << "norm: " << vecN << std::endl;
 	std::cout << "refl: " << vecRefl << std::endl;
 
+
+	ublas::matrix<double> M = tl::make_mat({{1.1,-2.2,3.3},{-4.4,5.5,6.6}, {7.7,8.8,-9.9}});
+	std::cout << M << std::endl;
+	std::cout << tl::insert_unity(M, 2) << std::endl;
+
+
+	ublas::matrix<double> Q, R;
+	if(tl::qr_decomp(M, Q, R))
+	{
+		std::cout << "M = " << M << std::endl;
+		std::cout << "Q = " << Q << std::endl;
+		std::cout << "R = " << R << std::endl;
+		std::cout << "QR = " << ublas::prod(Q,R) << std::endl;
+	}
+
 	return 0;
 }

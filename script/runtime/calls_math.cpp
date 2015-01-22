@@ -860,7 +860,7 @@ static Symbol* fkt_qr(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Runt
 	t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0]);
 
 	ublas::matrix<t_real> Q, R;
-	bool bOk = tl::qr<t_real>(mat, Q, R);
+	bool bOk = tl::qr_decomp(mat, Q, R);
 	if(!bOk) return 0;
 
 	Symbol *pQ = mat_to_sym<t_mat>(Q);
