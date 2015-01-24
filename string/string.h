@@ -5,8 +5,8 @@
  * @license GPLv2 or GPLv3
  */
 
-#ifndef __MIEZE_STRINGS__
-#define __MIEZE_STRINGS__
+#ifndef __TLIB_STRINGS__
+#define __TLIB_STRINGS__
 
 #include <string>
 #include <cstring>
@@ -303,17 +303,17 @@ void get_val_and_err(const t_str& str, T& val, T& err)
 template<typename T, typename t_char = char>
 std::string group_numbers(T tNum)
 {
-	struct Sep : std::numpunct<t_char>
+	class Sep : public std::numpunct<t_char>
 	{
+	public:
 		Sep() : std::numpunct<t_char>(1) {}
 		t_char do_thousands_sep() const { return ' ';}
-		std::string do_grouping() const { return "\03"; }
+		std::string do_grouping() const { return "\3"; }
 	};
 	Sep sep;
 
 	std::basic_ostringstream<t_char> ostr;
-	std::locale loc(ostr.getloc(), &sep);
-	ostr.imbue(loc);
+	ostr.imbue(std::locale(ostr.getloc(), &sep));
 
 	ostr << tNum;
 	return ostr.str();

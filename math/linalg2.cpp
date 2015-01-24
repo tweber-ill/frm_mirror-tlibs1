@@ -9,6 +9,7 @@
 #include "linalg2.h"
 #include <memory>
 
+#ifndef NO_LAPACK
 extern "C"
 {
 	#include <lapacke.h>
@@ -251,3 +252,5 @@ bool qr<double>(const ublas::matrix<double>& M,
 }
 
 }
+
+#endif

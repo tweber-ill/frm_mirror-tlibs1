@@ -5,8 +5,8 @@
  * @license GPLv2 or GPLv3
  */
 
-#ifndef __MIEZE_FILE_HELPER__
-#define __MIEZE_FILE_HELPER__
+#ifndef __TLIB_FILE_HELPER__
+#define __TLIB_FILE_HELPER__
 
 #include <iostream>
 #include <string>

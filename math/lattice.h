@@ -257,11 +257,10 @@ ublas::matrix<T> get_UB(const Lattice<T>& lattice_real,
 	using t_mat = ublas::matrix<T>;
 
 	t_mat matB = lattice_real.GetRecip()/*.GetAligned()*/.GetMetric();
-	t_mat matOrient = column_matrix({_vec1, _vec2});
-	t_mat matOrientB = ublas::prod(matB, matOrient);
 
-	t_vec vec1 = get_column(matOrientB, 0);
-	t_vec vec2 = get_column(matOrientB, 1);
+	t_vec vec1 = ublas::prod(matB, _vec1);
+	t_vec vec2 = ublas::prod(matB, _vec2);
+
 	t_vec vecUp = cross_3(vec1, vec2);
 	vec2 = cross_3(vecUp, vec1);
 

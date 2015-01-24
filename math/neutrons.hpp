@@ -424,6 +424,7 @@ get_sample_twotheta(const units::quantity<units::unit<units::wavenumber_dimensio
 	return tt;
 }
 
+// -> from cosine theorem
 template<class Sys, class Y>
 const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>
 get_sample_Q(const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& ki,

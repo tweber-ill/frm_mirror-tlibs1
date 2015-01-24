@@ -15,6 +15,26 @@
 
 namespace tl {
 
+#ifndef NO_LAPACK
+	#define USE_LAPACK
+#endif
+
+#ifdef NO_LAPACK
+
+template<typename T=double>
+bool qr(const ublas::matrix<T>& M, ublas::matrix<T>& Q, ublas::matrix<T>& R)
+{
+	return qr_decomp(M, Q, R);
+}
+
+template<typename T=double>
+bool eigenvec_sym(const ublas::matrix<T>& mat, std::vector<ublas::vector<T>>& evecs, std::vector<T>& evals)
+{
+	return eigenvec_sym_simple(mat, evecs, evals);
+}
+
+#else
+
 template<typename T=double>
 bool qr(const ublas::matrix<T>& M, ublas::matrix<T>& Q, ublas::matrix<T>& R)
 {
@@ -54,54 +74,8 @@ template<>
 bool eigenvec_sym<double>(const ublas::matrix<double>& mat,
 			std::vector<ublas::vector<double> >& evecs,
 			std::vector<double>& evals);
+#endif
 
-
-template<typename T=double>
-void sort_eigenvecs(std::vector<ublas::vector<T> >& evecs,
-					std::vector<T>& evals, bool bOrder=0, T (*pEvalFkt)(T)=0)
-{
-	if(evecs.size() != evals.size())
-		return;
-
-	struct Evec
-	{
-		ublas::vector<T> vec;
-		T val;
-	};
-
-	std::vector<Evec> myevecs;
-	myevecs.reserve(evecs.size());
-
-	for(unsigned int i=0; i<evecs.size(); ++i)
-	{
-		Evec ev;
-		ev.vec = evecs[i];
-		ev.val = evals[i];
-
-		myevecs.push_back(ev);
-	}
-
-
-	std::sort(myevecs.begin(), myevecs.end(),
-			[&](const Evec& evec1, const Evec& evec2) -> bool
-			{
-				bool b;
-				if(pEvalFkt)
-					b = pEvalFkt(evec1.val) < pEvalFkt(evec2.val);
-				else
-					b = evec1.val < evec2.val;
-
-				if(bOrder) b = !b;
-				return b;
-			});
-
-
-	for(unsigned int i=0; i<evecs.size(); ++i)
-	{
-		evecs[i] = myevecs[i].vec;
-		evals[i] = myevecs[i].val;
-	}
-}
 }
 
 #endif

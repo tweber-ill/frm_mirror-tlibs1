@@ -174,6 +174,13 @@ matrix_type remove_elems(const matrix_type& mat, unsigned int iIdx)
 	return submatrix(mat, iIdx, iIdx);
 }
 
+template<class t_vec=ublas::vector<double>, class t_mat=ublas::matrix<double>>
+void set_column(t_mat& M, unsigned int iCol, const t_vec& vec)
+{
+	std::size_t s = std::min(vec.size(), M.size1());
+	for(std::size_t i=0; i<s; ++i)
+		M(i, iCol) = vec[i];
+}
 
 template<class vector_type=ublas::vector<double>, class matrix_type=ublas::matrix<double> >
 vector_type get_column(const matrix_type& mat, unsigned int iCol)
@@ -1097,10 +1104,10 @@ template<class t_mat = ublas::matrix<double>,
 {
 	t_mat mat = -T(2) * ublas::outer_prod(vecNorm, vecNorm);
 	mat /= ublas::inner_prod(vecNorm, vecNorm);
-	
+
 	for(std::size_t i=0; i<vecNorm.size(); ++i)
 		mat(i,i) += T(1);
-		
+
 	return mat;
 }
 
@@ -1121,10 +1128,10 @@ template<class t_mat = ublas::matrix<double>,
 {
 	if(M.size1()!=M.size2())
 		throw Err("Non-square matrix not yet supported.");
-	
+
 	std::size_t m = M.size1();
 	t_mat M2 = t_mat(m+n, m+n);
-	
+
 	for(std::size_t iR=0; iR<m+n; ++iR)
 		for(std::size_t jR=0; jR<m+n; ++jR)
 		{
@@ -1151,12 +1158,21 @@ bool qr_decomp(const t_mat& M, t_mat& Q, t_mat& R)
 	for(std::size_t i=0; i<std::min(m-1,n); ++i)
 	{
 		t_vec vec0 = get_column(A, 0);
-		//vec0 = ublas::subrange(vec0, i, vec0.size());
+
+		// vector of form [123.4 0 0 0] ?
+		t_vec vec0_rest = ublas::subrange(vec0, 1, vec0.size());
+		if(vec_equal<t_vec>(vec0_rest, ublas::zero_vector<T>(vec0_rest.size())))
+		{
+			t_mat matReflM = unit_matrix(m);
+			vecRefls.push_back(matReflM);
+			continue;
+		}
 
 		t_vec vecE0 = ublas::zero_vector<T>(vec0.size());
 		vecE0[0] = ublas::norm_2(vec0);
 
 		t_vec vecReflNorm = vec0-vecE0;
+		//std::cout << "refl norm: " << vecReflNorm << std::endl;
 		t_mat matRefl = reflection_matrix(vecReflNorm);
 
 		A = ublas::prod(matRefl, A);
@@ -1181,11 +1197,137 @@ bool qr_decomp(const t_mat& M, t_mat& Q, t_mat& R)
 	for(int i=vecRefls.size()-2; i>=0; --i)
 		R = ublas::prod(R, vecRefls[i]);
 	R = ublas::prod(R, M);*/
-	
+
 	t_mat QT = ublas::trans(Q);
 	R = ublas::prod(QT, M);
 
 	return true;
+}
+
+
+template<class t_mat = ublas::matrix<double>,
+	class t_vec = ublas::vector<typename t_mat::value_type>,
+	typename T = typename t_mat::value_type>
+t_mat norm_col_vecs(const t_mat& M)
+{
+	t_mat N(M.size1(), M.size2());
+
+	for(std::size_t i=0; i<M.size2(); ++i)
+	{
+		t_vec vec0 = get_column(M, i);
+		vec0 /= ublas::norm_2(vec0);
+
+		set_column(N, i, vec0);
+	}
+
+	return N;
+}
+
+// ! for large matrices use eigenvec_sym from linalg2.h !
+template<class t_mat = ublas::matrix<double>,
+	class t_vec = ublas::vector<typename t_mat::value_type>,
+	typename T = typename t_mat::value_type>
+bool eigenvec_sym_simple(const t_mat& mat, std::vector<t_vec>& evecs, std::vector<T>& evals)
+{
+	if(mat.size1() != mat.size2())
+		return false;
+
+	const std::size_t n = mat.size1();
+	t_mat I = ublas::identity_matrix<T>(n);
+	t_mat M = mat;
+
+	const unsigned int MAX_ITER = 512;
+	unsigned int iIter = 0;
+	for(iIter=0; iIter<MAX_ITER; ++iIter)
+	{
+		t_mat Q, R;
+		if(!qr_decomp(M, Q, R))
+		{
+			log_err("QR decomposition failed for matrix ", M);
+			return false;
+		}
+		//std::cout << "Q=" << Q << ", R=" << R << std::endl;
+		//Q = norm_col_vecs(Q);
+
+		t_mat Mlast = M;
+		M = ublas::prod(R, Q);
+		I = ublas::prod(I, Q);
+
+
+		bool bConverged = 1;
+		for(unsigned int iVal=0; iVal<n; ++iVal)
+		{
+			if(std::fabs(M(iVal,iVal)-Mlast(iVal,iVal)) > 1e-6)
+			{
+				bConverged = 0;
+				break;
+			}
+		}
+
+		if(bConverged)
+			break;
+	}
+
+	//std::cout << "Iterations: " << iIter << std::endl;
+
+
+	evals.resize(n);
+	evecs.resize(n);
+
+	for(unsigned int iVal=0; iVal<n; ++iVal)
+	{
+		evals[iVal] = M(iVal,iVal);
+		evecs[iVal] = get_column(I, iVal);
+	}
+
+	return true;
+}
+
+template<typename T=double>
+void sort_eigenvecs(std::vector<ublas::vector<T> >& evecs,
+		std::vector<T>& evals, bool bOrder=0, T (*pEvalFkt)(T)=0)
+{
+	if(evecs.size() != evals.size())
+		return;
+
+	struct Evec
+	{
+		ublas::vector<T> vec;
+		T val;
+	};
+
+	std::vector<Evec> myevecs;
+	myevecs.reserve(evecs.size());
+
+	for(unsigned int i=0; i<evecs.size(); ++i)
+	{
+		Evec ev;
+		ev.vec = evecs[i];
+		ev.val = evals[i];
+
+		myevecs.push_back(ev);
+	}
+
+
+	std::sort(myevecs.begin(), myevecs.end(),
+			[&](const Evec& evec1, const Evec& evec2) -> bool
+			{
+				bool b;
+				if(pEvalFkt)
+					b = pEvalFkt(evec1.val) < pEvalFkt(evec2.val);
+				else
+					b = evec1.val < evec2.val;
+
+				if(bOrder) b = !b;
+				return b;
+			});
+
+
+	for(unsigned int i=0; i<evecs.size(); ++i)
+	{
+		evecs[i] = myevecs[i].vec;
+		evals[i] = myevecs[i].val;
+	}
 }
 
 }
