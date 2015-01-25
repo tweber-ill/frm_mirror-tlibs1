@@ -1230,7 +1230,10 @@ template<class t_mat = ublas::matrix<double>,
 bool eigenvec_sym_simple(const t_mat& mat, std::vector<t_vec>& evecs, std::vector<T>& evals)
 {
 	if(mat.size1() != mat.size2())
+	{
+		log_err("Matrix ", mat, " is not square.");
 		return false;
+	}
 
 	const std::size_t n = mat.size1();
 	t_mat I = ublas::identity_matrix<T>(n);
@@ -1328,6 +1331,38 @@ void sort_eigenvecs(std::vector<ublas::vector<T> >& evecs,
 		evecs[i] = myevecs[i].vec;
 		evals[i] = myevecs[i].val;
 	}
+}
+
+
+// --------------------------------------------------------------------------------
+
+
+template<typename t_vec = ublas::vector<double>,
+	typename T = typename t_vec::value_type>
+std::vector<t_vec> gram_schmidt(const std::vector<t_vec>& vecs, bool bNorm=1)
+{
+	std::vector<t_vec> vecsOut;
+	if(vecs.size() == 0)
+		return vecsOut;
+
+	vecsOut.resize(vecs.size());
+	for(std::size_t i=0; i<vecs.size(); ++i)
+	{
+		vecsOut[i] = vecs[i];
+		for(std::size_t j=0; j<i; ++j)
+		{
+			T tnum = ublas::inner_prod(vecs[i], vecsOut[j]);
+			T tden = ublas::inner_prod(vecsOut[j], vecsOut[j]);
+
+			vecsOut[i] -= tnum/tden * vecsOut[j];
+		}
+	}
+
+	if(bNorm)
+		for(t_vec& vec : vecsOut)
+			vec /= ublas::norm_2(vec);
+
+	return vecsOut;
 }
 
 }

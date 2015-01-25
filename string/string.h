@@ -268,15 +268,38 @@ T str_to_var(const t_str& str)
 }
 
 template<typename T, class t_str=std::string>
-t_str var_to_str(const T& t, std::streamsize iPrec=10)
+t_str var_to_str(const T& t, std::streamsize iPrec=10, int iGroup=-1)
 {
 	typedef typename t_str::value_type t_char;
 
 	std::basic_ostringstream<t_char> ostr;
 	ostr.precision(iPrec);
-	ostr << t;
 
-	return ostr.str();
+	class Sep : public std::numpunct<t_char>
+	{
+	public:
+		Sep() : std::numpunct<t_char>(1) {}
+		~Sep() { /*std::cout << "~Sep();" << std::endl;*/ }
+		t_char do_thousands_sep() const { return ' ';}
+		std::string do_grouping() const { return "\3"; }
+	};
+	Sep *pSep = nullptr;
+
+	if(iGroup > 0)
+	{
+		pSep = new Sep();
+		ostr.imbue(std::locale(ostr.getloc(), pSep));
+	}
+
+	ostr << t;
+	t_str str = ostr.str();
+
+	if(pSep)
+	{
+		ostr.imbue(std::locale());
+		delete pSep;
+	}
+	return str;
 }
 
 
@@ -299,25 +322,6 @@ void get_val_and_err(const t_str& str, T& val, T& err)
 		err = vec[1];
 }
 
-
-template<typename T, typename t_char = char>
-std::string group_numbers(T tNum)
-{
-	class Sep : public std::numpunct<t_char>
-	{
-	public:
-		Sep() : std::numpunct<t_char>(1) {}
-		t_char do_thousands_sep() const { return ' ';}
-		std::string do_grouping() const { return "\3"; }
-	};
-	Sep sep;
-
-	std::basic_ostringstream<t_char> ostr;
-	ostr.imbue(std::locale(ostr.getloc(), &sep));
-
-	ostr << tNum;
-	return ostr.str();
-}
 
 extern std::wstring str_to_wstr(const std::string& str);
 extern std::string wstr_to_str(const std::wstring& str);
