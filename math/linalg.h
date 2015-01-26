@@ -760,15 +760,12 @@ typename matrix_type::value_type determinant(const matrix_type& mat)
 	if(mat.size1() != mat.size2())
 		return T(0);
 
-	if(mat.size1()==1)
-	{
+	if(mat.size1()==0)
+		return T(0);
+	else if(mat.size1()==1)
 		return mat(0,0);
-	}
 	else if(mat.size1()==2)
-	{
 		return mat(0,0)*mat(1,1) - mat(1,0)*mat(0,1);
-	}
-	/*
 	else if(mat.size1()==3)
 	{
 		ublas::vector<T> vec0 = get_column(mat, 0);
@@ -777,17 +774,23 @@ typename matrix_type::value_type determinant(const matrix_type& mat)
 
 		ublas::vector<T> vecCross = cross_3<ublas::vector<T> >(vec1, vec2);
 		return ublas::inner_prod(vec0, vecCross);
-	}*/
+	}
 
 	const unsigned int i = 0;
 	T val = T(0);
 
 	for(unsigned int j=0; j<mat.size2(); ++j)
 	{
+		if(float_equal(mat(i,j), 0.))
+			continue;
+		
+		//std::cout << "col " << j << std::endl;
 		T dSign = 1.;
 		if(is_odd<unsigned int>(i+j))
 			dSign = -1.;
-		val += dSign * mat(i,j) * determinant<matrix_type>(submatrix(mat, i, j));
+
+		matrix_type matSub = submatrix(mat, i, j);
+		val += dSign * mat(i,j) * determinant<matrix_type>(matSub);
 	}
 
 	return val;
