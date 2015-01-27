@@ -41,8 +41,8 @@ double Chi2Function::chi2(const std::vector<double>& vecParams) const
 {
 	// cannot operate on m_pfkt directly, because Minuit
 	// uses more than one thread!
-	MinuitFuncModel* pfkt = m_pfkt->copy();
-	autodeleter<MinuitFuncModel> a(pfkt);
+	std::unique_ptr<MinuitFuncModel> uptrFkt(m_pfkt->copy());
+	MinuitFuncModel* pfkt = uptrFkt.get();
 
 	bool bParamsOk = pfkt->SetParams(vecParams);
 	//if(!bParamsOk)
@@ -64,13 +64,13 @@ double Chi2Function::chi2(const std::vector<double>& vecParams) const
 
 double Chi2Function_nd::chi2(const std::vector<double>& vecParams) const
 {
-	MinuitFuncModel_nd* pfkt = m_pfkt->copy();
-	autodeleter<MinuitFuncModel_nd> _a0(pfkt);
+	std::unique_ptr<MinuitFuncModel_nd> uptrFkt(m_pfkt->copy());
+	MinuitFuncModel_nd* pfkt = uptrFkt.get();
 
 	bool bParamsOk = pfkt->SetParams(vecParams);
 
-	double *px = new double[m_uiDim];
-	autodeleter<double> _a1(px, 1);
+	std::unique_ptr<double[]> uptrX(new double[m_uiDim]);
+	double *px = uptrX.get();
 
 	double dChi2 = 0.;
 	for(unsigned int i=0; i<m_uiLen; ++i)
@@ -90,4 +90,3 @@ double Chi2Function_nd::chi2(const std::vector<double>& vecParams) const
 }
 
 }
-

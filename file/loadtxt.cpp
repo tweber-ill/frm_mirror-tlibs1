@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <boost/algorithm/minmax_element.hpp>
 #include <limits>
+#include <memory>
 
 namespace tl {
 
@@ -1288,8 +1289,8 @@ bool Data3D::SaveTChan(const char* pcFile, unsigned int iX, unsigned int iY) con
 	double dXMin, dXMax, dYMin, dYMax, dTMin, dTMax;
 	bool bHasLimits = GetLimits(dXMin, dXMax, dYMin, dYMax, dTMin, dTMax);
 
-	double *px = new double[GetTDim()];
-	autodeleter<double> _adel(px, true);
+	std::unique_ptr<double[]> uptr(new double[GetTDim()]);
+	double *px = uptr.get();
 
 	if(bHasLimits)
 	{

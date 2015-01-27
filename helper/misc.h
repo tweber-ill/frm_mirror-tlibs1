@@ -19,6 +19,7 @@
 namespace tl
 {
 // deletes an object when going out of scope
+// deprecated, use std::unique_ptr instead!
 template<class T> class autodeleter
 {
 protected:
