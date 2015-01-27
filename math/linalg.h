@@ -752,10 +752,11 @@ vector_type cross_3(const vector_type& vec0, const vector_type& vec1)
 }
 
 
-template<class matrix_type/*=ublas::matrix<double>*/>
-typename matrix_type::value_type determinant(const matrix_type& mat)
+template<class t_mat/*=ublas::matrix<double>*/>
+typename t_mat::value_type determinant(const t_mat& mat)
 {
-	typedef typename matrix_type::value_type T;
+	typedef typename t_mat::value_type T;
+	typedef typename t_mat::size_type t_size;
 
 	if(mat.size1() != mat.size2())
 		return T(0);
@@ -775,25 +776,54 @@ typename matrix_type::value_type determinant(const matrix_type& mat)
 		ublas::vector<T> vecCross = cross_3<ublas::vector<T> >(vec1, vec2);
 		return ublas::inner_prod(vec0, vecCross);
 	}
-
-	const unsigned int i = 0;
-	T val = T(0);
-
-	for(unsigned int j=0; j<mat.size2(); ++j)
+	else if(mat.size1()>3 && mat.size1()<6)		// recursive expansion, complexity: O(n!)
 	{
-		if(float_equal(mat(i,j), 0.))
-			continue;
-		
-		//std::cout << "col " << j << std::endl;
-		T dSign = 1.;
-		if(is_odd<unsigned int>(i+j))
-			dSign = -1.;
+		const t_size i = 0;
+		T val = T(0);
 
-		matrix_type matSub = submatrix(mat, i, j);
-		val += dSign * mat(i,j) * determinant<matrix_type>(matSub);
+		for(t_size j=0; j<mat.size2(); ++j)
+		{
+			if(float_equal(mat(i,j), 0.))
+				continue;
+
+			//std::cout << "col " << j << std::endl;
+			T dSign = 1.;
+			if(is_odd<unsigned int>(i+j))
+				dSign = -1.;
+
+			t_mat matSub = submatrix(mat, i, j);
+			val += dSign * mat(i,j) * determinant<t_mat>(matSub);
+		}
+
+		return val;
+	}
+	else if(mat.size1()>=6)				// LU decomposition, complexity: O(n^3)
+	{
+		t_mat lu = mat;
+		t_size N = mat.size1();
+		ublas::permutation_matrix<> perm(N);
+
+		ublas::lu_factorize(lu, perm);
+
+		t_mat L = ublas::triangular_adaptor<t_mat, ublas::unit_lower>(lu);
+		t_mat U = ublas::triangular_adaptor<t_mat, ublas::upper>(lu);
+
+		T dDet = T(1.);
+		for(t_size i=0; i<mat.size1(); ++i)
+			dDet *= L(i,i)*U(i,i);
+
+		unsigned int iNumSwaps=0;
+		for(t_size iSwap=0; iSwap<perm.size(); ++iSwap)
+			if(iSwap != perm(iSwap))
+				++iNumSwaps;
+
+		if(is_odd<unsigned int>(iNumSwaps))
+			dDet *= T(-1.);
+
+		return dDet;
 	}
 
-	return val;
+	return T(0);
 }
 
 template<class matrix_type=ublas::matrix<double> >
