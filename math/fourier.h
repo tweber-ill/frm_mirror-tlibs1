@@ -9,78 +9,9 @@
 #ifndef __FOURIER__
 #define __FOURIER__
 
-#include <complex>
-#include "math.h"
-//#define USE_FFTW
+#include "dft.h"
 
 namespace tl {
-
-//------------------------------------------------------------------------------
-// standard dft
-// dft formulas from here:
-// http://www.fftw.org/fftw3_doc/The-1d-Discrete-Fourier-Transform-_0028DFT_0029.html#The-1d-Discrete-Fourier-Transform-_0028DFT_0029
-template<typename T>
-std::complex<T> dft_coeff(int k,
-					const T *pReal, const T *pImag,
-					unsigned int n)
-{
-	std::complex<T> imag(0., 1.);
-
-	std::complex<T> f(0.,0.);
-	for(unsigned int j=0; j<n; ++j)
-	{
-		std::complex<T> t(pReal?pReal[j]:T(0), pImag?pImag[j]:T(0));
-
-		T dv = -2.*M_PI*T(j)*T(k)/T(n);
-		f += t * (cos(dv) + imag*sin(dv));
-	}
-
-	return f;
-}
-
-template<typename T>
-void dft(const T *pRealIn, const T *pImagIn,
-			   T *pRealOut, T *pImagOut, unsigned int n)
-{
-	for(unsigned int k=0; k<n; ++k)
-	{
-		std::complex<T> f = dft_coeff<T>(k, pRealIn, pImagIn, n);
-		pRealOut[k] = f.real();
-		pImagOut[k] = f.imag();
-	}
-}
-
-template<typename T>
-std::complex<T> idft_coeff(int k,
-					const T *pReal, const T *pImag,
-					unsigned int n)
-{
-	std::complex<T> imag(0., 1.);
-
-	std::complex<T> t(0.,0.);
-	for(unsigned int j=0; j<n; ++j)
-	{
-		std::complex<T> f(pReal?pReal[j]:T(0), pImag?pImag[j]:T(0));
-
-		T dv = 2.*M_PI*T(j)*T(k)/T(n);
-		t += f * (cos(dv) + imag*sin(dv));
-	}
-
-	return t;
-}
-
-template<typename T>
-void idft(const T *pRealIn, const T *pImagIn,
-				T *pRealOut, T *pImagOut, unsigned int n)
-{
-	for(unsigned int k=0; k<n; ++k)
-	{
-		std::complex<T> t = idft_coeff<T>(k, pRealIn, pImagIn, n);
-		pRealOut[k] = t.real();
-		pImagOut[k] = t.imag();
-	}
-}
-//------------------------------------------------------------------------------
 
 
 //------------------------------------------------------------------------------
@@ -98,7 +29,7 @@ std::complex<T> phase_correction_0(const std::complex<T>& c, T dPhase)
 // dPhase = dPhaseOffs + x*dPhaseSlope
 template<typename T>
 std::complex<T> phase_correction_1(const std::complex<T>& c,
-								T dPhaseOffs, T dPhaseSlope, T x)
+				T dPhaseOffs, T dPhaseSlope, T x)
 {
 	return phase_correction_0<T>(c, dPhaseOffs + x*dPhaseSlope);
 }
@@ -111,8 +42,13 @@ class Fourier
 {
 	protected:
 		unsigned int m_iSize;
+		
+#ifdef USE_FFTW
 		void *m_pIn, *m_pOut;
 		void *m_pPlan, *m_pPlan_inv;
+#else
+		DFT<double> m_dft;
+#endif
 
 
 	public:

@@ -54,6 +54,17 @@ URL: http://www.gnu.org/software/bison
 
 
 -------------------------------------------------------------------------------- 
+FFTW
+
+FFTW is Copyright © 2003, 2007-11 Matteo Frigo, Copyright © 2003, 2007-11 Massachusetts Institute of Technology. 
+
+License: GNU GPL version 2 or later
+URL: http://www.fftw.org
+--------------------------------------------------------------------------------
+
+
+
+-------------------------------------------------------------------------------- 
 Qt
 
 Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).

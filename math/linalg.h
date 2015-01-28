@@ -5,8 +5,8 @@
  * @date: 30-apr-2013
  */
 
-#ifndef __TAZ_LINALG_H__
-#define __TAZ_LINALG_H__
+#ifndef __TLIBS_LINALG_H__
+#define __TLIBS_LINALG_H__
 
 #include "../helper/flags.h"
 #include "../helper/exception.h"

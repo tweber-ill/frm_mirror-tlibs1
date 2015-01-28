@@ -5,8 +5,8 @@
  * @license GPLv2 or GPLv3
  */
 
-#ifndef __M_RAND_H__
-#define __M_RAND_H__
+#ifndef __TLIBS_RAND_H__
+#define __TLIBS_RAND_H__
 
 #include <random>
 #include <vector>

@@ -5,8 +5,8 @@
  * @license GPLv2 or GPLv3
  */
 
-#ifndef __NEUTRONS__
-#define __NEUTRONS__
+#ifndef __TLIBS_NEUTRONS__
+#define __TLIBS_NEUTRONS__
 
 #include "math.h"
 #include "linalg.h"

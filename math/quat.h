@@ -6,8 +6,8 @@
  * @license GPLv2 or GPLv3
  */
 
- #ifndef __TAZ_QUAT_H__
- #define __TAZ_QUAT_H__
+ #ifndef __TLIBS_QUAT_H__
+ #define __TLIBS_QUAT_H__
 
 #include <boost/math/quaternion.hpp>
 #include "linalg.h"

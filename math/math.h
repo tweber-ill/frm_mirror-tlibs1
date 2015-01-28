@@ -6,8 +6,8 @@
  * @license GPLv2 or GPLv3
  */
 
-#ifndef __MIEZE_MATH__
-#define __MIEZE_MATH__
+#ifndef __TLIBS_MATH__
+#define __TLIBS_MATH__
 
 #include <cmath>
 #include <vector>

@@ -6,8 +6,8 @@
  * @license GPLv2 or GPLv3
  */
 
-#ifndef __MIEZE_LINALG2__
-#define __MIEZE_LINALG2__
+#ifndef __TLIBS_LINALG2__
+#define __TLIBS_LINALG2__
 
 
 #include "math.h"

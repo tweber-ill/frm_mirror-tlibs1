@@ -117,7 +117,7 @@ bool Fourier::ifft(const double* pRealIn, const double *pImagIn,
 
 #else
 
-Fourier::Fourier(unsigned int iSize) : m_iSize(iSize)
+Fourier::Fourier(unsigned int iSize) : m_iSize(iSize), m_dft(m_iSize)
 {}
 
 Fourier::~Fourier()
@@ -126,8 +126,8 @@ Fourier::~Fourier()
 bool Fourier::fft(const double *pRealIn, const double *pImagIn,
 					double *pRealOut, double *pImagOut)
 {
-	// if we don't have the fftw available, use dft instead
-	dft<double>(pRealIn, pImagIn, pRealOut, pImagOut, m_iSize);
+	//dft_direct<double>(pRealIn, pImagIn, pRealOut, pImagOut, m_iSize, 0);
+	m_dft.trafo(pRealIn, pImagIn, pRealOut, pImagOut, 0);
 
 	return true;
 }
@@ -135,8 +135,8 @@ bool Fourier::fft(const double *pRealIn, const double *pImagIn,
 bool Fourier::ifft(const double *pRealIn, const double *pImagIn,
 					double *pRealOut, double *pImagOut)
 {
-	// if we don't have the fftw available, use dft instead
-	idft<double>(pRealIn, pImagIn, pRealOut, pImagOut, m_iSize);
+	//dft_direct<double>(pRealIn, pImagIn, pRealOut, pImagOut, m_iSize, 1);
+	m_dft.trafo(pRealIn, pImagIn, pRealOut, pImagOut, 1);
 
 	return true;
 }
@@ -203,7 +203,7 @@ bool Fourier::shift_sin(double dNumOsc, const double* pDatIn,
 }
 
 bool Fourier::phase_correction_0(const double* pDatIn, double *pDataOut,
-								double dPhase)
+				double dPhase)
 {
 	unsigned int iSize = m_iSize;
 
@@ -300,7 +300,7 @@ bool Fourier::phase_correction_1(const double* pDatIn,
 
 
 bool Fourier::get_contrast(double dNumOsc, const double* pDatIn,
-						   double& dC, double& dPh)
+				   double& dC, double& dPh)
 {
 	unsigned int iSize = m_iSize;
 	const int iNumOsc = int(dNumOsc);

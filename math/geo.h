@@ -6,8 +6,8 @@
  * @license GPLv2 or GPLv3
  */
 
-#ifndef __TAZ_GEO_H__
-#define __TAZ_GEO_H__
+#ifndef __TLIBS_GEO_H__
+#define __TLIBS_GEO_H__
 
 #include "../helper/flags.h"
 #include "../helper/exception.h"
