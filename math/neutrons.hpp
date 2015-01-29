@@ -12,11 +12,14 @@
 #include "linalg.h"
 #include "../helper/exception.h"
 
+#include <cmath>
+
 #include <boost/units/unit.hpp>
 #include <boost/units/quantity.hpp>
 #include <boost/units/dimensionless_quantity.hpp>
 #include <boost/units/cmath.hpp>
 #include <boost/units/physical_dimensions.hpp>
+
 #include <boost/units/systems/si.hpp>
 #include <boost/units/systems/angle/degrees.hpp>
 //#include <boost/units/systems/temperature/celsius.hpp>
@@ -34,15 +37,30 @@ namespace units = boost::units;
 namespace co = boost::units::si::constants::codata;
 
 
-static const auto one_meV = 1e-3 * co::e * units::si::volts;
-static const auto one_eV = co::e * units::si::volts;
-
 static const double SIGMA2FWHM = 2.*sqrt(2.*log(2.));
 static const double SIGMA2HWHM = SIGMA2FWHM/2.;
 static const double HWHM2SIGMA = 1./ SIGMA2HWHM;
 static const double FWHM2SIGMA = 1./ SIGMA2FWHM;
 
-static const units::quantity<units::si::length> angstrom = 1e-10 * units::si::meter;
+typedef units::quantity<units::si::plane_angle> angle;
+typedef units::quantity<units::si::wavenumber> wavenumber;
+typedef units::quantity<units::si::energy> energy;
+typedef units::quantity<units::si::length> length;
+typedef units::quantity<units::si::time> time;
+typedef units::quantity<units::si::magnetic_flux_density> flux;
+typedef units::quantity<units::si::frequency> freq;
+
+static const length meters = 1.*units::si::meters;
+static const flux teslas = 1.*units::si::teslas;
+static const time seconds = 1.*units::si::seconds;
+static const angle radians = 1.*units::si::radians;
+
+static const auto one_meV = 1e-3 * co::e * units::si::volts;
+static const auto one_eV = co::e * units::si::volts;
+static const length angstrom = 1e-10 * meters;
+static const length cm = meters/100.;
+static const time ps = 1e-12 * seconds;
+
 
 static const double KSQ2E = (co::hbar*co::hbar / (2.*co::m_n)) / one_meV / (angstrom*angstrom);
 static const double E2KSQ = 1./KSQ2E;
@@ -461,8 +479,8 @@ get_inelastic_spurion(bool bConstEi,
 		units::quantity<units::unit<units::energy_dimension, Sys>, Y> E,
 		unsigned int iOrderMono, unsigned int iOrderAna)
 {
-	const double dOrderMonoSq = double(iOrderMono)*double(iOrderMono);
-	const double dOrderAnaSq = double(iOrderAna)*double(iOrderAna);
+	const Y dOrderMonoSq = Y(iOrderMono)*Y(iOrderMono);
+	const Y dOrderAnaSq = Y(iOrderAna)*Y(iOrderAna);
 
 	units::quantity<units::unit<units::energy_dimension, Sys>, Y> E_sp;
 
@@ -489,7 +507,7 @@ std::vector<InelasticSpurion> check_inelastic_spurions(bool bConstEi,
 			units::quantity<units::unit<units::energy_dimension, Sys>, Y> E,
 			unsigned int iMaxOrder=5)
 {
-	const double dESensitivity = 0.25;	// meV
+	const Y dESensitivity = 0.25;	// meV
 
 	std::vector<InelasticSpurion> vecSpuris;
 
@@ -535,12 +553,12 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 							const ublas::vector<T>& kf,
 							const ublas::vector<T>& q)
 {
-	const double dKi = ublas::norm_2(ki);
-	const double dKf = ublas::norm_2(kf);
-	const double dq = ublas::norm_2(q);
+	const T dKi = ublas::norm_2(ki);
+	const T dKf = ublas::norm_2(kf);
+	const T dq = ublas::norm_2(q);
 
-	const double dAngleSensitivity = 2.;
-	const double dQSensitivity = std::max(dKi, dKf) / 50.;
+	const T dAngleSensitivity = 2.;
+	const T dQSensitivity = std::max(dKi, dKf) / 50.;
 
 
 	ElasticSpurion result;
@@ -553,8 +571,8 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 	// here: Q = ki - kf, E = Ei - Ef
 	ublas::vector<T> q_norm = -q;	q_norm /= dq;
 
-	double dAngleKfq = std::acos(ublas::inner_prod(kf_norm, q_norm));
-	double dAngleKiq = std::acos(ublas::inner_prod(ki_norm, q_norm));
+	T dAngleKfq = std::acos(ublas::inner_prod(kf_norm, q_norm));
+	T dAngleKiq = std::acos(ublas::inner_prod(ki_norm, q_norm));
 
 	//std::cout << "angle ki q: " << dAngleKiq/M_PI*180. << std::endl;
 	//std::cout << "angle kf q: " << dAngleKfq/M_PI*180. << std::endl;
@@ -574,7 +592,7 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 	// type A: q || kf, kf > ki
 	if(bKfqParallel)
 	{
-		double dApparentKf = dKf - dq;
+		T dApparentKf = dKf - dq;
 
 		if(float_equal(dApparentKf, dKi, dQSensitivity))
 		{
@@ -585,7 +603,7 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 	// type A: q || kf, kf < ki
 	else if(bKfqAntiParallel)
 	{
-		double dApparentKf = dKf + dq;
+		T dApparentKf = dKf + dq;
 
 		if(float_equal(dApparentKf, dKi, dQSensitivity))
 		{
@@ -597,7 +615,7 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 	// type M: q || ki, kf > ki
 	if(bKiqParallel)
 	{
-		double dApparentKi = dKi + dq;
+		T dApparentKi = dKi + dq;
 
 		if(float_equal(dApparentKi, dKf, dQSensitivity))
 		{
@@ -608,7 +626,7 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 	// type M: q || ki, kf < ki
 	else if(bkiqAntiParallel)
 	{
-		double dApparentKi = dKi - dq;
+		T dApparentKi = dKi - dq;
 
 		if(float_equal(dApparentKi, dKf, dQSensitivity))
 		{

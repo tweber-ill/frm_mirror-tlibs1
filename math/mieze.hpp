@@ -11,30 +11,14 @@
 #include "neutrons.hpp"
 #include "linalg.h"
 
-#include <cmath>
-
-#include <boost/units/unit.hpp>
-#include <boost/units/quantity.hpp>
-#include <boost/units/dimensionless_quantity.hpp>
-#include <boost/units/cmath.hpp>
-#include <boost/units/physical_dimensions.hpp>
-#include <boost/units/systems/si.hpp>
-#include <boost/units/systems/angle/degrees.hpp>
-#include <boost/units/systems/si/codata/universal_constants.hpp>
-#include <boost/units/systems/si/codata/neutron_constants.hpp>
-#include <boost/units/systems/si/codata/electromagnetic_constants.hpp>
-#include <boost/units/systems/si/codata/physico-chemical_constants.hpp>
-namespace units = boost::units;
-namespace co = boost::units::si::constants::codata;
-
-//static const units::quantity<units::si::length> angstrom = 1e-10 * units::si::meter;
-
-
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
-namespace ublas = boost::numeric::ublas;
+
 
 namespace tl {
+
+namespace ublas = boost::numeric::ublas;
+
 
 //------------------------------------------------------------------------------
 // MIEZE time (eq. 117 from [Keller, Golub, G��hler, 2000])
@@ -85,6 +69,45 @@ mieze_tau_lam(const units::quantity<units::unit<units::time_dimension, Sys>, Y>&
 
 
 //------------------------------------------------------------------------------
+// Larmor precession
+
+// gamma*B = omega
+template<class Sys, class Y=double>
+units::quantity<units::unit<units::frequency_dimension, Sys>, Y>
+larmor_om(const units::quantity<units::unit<units::magnetic_flux_density_dimension, Sys>, Y>& B)
+{
+	return co::gamma_n * B;
+}
+
+template<class Sys, class Y=double>
+units::quantity<units::unit<units::magnetic_flux_density_dimension, Sys>, Y>
+larmor_B(const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& om)
+{
+	return om/co::gamma_n;
+}
+
+/* omega = -gamma*B
+ * omega*t = -gamma*B*t
+ * phi = - gamma * B * l/v
+ * B = -phi*v / (gamma*l)
+ * phi = -pi  =>  B = pi*v / (gamma*l)
+ */
+template<class Sys, class Y=double>
+units::quantity<units::unit<units::magnetic_flux_density_dimension, Sys>, Y>
+larmor_field(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam,
+		const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len,
+		const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& phi)
+{
+	units::quantity<units::unit<units::velocity_dimension, Sys>, Y> v = lam2p(lam) / co::m_n;
+	units::quantity<units::unit<units::frequency_dimension, Sys>, Y> om = -Y(phi/units::si::radians)*v/len;
+	return om/co::gamma_n;
+}
+
+//------------------------------------------------------------------------------
+
+
+
+//------------------------------------------------------------------------------
 // MIEZE contrast reduction due to detector geometry
 template<class Sys, class Y>
 Y mieze_reduction_det(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lx,
@@ -96,7 +119,7 @@ Y mieze_reduction_det(const units::quantity<units::unit<units::length_dimension,
 						const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam,
 						const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& central_phase,
 						unsigned int iXPixels=128, unsigned int iYPixels=128,
-						ublas::matrix<double>* pPhaseMatrix=0)
+						ublas::matrix<Y>* pPhaseMatrix=0)
 {
 	using namespace units;
 	using namespace co;
@@ -107,8 +130,8 @@ Y mieze_reduction_det(const units::quantity<units::unit<units::length_dimension,
 	const units::quantity<units::unit<units::frequency_dimension, Sys>, Y> fM = mieze_tau_fm(tau, Ls, lam);
 	const quantity<unit<frequency_dimension, Sys>, Y> omegaM = 2.*M_PI*fM;
 
-	quantity<unit<length_dimension, Sys>, Y> lx_inc = lx / double(iXPixels);   // pixel size
-	quantity<unit<length_dimension, Sys>, Y> ly_inc = ly / double(iYPixels);   // pixel size
+	quantity<unit<length_dimension, Sys>, Y> lx_inc = lx / Y(iXPixels);   // pixel size
+	quantity<unit<length_dimension, Sys>, Y> ly_inc = ly / Y(iYPixels);   // pixel size
 
 	if(pPhaseMatrix)
 		pPhaseMatrix->resize(iXPixels, iYPixels, false);
@@ -146,7 +169,7 @@ Y mieze_reduction_det(const units::quantity<units::unit<units::length_dimension,
 		}
 	}
 
-	double dreduction = int_red / (lx*ly);
+	Y dreduction = int_red / (lx*ly);
 	dreduction = fabs(dreduction);
 
 	return dreduction;
@@ -177,16 +200,6 @@ Y mieze_reduction_det_d(const units::quantity<units::unit<units::length_dimensio
 
 //------------------------------------------------------------------------------
 
-
-
-template<typename T=double>
-T get_mieze_freq(const T* px, unsigned int iLen, T dNumOsc=2.)
-{
-	if(iLen==0)
-		return -1.;
-	double dTLen = (px[iLen-1]-px[0])/double(iLen-1)*double(iLen);
-	return dNumOsc * 2.*M_PI/dTLen;
-}
 
 
 
