@@ -42,7 +42,7 @@ class Fourier
 {
 	protected:
 		unsigned int m_iSize;
-		
+
 #ifdef USE_FFTW
 		void *m_pIn, *m_pOut;
 		void *m_pPlan, *m_pPlan_inv;

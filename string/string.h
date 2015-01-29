@@ -280,8 +280,9 @@ t_str var_to_str(const T& t, std::streamsize iPrec=10, int iGroup=-1)
 	public:
 		Sep() : std::numpunct<t_char>(1) {}
 		~Sep() { /*std::cout << "~Sep();" << std::endl;*/ }
-		t_char do_thousands_sep() const { return ' ';}
-		std::string do_grouping() const { return "\3"; }
+	protected:
+		virtual t_char do_thousands_sep() const override { return ' ';}
+		virtual std::string do_grouping() const override { return "\3"; }
 	};
 	Sep *pSep = nullptr;
 

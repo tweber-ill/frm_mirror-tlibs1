@@ -8,13 +8,18 @@ int main()
 {
 	double dInR[8] = {1., 2., 3., 4., 5., 6., 7., 8.};
 	double dInI[8] = {8., 7., 6., 5., 4., 3., 2., 1.};
-	double dOutR[8], dOutI[8];
+	//double dInR[] = {123., 234.};
+	//double dInI[] = {321., 432.};
 
-	tl::Fourier fourier(8);
+	const std::size_t iSize = sizeof(dInR)/sizeof(*dInR);
+
+	double dOutR[iSize], dOutI[8];
+
+	tl::Fourier fourier(iSize);
 	fourier.fft(dInR, dInI, dOutR, dOutI);
 
 	std::cout << "fft: ";
-	for(int i=0; i<8; ++i)
+	for(int i=0; i<iSize; ++i)
 	{
 		std::cout << dOutR[i];
 		if(!tl::float_equal(dOutI[i], 0.))
@@ -24,15 +29,19 @@ int main()
 	std::cout << std::endl;
 
 
+	std::vector<std::complex<double>> vec = tl::arrs_to_cvec(dOutR, dOutI, iSize);
+	vec = tl::dft_shift(vec, 1.);
+	tl::cvec_to_arrs(vec, dOutR, dOutI);
+
 
 	fourier.ifft(dOutR, dOutI, dInR, dInI);
 
 	std::cout << "ifft: ";
-	for(int i=0; i<8; ++i)
+	for(int i=0; i<iSize; ++i)
 	{
-		std::cout << dInR[i]/8.;
+		std::cout << dInR[i]/iSize;
 		if(!tl::float_equal(dInI[i], 0., 1e-7))
-			std::cout << " + " << dInI[i]/8. << "*i";
+			std::cout << " + " << dInI[i]/iSize << "*i";
 		std::cout << ", ";
 	}
 	std::cout << std::endl;
