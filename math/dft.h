@@ -158,8 +158,100 @@ std::vector<std::complex<T>> dft_double(const std::vector<std::complex<T>>& vecI
 
 //------------------------------------------------------------------------------
 
+template<typename T=unsigned int>
+T count_bits(T imax)
+{
+	T inum = 0;
+	for(; imax!=0; imax>>=1) ++inum;
+	return inum;
+}
 
-/* TODO
+template<typename T=unsigned int>
+T bit_reverse(T imax, T inum)
+{
+	if(imax<2) return inum;
+
+	T irev = 0;
+	T ibitcnt = count_bits(imax)-2;
+
+	for(T i=1; i<imax; i<<=1)
+	{
+		if(inum & i)
+			irev |= (1 << ibitcnt);
+		--ibitcnt;
+	}
+
+	return irev;
+}
+
+template<typename T=unsigned int>
+std::vector<T> bit_reverse_indices(T imax)
+{
+	std::vector<T> vec;
+	vec.reserve(imax);
+
+	for(T i=0; i<imax; ++i)
+		vec.push_back(bit_reverse(imax,i));
+
+	return vec;
+}
+
+template<typename T=double>
+std::complex<T> fft_factor(T N, T k)
+{
+	T c = std::cos(2.*M_PI*k/N);
+	T s = std::sin(2.*M_PI*k/N);
+	return std::complex<T>(c, -s);
+}
+
+template<typename T=double>
+std::vector<std::complex<T>> fft_reorder(const std::vector<std::complex<T>>& vecIn)
+{
+	std::vector<std::size_t> vecIdx = bit_reverse_indices(vecIn.size());
+
+	std::vector<std::complex<T>> vecInRev;
+	vecInRev.reserve(vecIn.size());
+
+	for(std::size_t i=0; i<vecIn.size(); ++i)
+		vecInRev.push_back(vecIn[vecIdx[i]]);
+
+	return vecInRev;
+}
+
+template<typename T=double>
+std::vector<std::complex<T>> fft_twopoint(const std::vector<std::complex<T>>& vecIn)
+{
+	std::vector<std::complex<T>> vecOut;
+	vecOut.reserve(vecIn.size());
+
+	for(std::size_t i=0; i<vecIn.size(); i+=2)
+	{
+		vecOut.push_back(vecIn[i] + vecIn[i+1]);
+		vecOut.push_back(vecIn[i] - vecIn[i+1]);
+	}
+
+	return vecOut;
+}
+
+template<typename T=double>
+std::vector<std::complex<T>> fft_merge(const std::vector<std::complex<T>>& vecIn)
+{
+	const std::size_t N = vecIn.size();
+	const std::size_t N2 = N/2;
+
+	std::vector<std::complex<T>> vecOut;
+	vecOut.resize(N);
+
+	vecOut[0] = vecIn[0] + vecIn[N2+0]*fft_factor<T>(N,0);
+	vecOut[1] = vecIn[1] + vecIn[N2+1]*fft_factor<T>(N,1);
+	vecOut[N2+0] = vecIn[0] + vecIn[N2+0]*fft_factor<T>(N,N2+0);
+	vecOut[N2+1] = vecIn[1] + vecIn[N2+1]*fft_factor<T>(N,N2+1);
+
+	// TODO
+
+	return vecOut;
+}
+
 template<typename T=double>
 std::vector<std::complex<T>> fft_direct(const std::vector<std::complex<T>>& vecIn)
 {
@@ -179,10 +271,15 @@ std::vector<std::complex<T>> fft_direct(const std::vector<std::complex<T>>& vecI
 	}
 	else
 	{
+		vecOut = fft_reorder(vecIn);
+		vecOut = fft_twopoint(vecOut);
+		vecOut = fft_merge(vecOut);
 	}
 
 	return vecOut;
-}*/
+}
+
+
 //------------------------------------------------------------------------------
 
 

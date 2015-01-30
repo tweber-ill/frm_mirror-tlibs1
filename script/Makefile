@@ -38,6 +38,10 @@ LIBS += -llapack -llapacke
 YY = bison
 #YY = /usr/local/bin/bison
 
+.PHONY: all clean
+
+all: hermelin
+
 hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/node.o \
 		obj/node_eval.o obj/calls.o obj/handles.o obj/gnuplot.o obj/file.o \
 		obj/string.o obj/loadtxt.o obj/rand.o obj/fourier.o obj/script_helper.o \

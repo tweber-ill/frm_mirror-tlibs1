@@ -14,8 +14,13 @@ int main()
 
 
 	std::vector<t_c> vecOut = tl::dft_direct(vecIn, 0, 0);
+	std::vector<t_c> vecOut2 = tl::fft_direct(vecIn);
 
 	std::cout << "dft: ";
+	for(const t_c& c : vecOut) std::cout << c << ", ";
+	std::cout << std::endl;
+
+	std::cout << "fft: ";
 	for(const t_c& c : vecOut) std::cout << c << ", ";
 	std::cout << std::endl;
 
