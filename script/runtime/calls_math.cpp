@@ -379,7 +379,7 @@ static Symbol* _fkt_fft(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab,
 						bool bInv)
 {
-	bool (tl::Fourier::*pFkt)(const t_real*, const t_real*, t_real*, t_real*)
+	void (tl::Fourier::*pFkt)(const t_real*, const t_real*, t_real*, t_real*)
 						= (bInv ? &tl::Fourier::ifft : &tl::Fourier::fft);
 
 	bool bArgsOk=1;

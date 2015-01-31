@@ -11,6 +11,8 @@
 #include <complex>
 #include <vector>
 #include <memory>
+#include <unordered_map>
+#include <boost/functional/hash.hpp>
 
 #include "math.h"
 #include "linalg.h"
@@ -197,10 +199,13 @@ std::vector<T> bit_reverse_indices(T imax)
 }
 
 template<typename T=double>
-std::complex<T> fft_factor(T N, T k)
+std::complex<T> fft_factor(T N, T k, bool bInv=0)
 {
-	T c = std::cos(2.*M_PI*k/N);
-	T s = std::sin(2.*M_PI*k/N);
+	T ph = 1.;
+	if(bInv) ph = -1.;
+
+	T c = std::cos(2.*M_PI*k/N * ph);
+	T s = std::sin(2.*M_PI*k/N * ph);
 	return std::complex<T>(c, -s);
 }
 
@@ -218,74 +223,89 @@ std::vector<std::complex<T>> fft_reorder(const std::vector<std::complex<T>>& vec
 	return vecInRev;
 }
 
-template<typename T=double>
-std::vector<std::complex<T>> fft_twopoint(const std::vector<std::complex<T>>& vecIn)
+template<class t_vec>
+std::pair<t_vec, t_vec> split_vec(const t_vec& vec)
 {
-	std::vector<std::complex<T>> vecOut;
-	vecOut.reserve(vecIn.size());
+	std::size_t N = vec.size();
+	std::pair<t_vec, t_vec> pair;
+	pair.first.reserve(N/2);
+	pair.second.reserve(N/2);
 
-	for(std::size_t i=0; i<vecIn.size(); i+=2)
+	for(std::size_t i=0; i<N/2; ++i)
 	{
-		vecOut.push_back(vecIn[i] + vecIn[i+1]);
-		vecOut.push_back(vecIn[i] - vecIn[i+1]);
+		pair.first.push_back(vec[i]);
+		pair.second.push_back(vec[N/2 + i]);
+	}
+
+	return pair;
+}
+
+
+template<typename T=double>
+std::vector<std::complex<T>> fft_merge(const std::vector<std::complex<T>>& vecIn,
+				bool bInv=0)
+{
+	typedef std::vector<std::complex<T>> t_vec;
+
+	const std::size_t N = vecIn.size();
+	const std::size_t N2 = N/2;
+
+	if(N==0 || N==1)
+		return vecIn;
+
+	std::pair<t_vec, t_vec> pair = split_vec(vecIn);
+	t_vec vec1 = fft_merge(pair.first, bInv);
+	t_vec vec2 = fft_merge(pair.second, bInv);
+
+	t_vec vecOut;
+	vecOut.resize(N);
+
+	for(std::size_t i=0; i<N2; ++i)
+	{
+		vecOut[i] = vec1[i] + vec2[i]*fft_factor<T>(N, i, bInv);
+		vecOut[N2+i] = vec1[i] + vec2[i]*fft_factor<T>(N, N2+i, bInv);
 	}
 
 	return vecOut;
 }
 
 template<typename T=double>
-std::vector<std::complex<T>> fft_merge(const std::vector<std::complex<T>>& vecIn)
-{
-	const std::size_t N = vecIn.size();
-	const std::size_t N2 = N/2;
-
-	std::vector<std::complex<T>> vecOut;
-	vecOut.resize(N);
-
-	vecOut[0] = vecIn[0] + vecIn[N2+0]*fft_factor<T>(N,0);
-	vecOut[1] = vecIn[1] + vecIn[N2+1]*fft_factor<T>(N,1);
-	vecOut[N2+0] = vecIn[0] + vecIn[N2+0]*fft_factor<T>(N,N2+0);
-	vecOut[N2+1] = vecIn[1] + vecIn[N2+1]*fft_factor<T>(N,N2+1);
-
-	// TODO
-
-	return vecOut;
-}
-
-template<typename T=double>
-std::vector<std::complex<T>> fft_direct(const std::vector<std::complex<T>>& vecIn)
+std::vector<std::complex<T>> fft_direct(const std::vector<std::complex<T>>& vecIn,
+				bool bInv=0, bool bNorm=0)
 {
 	const std::size_t n = vecIn.size();
 	std::vector<std::complex<T>> vecOut;
 	vecOut.resize(n);
 
-	if(n==0);
-	else if(n==1)
-	{
-		vecOut[0] = vecIn[0];
-	}
-	else if(n==2)
-	{
-		vecOut[0] = vecIn[0] + vecIn[1];
-		vecOut[1] = vecIn[0] - vecIn[1];
-	}
-	else
-	{
-		vecOut = fft_reorder(vecIn);
-		vecOut = fft_twopoint(vecOut);
-		vecOut = fft_merge(vecOut);
-	}
+	vecOut = fft_reorder(vecIn);
+	vecOut = fft_merge(vecOut, bInv);
+
+	if(bInv && bNorm)
+		for(std::complex<T>& c : vecOut)
+			c /= n;
 
 	return vecOut;
 }
 
 
-//------------------------------------------------------------------------------
+//==============================================================================
 
+
+template<class T=double>
+class Fourier_base
+{
+	public:
+		Fourier_base() = default;
+		virtual ~Fourier_base() = default;
+
+		virtual void trafo(const T* pInR, const T* pInI,
+					T* pOutR, T* pOutI,
+					bool bInv=0) = 0;
+};
 
 // dft with pre-calculated coefficients
 template<class T=double>
-class DFT
+class DFT : public Fourier_base<T>
 {
 	protected:
 		ublas::matrix<std::complex<T>> m_matCoeff;
@@ -323,9 +343,9 @@ class DFT
 				return ublas::prod(m_matCoeffInv, vec);
 		}
 
-		void trafo(const double* pInR, const double *pInI, 
-					double *pOutR, double *pOutI, 
-					bool bInv=0)
+		virtual void trafo(const T* pInR, const T* pInI,
+					T* pOutR, T* pOutI,
+					bool bInv=0) override
 		{
 			const std::size_t iSize = m_matCoeff.size1();
 
@@ -342,6 +362,134 @@ class DFT
 			vecOut = trafo(vecIn, bInv);
 
 			for(std::size_t i=0; i<iSize; ++i)
+			{
+				if(pOutR) pOutR[i] = vecOut[i].real();
+				if(pOutI) pOutI[i] = vecOut[i].imag();
+			}
+		}
+};
+
+
+// fft with pre-calculated coefficients
+template<class T=double>
+class FFT : public Fourier_base<T>
+{
+	protected:
+		struct CoeffKey
+		{
+			std::size_t N;
+			std::size_t i;
+
+			CoeffKey(std::size_t iN, std::size_t ii) : N(iN), i(ii)
+			{}
+		};
+
+		struct CoeffKeyHash
+		{
+        		std::size_t operator()(const CoeffKey& key) const
+			{
+				std::size_t iHsh = key.N;
+				boost::hash_combine<std::size_t>(iHsh, key.i);
+				return iHsh;
+			}
+		};
+
+		struct CoeffKeyEqual
+		{
+        		bool operator()(const CoeffKey& key0, const CoeffKey& key1) const
+        		{
+				return key0.N==key1.N && key0.i==key1.i;
+			}
+		};
+
+
+	protected:
+		typedef std::unordered_map<CoeffKey, std::complex<T>,
+					CoeffKeyHash, CoeffKeyEqual> t_mapCoeff;
+		t_mapCoeff m_mapCoeff, m_mapCoeffInv;
+		std::size_t m_n;
+
+	protected:
+		void InitCoeffs(std::size_t n)
+		{
+			for(std::size_t i=1; i<=n; i<<=1)
+			for(std::size_t j=0; j<i; ++j)
+			{
+				m_mapCoeff[CoeffKey(i,j)] = fft_factor<T>(i, j, 0);
+				m_mapCoeffInv[CoeffKey(i,j)] = fft_factor<T>(i, j, 1);
+			}
+		}
+
+		std::vector<std::complex<T>> FFTMerge(const std::vector<std::complex<T>>& vecIn,
+							bool bInv=0)
+		{
+        		typedef std::vector<std::complex<T>> t_vec;
+			/*const*/ t_mapCoeff *pCoeff = bInv ? &m_mapCoeffInv : &m_mapCoeff;
+
+			const std::size_t N = vecIn.size();
+			const std::size_t N2 = N/2;
+
+			if(N==0 || N==1)
+				return vecIn;
+
+			std::pair<t_vec, t_vec> pair = split_vec(vecIn);
+			t_vec vec1 = FFTMerge(pair.first, bInv);
+			t_vec vec2 = FFTMerge(pair.second, bInv);
+
+			t_vec vecOut;
+			vecOut.resize(N);
+
+			for(std::size_t i=0; i<N2; ++i)
+			{
+				vecOut[i] = vec1[i] + vec2[i] * pCoeff->operator[](CoeffKey(N,i));
+				vecOut[N2+i] = vec1[i] + vec2[i] * pCoeff->operator[](CoeffKey(N, N2+i));
+			}
+
+			return vecOut;
+		}
+
+
+	public:
+		FFT(std::size_t n) : m_n(n)
+		{
+			InitCoeffs(n);
+		}
+
+		virtual ~FFT() = default;
+
+		std::vector<std::complex<T>> trafo(const std::vector<std::complex<T>>& vec, bool bInv=0)
+		{
+			const std::size_t n = vec.size();
+			std::vector<std::complex<T>> vecOut;
+			vecOut.resize(n);
+
+			vecOut = fft_reorder(vec);
+			vecOut = FFTMerge(vecOut, bInv);
+
+			//if(bInv && bNorm)
+			//for(std::complex<T>& c : vecOut)
+			//	c /= n;
+
+			return vecOut;
+		}
+
+		virtual void trafo(const T* pInR, const T* pInI,
+					T* pOutR, T* pOutI,
+					bool bInv=0) override
+		{
+			typedef std::vector<std::complex<T>> t_vec;
+			t_vec vecIn(m_n), vecOut;
+
+			for(std::size_t i=0; i<m_n; ++i)
+			{
+				T dR = pInR ? pInR[i] : 0.;
+				T dI = pInI ? pInI[i] : 0.;
+				vecIn[i] = std::complex<T>(dR, dI);
+			}
+
+			vecOut = trafo(vecIn, bInv);
+
+			for(std::size_t i=0; i<m_n; ++i)
 			{
 				if(pOutR) pOutR[i] = vecOut[i].real();
 				if(pOutI) pOutI[i] = vecOut[i].imag();

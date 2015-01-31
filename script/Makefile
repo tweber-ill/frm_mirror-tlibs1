@@ -2,6 +2,7 @@ CC = gcc
 #CC = clang
 
 DEBUG = 0
+USE_FFTW = 0
 
 ifeq (${DEBUG}, 0)
 	OPT_FLAGS = -O3 -fexpensive-optimizations -march=native -DNDEBUG -Wall
@@ -11,7 +12,7 @@ else
 	STRIP = echo debug version: no stripping of
 endif
 
-DEFINES = -DNO_QT -DNO_COMP -DUSE_FFTW
+DEFINES = -DNO_QT -DNO_COMP
 INCS =
 FLAGS = -std=c++14 -fopenmp ${OPT_FLAGS} ${DEFINES} ${INCS}
 #FLAGS += -Wall -Wpedantic
@@ -22,7 +23,13 @@ LIBS = -L/usr/local/lib
 LIBS = -lboost_iostreams
 
 # FFTW
-LIBS += -lfftw3
+ifeq (${USE_FFTW}, 1)
+	DEFINES += -DUSE_FFTW
+	LIBS += -lfftw3
+	FFTW_OBJ = obj/fftw.o
+else
+	FFTW_OBJ =
+endif
 
 # Minuit
 INCS += -I/usr/include/root
@@ -42,6 +49,7 @@ YY = bison
 
 all: hermelin
 
+
 hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/node.o \
 		obj/node_eval.o obj/calls.o obj/handles.o obj/gnuplot.o obj/file.o \
 		obj/string.o obj/loadtxt.o obj/rand.o obj/fourier.o obj/script_helper.o \
@@ -49,7 +57,7 @@ hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/nod
 		obj/calls_plot.o obj/calls_math.o obj/calls_file.o obj/calls_thread.o \
 		obj/calls_fit.o obj/globals.o obj/flags.o obj/minuit.o \
 		obj/interpolation.o obj/spec_char.o obj/linalg2.o \
-		obj/log.o obj/node_opt.o
+		obj/log.o obj/node_opt.o ${FFTW_OBJ}
 	${CC} ${FLAGS} -o $@ $+ ${LIBS}
 	${STRIP} $@
 
@@ -101,7 +109,9 @@ obj/loadtxt.o: ../file/loadtxt.cpp ../file/loadtxt.h
 	${CC} ${FLAGS} -c -o $@ $<
 obj/rand.o: ../math/rand.cpp ../math/rand.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/fourier.o: ../math/fourier.cpp ../math/fourier.h
+obj/fourier.o: ../math/fourier.cpp ../math/fourier.h ../math/dft.h
+	${CC} ${FLAGS} -c -o $@ $<
+obj/fftw.o: ../math/fftw.cpp ../math/fftw.h ../math/dft.h
 	${CC} ${FLAGS} -c -o $@ $<
 obj/script_helper.o: lang/script_helper.cpp lang/script_helper.h
 	${CC} ${FLAGS} -c -o $@ $<
