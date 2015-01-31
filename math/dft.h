@@ -429,21 +429,75 @@ class FFT : public Fourier_base<T>
 			const std::size_t N = vecIn.size();
 			const std::size_t N2 = N/2;
 
+			t_vec vecOut;
+			vecOut.reserve(N);
+
 			if(N==0 || N==1)
 				return vecIn;
+			else if(N==2)	// N=2 specialisation for efficiency
+			{
+				for(std::size_t i=0; i<2; ++i)
+					vecOut.push_back(vecIn[0] + vecIn[1]*pCoeff->operator[](CoeffKey(2,i)));
+				return vecOut;
+			}
+			else if(N==4)	// N=4 specialisation for efficiency
+			{
+				// 2-point, upper
+				std::complex<T> cU[] = { vecIn[0] + vecIn[1]*pCoeff->operator[](CoeffKey(2,0)),
+							vecIn[0] + vecIn[1]*pCoeff->operator[](CoeffKey(2,1))};
+
+				// 2-point, lower
+				std::complex<T> cL[] = { vecIn[2] + vecIn[3]*pCoeff->operator[](CoeffKey(2,0)),
+							vecIn[2] + vecIn[3]*pCoeff->operator[](CoeffKey(2,1))};
+
+				// merge 2-points
+				for(std::size_t i=0; i<4; ++i)
+					vecOut.push_back(cU[i%2] + cL[i%2]*pCoeff->operator[](CoeffKey(4,i)));
+
+				return vecOut;
+			}
+			else if(N==8)	// N=8 specialisation for efficiency
+			{
+				// 2-point, top
+				std::complex<T> cT[] = { vecIn[0] + vecIn[1]*pCoeff->operator[](CoeffKey(2,0)),
+							vecIn[0] + vecIn[1]*pCoeff->operator[](CoeffKey(2,1)) };
+
+				// 2-point, uppper
+				std::complex<T> cU[] = { vecIn[2] + vecIn[3]*pCoeff->operator[](CoeffKey(2,0)),
+							vecIn[2] + vecIn[3]*pCoeff->operator[](CoeffKey(2,1)) };
+
+				// 2-point, lower
+				std::complex<T> cL[] = { vecIn[4] + vecIn[5]*pCoeff->operator[](CoeffKey(2,0)),
+							vecIn[4] + vecIn[5]*pCoeff->operator[](CoeffKey(2,1)) };
+
+				// 2-point, bottom
+				std::complex<T> cB[] = { vecIn[6] + vecIn[7]*pCoeff->operator[](CoeffKey(2,0)),
+							vecIn[6] + vecIn[7]*pCoeff->operator[](CoeffKey(2,1)) };
+
+				// 4-points: merge 2-points, top+upper
+				t_vec c4U; c4U.reserve(4);
+				for(std::size_t i=0; i<4; ++i)
+					c4U.push_back(cT[i%2] + cU[i%2]*pCoeff->operator[](CoeffKey(4,i)));
+
+				// 4-points: merge 2-points, lower+bottom
+				t_vec c4L; c4L.reserve(4);
+				for(std::size_t i=0; i<4; ++i)
+					c4L.push_back(cL[i%2] + cB[i%2]*pCoeff->operator[](CoeffKey(4,i)));
+
+				// merge 4-points
+				for(std::size_t i=0; i<8; ++i)
+					vecOut.push_back(c4U[i%4] + c4L[i%4]*pCoeff->operator[](CoeffKey(8,i)));
+				return vecOut;
+			}
 
 			std::pair<t_vec, t_vec> pair = split_vec(vecIn);
 			t_vec vec1 = FFTMerge(pair.first, bInv);
 			t_vec vec2 = FFTMerge(pair.second, bInv);
 
-			t_vec vecOut;
-			vecOut.resize(N);
-
 			for(std::size_t i=0; i<N2; ++i)
-			{
-				vecOut[i] = vec1[i] + vec2[i] * pCoeff->operator[](CoeffKey(N,i));
-				vecOut[N2+i] = vec1[i] + vec2[i] * pCoeff->operator[](CoeffKey(N, N2+i));
-			}
+				vecOut.push_back(vec1[i] + vec2[i] * pCoeff->operator[](CoeffKey(N,i)));
+			for(std::size_t i=0; i<N2; ++i)
+				vecOut.push_back(vec1[i] + vec2[i] * pCoeff->operator[](CoeffKey(N, N2+i)));
 
 			return vecOut;
 		}
@@ -459,18 +513,11 @@ class FFT : public Fourier_base<T>
 
 		std::vector<std::complex<T>> trafo(const std::vector<std::complex<T>>& vec, bool bInv=0)
 		{
-			const std::size_t n = vec.size();
-			std::vector<std::complex<T>> vecOut;
-			vecOut.resize(n);
-
-			vecOut = fft_reorder(vec);
-			vecOut = FFTMerge(vecOut, bInv);
+			return FFTMerge(fft_reorder(vec), bInv);
 
 			//if(bInv && bNorm)
 			//for(std::complex<T>& c : vecOut)
 			//	c /= n;
-
-			return vecOut;
 		}
 
 		virtual void trafo(const T* pInR, const T* pInI,

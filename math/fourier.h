@@ -1,4 +1,4 @@
-/*
+/**
  * Wrapper to choose between FFT and FFTw
  *
  * @author tweber

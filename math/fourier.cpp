@@ -1,8 +1,8 @@
 /*
- * FFT & DFT routines
+ * Wrapper to choose between FFT and FFTw
  *
- * @author Tobias Weber <tweber@frm2.tum.de>
- * @date August 2012
+ * @author tweber
+ * @date jan-2015
  * @license GPLv2 or GPLv3
  */
 

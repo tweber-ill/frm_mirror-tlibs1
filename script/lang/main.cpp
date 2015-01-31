@@ -303,12 +303,7 @@ static inline int script_main(int argc, char** argv)
 
 
 
-#include <chrono>
-#include <ctime>
-typedef std::chrono::system_clock::time_point t_tp_sys;
-typedef std::chrono::steady_clock::time_point t_tp_st;
-typedef std::chrono::duration<double> t_dur;
-typedef std::chrono::system_clock::duration t_dur_sys;
+#include "../../helper/stopwatch.h"
 
 int main(int argc, char** argv)
 {
@@ -320,13 +315,15 @@ int main(int argc, char** argv)
 	}
 
 	int iRet = -99;
-	t_tp_sys timeStart = std::chrono::system_clock::now();
-	t_tp_st timeStart_st = std::chrono::steady_clock::now();
+
+	tl::Stopwatch<double> watch;
 
 	try
 	{
 		tl::init_spec_chars();
+		if(g_bShowTiming) watch.start();
 		iRet = script_main(argc, argv);
+		if(g_bShowTiming) watch.stop();
 	}
 	catch(const std::exception& ex)
 	{
@@ -335,26 +332,10 @@ int main(int argc, char** argv)
 
 	if(g_bShowTiming && iRet==0)
 	{
-		t_tp_st timeStop_st = std::chrono::steady_clock::now();
-
-		t_dur dur = std::chrono::duration_cast<t_dur>(timeStop_st-timeStart_st);
-		t_dur_sys dur_sys = std::chrono::duration_cast<t_dur_sys>(dur);
-		double dDur = double(t_dur::period::num)/double(t_dur::period::den) * double(dur.count());
-
-		std::time_t tStart = std::chrono::system_clock::to_time_t(timeStart);
-		std::time_t tStop = std::chrono::system_clock::to_time_t(timeStart + dur_sys);
-
-		std::tm tmStart = *std::localtime(&tStart);
-		std::tm tmStop = *std::localtime(&tStop);
-
-		char cStart[128], cStop[128];
-		std::strftime(cStart, sizeof cStart, "%a %Y-%b-%d %H:%M:%S %Z", &tmStart);
-		std::strftime(cStop, sizeof cStop, "%a %Y-%b-%d %H:%M:%S %Z", &tmStop);
-
 		tl::log_info("================================================================================");
-		tl::log_info("Script start time:     ", cStart);
-		tl::log_info("Script stop time:      ", cStop);
-		tl::log_info("Script execution time: ", dDur, " s");
+		tl::log_info("Script start time:     ", watch.GetStartTimeStr());
+		tl::log_info("Script stop time:      ", watch.GetStopTimeStr());
+		tl::log_info("Script execution time: ", watch.GetDur(), " s");
 		tl::log_info("================================================================================");
 	}
 
