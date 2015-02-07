@@ -15,7 +15,7 @@
 
 namespace tl {
 
-#ifndef NO_LAPACK
+#if !defined NO_LAPACK && !defined USE_LAPACK
 	#define USE_LAPACK
 #endif
 
@@ -49,8 +49,8 @@ bool qr<double>(const ublas::matrix<double>& M,
 
 
 template<typename T=double>
-bool eigenvec(const ublas::matrix<T>& mat, 
-		std::vector<ublas::vector<T> >& evecs_real, std::vector<ublas::vector<T> >& evecs_imag, 
+bool eigenvec(const ublas::matrix<T>& mat,
+		std::vector<ublas::vector<T> >& evecs_real, std::vector<ublas::vector<T> >& evecs_imag,
 		std::vector<T>& evals_real, std::vector<T>& evals_imag)
 {
 	log_err("No specialisation of \"eigenvec\" available for this type.");
@@ -68,7 +68,7 @@ template<>
 bool eigenvec<double>(const ublas::matrix<double>& mat,
 			std::vector<ublas::vector<double> >& evecs_real,
 			std::vector<ublas::vector<double> >& evecs_imag,
-			std::vector<double>& evals_real, 
+			std::vector<double>& evals_real,
 			std::vector<double>& evals_imag);
 template<>
 bool eigenvec_sym<double>(const ublas::matrix<double>& mat,

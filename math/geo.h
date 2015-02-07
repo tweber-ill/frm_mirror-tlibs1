@@ -343,7 +343,7 @@ public:
 	Quadric(const ublas::matrix<T>& Q, /*const ublas::vector<T>& r,*/ T s)
 			: m_Q(Q), /*m_r(r),*/ m_s(s) {}
 	virtual ~Quadric() {}
-	
+
 	void SetDim(unsigned int iDim) { m_Q.resize(iDim, iDim, 1); }
 
 	const Quadric<T>& operator=(const Quadric<T>& quad)
@@ -402,8 +402,7 @@ public:
 	void transform(const ublas::matrix<T>& S)
 	{
 		ublas::matrix<T> TS = ublas::trans(S);
-		ublas::matrix<T> QS = ublas::prod(m_Q, S);
-		m_Q = ublas::prod(TS, QS);
+		m_Q = tl::transform<ublas::matrix<T>>(m_Q, TS, true);
 	}
 
 	// Q = O D O^T

@@ -745,6 +745,7 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 // --------------------------------------------------------------------------------
 // advanced linalg stuff
 
+#ifdef USE_LAPACK
 static Symbol* fkt_eigenvecs(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY}, {0}, "eigenvecs"))
@@ -801,6 +802,14 @@ static Symbol* fkt_eigenvecs(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 	pSymRet->UpdateIndices();
 	return pSymRet;
 }
+#else
+static Symbol* fkt_eigenvecs(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+{
+	std::ostringstream ostrErr;
+	ostrErr << linenr(runinfo) << "Function eigenvecs not linked." << std::endl;
+	throw tl::Err(ostrErr.str(),0);
+}
+#endif
 
 static Symbol* fkt_eigenvecs_sym(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
@@ -860,7 +869,7 @@ static Symbol* fkt_qr(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Runt
 	t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0]);
 
 	ublas::matrix<t_real> Q, R;
-	bool bOk = tl::qr/*_decomp*/(mat, Q, R);
+	bool bOk = tl::qr(mat, Q, R);
 	if(!bOk) return 0;
 
 	Symbol *pQ = mat_to_sym<t_mat>(Q);

@@ -161,12 +161,21 @@ matrix_type remove_column(const matrix_type& mat, unsigned int iCol)
 }
 
 template<class matrix_type>
-void submatrix_copy(matrix_type& mat, const matrix_type& sub, unsigned int iRowBegin, unsigned int iColBegin)
+void submatrix_copy(matrix_type& mat, const matrix_type& sub,
+		unsigned int iRowBegin, unsigned int iColBegin)
 {
 	for(unsigned int i=0; i<sub.size1(); ++i)
 		for(unsigned int j=0; j<sub.size2(); ++j)
 			mat(iRowBegin+i, iColBegin+j) = sub(i,j);
 }
+
+template<class vec_type>
+void subvector_copy(vec_type& vec, const vec_type& sub, unsigned int iRowBegin)
+{
+	for(unsigned int i=0; i<sub.size(); ++i)
+			vec[iRowBegin+i] = sub[i];
+}
+
 
 template<class matrix_type>
 matrix_type remove_elems(const matrix_type& mat, unsigned int iIdx)
@@ -524,6 +533,22 @@ bool inverse(const mat_type& mat, mat_type& inv)
 	}
 
 	return true;
+}
+
+
+template<class mat_type=ublas::matrix<double>>
+mat_type transform(const mat_type& mat, const mat_type& matTrafo, bool bOrtho=0)
+{
+	mat_type matTrafoInv;
+	if(bOrtho)
+		matTrafoInv = ublas::trans(matTrafo);
+	else
+		inverse(matTrafo, matTrafoInv);
+
+	mat_type MTInv = ublas::prod(mat, matTrafoInv);
+	mat_type TMTInv = ublas::prod(matTrafo, MTInv);
+
+	return TMTInv;
 }
 
 

@@ -3,6 +3,7 @@ CC = gcc
 
 DEBUG = 0
 USE_FFTW = 0
+NO_LAPACK = 1
 
 ifeq (${DEBUG}, 0)
 	OPT_FLAGS = -O3 -fexpensive-optimizations -march=native -DNDEBUG -Wall
@@ -39,8 +40,13 @@ LIBS += -L/usr/lib64/root -lMinuit2
 LIBS += -lstdc++ -lm
 
 # Lapack/e
-INCS += -I/usr/include/lapacke
-LIBS += -llapack -llapacke
+ifeq (${NO_LAPACK}, 0)
+	DEFINES += -DUSE_LAPACK
+	INCS += -I/usr/include/lapacke
+	LIBS += -llapack -llapacke
+else
+	DEFINES += -DNO_LAPACK
+endif
 
 YY = bison
 #YY = /usr/local/bin/bison
