@@ -545,10 +545,10 @@ mat_type transform(const mat_type& mat, const mat_type& matTrafo, bool bOrtho=0)
 	else
 		inverse(matTrafo, matTrafoInv);
 
-	mat_type MTInv = ublas::prod(mat, matTrafoInv);
-	mat_type TMTInv = ublas::prod(matTrafo, MTInv);
+	mat_type MT = ublas::prod(mat, matTrafo);
+	mat_type TinvMT = ublas::prod(matTrafoInv, MT);
 
-	return TMTInv;
+	return TinvMT;
 }
 
 

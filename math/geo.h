@@ -401,8 +401,7 @@ public:
 
 	void transform(const ublas::matrix<T>& S)
 	{
-		ublas::matrix<T> TS = ublas::trans(S);
-		m_Q = tl::transform<ublas::matrix<T>>(m_Q, TS, true);
+		m_Q = tl::transform<ublas::matrix<T>>(m_Q, S);
 	}
 
 	// Q = O D O^T
