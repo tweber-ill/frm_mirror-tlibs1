@@ -36,11 +36,17 @@ namespace tl {
 namespace units = boost::units;
 namespace co = boost::units::si::constants::codata;
 
+/*
+template<class T=double> static const T SIGMA2FWHM = T(2)*std::sqrt(T(2)*std::log(T(2)));
+template<class T=double> static const T SIGMA2HWHM = std::sqrt(T(2)*std::log(T(2)));
+template<class T=double> static const T FWHM2SIGMA = T(1)/SIGMA2FWHM<T>;
+template<class T=double> static const T HWHM2SIGMA = T(1)/SIGMA2HWHM<T>;
+*/
 
-static const double SIGMA2FWHM = 2.*sqrt(2.*log(2.));
+static const double SIGMA2FWHM = 2.*std::sqrt(2.*std::log(2.));
 static const double SIGMA2HWHM = SIGMA2FWHM/2.;
-static const double HWHM2SIGMA = 1./ SIGMA2HWHM;
-static const double FWHM2SIGMA = 1./ SIGMA2FWHM;
+static const double HWHM2SIGMA = 1./SIGMA2HWHM;
+static const double FWHM2SIGMA = 1./SIGMA2FWHM;
 
 
 // general quantities
@@ -60,18 +66,18 @@ template<class Sys, class T=double> using t_angle =
 	units::quantity<units::unit<units::plane_angle_dimension, Sys>, T>;
 template<class Sys, class T=double> using t_temperature = 
 	units::quantity<units::unit<units::temperature_dimension, Sys>, T>;
-template<class Sys, class T=double> using t_mass = 	
+template<class Sys, class T=double> using t_mass = 
 	units::quantity<units::unit<units::mass_dimension, Sys>, T>;
-template<class Sys, class T=double> using t_time = 	
+template<class Sys, class T=double> using t_time = 
 	units::quantity<units::unit<units::time_dimension, Sys>, T>;
-template<class Sys, class T=double> using t_flux = 	
+template<class Sys, class T=double> using t_flux = 
 	units::quantity<units::unit<units::magnetic_flux_density_dimension, Sys>, T>;
 template<class Sys, class T=double> using t_area = 
 	units::quantity<units::unit<units::area_dimension, Sys>, T>;
 template<class Sys, class T=double> using t_volume = 
 	units::quantity<units::unit<units::volume_dimension, Sys>, T>;
-	
-template<class Sys, class T=double> using t_length_inverse = 	
+
+template<class Sys, class T=double> using t_length_inverse = 
 	units::quantity<units::unit<units::derived_dimension<units::length_base_dimension, -1>::type, Sys>, T>;
 template<class Sys, class T=double> using t_length_square = 
 	units::quantity<units::unit<units::derived_dimension<units::length_base_dimension, 2>::type, Sys>, T>;
@@ -121,6 +127,10 @@ static const time second = seconds;
 static const energy meV = one_meV;
 static const energy eV = eV;
 
+/*
+template<class T=double> T KSQ2E = T((co::hbar*co::hbar / (T(2)*co::m_n)) / one_meV / (angstrom*angstrom));
+template<class T=double> T E2KSQ = T(1)/KSQ2E<T>;
+*/
 
 static const double KSQ2E = (co::hbar*co::hbar / (2.*co::m_n)) / one_meV / (angstrom*angstrom);
 static const double E2KSQ = 1./KSQ2E;
