@@ -42,6 +42,47 @@ static const double SIGMA2HWHM = SIGMA2FWHM/2.;
 static const double HWHM2SIGMA = 1./ SIGMA2HWHM;
 static const double FWHM2SIGMA = 1./ SIGMA2FWHM;
 
+// general quantities
+template<class Sys, class T=double> using t_length =
+	units::quantity<units::unit<units::length_dimension, Sys>, T>;
+template<class Sys, class T=double> using t_momentum = 
+	units::quantity<units::unit<units::momentum_dimension, Sys>, T>;
+template<class Sys, class T=double> using t_wavenumber = 
+	units::quantity<units::unit<units::wavenumber_dimension, Sys>, T>;
+template<class Sys, class T=double> using t_velocity = 
+	units::quantity<units::unit<units::velocity_dimension, Sys>, T>;
+template<class Sys, class T=double> using t_frequency = 
+	units::quantity<units::unit<units::frequency_dimension, Sys>, T>;
+template<class Sys, class T=double> using t_energy = 
+	units::quantity<units::unit<units::energy_dimension, Sys>, T>;
+template<class Sys, class T=double> using t_angle = 
+	units::quantity<units::unit<units::plane_angle_dimension, Sys>, T>;
+template<class Sys, class T=double> using t_temperature = 
+	units::quantity<units::unit<units::temperature_dimension, Sys>, T>;
+template<class Sys, class T=double> using t_mass = 	
+	units::quantity<units::unit<units::mass_dimension, Sys>, T>;
+template<class Sys, class T=double> using t_time = 	
+	units::quantity<units::unit<units::time_dimension, Sys>, T>;
+template<class Sys, class T=double> using t_flux = 	
+	units::quantity<units::unit<units::magnetic_flux_density_dimension, Sys>, T>;
+template<class Sys, class T=double> using t_area = 
+	units::quantity<units::unit<units::area_dimension, Sys>, T>;
+template<class Sys, class T=double> using t_volume = 
+	units::quantity<units::unit<units::volume_dimension, Sys>, T>;
+	
+template<class Sys, class T=double> using t_length_inverse = 	
+	units::quantity<units::unit<units::derived_dimension<units::length_base_dimension, -1>::type, Sys>, T>;
+template<class Sys, class T=double> using t_length_square = 
+	units::quantity<units::unit<units::derived_dimension<units::length_base_dimension, 2>::type, Sys>, T>;
+template<class Sys, class T=double> using t_dimensionless = 
+	units::quantity<units::unit<units::dimensionless_type, Sys>, T>;
+
+// synonyms
+template<class Sys, class T=double> using t_freq = t_frequency<Sys, T>;
+template<class Sys, class T=double> using t_temp = t_temperature<Sys,T>;
+
+
+// si quantities
 typedef units::quantity<units::si::plane_angle> angle;
 typedef units::quantity<units::si::wavenumber> wavenumber;
 typedef units::quantity<units::si::energy> energy;
@@ -61,26 +102,21 @@ static const length angstrom = 1e-10 * meters;
 static const length cm = meters/100.;
 static const time ps = 1e-12 * seconds;
 
-
 static const double KSQ2E = (co::hbar*co::hbar / (2.*co::m_n)) / one_meV / (angstrom*angstrom);
 static const double E2KSQ = 1./KSQ2E;
-
-//static const units::quantity<units::si::length> angstrom = 1e-10 * units::si::meter;
 
 
 // --------------------------------------------------------------------------------
 // de Broglie stuff
 // lam = h/p
-template<class Sys, class Y>
-units::quantity<units::unit<units::momentum_dimension, Sys>, Y>
-lam2p(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam)
+template<class Sys, class Y> 
+t_momentum<Sys,Y> lam2p(const t_length<Sys,Y>& lam)
 {
 	return co::h / lam;
 }
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::length_dimension, Sys>, Y>
-p2lam(const units::quantity<units::unit<units::momentum_dimension, Sys>, Y>& p)
+t_length<Sys,Y> p2lam(const t_momentum<Sys,Y>& p)
 {
 	return co::h / p;
 }
@@ -88,43 +124,37 @@ p2lam(const units::quantity<units::unit<units::momentum_dimension, Sys>, Y>& p)
 
 // lam = 2pi/k
 template<class Sys, class Y>
-units::quantity<units::unit<units::length_dimension, Sys>, Y>
-k2lam(const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& k)
+t_length<Sys,Y> k2lam(const t_wavenumber<Sys,Y>& k)
 {
 	return 2.*M_PI / k;
 }
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>
-lam2k(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam)
+t_wavenumber<Sys,Y> lam2k(const t_length<Sys,Y>& lam)
 {
 	return 2.*M_PI / lam;
 }
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::momentum_dimension, Sys>, Y>
-k2p(const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& k)
+t_momentum<Sys,Y> k2p(const t_wavenumber<Sys,Y>& k)
 {
 	return co::hbar*k;
 }
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>
-p2k(const units::quantity<units::unit<units::momentum_dimension, Sys>, Y>& p)
+t_wavenumber<Sys,Y> p2k(const t_momentum<Sys,Y>& p)
 {
 	return p/co::hbar;
 }
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::velocity_dimension, Sys>, Y>
-k2v(const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& k)
+t_velocity<Sys,Y> k2v(const t_wavenumber<Sys,Y>& k)
 {
 	return k2p(k) / co::m_n;
 }
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>
-v2k(const units::quantity<units::unit<units::velocity_dimension, Sys>, Y>& v)
+t_wavenumber<Sys,Y> v2k(const t_velocity<Sys,Y>& v)
 {
 	return co::m_n*v/co::hbar;
 }
@@ -134,43 +164,39 @@ v2k(const units::quantity<units::unit<units::velocity_dimension, Sys>, Y>& v)
 // --------------------------------------------------------------------------------
 // E = hbar*omega
 template<class Sys, class Y>
-units::quantity<units::unit<units::energy_dimension, Sys>, Y>
-omega2E(const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& omega)
+t_energy<Sys,Y> omega2E(const t_freq<Sys,Y>& omega)
 {
 	return co::hbar * omega;
 }
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::frequency_dimension, Sys>, Y>
-E2omega(const units::quantity<units::unit<units::energy_dimension, Sys>, Y>& en)
+t_freq<Sys,Y> E2omega(const t_energy<Sys,Y>& en)
 {
 	return en / co::hbar;
 }
 
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::energy_dimension, Sys>, Y>
-k2E(const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& k)
+t_energy<Sys,Y> k2E(const t_wavenumber<Sys,Y>& k)
 {
-	units::quantity<units::unit<units::momentum_dimension, Sys>, Y>
+	t_momentum<Sys,Y>
 		p = co::hbar*k;
-	units::quantity<units::unit<units::energy_dimension, Sys>, Y>
+	t_energy<Sys,Y>
 		E = p*p / (2.*co::m_n);
 	return E;
 }
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>
-E2k(const units::quantity<units::unit<units::energy_dimension, Sys>, Y>& E, bool &bImag)
+t_wavenumber<Sys,Y> E2k(const t_energy<Sys,Y>& E, bool &bImag)
 {
 	if(E < 0.*one_meV)
 		bImag = 1;
 	else
 		bImag = 0;
 
-	units::quantity<units::unit<units::momentum_dimension, Sys>, Y>
+	t_momentum<Sys,Y>
 		p = units::sqrt(2.*co::m_n*units::abs(E));
-	units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>
+	t_wavenumber<Sys,Y>
 		k = p / co::hbar;
 	return k;
 }
@@ -182,27 +208,24 @@ E2k(const units::quantity<units::unit<units::energy_dimension, Sys>, Y>& E, bool
 // Bragg
 // real: n * lam = 2d * sin(twotheta/2)
 template<class Sys, class Y>
-units::quantity<units::unit<units::length_dimension, Sys>, Y>
-bragg_real_lam(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& d,
-				const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& twotheta,
+t_length<Sys,Y> bragg_real_lam(const t_length<Sys,Y>& d,
+				const t_angle<Sys,Y>& twotheta,
 				Y n)
 {
 	return 2.*d/n * sin(twotheta/2.);
 }
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::length_dimension, Sys>, Y>
-bragg_real_d(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam,
-			const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& twotheta,
+t_length<Sys,Y> bragg_real_d(const t_length<Sys,Y>& lam,
+			const t_angle<Sys,Y>& twotheta,
 			Y n)
 {
 	return n * lam / (2.* sin(twotheta/2.));
 }
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>
-bragg_real_twotheta(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& d,
-					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam,
+t_angle<Sys,Y> bragg_real_twotheta(const t_length<Sys,Y>& d,
+					const t_length<Sys,Y>& lam,
 					Y n)
 {
 	return asin(n*lam/(2.*d)) * 2.;
@@ -210,28 +233,25 @@ bragg_real_twotheta(const units::quantity<units::unit<units::length_dimension, S
 
 // reciprocal: Q * lam = 4pi * sin(twotheta/2)
 template<class Sys, class Y>
-units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>
-bragg_recip_twotheta(const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& Q,
-					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam,
+t_angle<Sys,Y> bragg_recip_twotheta(const t_wavenumber<Sys,Y>& Q,
+					const t_length<Sys,Y>& lam,
 					Y n)
 {
 	return asin(Q*n*lam/(4.*M_PI)) * 2.;
 }
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>
-bragg_recip_Q(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam,
-			const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& twotheta,
-			Y n)
+t_wavenumber<Sys,Y> bragg_recip_Q(const t_length<Sys,Y>& lam,
+				const t_angle<Sys,Y>& twotheta,
+				Y n)
 {
 	return 4.*M_PI / (n*lam) * sin(twotheta/2.);
 }
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::length_dimension, Sys>, Y>
-bragg_recip_lam(const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& Q,
-				const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& twotheta,
-				Y n)
+t_length<Sys,Y> bragg_recip_lam(const t_wavenumber<Sys,Y>& Q,
+					const t_angle<Sys,Y>& twotheta,
+					Y n)
 {
 	return 4.*M_PI / Q * sin(twotheta/2.) / n;
 }
@@ -240,17 +260,16 @@ bragg_recip_lam(const units::quantity<units::unit<units::wavenumber_dimension, S
 
 // --------------------------------------------------------------------------------
 template<class Sys, class Y>
-units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>
-kinematic_plane(bool bFixedKi,
-				const units::quantity<units::unit<units::energy_dimension, Sys>, Y>& EiEf,
-				const units::quantity<units::unit<units::energy_dimension, Sys>, Y>& DeltaE,
-				const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& twotheta)
+t_wavenumber<Sys,Y> kinematic_plane(bool bFixedKi,
+						const t_energy<Sys,Y>& EiEf,
+						const t_energy<Sys,Y>& DeltaE,
+						const t_angle<Sys,Y>& twotheta)
 {
-	const units::quantity<units::unit<units::energy_dimension, Sys>, Y> dE = DeltaE;
+	const t_energy<Sys,Y> dE = DeltaE;
 	if(bFixedKi)
 		dE = -dE;
 
-	units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y> Q =
+	t_wavenumber<Sys,Y> Q =
 			units::sqrt(2.*co::m_n / co::hbar) *
 			(2*EiEf + dE - 2.*units::cos(twotheta)*units::sqrt(EiEf*(EiEf + dE)));
 
@@ -258,11 +277,10 @@ kinematic_plane(bool bFixedKi,
 }
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::energy_dimension, Sys>, Y>
-kinematic_plane(bool bFixedKi, bool bBranch,
-				const units::quantity<units::unit<units::energy_dimension, Sys>, Y>& EiEf,
-				const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& Q,
-				const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& twotheta)
+t_energy<Sys,Y> kinematic_plane(bool bFixedKi, bool bBranch,
+					const t_energy<Sys,Y>& EiEf,
+					const t_wavenumber<Sys,Y>& Q,
+					const t_angle<Sys,Y>& twotheta)
 {
 	auto c = 2.*co::m_n / (co::hbar*co::hbar);
 	Y ctt = units::cos(twotheta);
@@ -277,9 +295,10 @@ kinematic_plane(bool bFixedKi, bool bBranch,
 		dSignFixedKf = -1.;
 
 	auto rt = c*c*c*c * (-EiEf*EiEf)*ctt*ctt
-			+ c*c*c*c*EiEf*EiEf*ctt*ctt*c2tt + 2.*c*c*c*EiEf*Q*Q*ctt*ctt;
+			+ c*c*c*c*EiEf*EiEf*ctt*ctt*c2tt 
+			+ 2.*c*c*c*EiEf*Q*Q*ctt*ctt;
 
-	units::quantity<units::unit<units::energy_dimension, Sys>, Y> E =
+	t_energy<Sys,Y> E =
 			1./(c*c)*(dSignFixedKf*2.*c*c*EiEf*ctt*ctt
 			- dSignFixedKf*2.*c*c*EiEf
 			+ dSign*std::sqrt(2.) * units::sqrt(rt)
@@ -295,13 +314,13 @@ kinematic_plane(bool bFixedKi, bool bBranch,
 // Debye-Waller factor
 
 template<class Sys, class Y>
-Y debye_waller_high_T(const units::quantity<units::unit<units::temperature_dimension, Sys>, Y>& T_D,
-					const units::quantity<units::unit<units::temperature_dimension, Sys>, Y>& T,
-					const units::quantity<units::unit<units::mass_dimension, Sys>, Y>& M,
-					const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& Q,
-					units::quantity<units::unit<units::derived_dimension<units::length_base_dimension, 2>::type, Sys>, Y>* pZeta_sq=0)
+Y debye_waller_high_T(const t_temperature<Sys,Y>& T_D,
+					const t_temperature<Sys,Y>& T,
+					const t_mass<Sys,Y>& M,
+					const t_wavenumber<Sys,Y>& Q,
+					t_length_square<Sys,Y>* pZeta_sq=0)
 {
-	units::quantity<units::unit<units::derived_dimension<units::length_base_dimension, 2>::type, Sys>, Y> zeta_sq;
+	t_length_square<Sys,Y> zeta_sq;
 	zeta_sq = 9.*co::hbar*co::hbar / (co::k_B * T_D * M) * T/T_D;
 	Y dwf = units::exp(-1./3. * Q*Q * zeta_sq);
 
@@ -311,13 +330,13 @@ Y debye_waller_high_T(const units::quantity<units::unit<units::temperature_dimen
 
 
 template<class Sys, class Y>
-Y debye_waller_low_T(const units::quantity<units::unit<units::temperature_dimension, Sys>, Y>& T_D,
-					const units::quantity<units::unit<units::temperature_dimension, Sys>, Y>& T,
-					const units::quantity<units::unit<units::mass_dimension, Sys>, Y>& M,
-					const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& Q,
-					units::quantity<units::unit<units::derived_dimension<units::length_base_dimension, 2>::type, Sys>, Y>* pZeta_sq=0)
+Y debye_waller_low_T(const t_temperature<Sys,Y>& T_D,
+					const t_temperature<Sys,Y>& T,
+					const t_mass<Sys,Y>& M,
+					const t_wavenumber<Sys,Y>& Q,
+					t_length_square<Sys,Y>* pZeta_sq=0)
 {
-	units::quantity<units::unit<units::derived_dimension<units::length_base_dimension, 2>::type, Sys>, Y> zeta_sq;
+	t_length_square<Sys,Y> zeta_sq;
 	zeta_sq = 9.*co::hbar*co::hbar / (4.*co::k_B*T_D*M) * (1. + 2./3. * M_PI*M_PI * (T/T_D)*(T/T_D));
 	Y dwf = units::exp(-1./3. * Q*Q * zeta_sq);
 
@@ -336,13 +355,12 @@ Y debye_waller_low_T(const units::quantity<units::unit<units::temperature_dimens
 // kf^2 = ki^2 + Q^2 - 2ki Q cos th
 // cos th = (-kf^2 + ki^2 + Q^2) / (2kiQ)
 template<class Sys, class Y>
-units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>
-get_angle_ki_Q(const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& ki,
-		const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& kf,
-		const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& Q,
+t_angle<Sys,Y> get_angle_ki_Q(const t_wavenumber<Sys,Y>& ki,
+		const t_wavenumber<Sys,Y>& kf,
+		const t_wavenumber<Sys,Y>& Q,
 		bool bPosSense=1)
 {
-	units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y> angle;
+	t_angle<Sys,Y> angle;
 
 	if(Q*(1e-10 * units::si::meter) == 0.)
 		angle = M_PI/2. * units::si::radians;
@@ -366,13 +384,12 @@ get_angle_ki_Q(const units::quantity<units::unit<units::wavenumber_dimension, Sy
 // ki^2 = Q^2 + kf^2 + 2Q kf cos th
 // cos th = (ki^2 - Q^2 - kf^2) / (2Q kf)
 template<class Sys, class Y>
-units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>
-get_angle_kf_Q(const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& ki,
-		const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& kf,
-		const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& Q,
+t_angle<Sys,Y> get_angle_kf_Q(const t_wavenumber<Sys,Y>& ki,
+		const t_wavenumber<Sys,Y>& kf,
+		const t_wavenumber<Sys,Y>& Q,
 		bool bPosSense=1)
 {
-	units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y> angle;
+	t_angle<Sys,Y> angle;
 
 	if(Q*(1e-10 * units::si::meter) == 0.)
 		angle = M_PI/2. * units::si::radians;
@@ -393,25 +410,22 @@ get_angle_kf_Q(const units::quantity<units::unit<units::wavenumber_dimension, Sy
 
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>
-get_mono_twotheta(const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& k,
-				const units::quantity<units::unit<units::length_dimension, Sys>, Y>& d,
+t_angle<Sys,Y> get_mono_twotheta(const t_wavenumber<Sys,Y>& k,
+				const t_length<Sys,Y>& d,
 				bool bPosSense=1)
 {
-	units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y> tt
-											= 2. * units::asin(M_PI/(d*k));
+	t_angle<Sys,Y> tt = 2. * units::asin(M_PI/(d*k));
 	if(!bPosSense)
 		tt = -tt;
 	return tt;
 }
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>
-get_mono_k(const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& _theta,
-				const units::quantity<units::unit<units::length_dimension, Sys>, Y>& d,
+t_wavenumber<Sys,Y> get_mono_k(const t_angle<Sys,Y>& _theta,
+				const t_length<Sys,Y>& d,
 				bool bPosSense=1)
 {
-	units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y> theta = _theta;
+	t_angle<Sys,Y> theta = _theta;
 	if(!bPosSense)
 		theta = -theta;
 
@@ -423,18 +437,16 @@ get_mono_k(const units::quantity<units::unit<units::plane_angle_dimension, Sys>,
 // Q^2 = ki^2 + kf^2 - 2ki kf cos 2th
 // cos 2th = (-Q^2 + ki^2 + kf^2) / (2ki kf)
 template<class Sys, class Y>
-units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>
-get_sample_twotheta(const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& ki,
-					const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& kf,
-					const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& Q,
+t_angle<Sys,Y> get_sample_twotheta(const t_wavenumber<Sys,Y>& ki,
+					const t_wavenumber<Sys,Y>& kf,
+					const t_wavenumber<Sys,Y>& Q,
 					bool bPosSense=1)
 {
-	units::quantity<units::si::dimensionless> ttCos
-							= (ki*ki + kf*kf - Q*Q)/(2.*ki*kf);
+	t_dimensionless<Sys,Y> ttCos = (ki*ki + kf*kf - Q*Q)/(2.*ki*kf);
 	if(units::abs(ttCos) > 1.)
 		throw Err("Scattering triangle not closed.");
 
-	units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y> tt;
+	t_angle<Sys,Y> tt;
 	tt = units::acos(ttCos);
 	if(!bPosSense)
 		tt = -tt;
@@ -444,13 +456,13 @@ get_sample_twotheta(const units::quantity<units::unit<units::wavenumber_dimensio
 
 // -> from cosine theorem
 template<class Sys, class Y>
-const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>
-get_sample_Q(const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& ki,
-					const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& kf,
-					const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& tt)
+const t_wavenumber<Sys,Y>
+get_sample_Q(const t_wavenumber<Sys,Y>& ki,
+					const t_wavenumber<Sys,Y>& kf,
+					const t_angle<Sys,Y>& tt)
 {
-	units::quantity<units::si::dimensionless> ctt = units::cos(tt);
-	units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>
+	t_dimensionless<Sys,Y> ctt = units::cos(tt);
+	t_wavenumber<Sys,Y>
 		Q = units::sqrt(-ctt*(2.*ki*kf) + ki*ki + kf*kf);
 	return Q;
 }
@@ -458,9 +470,8 @@ get_sample_Q(const units::quantity<units::unit<units::wavenumber_dimension, Sys>
 
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::energy_dimension, Sys>, Y>
-get_energy_transfer(const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& ki,
-					const units::quantity<units::unit<units::wavenumber_dimension, Sys>, Y>& kf)
+t_energy<Sys,Y> get_energy_transfer(const t_wavenumber<Sys,Y>& ki,
+					const t_wavenumber<Sys,Y>& kf)
 {
 	return co::hbar*co::hbar*ki*ki/(2.*co::m_n)
 			- co::hbar*co::hbar*kf*kf/(2.*co::m_n);
@@ -474,15 +485,14 @@ get_energy_transfer(const units::quantity<units::unit<units::wavenumber_dimensio
 
 // inelastic spurions -> Shirane pp. 146-148
 template<class Sys, class Y>
-units::quantity<units::unit<units::energy_dimension, Sys>, Y>
-get_inelastic_spurion(bool bConstEi,
-		units::quantity<units::unit<units::energy_dimension, Sys>, Y> E,
+t_energy<Sys,Y> get_inelastic_spurion(bool bConstEi,
+		t_energy<Sys,Y> E,
 		unsigned int iOrderMono, unsigned int iOrderAna)
 {
 	const Y dOrderMonoSq = Y(iOrderMono)*Y(iOrderMono);
 	const Y dOrderAnaSq = Y(iOrderAna)*Y(iOrderAna);
 
-	units::quantity<units::unit<units::energy_dimension, Sys>, Y> E_sp;
+	t_energy<Sys,Y> E_sp;
 
 	// formulas from Shirane, p. 147
 	if(bConstEi)
@@ -493,28 +503,29 @@ get_inelastic_spurion(bool bConstEi,
 	return E_sp;
 }
 
+template<class Y=double>
 struct InelasticSpurion
 {
-	double dE_meV = 0.;
+	Y dE_meV = 0.;
 	unsigned int iOrderMono = 1;
 	unsigned int iOrderAna = 1;
 };
 
 template<class Sys, class Y>
-std::vector<InelasticSpurion> check_inelastic_spurions(bool bConstEi,
-			units::quantity<units::unit<units::energy_dimension, Sys>, Y> Ei,
-			units::quantity<units::unit<units::energy_dimension, Sys>, Y> Ef,
-			units::quantity<units::unit<units::energy_dimension, Sys>, Y> E,
+std::vector<InelasticSpurion<Y>> check_inelastic_spurions(bool bConstEi,
+			t_energy<Sys,Y> Ei,
+			t_energy<Sys,Y> Ef,
+			t_energy<Sys,Y> E,
 			unsigned int iMaxOrder=5)
 {
 	const Y dESensitivity = 0.25;	// meV
 
-	std::vector<InelasticSpurion> vecSpuris;
+	std::vector<InelasticSpurion<Y>> vecSpuris;
 
 	for(unsigned int iOrder=1; iOrder<=iMaxOrder; ++iOrder)
 	{
-		InelasticSpurion spuri;
-		units::quantity<units::unit<units::energy_dimension, Sys>, Y> EiEf;
+		InelasticSpurion<Y> spuri;
+		t_energy<Sys,Y> EiEf;
 
 		if(bConstEi)
 		{

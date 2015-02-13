@@ -21,48 +21,44 @@ namespace ublas = boost::numeric::ublas;
 
 
 //------------------------------------------------------------------------------
-// MIEZE time (eq. 117 from [Keller, Golub, G��hler, 2000])
+// MIEZE time (eq. 117 from [Keller, Golub, Gähler, 2000])
 // tau = hbar * omega * Ls / (m*v^3)
 template<class Sys, class Y>
-units::quantity<units::unit<units::time_dimension, Sys>, Y>
-mieze_tau(const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& fm,
-				const units::quantity<units::unit<units::length_dimension, Sys>, Y>& Ls,
-				const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam)
+t_time<Sys,Y> mieze_tau(const t_freq<Sys,Y>& fm,
+				const t_length<Sys,Y>& Ls,
+				const t_length<Sys,Y>& lam)
 {
-	units::quantity<units::unit<units::velocity_dimension, Sys>, Y> v = lam2p(lam) / co::m_n;
+	t_velocity<Sys,Y> v = lam2p(lam) / co::m_n;
 	return 2.*M_PI * fm * Ls * co::hbar / (co::m_n * v*v*v);
 }
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::frequency_dimension, Sys>, Y>
-mieze_tau_fm(const units::quantity<units::unit<units::time_dimension, Sys>, Y>& tau,
-						const units::quantity<units::unit<units::length_dimension, Sys>, Y>& Ls,
-						const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam)
+t_freq<Sys,Y> mieze_tau_fm(const t_time<Sys,Y>& tau,
+						const t_length<Sys,Y>& Ls,
+						const t_length<Sys,Y>& lam)
 {
-	units::quantity<units::unit<units::velocity_dimension, Sys>, Y> v = lam2p(lam) / co::m_n;
+	t_velocity<Sys,Y> v = lam2p(lam) / co::m_n;
 	return tau / (2.*M_PI * Ls * co::hbar) * (co::m_n * v*v*v);
 }
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::length_dimension, Sys>, Y>
-mieze_tau_Ls(const units::quantity<units::unit<units::time_dimension, Sys>, Y>& tau,
-						const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& fm,
-						const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam)
+t_length<Sys,Y> mieze_tau_Ls(const t_time<Sys,Y>& tau,
+						const t_freq<Sys,Y>& fm,
+						const t_length<Sys,Y>& lam)
 {
-	units::quantity<units::unit<units::velocity_dimension, Sys>, Y> v = lam2p(lam) / co::m_n;
+	t_velocity<Sys,Y> v = lam2p(lam) / co::m_n;
 	return tau / (2.*M_PI * fm * co::hbar) * (co::m_n * v*v*v);
 }
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::length_dimension, Sys>, Y>
-mieze_tau_lam(const units::quantity<units::unit<units::time_dimension, Sys>, Y>& tau,
-						const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& fm,
-						const units::quantity<units::unit<units::length_dimension, Sys>, Y>& Ls)
+t_length<Sys,Y> mieze_tau_lam(const t_time<Sys,Y>& tau,
+						const t_freq<Sys,Y>& fm,
+						const t_length<Sys,Y>& Ls)
 {
-	units::quantity<units::unit<units::velocity_dimension, Sys>, Y> v;
+	t_velocity<Sys,Y> v;
 	v = boost::units::root<3>(2.*M_PI * fm * Ls * co::hbar / (tau * co::m_n));
 
-	units::quantity<units::unit<units::momentum_dimension, Sys>, Y> p = v * co::m_n;
+	t_momentum<Sys,Y> p = v * co::m_n;
 	return p2lam(p);
 }
 //------------------------------------------------------------------------------
@@ -73,15 +69,13 @@ mieze_tau_lam(const units::quantity<units::unit<units::time_dimension, Sys>, Y>&
 
 // gamma*B = omega
 template<class Sys, class Y=double>
-units::quantity<units::unit<units::frequency_dimension, Sys>, Y>
-larmor_om(const units::quantity<units::unit<units::magnetic_flux_density_dimension, Sys>, Y>& B)
+t_freq<Sys,Y> larmor_om(const t_flux<Sys,Y>& B)
 {
 	return co::gamma_n * B;
 }
 
 template<class Sys, class Y=double>
-units::quantity<units::unit<units::magnetic_flux_density_dimension, Sys>, Y>
-larmor_B(const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& om)
+t_flux<Sys,Y> larmor_B(const t_freq<Sys,Y>& om)
 {
 	return om/co::gamma_n;
 }
@@ -93,13 +87,12 @@ larmor_B(const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>&
  * phi = -pi  =>  B = pi*v / (gamma*l)
  */
 template<class Sys, class Y=double>
-units::quantity<units::unit<units::magnetic_flux_density_dimension, Sys>, Y>
-larmor_field(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam,
-		const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len,
-		const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& phi)
+t_flux<Sys,Y> larmor_field(const t_length<Sys,Y>& lam,
+		const t_length<Sys,Y>& len,
+		const t_angle<Sys,Y>& phi)
 {
-	units::quantity<units::unit<units::velocity_dimension, Sys>, Y> v = lam2p(lam) / co::m_n;
-	units::quantity<units::unit<units::frequency_dimension, Sys>, Y> om = -Y(phi/units::si::radians)*v/len;
+	t_velocity<Sys,Y> v = lam2p(lam) / co::m_n;
+	t_freq<Sys,Y> om = -Y(phi/radians)*v/len;
 	return om/co::gamma_n;
 }
 
@@ -110,34 +103,34 @@ larmor_field(const units::quantity<units::unit<units::length_dimension, Sys>, Y>
 //------------------------------------------------------------------------------
 // MIEZE contrast reduction due to detector geometry
 template<class Sys, class Y>
-Y mieze_reduction_det(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lx,
-						const units::quantity<units::unit<units::length_dimension, Sys>, Y>& ly,
-						const units::quantity<units::unit<units::length_dimension, Sys>, Y>& xpos,
-						const units::quantity<units::unit<units::length_dimension, Sys>, Y>& ypos,
-						const units::quantity<units::unit<units::length_dimension, Sys>, Y>& Ls,
-						const units::quantity<units::unit<units::time_dimension, Sys>, Y>& tau,
-						const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam,
-						const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& central_phase,
+Y mieze_reduction_det(const t_length<Sys,Y>& lx,
+						const t_length<Sys,Y>& ly,
+						const t_length<Sys,Y>& xpos,
+						const t_length<Sys,Y>& ypos,
+						const t_length<Sys,Y>& Ls,
+						const t_time<Sys,Y>& tau,
+						const t_length<Sys,Y>& lam,
+						const t_angle<Sys,Y>& central_phase,
 						unsigned int iXPixels=128, unsigned int iYPixels=128,
 						ublas::matrix<Y>* pPhaseMatrix=0)
 {
 	using namespace units;
 	using namespace co;
 
-	const quantity<unit<mass_dimension, Sys>, Y> mn = co::m_n;
-	quantity<unit<velocity_dimension, Sys> > v0 = lam2p(lam)/mn;
+	const t_mass<Sys,Y> mn = co::m_n;
+	t_velocity<Sys,Y> v0 = lam2p(lam)/mn;
 
-	const units::quantity<units::unit<units::frequency_dimension, Sys>, Y> fM = mieze_tau_fm(tau, Ls, lam);
-	const quantity<unit<frequency_dimension, Sys>, Y> omegaM = 2.*M_PI*fM;
+	const t_freq<Sys,Y> fM = mieze_tau_fm(tau, Ls, lam);
+	const t_freq<Sys,Y> omegaM = 2.*M_PI*fM;
 
-	quantity<unit<length_dimension, Sys>, Y> lx_inc = lx / Y(iXPixels);   // pixel size
-	quantity<unit<length_dimension, Sys>, Y> ly_inc = ly / Y(iYPixels);   // pixel size
+	t_length<Sys,Y> lx_inc = lx / Y(iXPixels);   // pixel size
+	t_length<Sys,Y> ly_inc = ly / Y(iYPixels);   // pixel size
 
 	if(pPhaseMatrix)
 		pPhaseMatrix->resize(iXPixels, iYPixels, false);
 
-	quantity<unit<length_dimension, Sys>, Y> dx, dy;
-	quantity<unit<area_dimension, Sys>, Y> int_red = 0.*si::meter*si::meter;
+	t_length<Sys,Y> dx, dy;
+	t_area<Sys,Y> int_red = 0.*meters*meters;
 
 
 	unsigned int iX, iY;
@@ -146,16 +139,16 @@ Y mieze_reduction_det(const units::quantity<units::unit<units::length_dimension,
 	{
 		for(dy=-ly/2., iY=0; dy<ly/2. && iY<iYPixels; dy+=ly_inc, ++iY)
 		{
-			quantity<unit<length_dimension, Sys>, Y> dx_new = dx-xpos;
-			quantity<unit<length_dimension, Sys>, Y> dy_new = dy-ypos;
+			t_length<Sys,Y> dx_new = dx-xpos;
+			t_length<Sys,Y> dy_new = dy-ypos;
 
-			quantity<unit<length_dimension, Sys>, Y> path_diff = sqrt(dx_new*dx_new + dy_new*dy_new + Ls*Ls) - Ls;
+			t_length<Sys,Y> path_diff = sqrt(dx_new*dx_new + dy_new*dy_new + Ls*Ls) - Ls;
 
 			// additional time needed for the neutron
-			quantity<unit<time_dimension, Sys>, Y> dt = path_diff / v0;
+			t_time<Sys,Y> dt = path_diff / v0;
 
 			// additional phase
-			Y phase = -omegaM * dt + central_phase/units::si::radians;
+			Y phase = -omegaM * dt + central_phase/radians;
 			phase = fmod(phase, 2.*M_PI);
 
 			int_red += cos(phase/2.)*lx_inc*ly_inc;
@@ -177,19 +170,19 @@ Y mieze_reduction_det(const units::quantity<units::unit<units::length_dimension,
 
 // reduction factor due to detector thickness
 template<class Sys, class Y>
-Y mieze_reduction_det_d(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& d,
-						const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& fM,
-						const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam)
+Y mieze_reduction_det_d(const t_length<Sys,Y>& d,
+						const t_freq<Sys,Y>& fM,
+						const t_length<Sys,Y>& lam)
 {
 	using namespace units;
 	using namespace co;
 
-	const quantity<unit<mass_dimension, Sys>, Y> mn = co::m_n;
-	quantity<unit<velocity_dimension, Sys> > v0 = lam2p(lam)/mn;
+	const t_mass<Sys,Y> mn = co::m_n;
+	t_velocity<Sys,Y> v0 = lam2p(lam)/mn;
 
-	const quantity<unit<frequency_dimension, Sys>, Y> omegaM = 2.*M_PI*fM;
+	const t_freq<Sys,Y> omegaM = 2.*M_PI*fM;
 
-	quantity<unit<length_dimension, Sys>, Y> int_red = 0.*si::meter;
+	t_length<Sys,Y> int_red = 0.*meters;
 	int_red = std::sin(-0.5*omegaM/v0 * d)/(-0.5*omegaM/v0);
 
 	Y dreduction = int_red / d;
@@ -208,20 +201,20 @@ Y mieze_reduction_det_d(const units::quantity<units::unit<units::length_dimensio
 
 // numerical approximation to the R_sample integral of formula (9) in [Brandl 11]
 template<class Sys, class Y>
-Y mieze_reduction_sample_cuboid(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_x,
-					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_y,
-					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_z,
-					const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& fM,
-					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam,
-					const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& twotheta,
-					const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& theta_s,
+Y mieze_reduction_sample_cuboid(const t_length<Sys,Y>& len_x,
+					const t_length<Sys,Y>& len_y,
+					const t_length<Sys,Y>& len_z,
+					const t_freq<Sys,Y>& fM,
+					const t_length<Sys,Y>& lam,
+					const t_angle<Sys,Y>& twotheta,
+					const t_angle<Sys,Y>& theta_s,
 					unsigned int ITERS=100)
 {
 	using namespace units;
 	using namespace co;
 
-	const quantity<unit<frequency_dimension, Sys>, Y> omegaM = 2.*M_PI*fM;
-	quantity<unit<velocity_dimension, Sys> > v = lam2p(lam)/co::m_n;
+	const t_freq<Sys,Y> omegaM = 2.*M_PI*fM;
+	t_velocity<Sys,Y> v = lam2p(lam)/co::m_n;
 
 	ublas::vector<Y> ki(3);
 	ki[0] = 0.;
@@ -235,14 +228,14 @@ Y mieze_reduction_sample_cuboid(const units::quantity<units::unit<units::length_
 
 	ublas::vector<Y> q_dir = ki-kf;
 
-	quantity<unit<length_dimension, Sys>, Y> dX = len_x / Y(ITERS);
-	quantity<unit<length_dimension, Sys>, Y> dY = len_y / Y(ITERS);
-	quantity<unit<length_dimension, Sys>, Y> dZ = len_z / Y(ITERS);
+	t_length<Sys,Y> dX = len_x / Y(ITERS);
+	t_length<Sys,Y> dY = len_y / Y(ITERS);
+	t_length<Sys,Y> dZ = len_z / Y(ITERS);
 
-	quantity<unit<length_dimension, Sys>, Y> x, y, z;
+	t_length<Sys,Y> x, y, z;
 
-	quantity<unit<volume_dimension, Sys>, Y> integral = 0.*si::meter*si::meter*si::meter;
-	quantity<unit<volume_dimension, Sys>, Y> vol = 0.*si::meter*si::meter*si::meter;
+	t_volume<Sys,Y> integral = 0.*meters*meters*meters;
+	t_volume<Sys,Y> vol = 0.*meters*meters*meters;
 
 	const Y stheta_s = sin(theta_s);
 	const Y ctheta_s = cos(theta_s);
@@ -251,16 +244,16 @@ Y mieze_reduction_sample_cuboid(const units::quantity<units::unit<units::length_
 		for(y=-len_y/2.; y<len_y/2.; y+=dY)
 			for(z=-len_z/2.; z<len_z/2.; z+=dZ)
 			{
-				quantity<unit<length_dimension, Sys>, Y> pos[3];
+				t_length<Sys,Y> pos[3];
 				// rotate sample
 				pos[0] = ctheta_s*x + stheta_s*z;
 				pos[1] = y;
 				pos[2] = -stheta_s*x + ctheta_s*z;
 
-				quantity<unit<length_dimension, Sys>, Y> path_diff = q_dir[0]*pos[0] + q_dir[1]*pos[1] + q_dir[2]*pos[2];
+				t_length<Sys,Y> path_diff = q_dir[0]*pos[0] + q_dir[1]*pos[1] + q_dir[2]*pos[2];
 				Y phase = omegaM * path_diff / v;
 
-				quantity<unit<volume_dimension, Sys>, Y> func_det = dX*dY*dZ;
+				t_volume<Sys,Y> func_det = dX*dY*dZ;
 
 				vol += func_det;
 				integral += func_det * cos(phase);
@@ -275,28 +268,21 @@ Y mieze_reduction_sample_cuboid(const units::quantity<units::unit<units::length_
 
 // Scattering with extinction
 template<class Sys, class Y>
-Y mieze_reduction_sample_cuboid_extinction(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_x,
-			const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_y,
-			const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_z,
-			const units::quantity<units::unit<units::derived_dimension<units::length_base_dimension, -1>::type, Sys>, Y>& mu,
-			const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& fM,
-			const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam,
-			const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>& twotheta,
+Y mieze_reduction_sample_cuboid_extinction(const t_length<Sys,Y>& len_x,
+			const t_length<Sys,Y>& len_y,
+			const t_length<Sys,Y>& len_z,
+			const t_length_inverse<Sys,Y>& mu,
+			const t_freq<Sys,Y>& fM,
+			const t_length<Sys,Y>& lam,
+			const t_angle<Sys,Y>& twotheta,
 			unsigned int ITERS=100)
 {
 	const Y SUBDIVS = Y(ITERS);
 
-	using namespace units;
 	using namespace co;
 
-	typedef quantity<unit<length_dimension, Sys>, Y> length;
-	typedef quantity<unit<volume_dimension, Sys>, Y> volume;
-	typedef const quantity<unit<frequency_dimension, Sys>, Y> frequency;
-	typedef quantity<unit<velocity_dimension, Sys> > velocity;
-	typedef quantity<unit<plane_angle_dimension, Sys>, Y> angle;
-
-	frequency omegaM = 2.*M_PI*fM;
-	velocity v = lam2p(lam)/co::m_n;
+	t_frequency<Sys,Y> omegaM = 2.*M_PI*fM;
+	t_velocity<Sys,Y> v = lam2p(lam)/co::m_n;
 
 	ublas::vector<Y> ki(3);
 	ki[0] = 0.;
@@ -311,43 +297,42 @@ Y mieze_reduction_sample_cuboid_extinction(const units::quantity<units::unit<uni
 	ublas::vector<Y> q_dir = ki-kf;
 
 
-	length x, y, z;
-	volume integral = 0.*si::meter*si::meter*si::meter;
-	volume vol = 0.*si::meter*si::meter*si::meter;
+	t_length<Sys,Y> x, y, z;
+	t_volume<Sys,Y> integral = 0.*meters*meters*meters;
+	t_volume<Sys,Y> vol = 0.*meters*meters*meters;
 
 
-	angle theta_s = twotheta/2. - M_PI/2.*si::radians;
+	t_angle<Sys,Y> theta_s = twotheta/2. - M_PI/2.*radians;
 	const Y stheta_s = sin(theta_s);
 	const Y ctheta_s = cos(theta_s);
 
 
-	length zpath = 1./(mu*2.);	// reflexive: path taken twice
+	t_length<Sys,Y> zpath = 1./(mu*2.);	// reflexive: path taken twice
 	//zpath /= ctheta_s;
 	//if(zpath > len_z)
 		zpath = len_z;
 
-	length dX = len_x / SUBDIVS;
-	length dY = len_y / SUBDIVS;
-	length dZ = zpath / SUBDIVS;
+	t_length<Sys,Y> dX = len_x / SUBDIVS;
+	t_length<Sys,Y> dY = len_y / SUBDIVS;
+	t_length<Sys,Y> dZ = zpath / SUBDIVS;
 
-	const volume func_det = dX*dY*dZ;
+	const t_volume<Sys,Y> func_det = dX*dY*dZ;
 
 	for(x=-len_x/2.; x<len_x/2.; x+=dX)
 		for(y=-len_y/2.; y<len_y/2.; y+=dY)
-			for(z=0.*si::meter; z<zpath; z+=dZ)
+			for(z=0.*meters; z<zpath; z+=dZ)
 			{
 				//z = len_z/2.;
-				length pos[3];
+				t_length<Sys,Y> pos[3];
 				// rotate sample
 				pos[0] = ctheta_s*x + stheta_s*z;
 				pos[1] = y;
 				pos[2] = -stheta_s*x + ctheta_s*z;
 
-				length path_diff = q_dir[0]*pos[0] + q_dir[1]*pos[1] + q_dir[2]*pos[2];
+				t_length<Sys,Y> path_diff = q_dir[0]*pos[0] + q_dir[1]*pos[1] + q_dir[2]*pos[2];
 				Y phase = omegaM * path_diff / v;
 
-
-				length dist = z/*+len_z/2.*/;
+				t_length<Sys,Y> dist = z/*+len_z/2.*/;
 				dist /= ctheta_s;
 
 				Y extinction_factor = exp(-mu * dist * 2.); // reflexive: path taken twice
@@ -367,16 +352,16 @@ Y mieze_reduction_sample_cuboid_extinction(const units::quantity<units::unit<uni
 
 // Bragg scattering with extinction
 template<class Sys, class Y>
-Y mieze_reduction_sample_cuboid_bragg(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_x,
-			const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_y,
-			const units::quantity<units::unit<units::length_dimension, Sys>, Y>& len_z,
-			const units::quantity<units::unit<units::derived_dimension<units::length_base_dimension, -1>::type, Sys>, Y>& mu,
-			const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& fM,
-			const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam,
-			const units::quantity<units::unit<units::length_dimension, Sys>, Y>& d_ana,
+Y mieze_reduction_sample_cuboid_bragg(const t_length<Sys,Y>& len_x,
+			const t_length<Sys,Y>& len_y,
+			const t_length<Sys,Y>& len_z,
+			const t_length_inverse<Sys, Y>& mu,
+			const t_freq<Sys,Y>& fM,
+			const t_length<Sys,Y>& lam,
+			const t_length<Sys,Y>& d_ana,
 			unsigned int ITERS=100)
 {
-	const units::quantity<units::unit<units::plane_angle_dimension, Sys>, Y>
+	const t_angle<Sys,Y>
 		twotheta = bragg_real_twotheta(d_ana, lam, 1.);
 
 	return mieze_reduction_sample_cuboid_extinction(len_x, len_y, len_z, mu, fM, lam, twotheta, ITERS);
@@ -391,37 +376,33 @@ Y mieze_reduction_sample_cuboid_bragg(const units::quantity<units::unit<units::l
 //------------------------------------------------------------------------------
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::length_dimension, Sys>, Y>
-mieze_condition_L2(const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& f1,
-					const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& f2,
-					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& L1)
+t_length<Sys,Y> mieze_condition_L2(const t_freq<Sys,Y>& f1,
+					const t_freq<Sys,Y>& f2,
+					const t_length<Sys,Y>& L1)
 {
         return L1 / (f2/f1 - 1.);
 }
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::length_dimension, Sys>, Y>
-mieze_condition_L1(const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& f1,
-					const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& f2,
-					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& L2)
+t_length<Sys,Y> mieze_condition_L1(const t_freq<Sys,Y>& f1,
+					const t_freq<Sys,Y>& f2,
+					const t_length<Sys,Y>& L2)
 {
         return L2 * (f2/f1 - 1.);
 }
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::frequency_dimension, Sys>, Y>
-mieze_condition_f2(const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& f1,
-					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& L1,
-					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& L2)
+t_freq<Sys,Y> mieze_condition_f2(const t_freq<Sys,Y>& f1,
+					const t_length<Sys,Y>& L1,
+					const t_length<Sys,Y>& L2)
 {
         return (L1/L2 + 1.)*f1;
 }
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::frequency_dimension, Sys>, Y>
-mieze_condition_f1(const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& f2,
-				const units::quantity<units::unit<units::length_dimension, Sys>, Y>& L1,
-				const units::quantity<units::unit<units::length_dimension, Sys>, Y>& L2)
+t_freq<Sys,Y> mieze_condition_f1(const t_freq<Sys,Y>& f2,
+				const t_length<Sys,Y>& L1,
+				const t_length<Sys,Y>& L2)
 {
         return f2 / (L1/L2 + 1.);
 }
@@ -429,17 +410,14 @@ mieze_condition_f1(const units::quantity<units::unit<units::frequency_dimension,
 
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::length_dimension, Sys>, Y>
-mieze_condition_inel_Ls(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& Ls0,
-					const units::quantity<units::unit<units::energy_dimension, Sys>, Y>& dE,
-					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& lam)
+t_length<Sys,Y> mieze_condition_inel_Ls(const t_length<Sys,Y>& Ls0,
+					const t_energy<Sys,Y>& dE,
+					const t_length<Sys,Y>& lam)
 {
-	using namespace units;
+	t_velocity<Sys,Y> v0 = lam2p(lam)/co::m_n;
 
-	quantity<unit<velocity_dimension, Sys> > v0 = lam2p(lam)/co::m_n;
-
-	quantity<unit<velocity_dimension, Sys> > dv = sqrt(v0*v0 + 2.*dE/co::m_n) - v0;
-	quantity<unit<velocity_dimension, Sys> > v1 = v0 + dv;
+	t_velocity<Sys,Y> dv = sqrt(v0*v0 + 2.*dE/co::m_n) - v0;
+	t_velocity<Sys,Y> v1 = v0 + dv;
 	return Ls0 * (v1*v1*v1/(v0*v0*v0));
 }
 
@@ -447,27 +425,25 @@ mieze_condition_inel_Ls(const units::quantity<units::unit<units::length_dimensio
 //------------------------------------------------------------------------------
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::frequency_dimension, Sys>, Y>
-mieze_det_misaligned_df1(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& L1,
-					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& L2,
-					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& dL,
-					const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& f1,
-					const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& f2)
+t_freq<Sys,Y> mieze_det_misaligned_df1(const t_length<Sys,Y>& L1,
+					const t_length<Sys,Y>& L2,
+					const t_length<Sys,Y>& dL,
+					const t_freq<Sys,Y>& f1,
+					const t_freq<Sys,Y>& f2)
 {
-	units::quantity<units::unit<units::frequency_dimension, Sys>, Y> df;
+	t_freq<Sys,Y> df;
 	df = (f2-f1) - (L1*f2)/(L1+L2+dL);
 	return df;
 }
 
 template<class Sys, class Y>
-units::quantity<units::unit<units::frequency_dimension, Sys>, Y>
-mieze_det_misaligned_df2(const units::quantity<units::unit<units::length_dimension, Sys>, Y>& L1,
-					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& L2,
-					const units::quantity<units::unit<units::length_dimension, Sys>, Y>& dL,
-					const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& f1,
-					const units::quantity<units::unit<units::frequency_dimension, Sys>, Y>& f2)
+t_freq<Sys,Y> mieze_det_misaligned_df2(const t_length<Sys,Y>& L1,
+					const t_length<Sys,Y>& L2,
+					const t_length<Sys,Y>& dL,
+					const t_freq<Sys,Y>& f1,
+					const t_freq<Sys,Y>& f2)
 {
-	units::quantity<units::unit<units::frequency_dimension, Sys>, Y> df;
+	t_freq<Sys,Y> df;
 	df = (L1 / (L2+dL) + 1.) * f1 - f2;
 	return df;
 }
