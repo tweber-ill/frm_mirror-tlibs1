@@ -315,8 +315,8 @@ void get_tas_angles(const Lattice<T>& lattice_real,
 			throw Err(strErr);
 		}
 
-		*pTwoTheta = get_sample_twotheta(dKi/angstrom, dKf/angstrom, dQ/angstrom, bSense) / units::si::radians;
-		T dKiQ = get_angle_ki_Q(dKi/angstrom, dKf/angstrom, dQ/angstrom, /*bSense*/1) / units::si::radians;
+		*pTwoTheta = get_sample_twotheta(dKi/angstrom, dKf/angstrom, dQ/angstrom, bSense) / radians;
+		T dKiQ = get_angle_ki_Q(dKi/angstrom, dKf/angstrom, dQ/angstrom, /*bSense*/1) / radians;
 		vecQ.resize(2,true);
 
 		T dAngleKiOrient1 = -dKiQ - vec_angle(vecQ);
@@ -350,11 +350,11 @@ void get_hkl_from_tas_angles(const Lattice<T>& lattice_real,
 		tt_s = -tt_s;
 	}
 
-	T ki = get_mono_k(th_m*units::si::radians, dm*angstrom, bSense_m)*angstrom;
-	T kf = get_mono_k(th_a*units::si::radians, da*angstrom, bSense_a)*angstrom;
+	T ki = get_mono_k(th_m*radians, dm*angstrom, bSense_m)*angstrom;
+	T kf = get_mono_k(th_a*radians, da*angstrom, bSense_a)*angstrom;
 	T E = get_energy_transfer(ki/angstrom, kf/angstrom) / one_meV;
-	T Q = get_sample_Q(ki/angstrom, kf/angstrom, tt_s*units::si::radians)*angstrom;
-	T kiQ = get_angle_ki_Q(ki/angstrom, kf/angstrom, Q/angstrom, /*bSense_s*/1) / units::si::radians;
+	T Q = get_sample_Q(ki/angstrom, kf/angstrom, tt_s*radians)*angstrom;
+	T kiQ = get_angle_ki_Q(ki/angstrom, kf/angstrom, Q/angstrom, /*bSense_s*/1) / radians;
 
 	th_s += M_PI/2.;					// theta here
 	T Qvec1 = M_PI - th_s - kiQ;		// a3 convention

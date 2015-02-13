@@ -42,6 +42,7 @@ static const double SIGMA2HWHM = SIGMA2FWHM/2.;
 static const double HWHM2SIGMA = 1./ SIGMA2HWHM;
 static const double FWHM2SIGMA = 1./ SIGMA2FWHM;
 
+
 // general quantities
 template<class Sys, class T=double> using t_length =
 	units::quantity<units::unit<units::length_dimension, Sys>, T>;
@@ -86,21 +87,40 @@ template<class Sys, class T=double> using t_temp = t_temperature<Sys,T>;
 typedef units::quantity<units::si::plane_angle> angle;
 typedef units::quantity<units::si::wavenumber> wavenumber;
 typedef units::quantity<units::si::energy> energy;
+typedef units::quantity<units::si::momentum> momentum;
+typedef units::quantity<units::si::velocity> velocity;
 typedef units::quantity<units::si::length> length;
 typedef units::quantity<units::si::time> time;
 typedef units::quantity<units::si::magnetic_flux_density> flux;
-typedef units::quantity<units::si::frequency> freq;
+typedef units::quantity<units::si::frequency> frequency;
+typedef units::quantity<units::si::temperature> temperature;
+typedef units::quantity<units::si::mass> mass;
+
+// synonyms
+typedef frequency freq;
+typedef temperature temp;
+
 
 static const length meters = 1.*units::si::meters;
 static const flux teslas = 1.*units::si::teslas;
 static const time seconds = 1.*units::si::seconds;
 static const angle radians = 1.*units::si::radians;
+static const temp kelvins = 1.*units::si::kelvins;
+static const mass amu = co::m_u;
 
-static const auto one_meV = 1e-3 * co::e * units::si::volts;
-static const auto one_eV = co::e * units::si::volts;
+static const energy one_meV = 1e-3 * co::e * units::si::volts;
+static const energy one_eV = co::e * units::si::volts;
 static const length angstrom = 1e-10 * meters;
 static const length cm = meters/100.;
 static const time ps = 1e-12 * seconds;
+
+// synonyms
+static const temp kelvin = kelvins;
+static const length meter = meters;
+static const time second = seconds;
+static const energy meV = one_meV;
+static const energy eV = eV;
+
 
 static const double KSQ2E = (co::hbar*co::hbar / (2.*co::m_n)) / one_meV / (angstrom*angstrom);
 static const double E2KSQ = 1./KSQ2E;
