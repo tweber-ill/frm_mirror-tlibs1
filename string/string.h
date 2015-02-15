@@ -304,6 +304,28 @@ t_str var_to_str(const T& t, std::streamsize iPrec=10, int iGroup=-1)
 }
 
 
+template<typename t_char=char>
+void skip_after_line(std::basic_istream<t_char>& istr,
+		const std::basic_string<t_char>& strLineBegin,
+		bool bTrim=true)
+{
+	while(!istr.eof())
+	{
+		std::basic_string<t_char> strLine;
+		std::getline(istr, strLine);
+		if(bTrim)
+			trim(strLine);
+
+		if(strLine.size() < strLineBegin.size())
+			continue;
+
+		std::basic_string<t_char> strSub = strLine.substr(0, strLineBegin.size());
+		if(strSub == strLineBegin)
+			break;
+	}
+}
+
+
 // e.g. str = "123.4 +- 0.5"
 template<typename T=double, class t_str=std::string>
 void get_val_and_err(const t_str& str, T& val, T& err)
