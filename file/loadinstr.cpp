@@ -146,7 +146,7 @@ std::array<double,3> FilePsi::GetSampleLattice() const
 	double b = (iterB!=m_mapParameters.end() ? iterB->second : 0.);
 	double c = (iterC!=m_mapParameters.end() ? iterC->second : 0.);
 
-	return std::array<double,3> {a,b,c};
+	return std::array<double,3>{{a,b,c}};
 }
 
 std::array<double,3> FilePsi::GetSampleAngles() const
@@ -159,7 +159,7 @@ std::array<double,3> FilePsi::GetSampleAngles() const
 	double beta = (iterB!=m_mapParameters.end() ? iterB->second/180.*M_PI : M_PI/2.);
 	double gamma = (iterC!=m_mapParameters.end() ? iterC->second/180.*M_PI : M_PI/2.);
 
-	return std::array<double,3> {alpha, beta, gamma};
+	return std::array<double,3>{{alpha, beta, gamma}};
 }
 
 std::array<double,2> FilePsi::GetMonoAnaD() const
@@ -170,7 +170,7 @@ std::array<double,2> FilePsi::GetMonoAnaD() const
 	double m = (iterM!=m_mapParameters.end() ? iterM->second : 3.355);
 	double a = (iterA!=m_mapParameters.end() ? iterA->second : 3.355);
 
-	return std::array<double,2> {m, a};
+	return std::array<double,2>{{m, a}};
 }
 
 std::array<bool, 3> FilePsi::GetScatterSenses() const
@@ -183,7 +183,7 @@ std::array<bool, 3> FilePsi::GetScatterSenses() const
 	bool s = (iterM!=m_mapParameters.end() ? iterS->second>0 : 1);
 	bool a = (iterM!=m_mapParameters.end() ? iterA->second>0 : 0);
 
-	return std::array<bool,3> {m, s, a};
+	return std::array<bool,3>{{m, s, a}};
 }
 
 std::array<double, 3> FilePsi::GetScatterPlane0() const
@@ -196,7 +196,7 @@ std::array<double, 3> FilePsi::GetScatterPlane0() const
 	double y = (iterY!=m_mapParameters.end() ? iterY->second : 0.);
 	double z = (iterZ!=m_mapParameters.end() ? iterZ->second : 0.);
 
-	return std::array<double,3> {x,y,z};
+	return std::array<double,3>{{x,y,z}};
 }
 
 std::array<double, 3> FilePsi::GetScatterPlane1() const
@@ -209,7 +209,7 @@ std::array<double, 3> FilePsi::GetScatterPlane1() const
 	double y = (iterY!=m_mapParameters.end() ? iterY->second : 1.);
 	double z = (iterZ!=m_mapParameters.end() ? iterZ->second : 0.);
 
-	return std::array<double,3> {x,y,z};
+	return std::array<double,3>{{x,y,z}};
 }
 
 double FilePsi::GetKFix() const
@@ -232,7 +232,7 @@ std::array<double, 4> FilePsi::GetPosHKLE() const
 	double l = (iterL!=m_mapPosHkl.end() ? iterL->second : 0.);
 	double E = (iterE!=m_mapPosHkl.end() ? iterE->second : 0.);
 
-	return std::array<double,4> {h,k,l,E};
+	return std::array<double,4>{{h,k,l,E}};
 }
 
 std::array<double, 4> FilePsi::GetDeltaHKLE() const
@@ -255,7 +255,7 @@ std::array<double, 4> FilePsi::GetDeltaHKLE() const
         double l = (iterL!=m_mapScanSteps.end() ? iterL->second : 0.);
         double E = (iterE!=m_mapScanSteps.end() ? iterE->second : 0.);
 
-        return std::array<double,4> {h,k,l,E};
+        return std::array<double,4>{{h,k,l,E}};
 }
 
 // TODO
@@ -282,7 +282,7 @@ std::array<double, 5> FilePsi::GetScanHKLKiKf(std::size_t i) const
 	if(i>=minSize)
 	{
 		tl::log_err("Scan position ", i, " out of bounds. Size: ", minSize, ".");
-		return std::array<double,5>{0.,0.,0.,0.};
+		return std::array<double,5>{{0.,0.,0.,0.}};
 	}
 
 	double h = vecH[i];
@@ -294,7 +294,7 @@ std::array<double, 5> FilePsi::GetScanHKLKiKf(std::size_t i) const
 	double kfix = GetKFix();
 	double kother = get_other_k(E*meV, kfix/angstrom, bKiFix) * angstrom;
 
-	return std::array<double,5> {h,k,l, bKiFix?kfix:kother, bKiFix?kother:kfix};
+	return std::array<double,5>{{h,k,l, bKiFix?kfix:kother, bKiFix?kother:kfix}};
 }
 
 }
