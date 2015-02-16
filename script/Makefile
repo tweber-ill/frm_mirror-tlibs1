@@ -58,7 +58,7 @@ all: hermelin
 
 hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/node.o \
 		obj/node_eval.o obj/calls.o obj/handles.o obj/gnuplot.o obj/file.o \
-		obj/string.o obj/loadtxt.o obj/rand.o obj/fourier.o obj/script_helper.o \
+		obj/loadtxt.o obj/rand.o obj/fourier.o obj/script_helper.o \
 		obj/calls_basic.o obj/info.o \
 		obj/calls_plot.o obj/calls_math.o obj/calls_file.o obj/calls_thread.o \
 		obj/calls_fit.o obj/globals.o obj/flags.o obj/minuit.o \
@@ -106,8 +106,6 @@ obj/handles.o: lang/handles.cpp lang/handles.h
 obj/gnuplot.o: ../gfx/gnuplot.cpp ../gfx/gnuplot.h
 	${CC} ${FLAGS} -c -o $@ $<
 obj/file.o: ../file/file.cpp ../file/file.h
-	${CC} ${FLAGS} -c -o $@ $<
-obj/string.o: ../string/string.cpp ../string/string.h
 	${CC} ${FLAGS} -c -o $@ $<
 obj/spec_char.o: ../string/spec_char.cpp ../string/spec_char.h
 	${CC} ${FLAGS} -c -o $@ $<

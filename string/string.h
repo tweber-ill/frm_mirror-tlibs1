@@ -13,25 +13,59 @@
 #include <boost/tokenizer.hpp>
 #include <iostream>
 #include <sstream>
+#include <locale>
 #include <map>
+
 #include "../helper/exception.h"
+#include "../helper/misc.h"
+
 
 namespace tl {
 
-template<class t_str=std::string>
-t_str insert_before(const t_str& str,
-					const t_str& strChar,
-					const t_str& strInsert)
+// -----------------------------------------------------------------------------
+
+template<class t_str=std::string> const t_str& get_dir_seps();
+template<class t_str=std::string> const t_str& get_trim_chars();
+	
+template<> inline const std::string& get_dir_seps()
 {
-	std::size_t pos = str.find(strChar);
-	if(pos==t_str::npos)
-			return str;
-
-	t_str strRet = str;
-	strRet.insert(pos, strInsert);
-
-	return strRet;
+	static const std::string strSeps("\\/");
+	return strSeps;
 }
+template<> inline const std::wstring& get_dir_seps()
+{
+	static const std::wstring strSeps(L"\\/");
+	return strSeps;
+}
+
+template<> inline const std::string& get_trim_chars()
+{
+	static const std::string strC(" \t");
+	return strC;
+}
+template<> inline const std::wstring& get_trim_chars()
+{
+	static const std::wstring strC(L" \t");
+	return strC;
+}
+
+
+// -----------------------------------------------------------------------------
+
+
+static inline std::wstring str_to_wstr(const std::string& str)
+{
+	return std::wstring(str.begin(), str.end());
+}
+
+static inline std::string wstr_to_str(const std::wstring& str)
+{
+	return std::string(str.begin(), str.end());
+}
+
+
+// -----------------------------------------------------------------------------
+
 
 template<class t_str=std::string>
 t_str get_fileext(const t_str& str)
@@ -55,11 +89,6 @@ t_str get_fileext2(const t_str& str)
 	return get_fileext(strFile);
 }
 
-template<class t_str=std::string> const t_str& get_dir_seps();
-template<> const std::string& get_dir_seps();
-template<> const std::wstring& get_dir_seps();
-
-
 template<class t_str=std::string>
 t_str get_dir(const t_str& str)
 {
@@ -78,6 +107,25 @@ t_str get_file(const t_str& str)
 	if(iPos == t_str::npos)
 		return t_str();
 	return str.substr(iPos+1);
+}
+
+
+// -----------------------------------------------------------------------------
+
+
+template<class t_str=std::string>
+t_str insert_before(const t_str& str,
+					const t_str& strChar,
+					const t_str& strInsert)
+{
+	std::size_t pos = str.find(strChar);
+	if(pos==t_str::npos)
+			return str;
+
+	t_str strRet = str;
+	strRet.insert(pos, strInsert);
+
+	return strRet;
 }
 
 
@@ -120,10 +168,6 @@ bool str_contains(const t_str& str, const t_str& strSub, bool bCase=0)
 
 	return strLower.find(strSubLower) != t_str::npos;
 }
-
-template<class t_str=std::string> const t_str& get_trim_chars();
-template<> const std::string& get_trim_chars();
-template<> const std::wstring& get_trim_chars();
 
 
 template<class t_str=std::string>
@@ -211,8 +255,6 @@ split_first(const t_str& str, const t_str& strSep, bool bTrim=0)
 	return std::pair<t_str, t_str>(str1, str2);
 }
 
-//extern std::vector<std::string>
-//		split(const std::string& str, const std::string& strSep);
 
 template<typename T, class t_str=std::string, bool bTIsStr=0>
 struct _str_to_var_impl
@@ -324,30 +366,6 @@ void skip_after_line(std::basic_istream<t_char>& istr,
 			break;
 	}
 }
-
-
-// e.g. str = "123.4 +- 0.5"
-template<typename T=double, class t_str=std::string>
-void get_val_and_err(const t_str& str, T& val, T& err)
-{
-	// "+-", inelegant...
-	t_str strPlusMinus;
-	strPlusMinus.resize(2);
-	strPlusMinus[0] = '+';
-	strPlusMinus[1] = '-';
-
-	std::vector<T> vec;
-	get_tokens<T, t_str>(str, strPlusMinus, vec);
-
-	if(vec.size() >= 1)
-		val = vec[0];
-	if(vec.size() >= 2)
-		err = vec[1];
-}
-
-
-extern std::wstring str_to_wstr(const std::string& str);
-extern std::string wstr_to_str(const std::wstring& str);
 
 }
 #endif

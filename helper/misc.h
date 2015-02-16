@@ -5,8 +5,8 @@
  * @license GPLv2 or GPLv3
  */
 
-#ifndef __MIEZE_MISC_HELPER__
-#define __MIEZE_MISC_HELPER__
+#ifndef __TLIBS_MISC_HELPER__
+#define __TLIBS_MISC_HELPER__
 
 #include <vector>
 #include <list>
@@ -16,41 +16,29 @@
 #include <tuple>
 #include "../math/math.h"
 
-namespace tl
+namespace tl {
+	
+template<typename T=double>
+T max3(T t1, T t2, T t3)
 {
-// deletes an object when going out of scope
-// deprecated, use std::unique_ptr instead!
-template<class T> class autodeleter
+	T tmax = t1;
+	tmax = std::max(tmax, t2);
+	tmax = std::max(tmax, t3);
+	return tmax;
+}
+
+template<typename T>
+T nextpow2(T val)
 {
-protected:
-	T *m_t;
-	bool m_bIsArray;
-
-public:
-	autodeleter(T* t, bool bIsArray=false) : m_t(t), m_bIsArray(bIsArray)
-	{}
-
-	~autodeleter()
-	{
-		if(m_t)
-		{
-			if(m_bIsArray)
-				delete[] m_t;
-			else
-				delete m_t;
-			m_t = 0;
-		}
-	}
-};
-
-template<typename T> T safe_log10(T t)
+	return std::pow(2., std::ceil(std::log2(val)));
+}
+	
+template<typename T> T safe_log10(T t, T tInvalid=T(-10))
 {
-	const T t_invalid = T(-10);
-
 	if(t > T(0))
-		return log10(t);
+		return std::log10(t);
 
-	return t_invalid;
+	return tInvalid;
 }
 
 // pixel -> val
@@ -108,7 +96,7 @@ void apply_fkt(const T* pIn, T* pOut, T(*fkt)(T), unsigned int iSize)
 		pOut[i] = (*fkt)(pIn[i]);
 }
 
-inline unsigned int lerprgb(unsigned char r1, unsigned char g1, unsigned char b1,
+static unsigned int lerprgb(unsigned char r1, unsigned char g1, unsigned char b1,
 							unsigned char r2, unsigned char g2, unsigned char b2,
 							double dval)
 {
@@ -119,7 +107,7 @@ inline unsigned int lerprgb(unsigned char r1, unsigned char g1, unsigned char b1
 	return (0xff<<24) | (r<<16) | (g<<8) | (b);
 }
 
-inline unsigned int lerprgb(unsigned int col1, unsigned int col2, double dval)
+static unsigned int lerprgb(unsigned int col1, unsigned int col2, double dval)
 {
 	unsigned char r1 = (unsigned char)((col1&0x00ff0000) >> 16);
 	unsigned char r2 = (unsigned char)((col2&0x00ff0000) >> 16);
@@ -137,31 +125,7 @@ inline unsigned int lerprgb(unsigned int col1, unsigned int col2, double dval)
 	return (0xff<<24) | (r<<16) | (g<<8) | (b);
 }
 
-/*template<typename T> bool has_nan_or_inf(T d)
-{
-        // NaN?
-        if(d!=d)
-                return true;
-
-        // inf?
-        if(d==std::numeric_limits<T>::infinity())
-                return true;
-
-        return false;
-}*/
-
-template<typename T> T* vec_to_array(const std::vector<T>& vec)
-{
-	T* t_arr = new T[vec.size()];
-
-	unsigned int i=0;
-	for(const T& t : vec)
-		t_arr[i++] = t;
-
-	return t_arr;
-}
-
-
+// -----------------------------------------------------------------------------
 
 template<class T>
 struct sort_obj
@@ -235,6 +199,7 @@ void sorttuples(std::vector<std::tuple<Ts...> >& vec)
 }
 
 
+// -----------------------------------------------------------------------------
 
 template<typename T>
 std::list<T> vector_to_list(const std::vector<T>& vec)
@@ -245,13 +210,16 @@ std::list<T> vector_to_list(const std::vector<T>& vec)
 	return lst;
 }
 
-template<typename T=double>
-T max3(T t1, T t2, T t3)
+template<typename T> 
+T* vec_to_array(const std::vector<T>& vec)
 {
-	T tmax = t1;
-	tmax = std::max(tmax, t2);
-	tmax = std::max(tmax, t3);
-	return tmax;
+	T* t_arr = new T[vec.size()];
+
+	unsigned int i=0;
+	for(const T& t : vec)
+		t_arr[i++] = t;
+
+	return t_arr;
 }
 
 template<typename T1, typename T2>
@@ -259,13 +227,6 @@ void merge_map(std::map<T1, T2>& mapThis, const std::map<T1, T2>& mapOther)
 {
 	for(const std::pair<T1, T2>& thepair : mapOther)
 		mapThis.insert(thepair);
-}
-
-
-template<typename T>
-T nextpow2(T val)
-{
-	return std::pow(2., std::ceil(std::log2(val)));
 }
 
 }
