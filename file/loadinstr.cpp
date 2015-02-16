@@ -8,6 +8,7 @@
 #include "loadinstr.h"
 #include "../helper/log.h"
 #include "../file/file.h"
+#include "../math/neutrons.hpp"
 #include <fstream>
 
 namespace tl{
@@ -234,7 +235,7 @@ std::array<double, 4> FilePsi::GetPosHKLE() const
 	return std::array<double,4> {h,k,l,E};
 }
 
-std::array<double, 4> FilePsi::GetStepsHKLE() const
+std::array<double, 4> FilePsi::GetDeltaHKLE() const
 {
         t_mapIParams::const_iterator iterH = m_mapScanSteps.find("DQH");
 	if(iterH==m_mapScanSteps.end()) iterH = m_mapScanSteps.find("QH");
@@ -255,6 +256,45 @@ std::array<double, 4> FilePsi::GetStepsHKLE() const
         double E = (iterE!=m_mapScanSteps.end() ? iterE->second : 0.);
 
         return std::array<double,4> {h,k,l,E};
+}
+
+// TODO
+bool FilePsi::IsKiFixed() const
+{
+	return 0;
+}
+
+std::size_t FilePsi::GetScanCount() const
+{
+	if(m_vecData.size() < 1)
+		return 0;
+	return m_vecData[0].size();
+}
+
+std::array<double, 5> FilePsi::GetScanHKLKiKf(std::size_t i) const
+{
+	const std::vector<double>& vecH = GetCol("QH");
+	const std::vector<double>& vecK = GetCol("QK");
+	const std::vector<double>& vecL = GetCol("QL");
+	const std::vector<double>& vecE = GetCol("EN");
+
+	std::size_t minSize = tl::min4(vecH.size(), vecK.size(), vecL.size(), vecE.size());
+	if(i>=minSize)
+	{
+		tl::log_err("Scan position ", i, " out of bounds. Size: ", minSize, ".");
+		return std::array<double,5>{0.,0.,0.,0.};
+	}
+
+	double h = vecH[i];
+	double k = vecK[i];
+	double l = vecL[i];
+	double E = vecE[i];
+
+	bool bKiFix = IsKiFixed();
+	double kfix = GetKFix();
+	double kother = get_other_k(E*meV, kfix/angstrom, bKiFix) * angstrom;
+
+	return std::array<double,5> {h,k,l, bKiFix?kfix:kother, bKiFix?kother:kfix};
 }
 
 }
@@ -288,6 +328,13 @@ int main()
 	for(std::size_t i=0; i<psi.GetCol("CNTS").size(); ++i)
 		std::cout << psi.GetCol("CNTS")[i] << ", ";
 	std::cout << std::endl;
+
+	for(std::size_t i=0; i<psi.GetScanCount(); ++i)
+	{
+		std::array<double,5> dat = psi.GetScanHKLKiKf(i);
+		std::cout << "(" << dat[0] << " " << dat[1] << " " << dat[2] << "), ";
+		std::cout << "ki = " << dat[3] << ", kf = " << dat[4] << std::endl;
+	}
 
 	return 0;
 }

@@ -64,9 +64,13 @@ class FilePsi
 		std::array<double, 3> GetScatterPlane1() const;
 
 		double GetKFix() const;
+		bool IsKiFixed() const;
 
 		std::array<double, 4> GetPosHKLE() const;	// zero pos.
-		std::array<double, 4> GetStepsHKLE() const;	// scan steps
+		std::array<double, 4> GetDeltaHKLE() const;	// scan steps
+
+		std::size_t GetScanCount() const;
+		std::array<double, 5> GetScanHKLKiKf(std::size_t i) const;
 };
 
 }

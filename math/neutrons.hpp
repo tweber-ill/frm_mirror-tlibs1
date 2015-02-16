@@ -388,12 +388,13 @@ template<class Sys, class Y>
 t_angle<Sys,Y> get_angle_ki_Q(const t_wavenumber<Sys,Y>& ki,
 		const t_wavenumber<Sys,Y>& kf,
 		const t_wavenumber<Sys,Y>& Q,
-		bool bPosSense=1)
+		bool bPosSense=1,
+		bool bAngleOutsideTriag=0)
 {
 	t_angle<Sys,Y> angle;
 
-	if(Q*(1e-10 * units::si::meter) == 0.)
-		angle = M_PI/2. * units::si::radians;
+	if(Q*(1e-10 * meters) == 0.)
+		angle = M_PI/2. * radians;
 	else
 	{
 		auto c = (ki*ki - kf*kf + Q*Q)/(2.*ki*Q);
@@ -403,8 +404,8 @@ t_angle<Sys,Y> get_angle_ki_Q(const t_wavenumber<Sys,Y>& ki,
 		angle = units::acos(c);
 	}
 
-	if(!bPosSense)
-		angle = -angle;
+	if(bAngleOutsideTriag) angle = M_PI*radians - angle;
+	if(!bPosSense) angle = -angle;
 
 	return angle;
 }
@@ -417,12 +418,13 @@ template<class Sys, class Y>
 t_angle<Sys,Y> get_angle_kf_Q(const t_wavenumber<Sys,Y>& ki,
 		const t_wavenumber<Sys,Y>& kf,
 		const t_wavenumber<Sys,Y>& Q,
-		bool bPosSense=1)
+		bool bPosSense=1,
+		bool bAngleOutsideTriag=1)
 {
 	t_angle<Sys,Y> angle;
 
-	if(Q*(1e-10 * units::si::meter) == 0.)
-		angle = M_PI/2. * units::si::radians;
+	if(Q*(1e-10 * meters) == 0.)
+		angle = M_PI/2. * radians;
 	else
 	{
 		auto c = (-kf*kf + ki*ki - Q*Q)/(2.*kf*Q);
@@ -432,8 +434,8 @@ t_angle<Sys,Y> get_angle_kf_Q(const t_wavenumber<Sys,Y>& ki,
 		angle = units::acos(c);
 	}
 
-	if(!bPosSense)
-		angle = -angle;
+	if(!bAngleOutsideTriag) angle = M_PI*radians - angle;
+	if(!bPosSense) angle = -angle;
 
 	return angle;
 }
@@ -478,9 +480,8 @@ t_angle<Sys,Y> get_sample_twotheta(const t_wavenumber<Sys,Y>& ki,
 
 	t_angle<Sys,Y> tt;
 	tt = units::acos(ttCos);
-	if(!bPosSense)
-		tt = -tt;
 
+	if(!bPosSense) tt = -tt;
 	return tt;
 }
 
@@ -505,6 +506,26 @@ t_energy<Sys,Y> get_energy_transfer(const t_wavenumber<Sys,Y>& ki,
 {
 	return co::hbar*co::hbar*ki*ki/(2.*co::m_n)
 			- co::hbar*co::hbar*kf*kf/(2.*co::m_n);
+}
+
+
+// (hbar*ki)^2 / (2*mn)  -  (hbar*kf)^2 / (2mn)  =  E
+// 1) ki^2  =  +E * 2*mn / hbar^2  +  kf^2
+// 2) kf^2  =  -E * 2*mn / hbar^2  +  ki^2
+
+template<class Sys, class Y>
+t_wavenumber<Sys,Y> get_other_k(const t_energy<Sys,Y>& E,
+				const t_wavenumber<Sys,Y>& kfix,
+				bool bFixedKi)
+{
+	auto kE_sq = E*2.*co::m_n/co::hbar/co::hbar;
+	if(bFixedKi) kE_sq = -kE_sq;
+
+	auto k_sq = kE_sq + kfix*kfix;
+	if(k_sq*angstrom*angstrom < 0.)
+		throw Err("Scattering triangle not closed.");
+
+	return units::sqrt(k_sq);
 }
 
 // --------------------------------------------------------------------------------

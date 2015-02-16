@@ -17,7 +17,7 @@
 #include "../math/math.h"
 
 namespace tl {
-	
+
 template<typename T=double>
 T max3(T t1, T t2, T t3)
 {
@@ -27,12 +27,31 @@ T max3(T t1, T t2, T t3)
 	return tmax;
 }
 
+template<typename T=double>
+T min3(T t1, T t2, T t3)
+{
+	T tmin = t1;
+	tmin = std::min(tmin, t2);
+	tmin = std::min(tmin, t3);
+	return tmin;
+}
+
+template<typename T=double>
+T min4(T t1, T t2, T t3, T t4)
+{
+	T tmin = t1;
+	tmin = std::min(tmin, t2);
+	tmin = std::min(tmin, t3);
+	tmin = std::min(tmin, t4);
+	return tmin;
+}
+
 template<typename T>
 T nextpow2(T val)
 {
 	return std::pow(2., std::ceil(std::log2(val)));
 }
-	
+
 template<typename T> T safe_log10(T t, T tInvalid=T(-10))
 {
 	if(t > T(0))
