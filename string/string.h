@@ -349,7 +349,7 @@ t_str var_to_str(const T& t, std::streamsize iPrec=10, int iGroup=-1)
 template<typename t_char=char>
 void skip_after_line(std::basic_istream<t_char>& istr,
 		const std::basic_string<t_char>& strLineBegin,
-		bool bTrim=true)
+		bool bTrim=true, bool bCase=0)
 {
 	while(!istr.eof())
 	{
@@ -362,10 +362,29 @@ void skip_after_line(std::basic_istream<t_char>& istr,
 			continue;
 
 		std::basic_string<t_char> strSub = strLine.substr(0, strLineBegin.size());
-		if(strSub == strLineBegin)
+		
+		if(str_is_equal<std::basic_string<t_char>>(strSub, strLineBegin, bCase))
 			break;
 	}
 }
+
+template<typename t_char=char>
+void skip_after_char(std::basic_istream<t_char>& istr, t_char ch, bool bCase=0)
+{
+	if(!bCase) ch = std::tolower(ch);
+	
+	while(!istr.eof())
+	{
+		t_char c;
+		istr.get(c);
+
+		if(!bCase) c = std::tolower(c);
+
+		if(c == ch)
+			break;
+	}
+}
+
 
 }
 #endif

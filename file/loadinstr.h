@@ -16,24 +16,57 @@
 
 namespace tl{
 
-// psi & ill files
-class FilePsi
+// interface for instrument-specific data files
+class FileInstr
 {
 	public:
 		typedef std::unordered_map<std::string, std::string> t_mapParams;
-		t_mapParams m_mapParams;
+		typedef std::vector<std::string> t_vecColNames;
+		typedef std::vector<double> t_vecVals;
+	
+	protected:
+		std::array<double, 5> GetScanHKLKiKf(const char* pcH, const char* pcK, 
+											const char* pcL, const char* pcE,
+											std::size_t i) const;
+	
+	public:
+		FileInstr() = default;
+		virtual ~FileInstr() = default;
 
+		virtual bool Load(const char* pcFile) = 0;
+
+		virtual std::array<double, 3> GetSampleLattice() const = 0;
+		virtual std::array<double, 3> GetSampleAngles() const = 0;
+		virtual std::array<double, 2> GetMonoAnaD() const = 0;
+
+		virtual std::array<bool, 3> GetScatterSenses() const = 0;
+		virtual std::array<double, 3> GetScatterPlane0() const = 0;
+		virtual std::array<double, 3> GetScatterPlane1() const = 0;
+
+		virtual double GetKFix() const = 0;
+		virtual bool IsKiFixed() const = 0;
+		
+		virtual const std::vector<double>& GetCol(const std::string& strName) const = 0;
+
+		virtual std::size_t GetScanCount() const = 0;
+		virtual std::array<double, 5> GetScanHKLKiKf(std::size_t i) const = 0;
+		
+	public:
+		static FileInstr* LoadInstr(const char* pcFile);
+};
+
+
+// psi & ill files
+class FilePsi : public FileInstr
+{
+	public:
 		// internal parameters in m_mapParams
 		typedef std::unordered_map<std::string, double> t_mapIParams;
+		
+	protected:
+		t_mapParams m_mapParams;
 		t_mapIParams m_mapParameters, m_mapZeros, m_mapVariables, m_mapPosHkl, m_mapScanSteps;
-
-
-		typedef std::vector<std::string> t_vecColNames;
 		t_vecColNames m_vecColNames;
-
-		typedef std::vector<double> t_vecVals;
-		t_vecVals m_vecVals;
-
 		std::vector<t_vecVals> m_vecData;
 
 	protected:
@@ -44,33 +77,71 @@ class FilePsi
 		FilePsi() = default;
 		virtual ~FilePsi() = default;
 
-		bool Load(const char* pcFile);
+		virtual bool Load(const char* pcFile) override;
 
 		void PrintParams(std::ostream& ostr) const;
 		const t_mapParams& GetParams() const { return m_mapParams; }
 
 		const std::string& GetColName(std::size_t iCol) const { return m_vecColNames[iCol]; }
 		std::size_t GetColCount() const { return m_vecColNames.size(); }
+
 		const std::vector<double>& GetCol(std::size_t iCol) const { return m_vecData[iCol]; }
-		const std::vector<double>& GetCol(const std::string& strName) const;
+		virtual const std::vector<double>& GetCol(const std::string& strName) const override;
 
 	public:
-		std::array<double, 3> GetSampleLattice() const;
-		std::array<double, 3> GetSampleAngles() const;
-		std::array<double, 2> GetMonoAnaD() const;
+		virtual std::array<double, 3> GetSampleLattice() const override;
+		virtual std::array<double, 3> GetSampleAngles() const override;
+		virtual std::array<double, 2> GetMonoAnaD() const override;
 
-		std::array<bool, 3> GetScatterSenses() const;
-		std::array<double, 3> GetScatterPlane0() const;
-		std::array<double, 3> GetScatterPlane1() const;
+		virtual std::array<bool, 3> GetScatterSenses() const override;
+		virtual std::array<double, 3> GetScatterPlane0() const override;
+		virtual std::array<double, 3> GetScatterPlane1() const override;
 
-		double GetKFix() const;
-		bool IsKiFixed() const;
+		virtual double GetKFix() const override;
+		virtual bool IsKiFixed() const override;
 
 		std::array<double, 4> GetPosHKLE() const;	// zero pos.
 		std::array<double, 4> GetDeltaHKLE() const;	// scan steps
 
-		std::size_t GetScanCount() const;
-		std::array<double, 5> GetScanHKLKiKf(std::size_t i) const;
+		virtual std::size_t GetScanCount() const override;
+		virtual std::array<double, 5> GetScanHKLKiKf(std::size_t i) const override;
+};
+
+
+// frm/nicos files
+class FileFrm : public FileInstr
+{	
+	protected:
+		t_mapParams m_mapParams;
+		t_vecColNames m_vecQuantities, m_vecUnits;
+		std::vector<t_vecVals> m_vecData;
+	
+	public:
+		FileFrm() = default;
+		virtual ~FileFrm() = default;
+		
+	protected:
+		void ReadHeader(std::istream& istr);
+		void ReadData(std::istream& istr);
+
+	public:
+		virtual bool Load(const char* pcFile) override;
+
+		virtual std::array<double, 3> GetSampleLattice() const override;
+		virtual std::array<double, 3> GetSampleAngles() const override;
+		virtual std::array<double, 2> GetMonoAnaD() const override;
+
+		virtual std::array<bool, 3> GetScatterSenses() const override;
+		virtual std::array<double, 3> GetScatterPlane0() const override;
+		virtual std::array<double, 3> GetScatterPlane1() const override;
+
+		virtual double GetKFix() const override;
+		virtual bool IsKiFixed() const override;
+
+		virtual std::size_t GetScanCount() const override;
+		virtual std::array<double, 5> GetScanHKLKiKf(std::size_t i) const override;
+		
+		virtual const std::vector<double>& GetCol(const std::string& strName) const override;
 };
 
 }
