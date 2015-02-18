@@ -128,6 +128,19 @@ t_str insert_before(const t_str& str,
 	return strRet;
 }
 
+template<class t_str=std::string>
+t_str str_to_lower(const t_str& str)
+{
+	typedef typename std::string::value_type t_char;
+
+	t_str strOut;
+	strOut.reserve(str.length());
+
+	for(t_char ch : str)
+		strOut.push_back(std::tolower(ch));
+		
+	return strOut;
+}
 
 template<class t_str=std::string>
 bool str_is_equal(const t_str& str0, const t_str& str1, bool bCase=0)

@@ -19,8 +19,25 @@ namespace tl{
 // automatically choose correct instrument	
 FileInstr* FileInstr::LoadInstr(const char* pcFile)
 {
-	FileInstr* pDat = new FilePsi();
-	if(!pDat->Load(pcFile))
+	FileInstr* pDat = nullptr;
+	
+	std::ifstream ifstr(pcFile);
+	if(!ifstr.is_open())
+		return nullptr;
+	
+	std::string strLine;
+	std::getline(ifstr, strLine);
+	ifstr.close();
+
+	strLine = tl::str_to_lower(strLine);
+	const std::string strNicos("nicos data file");
+	
+	if(strLine.find(strNicos) != std::string::npos)	// frm file
+		pDat = new FileFrm();
+	else											// psi or ill file
+		pDat = new FilePsi();
+
+	if(pDat && !pDat->Load(pcFile))
 	{
 		delete pDat;
 		return nullptr;
@@ -326,6 +343,27 @@ std::array<double, 5> FilePsi::GetScanHKLKiKf(std::size_t i) const
 }
 
 
+std::string FilePsi::GetTitle() const
+{
+	std::string strTitle;
+	t_mapParams::const_iterator iter = m_mapParams.find("TITLE");
+	if(iter != m_mapParams.end())
+		strTitle = iter->second;
+	return strTitle;
+}
+
+std::string FilePsi::GetSampleName() const
+{
+	return "";
+}
+
+std::string FilePsi::GetSpacegroup() const
+{
+	return "";
+}
+
+
+
 
 // -----------------------------------------------------------------------------
 
@@ -532,6 +570,34 @@ std::size_t FileFrm::GetScanCount() const
 std::array<double, 5> FileFrm::GetScanHKLKiKf(std::size_t i) const
 {
 	return FileInstr::GetScanHKLKiKf("h", "k", "l", "E", i);
+}
+
+
+std::string FileFrm::GetTitle() const
+{
+	std::string strTitle;
+	t_mapParams::const_iterator iter = m_mapParams.find("Exp_title");
+	if(iter != m_mapParams.end())
+		strTitle = iter->second;
+	return strTitle;
+}
+
+std::string FileFrm::GetSampleName() const
+{
+	std::string strName;
+	t_mapParams::const_iterator iter = m_mapParams.find("Sample_samplename");
+	if(iter != m_mapParams.end())
+		strName = iter->second;
+	return strName;
+}
+
+std::string FileFrm::GetSpacegroup() const
+{
+	std::string strSG;
+	t_mapParams::const_iterator iter = m_mapParams.find("Sample_spacegroup");
+	if(iter != m_mapParams.end())
+		strSG = iter->second;
+	return strSG;
 }
 
 

@@ -51,6 +51,10 @@ class FileInstr
 		virtual std::size_t GetScanCount() const = 0;
 		virtual std::array<double, 5> GetScanHKLKiKf(std::size_t i) const = 0;
 		
+		virtual std::string GetTitle() const = 0;
+		virtual std::string GetSampleName() const = 0;
+		virtual std::string GetSpacegroup() const = 0;
+		
 	public:
 		static FileInstr* LoadInstr(const char* pcFile);
 };
@@ -105,6 +109,10 @@ class FilePsi : public FileInstr
 
 		virtual std::size_t GetScanCount() const override;
 		virtual std::array<double, 5> GetScanHKLKiKf(std::size_t i) const override;
+		
+		virtual std::string GetTitle() const override;
+		virtual std::string GetSampleName() const override;
+		virtual std::string GetSpacegroup() const override;
 };
 
 
@@ -142,6 +150,10 @@ class FileFrm : public FileInstr
 		virtual std::array<double, 5> GetScanHKLKiKf(std::size_t i) const override;
 		
 		virtual const std::vector<double>& GetCol(const std::string& strName) const override;
+		
+		virtual std::string GetTitle() const override;
+		virtual std::string GetSampleName() const override;
+		virtual std::string GetSpacegroup() const override;		
 };
 
 }
