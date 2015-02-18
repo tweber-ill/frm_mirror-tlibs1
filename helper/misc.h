@@ -115,9 +115,10 @@ void apply_fkt(const T* pIn, T* pOut, T(*fkt)(T), unsigned int iSize)
 		pOut[i] = (*fkt)(pIn[i]);
 }
 
-static unsigned int lerprgb(unsigned char r1, unsigned char g1, unsigned char b1,
-							unsigned char r2, unsigned char g2, unsigned char b2,
-							double dval)
+template<typename T=double>
+unsigned int lerprgb(unsigned char r1, unsigned char g1, unsigned char b1,
+				unsigned char r2, unsigned char g2, unsigned char b2,
+				T dval)
 {
 	unsigned char r = lerp(r1, r2, dval);
 	unsigned char g = lerp(g1, g2, dval);
@@ -126,7 +127,8 @@ static unsigned int lerprgb(unsigned char r1, unsigned char g1, unsigned char b1
 	return (0xff<<24) | (r<<16) | (g<<8) | (b);
 }
 
-static unsigned int lerprgb(unsigned int col1, unsigned int col2, double dval)
+template<typename T=double>
+unsigned int lerprgb(unsigned int col1, unsigned int col2, T dval)
 {
 	unsigned char r1 = (unsigned char)((col1&0x00ff0000) >> 16);
 	unsigned char r2 = (unsigned char)((col2&0x00ff0000) >> 16);
