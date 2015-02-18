@@ -518,8 +518,25 @@ std::array<double, 2> FileFrm::GetMonoAnaD() const
 
 std::array<bool, 3> FileFrm::GetScatterSenses() const
 {
-	// TODO
-	return std::array<bool,3>{{0,1,0}};
+	std::vector<int> vec;
+	
+	t_mapParams::const_iterator iter;
+	for(iter=m_mapParams.begin(); iter!=m_mapParams.end(); ++iter)
+	{
+		if(iter->first.find("scatteringsense") != std::string::npos)
+		{
+			vec = tl::get_py_array<std::string, std::vector<int>>(iter->second);
+			break;
+		}
+	}
+	
+	if(vec.size() != 3)
+	{
+		vec.resize(3);
+		vec[0] = 0; vec[1] = 1; vec[2] = 0;
+	}
+	
+	return std::array<bool,3>{{vec[0]>0, vec[1]>0, vec[2]>0}};
 }
 
 std::array<double, 3> FileFrm::GetScatterPlane0() const
@@ -556,8 +573,22 @@ double FileFrm::GetKFix() const
 
 bool FileFrm::IsKiFixed() const
 {
-	// TODO
-	return 1;
+	std::string strScanMode = "ckf";
+	
+	t_mapParams::const_iterator iter;
+	for(iter=m_mapParams.begin(); iter!=m_mapParams.end(); ++iter)
+	{
+		if(iter->first.find("scanmode") != std::string::npos)
+		{
+			strScanMode = tl::str_to_lower(iter->second);
+			tl::trim(strScanMode);
+			break;
+		}
+	}
+	
+	if(strScanMode == "cki")
+		return 1;
+	return 0;
 }
 
 std::size_t FileFrm::GetScanCount() const
