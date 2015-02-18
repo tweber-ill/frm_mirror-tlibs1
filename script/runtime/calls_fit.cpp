@@ -671,9 +671,9 @@ static Symbol* _fkt_param(FktParam whichfkt, const std::vector<Symbol*>& vecSyms
 
 	tl::FunctionModel_param* pfkt = 0;
 	if(whichfkt == FKT_SPLINE)
-		pfkt = new tl::BSpline(iSize, vecX.data(), vecY.data(), ideg);
+		pfkt = new tl::BSpline<double>(iSize, vecX.data(), vecY.data(), ideg);
 	else if(whichfkt == FKT_BEZIER)
-		pfkt = new tl::Bezier(iSize, vecX.data(), vecY.data());
+		pfkt = new tl::Bezier<double>(iSize, vecX.data(), vecY.data());
 	else
 	{
 		std::ostringstream ostrErr;

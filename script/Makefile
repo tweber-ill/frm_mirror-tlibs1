@@ -62,7 +62,7 @@ hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/nod
 		obj/calls_basic.o obj/info.o \
 		obj/calls_plot.o obj/calls_math.o obj/calls_file.o obj/calls_thread.o \
 		obj/calls_fit.o obj/globals.o obj/flags.o obj/minuit.o \
-		obj/interpolation.o obj/spec_char.o obj/linalg2.o \
+		obj/spec_char.o obj/linalg2.o \
 		obj/log.o obj/node_opt.o ${FFTW_OBJ}
 	${CC} ${FLAGS} -o $@ $+ ${LIBS}
 	${STRIP} $@
@@ -126,8 +126,6 @@ obj/flags.o: ../helper/flags.cpp ../helper/flags.h
 obj/log.o: ../helper/log.cpp ../helper/log.h
 	${CC} ${FLAGS} -c -o $@ $<
 obj/minuit.o: ../math/minuit.cpp ../math/minuit.h
-	${CC} ${FLAGS} -c -o $@ $<
-obj/interpolation.o: ../math/interpolation.cpp ../math/interpolation.h
 	${CC} ${FLAGS} -c -o $@ $<
 obj/linalg2.o: ../math/linalg2.cpp ../math/linalg2.h
 	${CC} ${FLAGS} -c -o $@ $<

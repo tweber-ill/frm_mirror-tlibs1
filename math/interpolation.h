@@ -13,6 +13,7 @@
 #include <boost/math/special_functions/binomial.hpp>
 #include <vector>
 #include <algorithm>
+#include <limits>
 
 #include "math.h"
 #include "geo.h"
@@ -21,6 +22,9 @@
 #include "funcmod.h"
 
 namespace tl {
+
+namespace ublas = boost::numeric::ublas;
+
 
 // see: http://mathworld.wolfram.com/BernsteinPolynomial.html
 template<typename T> T bernstein(int i, int n, T t)
@@ -31,12 +35,12 @@ template<typename T> T bernstein(int i, int n, T t)
 
 // see: http://mathworld.wolfram.com/BezierCurve.html
 template<typename T>
-boost::numeric::ublas::vector<T> bezier(const boost::numeric::ublas::vector<T>* P, unsigned int N, T t)
+ublas::vector<T> bezier(const ublas::vector<T>* P, unsigned int N, T t)
 {
-	if(N==0) return boost::numeric::ublas::vector<T>(0);
+	if(N==0) return ublas::vector<T>(0);
 	const int n = N-1;
 
-	boost::numeric::ublas::vector<T> vec(P[0].size());
+	ublas::vector<T> vec(P[0].size());
 	for(unsigned int i=0; i<vec.size(); ++i) vec[i] = T(0);
 
 	for(int i=0; i<=n; ++i)
@@ -47,7 +51,8 @@ boost::numeric::ublas::vector<T> bezier(const boost::numeric::ublas::vector<T>* 
 
 
 // see: http://mathworld.wolfram.com/B-Spline.html
-template<typename T> T bspline_base(int i, int j, T t, const std::vector<T>& knots)
+template<typename T> 
+T bspline_base(int i, int j, T t, const std::vector<T>& knots)
 {
 	if(j==0)
 	{
@@ -71,14 +76,14 @@ template<typename T> T bspline_base(int i, int j, T t, const std::vector<T>& kno
 
 // see: http://mathworld.wolfram.com/B-Spline.html
 template<typename T>
-boost::numeric::ublas::vector<T> bspline(const boost::numeric::ublas::vector<T>* P, unsigned int N, T t, const std::vector<T>& knots)
+ublas::vector<T> bspline(const ublas::vector<T>* P, unsigned int N, T t, const std::vector<T>& knots)
 {
-	if(N==0) return boost::numeric::ublas::vector<T>(0);
+	if(N==0) return ublas::vector<T>(0);
 	const int n = N-1;
 	const int m = knots.size()-1;
 	const int degree = m-n-1;
 
-	boost::numeric::ublas::vector<T> vec(P[0].size());
+	ublas::vector<T> vec(P[0].size());
 	for(unsigned int i=0; i<vec.size(); ++i) vec[i] = T(0);
 
 	for(int i=0; i<=n; ++i)
@@ -88,44 +93,44 @@ boost::numeric::ublas::vector<T> bspline(const boost::numeric::ublas::vector<T>*
 }
 
 
+template<typename T=double>
 class Bezier : public FunctionModel_param
 {
 	protected:
-		boost::numeric::ublas::vector<double> *m_pvecs;
+		ublas::vector<T> *m_pvecs;
 		unsigned int m_iN;
 
 	public:
-		Bezier(unsigned int N, const double *px, const double *py);
+		Bezier(unsigned int N, const T *px, const T *py);
 		virtual ~Bezier();
 
-		virtual boost::numeric::ublas::vector<double> operator()(double t) const;
-
+		virtual ublas::vector<T> operator()(T t) const;
 		virtual const char* GetModelName() const { return "bezier"; };
 };
 
 
+template<typename T=double>
 class BSpline : public FunctionModel_param
 {
 	protected:
-		boost::numeric::ublas::vector<double> *m_pvecs;
+		ublas::vector<T> *m_pvecs;
 		unsigned int m_iN, m_iDegree;
-		std::vector<double> m_vecKnots;
+		std::vector<T> m_vecKnots;
 
 	public:
-		BSpline(unsigned int N, const double *px, const double *py, unsigned int iDegree=3);
+		BSpline(unsigned int N, const T *px, const T *py, unsigned int iDegree=3);
 		virtual ~BSpline();
 
-		virtual boost::numeric::ublas::vector<double> operator()(double t) const;
-
+		virtual ublas::vector<double> operator()(T t) const;
 		virtual const char* GetModelName() const { return "bspline"; };
 };
 
 
 template<typename T>
 void find_peaks(unsigned int iLen, const T* px, const T* py, unsigned int iOrder,
-						std::vector<T>& vecMaximaX, std::vector<T>& vecMaximaSize, std::vector<T>& vecMaximaWidth)
+		std::vector<T>& vecMaximaX, std::vector<T>& vecMaximaSize, std::vector<T>& vecMaximaWidth)
 {
-	BSpline spline(iLen, px, py, iOrder);
+	BSpline<T> spline(iLen, px, py, iOrder);
 	const unsigned int iNumSpline = 512;    // TODO: in config
 
 	T *pSplineX = new T[iNumSpline];
@@ -133,12 +138,12 @@ void find_peaks(unsigned int iLen, const T* px, const T* py, unsigned int iOrder
 	T *pSplineDiff = new T[iNumSpline];
 	T *pSplineDiff2 = new T[iNumSpline];
 
-	const double* pdyMin = std::min_element(py, py+iLen);
+	const T* pdyMin = std::min_element(py, py+iLen);
 
 	for(unsigned int iSpline=0; iSpline<iNumSpline; ++iSpline)
 	{
 		const T dT = T(iSpline) / T(iNumSpline-1);
-		boost::numeric::ublas::vector<T> vec = spline(dT);
+		ublas::vector<T> vec = spline(dT);
 
 		pSplineX[iSpline] = vec[0];
 		pSplineY[iSpline] = vec[1];
@@ -204,7 +209,8 @@ void find_peaks(unsigned int iLen, const T* px, const T* py, unsigned int iOrder
 		vecMaximaWidth.push_back(dWidth);
 	}
 
-	tl::sort_3<std::vector<double>::iterator>(vecMaximaSize.begin(), vecMaximaSize.end(), vecMaximaWidth.begin(), vecMaximaX.begin());
+	tl::sort_3<typename std::vector<T>::iterator>(vecMaximaSize.begin(), vecMaximaSize.end(),
+						vecMaximaWidth.begin(), vecMaximaX.begin());
 	std::reverse(vecMaximaSize.begin(), vecMaximaSize.end());
 	std::reverse(vecMaximaWidth.begin(), vecMaximaWidth.end());
 	std::reverse(vecMaximaX.begin(), vecMaximaX.end());
@@ -213,7 +219,7 @@ void find_peaks(unsigned int iLen, const T* px, const T* py, unsigned int iOrder
 
 	std::ostringstream ostrDbg;
 	ostrDbg << "Prefitter found peaks at: ";
-	for(double dValX : vecMaximaX)
+	for(T dValX : vecMaximaX)
 		ostrDbg << dValX << ", ";
 	log_debug(ostrDbg.str());
 
@@ -222,6 +228,100 @@ void find_peaks(unsigned int iLen, const T* px, const T* py, unsigned int iOrder
 	delete[] pSplineY;
 	delete[] pSplineDiff;
 	delete[] pSplineDiff2;
+}
+
+
+
+template<class T>
+Bezier<T>::Bezier(unsigned int N, const T *px, const T *py)
+	: m_pvecs(0), m_iN(N)
+{
+	m_pvecs = new ublas::vector<T>[m_iN];
+
+	for(unsigned int i=0; i<N; ++i)
+	{
+		m_pvecs[i].resize(2);
+		m_pvecs[i][0] = px[i];
+		m_pvecs[i][1] = py[i];
+	}
+
+	//auto MinMax = boost::minmax_element(px, px+N);
+	//m_dMin = *MinMax.first;
+	//m_dMax = *MinMax.second;
+}
+
+template<class T>
+Bezier<T>::~Bezier()
+{
+	if(m_pvecs) delete[] m_pvecs;
+}
+
+template<class T>
+ublas::vector<T> Bezier<T>::operator()(T t) const
+{
+	return tl::bezier<T>(m_pvecs, m_iN, t);
+}
+
+
+
+template<class T>
+BSpline<T>::BSpline(unsigned int N, const T *px, const T *py, unsigned int iDegree)
+	: m_pvecs(0), m_iN(N), m_iDegree(iDegree)
+{
+	m_pvecs = new ublas::vector<double>[m_iN];
+
+	for(unsigned int i=0; i<m_iN; ++i)
+	{
+		m_pvecs[i].resize(2);
+		m_pvecs[i][0] = px[i];
+		m_pvecs[i][1] = py[i];
+	}
+
+	unsigned int iM = m_iDegree + m_iN + 1;
+	m_vecKnots.resize(iM);
+
+	const T eps = std::numeric_limits<T>::epsilon();
+
+	// set knots to uniform, nonperiodic B-Spline
+	for(unsigned int i=0; i<m_iDegree+1; ++i)
+		m_vecKnots[i] = 0.+i*eps;
+	for(unsigned int i=iM-m_iDegree-1; i<iM; ++i)
+		m_vecKnots[i] = 1.-i*eps;
+	for(unsigned int i=m_iDegree+1; i<iM-m_iDegree-1; ++i)
+		m_vecKnots[i] = T(i+1-m_iDegree-1) / T(iM-2*m_iDegree-2 + 1);
+
+	//for(unsigned int i=0; i<iM; ++i)
+	//	m_vecKnots[i] = T(i) / T(iM-1);
+
+	/*std::cout << "knots: ";
+	for(T d: m_vecKnots)
+		std::cout << d << " ";
+	std::cout << std::endl;*/
+}
+
+template<class T>
+BSpline<T>::~BSpline()
+{
+	if(m_pvecs) delete[] m_pvecs;
+}
+
+template<class T>
+ublas::vector<double> BSpline<T>::operator()(T t) const
+{
+	if(m_iN==0)
+	{
+		ublas::vector<T> vecNull(2);
+		vecNull[0] = vecNull[1] = 0.;
+		return vecNull;
+	}
+
+	ublas::vector<T> vec = tl::bspline<T>(m_pvecs, m_iN, t, m_vecKnots);
+
+	// remove epsilon dependence
+	if(t<=0.) vec = m_pvecs[0];
+	if(t>=1.) vec = m_pvecs[m_iN-1];
+
+	return vec;
 }
 
 }
