@@ -1,0 +1,5 @@
+main()
+{
+	dat = loadinstr("/home/tw/Measurements/Eiger2014/eiger2014n000650.scn");
+	print(dat);
+}

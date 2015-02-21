@@ -11,6 +11,7 @@
 #include "calls_file.h"
 #include "../lang/calls.h"
 #include "../../file/loadtxt.h"
+#include "../../file/loadinstr.h"
 #include <sstream>
 #include <fstream>
 #include <iomanip>
@@ -91,7 +92,7 @@ static Symbol* fkt_write_file(const std::vector<Symbol*>& vecSyms,
 // loading and saving of .dat files
 
 static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING}, {0}, "loadtxt"))
 		return 0;
@@ -146,6 +147,87 @@ static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
 
 	pArr->UpdateIndices();
 	return pArr;
+}
+
+static Symbol* fkt_loadinstr(const std::vector<Symbol*>& vecSyms,
+			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+{
+	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING}, {0}, "loadinstr"))
+		return 0;
+
+	SymbolMap* pmapRet = new SymbolMap();
+	SymbolInt* pOk = new SymbolInt(0);
+	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("ok"), pOk));
+
+	const t_string& strFile = ((SymbolString*)vecSyms[0])->GetVal();
+	const tl::FileInstr* pInstr = tl::FileInstr::LoadInstr(strFile.c_str());
+	if(!pInstr)
+	{
+		tl::log_err(linenr(runinfo), "loadinstr could not open \"", strFile, "\".");
+		return pmapRet;
+	}
+
+
+	const tl::FileInstr::t_vecDat& vecDat = pInstr->GetData();
+	const tl::FileInstr::t_vecColNames& vecColNames = pInstr->GetColNames();
+	const tl::FileInstr::t_mapParams& mapParams = pInstr->GetAllParams();
+	std::vector<std::string> vecScanVars = pInstr->GetScannedVars();
+
+
+	// data
+	SymbolArray* pArrDat = new SymbolArray();
+	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("data"), pArrDat));
+
+	pArrDat->GetArr().reserve(vecDat.size());
+	for(const tl::FileInstr::t_vecDat::value_type& vecRow : vecDat)
+	{
+		SymbolArray *pArrRow = new SymbolArray();
+		pArrDat->GetArr().push_back(pArrRow);
+		pArrRow->GetArr().reserve(vecRow.size());
+
+		for(const tl::FileInstr::t_vecDat::value_type::value_type& val : vecRow)
+			pArrRow->GetArr().push_back(new SymbolReal(val));
+	}
+
+
+	// column labels
+	SymbolArray* pArrLab = new SymbolArray();
+	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("labels"), pArrLab));
+
+	pArrLab->GetArr().reserve(vecColNames.size());
+	for(const tl::FileInstr::t_vecColNames::value_type& strLab : vecColNames)
+		pArrLab->GetArr().push_back(new SymbolString(strLab));
+
+
+	// param map
+	SymbolMap *pmapParams = new SymbolMap();
+	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("params"), pmapParams));
+	for(const tl::FileInstr::t_mapParams::value_type& pair : mapParams)
+	{
+		const t_string& strKey = pair.first;
+		SymbolString *pVal = new SymbolString(pair.second);
+		pmapParams->GetMap().insert(SymbolMap::t_map::value_type(strKey, pVal));
+	}
+
+
+	// scan vars
+	SymbolArray* pArrSc = new SymbolArray();
+	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("scanvars"), pArrSc));
+
+	pArrSc->GetArr().reserve(vecScanVars.size());
+	for(const std::string& strVar : vecScanVars)
+		pArrSc->GetArr().push_back(new SymbolString(strVar));
+
+
+
+	// misc
+	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("cki"), new SymbolInt(pInstr->IsKiFixed())));
+	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("kfix"), new SymbolReal(pInstr->GetKFix())));
+
+
+	delete pInstr;
+	pOk->SetVal(1);
+	return pmapRet;
 }
 
 static void get_2darr_size(const SymbolArray* pArr,
@@ -289,6 +371,9 @@ extern void init_ext_file_calls()
 		// dat files
 		t_mapFkts::value_type(T_STR"loadtxt", fkt_loadtxt),
 		t_mapFkts::value_type(T_STR"savetxt", fkt_savetxt),
+
+		// special intrument dat files
+		t_mapFkts::value_type(T_STR"loadinstr", fkt_loadinstr),
 	};
 
 	add_ext_calls(mapFkts);

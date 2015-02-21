@@ -16,22 +16,22 @@
 namespace tl{
 
 
-// automatically choose correct instrument	
+// automatically choose correct instrument
 FileInstr* FileInstr::LoadInstr(const char* pcFile)
 {
 	FileInstr* pDat = nullptr;
-	
+
 	std::ifstream ifstr(pcFile);
 	if(!ifstr.is_open())
 		return nullptr;
-	
+
 	std::string strLine;
 	std::getline(ifstr, strLine);
 	ifstr.close();
 
 	strLine = tl::str_to_lower(strLine);
 	const std::string strNicos("nicos data file");
-	
+
 	if(strLine.find(strNicos) != std::string::npos)	// frm file
 		pDat = new FileFrm();
 	else											// psi or ill file
@@ -47,7 +47,7 @@ FileInstr* FileInstr::LoadInstr(const char* pcFile)
 }
 
 
-std::array<double, 5> FileInstr::GetScanHKLKiKf(const char* pcH, const char* pcK, 
+std::array<double, 5> FileInstr::GetScanHKLKiKf(const char* pcH, const char* pcK,
 											const char* pcL, const char* pcE,
 											std::size_t i) const
 {
@@ -171,10 +171,10 @@ bool FilePsi::Load(const char* pcFile)
 				iterSteps = m_mapParams.find("STEPS");
 
 	if(iterParams!=m_mapParams.end()) GetInternalParams(iterParams->second, m_mapParameters);
-	if(iterZeros!=m_mapParams.end()) GetInternalParams(iterZeros->second, m_mapParameters);
-	if(iterVars!=m_mapParams.end()) GetInternalParams(iterVars->second, m_mapParameters);
-	if(iterPos!=m_mapParams.end()) GetInternalParams(iterPos->second, m_mapParameters);
-	if(iterSteps!=m_mapParams.end()) GetInternalParams(iterSteps->second, m_mapParameters);
+	if(iterZeros!=m_mapParams.end()) GetInternalParams(iterZeros->second, m_mapZeros);
+	if(iterVars!=m_mapParams.end()) GetInternalParams(iterVars->second, m_mapVariables);
+	if(iterPos!=m_mapParams.end()) GetInternalParams(iterPos->second, m_mapPosHkl);
+	if(iterSteps!=m_mapParams.end()) GetInternalParams(iterSteps->second, m_mapScanSteps);
 
 	return true;
 }
@@ -363,6 +363,51 @@ std::string FilePsi::GetSpacegroup() const
 }
 
 
+std::vector<std::string> FilePsi::GetScannedVars() const
+{
+	std::vector<std::string> vecVars;
+
+	// steps parameter
+	for(const t_mapIParams::value_type& pair : m_mapScanSteps)
+	{
+		if(!float_equal(pair.second, 0.) && pair.first.length())
+		{
+			if(std::tolower(pair.first[0]) == 'd')
+				vecVars.push_back(pair.first.substr(1));
+			else
+				vecVars.push_back(pair.first);
+		}
+	}
+
+
+	// nothing found yet -> try scan command instead
+	if(!vecVars.size())
+	{
+		t_mapParams::const_iterator iter = m_mapParams.find("COMND");
+		if(iter != m_mapParams.end())
+		{
+			std::vector<std::string> vecToks;
+			tl::get_tokens<std::string, std::string>(iter->second, " \t", vecToks);
+			std::transform(vecToks.begin(), vecToks.end(), vecToks.begin(), str_to_lower<std::string>);
+			std::vector<std::string>::iterator iter = std::find(vecToks.begin(), vecToks.end(), "dqh");
+
+			if(iter != vecToks.end())
+			{
+				double dh = str_to_var<double>(*(++iter));
+				double dk = str_to_var<double>(*(++iter));
+				double dl = str_to_var<double>(*(++iter));
+				double dE = str_to_var<double>(*iter);
+
+				if(!float_equal(dh, 0.)) vecVars.push_back("QH");
+				if(!float_equal(dk, 0.)) vecVars.push_back("QK");
+				if(!float_equal(dl, 0.)) vecVars.push_back("QL");
+				if(!float_equal(dE, 0.)) vecVars.push_back("EN");
+			}
+		}
+	}
+
+	return vecVars;
+}
 
 
 // -----------------------------------------------------------------------------
@@ -413,10 +458,10 @@ void FileFrm::ReadData(std::istream& istr)
 	// column headers
 	skip_after_char<char>(istr, '#');
 	std::string strLineQuantities;
-	std::getline(istr, strLineQuantities);	
+	std::getline(istr, strLineQuantities);
 	tl::get_tokens<std::string, std::string, t_vecColNames>
 		(strLineQuantities, " \t", m_vecQuantities);
-	
+
 	skip_after_char<char>(istr, '#');
 	std::string strLineUnits;
 	std::getline(istr, strLineUnits);
@@ -509,17 +554,17 @@ std::array<double, 2> FileFrm::GetMonoAnaD() const
 {
 	t_mapParams::const_iterator iterM = m_mapParams.find("mono_dvalue");
 	t_mapParams::const_iterator iterA = m_mapParams.find("ana_dvalue");
-	
+
 	double m = (iterM!=m_mapParams.end() ? tl::str_to_var<double>(iterM->second) : 3.355);
 	double a = (iterA!=m_mapParams.end() ? tl::str_to_var<double>(iterA->second) : 3.355);
-	
+
 	return std::array<double,2>{{m, a}};
 }
 
 std::array<bool, 3> FileFrm::GetScatterSenses() const
 {
 	std::vector<int> vec;
-	
+
 	t_mapParams::const_iterator iter;
 	for(iter=m_mapParams.begin(); iter!=m_mapParams.end(); ++iter)
 	{
@@ -529,13 +574,13 @@ std::array<bool, 3> FileFrm::GetScatterSenses() const
 			break;
 		}
 	}
-	
+
 	if(vec.size() != 3)
 	{
 		vec.resize(3);
 		vec[0] = 0; vec[1] = 1; vec[2] = 0;
 	}
-	
+
 	return std::array<bool,3>{{vec[0]>0, vec[1]>0, vec[2]>0}};
 }
 
@@ -566,7 +611,7 @@ std::array<double, 3> FileFrm::GetScatterPlane1() const
 double FileFrm::GetKFix() const
 {
 	std::string strKey = (IsKiFixed() ? "ki_value" : "kf_value");
-	
+
 	t_mapParams::const_iterator iter = m_mapParams.find(strKey);
 	return (iter!=m_mapParams.end() ? tl::str_to_var<double>(iter->second) : 0.);
 }
@@ -574,7 +619,7 @@ double FileFrm::GetKFix() const
 bool FileFrm::IsKiFixed() const
 {
 	std::string strScanMode = "ckf";
-	
+
 	t_mapParams::const_iterator iter;
 	for(iter=m_mapParams.begin(); iter!=m_mapParams.end(); ++iter)
 	{
@@ -585,7 +630,7 @@ bool FileFrm::IsKiFixed() const
 			break;
 		}
 	}
-	
+
 	if(strScanMode == "cki")
 		return 1;
 	return 0;
@@ -632,6 +677,15 @@ std::string FileFrm::GetSpacegroup() const
 }
 
 
+std::vector<std::string> FileFrm::GetScannedVars() const
+{
+	std::vector<std::string> vecVars;
+
+	// TODO
+
+	return vecVars;
+}
+
 }
 
 
@@ -651,10 +705,10 @@ int main()
 		tl::log_err("Cannot load data file.");
 		return -1;
 	}
-	
+
 	std::array<double,3> latt = dat.GetSampleAngles();
 	std::cout << latt[0] << ", " << latt[1] << ", " << latt[2] << std::endl;
-	
+
 	std::cout << "kfix = " << dat.GetKFix() << std::endl;
 
 	return 0;

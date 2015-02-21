@@ -9,6 +9,7 @@
 #define __LOADINSTR_H__
 
 #include <unordered_map>
+#include <map>
 #include <vector>
 #include <array>
 #include <iostream>
@@ -23,12 +24,13 @@ class FileInstr
 		typedef std::unordered_map<std::string, std::string> t_mapParams;
 		typedef std::vector<std::string> t_vecColNames;
 		typedef std::vector<double> t_vecVals;
-	
+		typedef std::vector<t_vecVals> t_vecDat;
+
 	protected:
-		std::array<double, 5> GetScanHKLKiKf(const char* pcH, const char* pcK, 
+		std::array<double, 5> GetScanHKLKiKf(const char* pcH, const char* pcK,
 											const char* pcL, const char* pcE,
 											std::size_t i) const;
-	
+
 	public:
 		FileInstr() = default;
 		virtual ~FileInstr() = default;
@@ -45,16 +47,22 @@ class FileInstr
 
 		virtual double GetKFix() const = 0;
 		virtual bool IsKiFixed() const = 0;
-		
+
 		virtual const std::vector<double>& GetCol(const std::string& strName) const = 0;
 
 		virtual std::size_t GetScanCount() const = 0;
 		virtual std::array<double, 5> GetScanHKLKiKf(std::size_t i) const = 0;
-		
+
 		virtual std::string GetTitle() const = 0;
 		virtual std::string GetSampleName() const = 0;
 		virtual std::string GetSpacegroup() const = 0;
-		
+
+		virtual const t_vecDat& GetData() const = 0;
+		virtual const t_vecColNames& GetColNames() const = 0;
+		virtual const t_mapParams& GetAllParams() const = 0;
+
+		virtual std::vector<std::string> GetScannedVars() const = 0;
+
 	public:
 		static FileInstr* LoadInstr(const char* pcFile);
 };
@@ -65,13 +73,13 @@ class FilePsi : public FileInstr
 {
 	public:
 		// internal parameters in m_mapParams
-		typedef std::unordered_map<std::string, double> t_mapIParams;
-		
+		typedef std::map<std::string, double> t_mapIParams;
+
 	protected:
 		t_mapParams m_mapParams;
 		t_mapIParams m_mapParameters, m_mapZeros, m_mapVariables, m_mapPosHkl, m_mapScanSteps;
 		t_vecColNames m_vecColNames;
-		std::vector<t_vecVals> m_vecData;
+		t_vecDat m_vecData;
 
 	protected:
 		void ReadData(std::istream& istr);
@@ -109,25 +117,31 @@ class FilePsi : public FileInstr
 
 		virtual std::size_t GetScanCount() const override;
 		virtual std::array<double, 5> GetScanHKLKiKf(std::size_t i) const override;
-		
+
 		virtual std::string GetTitle() const override;
 		virtual std::string GetSampleName() const override;
 		virtual std::string GetSpacegroup() const override;
+
+		virtual const t_vecDat& GetData() const override { return m_vecData; }
+		virtual const t_vecColNames& GetColNames() const override { return m_vecColNames; }
+		virtual const t_mapParams& GetAllParams() const override { return m_mapParams; }
+
+		virtual std::vector<std::string> GetScannedVars() const override;
 };
 
 
 // frm/nicos files
 class FileFrm : public FileInstr
-{	
+{
 	protected:
 		t_mapParams m_mapParams;
 		t_vecColNames m_vecQuantities, m_vecUnits;
-		std::vector<t_vecVals> m_vecData;
-	
+		t_vecDat m_vecData;
+
 	public:
 		FileFrm() = default;
 		virtual ~FileFrm() = default;
-		
+
 	protected:
 		void ReadHeader(std::istream& istr);
 		void ReadData(std::istream& istr);
@@ -148,12 +162,18 @@ class FileFrm : public FileInstr
 
 		virtual std::size_t GetScanCount() const override;
 		virtual std::array<double, 5> GetScanHKLKiKf(std::size_t i) const override;
-		
+
 		virtual const std::vector<double>& GetCol(const std::string& strName) const override;
-		
+
 		virtual std::string GetTitle() const override;
 		virtual std::string GetSampleName() const override;
-		virtual std::string GetSpacegroup() const override;		
+		virtual std::string GetSpacegroup() const override;
+
+		virtual const t_vecDat& GetData() const override { return m_vecData; }
+		virtual const t_vecColNames& GetColNames() const override { return m_vecQuantities; }
+		virtual const t_mapParams& GetAllParams() const override { return m_mapParams; }
+
+		virtual std::vector<std::string> GetScannedVars() const override;
 };
 
 }
