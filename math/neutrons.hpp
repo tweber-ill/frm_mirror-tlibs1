@@ -52,36 +52,36 @@ static const double FWHM2SIGMA = 1./SIGMA2FWHM;
 // general quantities
 template<class Sys, class T=double> using t_length =
 	units::quantity<units::unit<units::length_dimension, Sys>, T>;
-template<class Sys, class T=double> using t_momentum = 
+template<class Sys, class T=double> using t_momentum =
 	units::quantity<units::unit<units::momentum_dimension, Sys>, T>;
-template<class Sys, class T=double> using t_wavenumber = 
+template<class Sys, class T=double> using t_wavenumber =
 	units::quantity<units::unit<units::wavenumber_dimension, Sys>, T>;
-template<class Sys, class T=double> using t_velocity = 
+template<class Sys, class T=double> using t_velocity =
 	units::quantity<units::unit<units::velocity_dimension, Sys>, T>;
-template<class Sys, class T=double> using t_frequency = 
+template<class Sys, class T=double> using t_frequency =
 	units::quantity<units::unit<units::frequency_dimension, Sys>, T>;
-template<class Sys, class T=double> using t_energy = 
+template<class Sys, class T=double> using t_energy =
 	units::quantity<units::unit<units::energy_dimension, Sys>, T>;
-template<class Sys, class T=double> using t_angle = 
+template<class Sys, class T=double> using t_angle =
 	units::quantity<units::unit<units::plane_angle_dimension, Sys>, T>;
-template<class Sys, class T=double> using t_temperature = 
+template<class Sys, class T=double> using t_temperature =
 	units::quantity<units::unit<units::temperature_dimension, Sys>, T>;
-template<class Sys, class T=double> using t_mass = 
+template<class Sys, class T=double> using t_mass =
 	units::quantity<units::unit<units::mass_dimension, Sys>, T>;
-template<class Sys, class T=double> using t_time = 
+template<class Sys, class T=double> using t_time =
 	units::quantity<units::unit<units::time_dimension, Sys>, T>;
-template<class Sys, class T=double> using t_flux = 
+template<class Sys, class T=double> using t_flux =
 	units::quantity<units::unit<units::magnetic_flux_density_dimension, Sys>, T>;
-template<class Sys, class T=double> using t_area = 
+template<class Sys, class T=double> using t_area =
 	units::quantity<units::unit<units::area_dimension, Sys>, T>;
-template<class Sys, class T=double> using t_volume = 
+template<class Sys, class T=double> using t_volume =
 	units::quantity<units::unit<units::volume_dimension, Sys>, T>;
 
-template<class Sys, class T=double> using t_length_inverse = 
+template<class Sys, class T=double> using t_length_inverse =
 	units::quantity<units::unit<units::derived_dimension<units::length_base_dimension, -1>::type, Sys>, T>;
-template<class Sys, class T=double> using t_length_square = 
+template<class Sys, class T=double> using t_length_square =
 	units::quantity<units::unit<units::derived_dimension<units::length_base_dimension, 2>::type, Sys>, T>;
-template<class Sys, class T=double> using t_dimensionless = 
+template<class Sys, class T=double> using t_dimensionless =
 	units::quantity<units::unit<units::dimensionless_type, Sys>, T>;
 
 // synonyms
@@ -139,7 +139,7 @@ static const double E2KSQ = 1./KSQ2E;
 // --------------------------------------------------------------------------------
 // de Broglie stuff
 // lam = h/p
-template<class Sys, class Y> 
+template<class Sys, class Y>
 t_momentum<Sys,Y> lam2p(const t_length<Sys,Y>& lam)
 {
 	return co::h / lam;
@@ -219,10 +219,7 @@ t_energy<Sys,Y> k2E(const t_wavenumber<Sys,Y>& k)
 template<class Sys, class Y>
 t_wavenumber<Sys,Y> E2k(const t_energy<Sys,Y>& E, bool &bImag)
 {
-	if(E < 0.*one_meV)
-		bImag = 1;
-	else
-		bImag = 0;
+	bImag = (E < 0.*one_meV);
 
 	t_momentum<Sys,Y>
 		p = units::sqrt(2.*co::m_n*units::abs(E));
@@ -325,7 +322,7 @@ t_energy<Sys,Y> kinematic_plane(bool bFixedKi, bool bBranch,
 		dSignFixedKf = -1.;
 
 	auto rt = c*c*c*c * (-EiEf*EiEf)*ctt*ctt
-			+ c*c*c*c*EiEf*EiEf*ctt*ctt*c2tt 
+			+ c*c*c*c*EiEf*EiEf*ctt*ctt*c2tt
 			+ 2.*c*c*c*EiEf*Q*Q*ctt*ctt;
 
 	t_energy<Sys,Y> E =
@@ -533,6 +530,20 @@ t_wavenumber<Sys,Y> get_other_k(const t_energy<Sys,Y>& E,
 
 // --------------------------------------------------------------------------------
 // spurions
+
+// Bragg tail -> see Shirane p. 152
+template<class Sys, class Y>
+t_energy<Sys,Y> get_bragg_tail(t_wavenumber<Sys,Y> k, t_wavenumber<Sys,Y> q,
+								bool bConstEi=0)
+{
+	Y t = q / (2.*k);
+	if(!bConstEi)
+		t = -t;
+
+	t_energy<Sys,Y> E = co::hbar*co::hbar / co::m_n * k*q*(1.+t);
+	return E;
+}
+
 
 // inelastic spurions -> Shirane pp. 146-148
 template<class Sys, class Y>

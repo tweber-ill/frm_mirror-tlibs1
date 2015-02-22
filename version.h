@@ -7,6 +7,6 @@
 #ifndef __TLIBS_VER_H__
 #define __TLIBS_VER_H__
 
-#define TLIBS_VERSION "0.53"
+#define TLIBS_VERSION "0.54"
 
 #endif
