@@ -28,7 +28,7 @@ class Stopwatch
 		t_dur m_dur;
 		t_dur_sys m_dur_sys;
 
-		T m_dDur;
+		T m_dDur = T(0);
 
 	public:
 		Stopwatch() = default;
@@ -59,10 +59,10 @@ class Stopwatch
 		{
 			std::time_t tStart = std::chrono::system_clock::to_time_t(t);
 			std::tm tmStart = *std::localtime(&tStart);
-			char cStart[128];
-			std::strftime(cStart, sizeof cStart, "%a %Y-%b-%d %H:%M:%S %Z", &tmStart);
 
-			return std::string(cStart);
+			char cTime[256];
+			std::strftime(cTime, sizeof cTime, "%a %Y-%b-%d %H:%M:%S %Z", &tmStart);
+			return std::string(cTime);
 		}
 
 		std::string GetStartTimeStr() const { return to_str(m_timeStart); }

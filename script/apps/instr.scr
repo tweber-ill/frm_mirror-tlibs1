@@ -24,64 +24,6 @@ load_instr(filename)
 	return [instr["labels"], instr["data"], instr["params"], instr["scanvars"]];
 }
 
-mergedata(data0, data1)
-{
-	#print("\nbefore: " + str(data0));
-
-	for(col1 : data1)
-	{
-		curcol = cur_iter(col1);
-
-		for(row1 : col1)
-			data0[curcol][length(data0[curcol])] = row1;
-	}
-
-	#print("\nafter: " + str(data0));
-
-	return data0;
-}
-
-load_instr_multi(filenames)
-{
-	for(filename : filenames)
-	{
-		[curlabs, curdata, curparams, curscanvars] = load_instr(filename);
-		if(!is_valid(curlabs, curdata, curparams, curscanvars))
-			continue;
-		
-		if(cur_iter(filename) == 0)
-		{
-			labs = curlabs;
-			data = curdata;
-			params = curparams;
-			scanvars = curscanvars;
-
-			params["FILE_"] = "\x23" + trim(params["FILE_"]);
-
-			print("Columns: " + str(labs));
-		}
-		else
-		{
-			print("Merging " + filename + " with " + filenames[0] + ".");
-			for(curlab : curlabs)
-			{
-				if(curlab != labs[cur_iter(curlab)])
-				{
-					print("Error: Incompatible data sets.");
-					return -1;
-				}
-			}
-
-			params["FILE_"] += "+" + "\x23" + trim(curparams["FILE_"]);
-			data = mergedata(data, curdata);
-		}
-	}
-
-	if(!is_valid(labs, data, params, scanvars))
-		return;
-	return [labs, data, params, scanvars];
-}
-
 norm_to_mon(dat_y, dat_yerr, dat_mon, dat_monerr)
 {
 	for(i=0; i<length(dat_y); i+=1)
@@ -104,10 +46,11 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 	num_peaks = length(peaks_x);
 	title_len = length(title);
 
+	[labs, data, params, scanvars] = load_instr(filenames);
 	if(typeof(filenames) == "vector")
-		[labs, data, params, scanvars] = load_instr_multi(filenames);
-	else
-		[labs, data, params, scanvars] = load_instr(filenames);
+		for(filename : filenames)
+			print("Merged " + filename + " with " + filenames[0] + ".");
+
 
 	if(!is_valid(labs, data, params))
 		return -1;
@@ -165,7 +108,7 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 	numor = trim(params["FILE_"]);
 	if(length(numor))
 	{
-		print("File number: " + numor);
+		print("File number(s): " + numor);
 
 		oldtitle = title;
 		title = "Scan " + numor;
@@ -314,7 +257,7 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 			"term" : "wxt"]);
 	}
 
-	#sleep(500);
+	#sleep(10000);
 	return [params, fitres];
 }
 

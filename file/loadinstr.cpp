@@ -76,6 +76,32 @@ std::array<double, 5> FileInstr::GetScanHKLKiKf(const char* pcH, const char* pcK
 }
 
 
+bool FileInstr::MergeWith(const FileInstr* pDat)
+{
+	if(this->GetColNames().size() != pDat->GetColNames().size())
+	{
+		log_err("Cannot merge: Mismatching number of columns.");
+		return false;
+	}
+	
+	for(const std::string& strCol : GetColNames())
+	{
+		t_vecVals& col1 = this->GetCol(strCol);
+		const t_vecVals& col2 = pDat->GetCol(strCol);
+		
+		if(col1.size() == 0 || col2.size() == 0)
+		{
+			log_err("Cannot merge: Column \"", strCol, "\" is empty.");
+			return false;			
+		}
+		
+		col1.insert(col1.end(), col2.begin(), col2.end());
+	}
+	
+	return true;
+}
+
+
 // -----------------------------------------------------------------------------
 
 
@@ -179,9 +205,14 @@ bool FilePsi::Load(const char* pcFile)
 	return true;
 }
 
-const std::vector<double>& FilePsi::GetCol(const std::string& strName) const
+const FileInstr::t_vecVals& FilePsi::GetCol(const std::string& strName) const
 {
-	static const std::vector<double> vecNull;
+	return const_cast<FilePsi*>(this)->GetCol(strName);
+}
+
+FileInstr::t_vecVals& FilePsi::GetCol(const std::string& strName)
+{
+	static std::vector<double> vecNull;
 
 	for(std::size_t i=0; i<m_vecColNames.size(); ++i)
 	{
@@ -324,6 +355,23 @@ std::array<double, 4> FilePsi::GetDeltaHKLE() const
         return std::array<double,4>{{h,k,l,E}};
 }
 
+bool FilePsi::MergeWith(const FileInstr* pDat)
+{
+	if(!FileInstr::MergeWith(pDat))
+		return false;
+		
+	std::string strNr = pDat->GetScanNumber();
+	if(strNr.length() != 0)
+	{
+		// include merged scan number
+		t_mapParams::iterator iter = m_mapParams.find("FILE_");
+		if(iter != m_mapParams.end())
+			iter->second += std::string(" + ") + strNr;
+	}
+
+	return true;	
+}
+
 // TODO
 bool FilePsi::IsKiFixed() const
 {
@@ -347,6 +395,15 @@ std::string FilePsi::GetTitle() const
 {
 	std::string strTitle;
 	t_mapParams::const_iterator iter = m_mapParams.find("TITLE");
+	if(iter != m_mapParams.end())
+		strTitle = iter->second;
+	return strTitle;
+}
+
+std::string FilePsi::GetScanNumber() const
+{
+	std::string strTitle;
+	t_mapParams::const_iterator iter = m_mapParams.find("FILE_");
 	if(iter != m_mapParams.end())
 		strTitle = iter->second;
 	return strTitle;
@@ -510,9 +567,14 @@ bool FileFrm::Load(const char* pcFile)
 	return true;
 }
 
-const std::vector<double>& FileFrm::GetCol(const std::string& strName) const
+const FileInstr::t_vecVals& FileFrm::GetCol(const std::string& strName) const
 {
-	static const std::vector<double> vecNull;
+	return const_cast<FileFrm*>(this)->GetCol(strName);
+}
+
+FileInstr::t_vecVals& FileFrm::GetCol(const std::string& strName)
+{
+	static std::vector<double> vecNull;
 
 	for(std::size_t i=0; i<m_vecQuantities.size(); ++i)
 	{
@@ -648,6 +710,23 @@ std::array<double, 5> FileFrm::GetScanHKLKiKf(std::size_t i) const
 	return FileInstr::GetScanHKLKiKf("h", "k", "l", "E", i);
 }
 
+bool FileFrm::MergeWith(const FileInstr* pDat)
+{
+	if(!FileInstr::MergeWith(pDat))
+		return false;
+		
+	std::string strNr = pDat->GetScanNumber();
+	if(strNr.length() != 0)
+	{
+		// include merged scan number
+		t_mapParams::iterator iter = m_mapParams.find("number");
+		if(iter != m_mapParams.end())
+			iter->second += std::string(" + ") + strNr;
+	}
+
+	return true;	
+}
+
 
 std::string FileFrm::GetTitle() const
 {
@@ -656,6 +735,15 @@ std::string FileFrm::GetTitle() const
 	if(iter != m_mapParams.end())
 		strTitle = iter->second;
 	return strTitle;
+}
+
+std::string FileFrm::GetScanNumber() const
+{
+	std::string strTitle;
+	t_mapParams::const_iterator iter = m_mapParams.find("number");
+	if(iter != m_mapParams.end())
+		strTitle = iter->second;
+	return strTitle;	
 }
 
 std::string FileFrm::GetSampleName() const

@@ -48,12 +48,15 @@ class FileInstr
 		virtual double GetKFix() const = 0;
 		virtual bool IsKiFixed() const = 0;
 
-		virtual const std::vector<double>& GetCol(const std::string& strName) const = 0;
+		virtual const t_vecVals& GetCol(const std::string& strName) const = 0;
+		virtual t_vecVals& GetCol(const std::string& strName) = 0;
 
 		virtual std::size_t GetScanCount() const = 0;
 		virtual std::array<double, 5> GetScanHKLKiKf(std::size_t i) const = 0;
+		virtual bool MergeWith(const FileInstr* pDat) = 0;
 
 		virtual std::string GetTitle() const = 0;
+		virtual std::string GetScanNumber() const = 0;
 		virtual std::string GetSampleName() const = 0;
 		virtual std::string GetSpacegroup() const = 0;
 
@@ -97,8 +100,9 @@ class FilePsi : public FileInstr
 		const std::string& GetColName(std::size_t iCol) const { return m_vecColNames[iCol]; }
 		std::size_t GetColCount() const { return m_vecColNames.size(); }
 
-		const std::vector<double>& GetCol(std::size_t iCol) const { return m_vecData[iCol]; }
-		virtual const std::vector<double>& GetCol(const std::string& strName) const override;
+		const t_vecVals& GetCol(std::size_t iCol) const { return m_vecData[iCol]; }
+		virtual const t_vecVals& GetCol(const std::string& strName) const override;
+		virtual t_vecVals& GetCol(const std::string& strName) override;
 
 	public:
 		virtual std::array<double, 3> GetSampleLattice() const override;
@@ -117,8 +121,10 @@ class FilePsi : public FileInstr
 
 		virtual std::size_t GetScanCount() const override;
 		virtual std::array<double, 5> GetScanHKLKiKf(std::size_t i) const override;
+		virtual bool MergeWith(const FileInstr* pDat) override;
 
 		virtual std::string GetTitle() const override;
+		virtual std::string GetScanNumber() const override;
 		virtual std::string GetSampleName() const override;
 		virtual std::string GetSpacegroup() const override;
 
@@ -162,10 +168,13 @@ class FileFrm : public FileInstr
 
 		virtual std::size_t GetScanCount() const override;
 		virtual std::array<double, 5> GetScanHKLKiKf(std::size_t i) const override;
+		virtual bool MergeWith(const FileInstr* pDat) override;
 
-		virtual const std::vector<double>& GetCol(const std::string& strName) const override;
+		virtual const t_vecVals& GetCol(const std::string& strName) const override;
+		virtual t_vecVals& GetCol(const std::string& strName) override;
 
 		virtual std::string GetTitle() const override;
+		virtual std::string GetScanNumber() const override;
 		virtual std::string GetSampleName() const override;
 		virtual std::string GetSpacegroup() const override;
 

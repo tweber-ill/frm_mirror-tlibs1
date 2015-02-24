@@ -6,7 +6,7 @@
 disp(beta, m1, m2, q, a, branch)
 {
 	# see Furrer p. 92
-	om_sq = beta*(1./m1 + 1./m2) + branch*beta*sqrt((1./m1 + 1./m2)^2. - 4./(m1*m2)*sin(q*a)^2.);
+	om_sq = beta*(1./m1 + 1./m2) + branch*beta*sqrt((1./m1 + 1./m2)^2. - 4./(m1*m2)*sin(q*a/2.)^2.);
 	return sqrt(om_sq);
 }
 
@@ -15,7 +15,7 @@ usage(app)
         print("\nPhonon branch calculation\n\nUsage: e.g. " + app + " m1=1 m2=2 a=1 beta=1");
         print("\tm1\tmass of atom sort 1");
         print("\tm2\tmass of atom sort 2");
-        print("\ta\tdistance between two atoms");
+        print("\ta\tdistance between two atoms of the SAME sort");
         print("\tbeta\tforce constant");
 	print();
 }
@@ -52,7 +52,9 @@ main(args)
 	plopt2 = ["style":"line", "legend":"acoustic phonon"];
 
 	title = "m1=" + m1 + ", m2=" + m2 + ", a=" + a + ", beta="+beta;
-	plopt = ["xlabel":"q", "ylabel":"omega", "title":title, "xlimits":xlim];
+	plopt = ["xlabel":"q", "ylabel":"omega", "title":title, "xlimits":xlim
+#		, "term":"wxt", "outfile":"phonon.pdf"
+		];
 
 	plot([q, om1, plopt1], [q, om2, plopt2], plopt);
 }

@@ -152,20 +152,72 @@ static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
 static Symbol* fkt_loadinstr(const std::vector<Symbol*>& vecSyms,
 			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING}, {0}, "loadinstr"))
+	//if(!check_args(runinfo, vecSyms, {SYMBOL_STRING}, {0}, "loadinstr"))
+	//	return 0;
+
+	if(vecSyms.size() != 1)
+	{
+		tl::log_err(linenr(runinfo), "loadinstr needs one argument of string or array type.");
 		return 0;
+	}
+
+	std::vector<tl::FileInstr*> vecToMerge;
+
+	t_string strMainFile;
+	if(vecSyms[0]->GetType() == SYMBOL_STRING)
+		strMainFile = ((SymbolString*)vecSyms[0])->GetVal();
+	else if(vecSyms[0]->GetType() == SYMBOL_ARRAY)
+	{
+		const std::vector<Symbol*>& vecArr = ((SymbolArray*)vecSyms[0])->GetArr();
+		if(vecArr.size() == 0 || vecArr[0]->GetType() != SYMBOL_STRING)
+		{
+			tl::log_err(linenr(runinfo), "loadinstr got no valid file name.");
+			return 0;
+		}
+
+		strMainFile = ((SymbolString*)vecArr[0])->GetVal();
+
+		for(std::size_t iFile=1; iFile<vecArr.size(); ++iFile)
+		{
+			Symbol *pSymAux = vecArr[iFile];
+			if(!pSymAux || pSymAux->GetType() != SYMBOL_STRING)
+			{
+				tl::log_warn(linenr(runinfo), "loadinstr cannot load file ", iFile, " in array.");
+				continue;
+			}
+
+			const t_string& strFileAux = ((SymbolString*)pSymAux)->GetVal();
+
+			tl::FileInstr *pToMerge = tl::FileInstr::LoadInstr(strFileAux.c_str());
+			if(!pToMerge)
+			{
+				tl::log_warn(linenr(runinfo), "loadinstr could not open \"", strFileAux, "\" for merging.");
+				continue;
+			}
+			else
+				vecToMerge.push_back(pToMerge);
+		}
+	}
+
 
 	SymbolMap* pmapRet = new SymbolMap();
 	SymbolInt* pOk = new SymbolInt(0);
 	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("ok"), pOk));
 
-	const t_string& strFile = ((SymbolString*)vecSyms[0])->GetVal();
-	const tl::FileInstr* pInstr = tl::FileInstr::LoadInstr(strFile.c_str());
+	const t_string& strFile = strMainFile;
+	tl::FileInstr* pInstr = tl::FileInstr::LoadInstr(strFile.c_str());
 	if(!pInstr)
 	{
 		tl::log_err(linenr(runinfo), "loadinstr could not open \"", strFile, "\".");
 		return pmapRet;
 	}
+
+	for(tl::FileInstr* pToMerge : vecToMerge)
+	{
+		pInstr->MergeWith(pToMerge);
+		delete pToMerge;
+	}
+	vecToMerge.clear();
 
 
 	const tl::FileInstr::t_vecDat& vecDat = pInstr->GetData();

@@ -167,9 +167,7 @@ static inline int script_main(int argc, char** argv)
 		if(strArg[0] != T_STR'-')
 			break;
 
-		if(strArg=="-t" || strArg == "--timing")
-			g_bShowTiming = 1;
-		else if(strArg=="-s" || strArg == "--symbols")
+		if(strArg=="-s" || strArg == "--symbols")
 			bShowSymbols = 1;
 		else if(strArg=="-i" || strArg == "--interactive")
 			bInteractive = 1;
@@ -307,6 +305,21 @@ static inline int script_main(int argc, char** argv)
 
 int main(int argc, char** argv)
 {
+	// global flags
+	for(int iStartArg=1; iStartArg<argc; ++iStartArg)
+	{
+		t_string strArg = STR_TO_WSTR(argv[iStartArg]);
+		tl::trim(strArg);
+
+		// end of arguments to hermelin
+		if(strArg[0] != T_STR'-')
+			break;
+
+		if(strArg=="-t" || strArg == "--timing")
+			g_bShowTiming = 1;
+	}
+
+
 	const std::array<tl::Log*, 5> arrLogs{&tl::log_crit, &tl::log_err, &tl::log_warn, &tl::log_info, &tl::log_debug};
 	for(tl::Log* pLog : arrLogs)
 	{

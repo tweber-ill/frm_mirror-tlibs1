@@ -1,5 +1,8 @@
 main()
 {
-	dat = loadinstr("/home/tw/Measurements/Eiger2014/eiger2014n000650.scn");
+	dat = loadinstr([
+			"/home/tweber/Messdaten/Eiger_2014/data/eiger2014n001077.scn",
+			"/home/tweber/Messdaten/Eiger_2014/data/eiger2014n001078.scn"
+			]);
 	print(dat);
 }
