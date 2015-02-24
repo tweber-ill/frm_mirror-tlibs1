@@ -14,16 +14,6 @@ module_init()
 	global size_lines = 1.5;
 }
 
-
-load_instr(filename)
-{
-	instr = loadinstr(filename);
-	if(!instr["ok"])
-		exit(-1);
-
-	return [instr["labels"], instr["data"], instr["params"], instr["scanvars"]];
-}
-
 norm_to_mon(dat_y, dat_yerr, dat_mon, dat_monerr)
 {
 	for(i=0; i<length(dat_y); i+=1)
@@ -46,14 +36,26 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 	num_peaks = length(peaks_x);
 	title_len = length(title);
 
-	[labs, data, params, scanvars] = load_instr(filenames);
+	instr = loadinstr(filenames);
+	if(!instr["ok"])
+	{
+		print("Cannot load file(s).");
+		return -1;
+	}
+
 	if(typeof(filenames) == "vector")
 		for(filename : filenames)
 			print("Merged " + filename + " with " + filenames[0] + ".");
 
 
-	if(!is_valid(labs, data, params))
+	labs = instr["labels"];
+	data = instr["data"];
+	params = instr["params"];
+	scanvars = instr["scanvars"];
+
+	if(!is_valid(labs, data, params, scanvars))
 		return -1;
+
 
 	if(typeof(data[0])!="vector" || length(data[0]) == 0)
 	{
@@ -136,7 +138,7 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 		print("Temperature: " + temp_mean + " +- " + temp_err);
 	}
 
-	
+
 	xlab = scvar;
 	ylab = "Counts";
 	if(norm_to_monitor)
@@ -159,6 +161,7 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 
 		[dat_y, dat_yerr] = norm_to_mon(dat_y, dat_yerr, dat_mon, dat_monerr);
 	}
+
 
 	minx = min(dat_x);
 	maxx = max(dat_x);
