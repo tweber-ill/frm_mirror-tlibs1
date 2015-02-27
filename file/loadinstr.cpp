@@ -83,21 +83,21 @@ bool FileInstr::MergeWith(const FileInstr* pDat)
 		log_err("Cannot merge: Mismatching number of columns.");
 		return false;
 	}
-	
+
 	for(const std::string& strCol : GetColNames())
 	{
 		t_vecVals& col1 = this->GetCol(strCol);
 		const t_vecVals& col2 = pDat->GetCol(strCol);
-		
+
 		if(col1.size() == 0 || col2.size() == 0)
 		{
 			log_err("Cannot merge: Column \"", strCol, "\" is empty.");
-			return false;			
+			return false;
 		}
-		
+
 		col1.insert(col1.end(), col2.begin(), col2.end());
 	}
-	
+
 	return true;
 }
 
@@ -359,7 +359,7 @@ bool FilePsi::MergeWith(const FileInstr* pDat)
 {
 	if(!FileInstr::MergeWith(pDat))
 		return false;
-		
+
 	std::string strNr = pDat->GetScanNumber();
 	if(strNr.length() != 0)
 	{
@@ -369,7 +369,7 @@ bool FilePsi::MergeWith(const FileInstr* pDat)
 			iter->second += std::string(" + ") + strNr;
 	}
 
-	return true;	
+	return true;
 }
 
 // TODO
@@ -464,6 +464,18 @@ std::vector<std::string> FilePsi::GetScannedVars() const
 	}
 
 	return vecVars;
+}
+
+std::string FilePsi::GetCountVar() const
+{
+	// TODO
+	return "CNTS";
+}
+
+std::string FilePsi::GetMonVar() const
+{
+	// TODO
+	return "M1";
 }
 
 
@@ -714,7 +726,7 @@ bool FileFrm::MergeWith(const FileInstr* pDat)
 {
 	if(!FileInstr::MergeWith(pDat))
 		return false;
-		
+
 	std::string strNr = pDat->GetScanNumber();
 	if(strNr.length() != 0)
 	{
@@ -724,7 +736,7 @@ bool FileFrm::MergeWith(const FileInstr* pDat)
 			iter->second += std::string(" + ") + strNr;
 	}
 
-	return true;	
+	return true;
 }
 
 
@@ -743,7 +755,7 @@ std::string FileFrm::GetScanNumber() const
 	t_mapParams::const_iterator iter = m_mapParams.find("number");
 	if(iter != m_mapParams.end())
 		strTitle = iter->second;
-	return strTitle;	
+	return strTitle;
 }
 
 std::string FileFrm::GetSampleName() const
@@ -770,9 +782,21 @@ std::vector<std::string> FileFrm::GetScannedVars() const
 	std::vector<std::string> vecVars;
 
 	// TODO
-
 	return vecVars;
 }
+
+std::string FileFrm::GetCountVar() const
+{
+	// TODO
+	return "ctr1";
+}
+
+std::string FileFrm::GetMonVar() const
+{
+	// TODO
+	return "mon";
+}
+
 
 }
 

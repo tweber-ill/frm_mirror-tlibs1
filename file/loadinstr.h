@@ -65,6 +65,8 @@ class FileInstr
 		virtual const t_mapParams& GetAllParams() const = 0;
 
 		virtual std::vector<std::string> GetScannedVars() const = 0;
+		virtual std::string GetCountVar() const = 0;
+		virtual std::string GetMonVar() const = 0;
 
 	public:
 		static FileInstr* LoadInstr(const char* pcFile);
@@ -133,6 +135,8 @@ class FilePsi : public FileInstr
 		virtual const t_mapParams& GetAllParams() const override { return m_mapParams; }
 
 		virtual std::vector<std::string> GetScannedVars() const override;
+		virtual std::string GetCountVar() const override;
+		virtual std::string GetMonVar() const override;
 };
 
 
@@ -183,6 +187,8 @@ class FileFrm : public FileInstr
 		virtual const t_mapParams& GetAllParams() const override { return m_mapParams; }
 
 		virtual std::vector<std::string> GetScannedVars() const override;
+		virtual std::string GetCountVar() const override;
+		virtual std::string GetMonVar() const override;
 };
 
 }
