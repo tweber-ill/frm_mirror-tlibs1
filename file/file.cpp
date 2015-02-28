@@ -11,13 +11,13 @@
 
 #include <unistd.h>
 #include <fcntl.h>
-#include <stdio.h>
+#include <cstdio>
 
 #ifndef NO_QT
 	#include <QtCore/QDir>
 #else
-       #include <sys/types.h>
-       #include <dirent.h>
+	#include <sys/types.h>
+	#include <dirent.h>
 #endif
 
 
@@ -37,6 +37,7 @@ bool dir_exists(const char* pcDir)
 }
 
 
+// -----------------------------------------------------------------------------
 
 
 TmpFile::TmpFile() : m_strPrefix("cattus"), m_iHandle(-1)
@@ -113,5 +114,8 @@ void TmpFile::SetPrefix(const char* pcStr)
 {
 	m_strPrefix = pcStr;
 }
+
+
+// -----------------------------------------------------------------------------
 
 }

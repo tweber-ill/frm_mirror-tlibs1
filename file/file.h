@@ -9,9 +9,13 @@
 #define __TLIB_FILE_HELPER__
 
 #include <iostream>
+#include <list>
 #include <string>
 
+
 namespace tl {
+
+// -----------------------------------------------------------------------------
 
 template<typename t_char=char>
 std::streampos get_file_size(std::basic_istream<t_char>& istr)
@@ -38,6 +42,9 @@ std::streampos get_file_pos(std::basic_istream<t_char>& istr)
 extern bool dir_exists(const char* pcDir);
 
 
+// -----------------------------------------------------------------------------
+
+
 class TmpFile
 {
 protected:
@@ -57,6 +64,9 @@ public:
 
 	static int mkstemp(std::string& strFile);
 };
+
+
+// -----------------------------------------------------------------------------
 
 }
 
