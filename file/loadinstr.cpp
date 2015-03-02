@@ -797,24 +797,35 @@ std::vector<std::string> FileFrm::GetScannedVars() const
 	{
 		const std::string& strInfo = iter->second;
 
+		// try qscan/qcscan
 		const std::string strRegex = R"REX((qscan|qcscan)\((\[.*\])[, ]+(\[.*\]).*\))REX";
 		rex::regex rx(strRegex, rex::regex::ECMAScript);
 		rex::smatch m;
-		if(rex::regex_search(strInfo, m, rx))
+		if(rex::regex_search(strInfo, m, rx) && m.size()>3)
 		{
-			if(m.size() > 3)
+			const std::string& strSteps = m[3];
+			std::vector<double> vecSteps = get_py_array(strSteps);
+			
+			if(vecSteps.size()>0 && !float_equal(vecSteps[0], 0.))
+				vecVars.push_back("h");
+			if(vecSteps.size()>1 && !float_equal(vecSteps[1], 0.))
+				vecVars.push_back("k");
+			if(vecSteps.size()>2 && !float_equal(vecSteps[2], 0.))
+				vecVars.push_back("l");
+			if(vecSteps.size()>3 && !float_equal(vecSteps[3], 0.))
+				vecVars.push_back("E");
+		}
+
+
+		if(vecVars.size() == 0)
+		{
+			// try scan/cscan
+			const std::string strRegexDevScan = R"REX((scan|cscan)\(([A-Za-z0-9_]+)[, ]+.*\))REX";
+			rex::regex rxDev(strRegexDevScan, rex::regex::ECMAScript);
+			rex::smatch mDev;
+			if(rex::regex_search(strInfo, mDev, rxDev) && mDev.size()>2)
 			{
-				const std::string& strSteps = m[3];
-				std::vector<double> vecSteps = get_py_array(strSteps);
-				
-				if(vecSteps.size()>0 && !float_equal(vecSteps[0], 0.))
-					vecVars.push_back("h");
-				if(vecSteps.size()>1 && !float_equal(vecSteps[1], 0.))
-					vecVars.push_back("k");
-				if(vecSteps.size()>2 && !float_equal(vecSteps[2], 0.))
-					vecVars.push_back("l");
-				if(vecSteps.size()>3 && !float_equal(vecSteps[3], 0.))
-					vecVars.push_back("E");
+				vecVars.push_back(mDev[2]);
 			}
 		}
 	}
