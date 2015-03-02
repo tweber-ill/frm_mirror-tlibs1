@@ -238,7 +238,7 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 		plotobjs[length(plotobjs)] = [fitx, fity, ["style":"lines", "size":size_lines]];
 
 		if(!fitres["<valid>"])
-			title += "  !! FIT INVALID !!  ";
+			title += "  !! FIT DID NOT CONVERGE !!  ";
 	}
 
 	plot(plotobjs, 

@@ -12,6 +12,12 @@
 #include "../math/neutrons.hpp"
 #include <fstream>
 
+#include <regex>
+namespace rex = ::std;
+
+//#include <boost/tr1/regex.hpp>
+//namespace rex = ::boost;
+
 
 namespace tl{
 
@@ -29,12 +35,16 @@ FileInstr* FileInstr::LoadInstr(const char* pcFile)
 	std::getline(ifstr, strLine);
 	ifstr.close();
 
-	strLine = tl::str_to_lower(strLine);
+	trim(strLine);
+	strLine = str_to_lower(strLine);
+	if(strLine == "")
+		return nullptr;
+
 	const std::string strNicos("nicos data file");
 
-	if(strLine.find(strNicos) != std::string::npos)	// frm file
+	if(strLine.find(strNicos) != std::string::npos)			// frm file
 		pDat = new FileFrm();
-	else											// psi or ill file
+	else								// psi or ill file
 		pDat = new FilePsi();
 
 	if(pDat && !pDat->Load(pcFile))
@@ -48,18 +58,18 @@ FileInstr* FileInstr::LoadInstr(const char* pcFile)
 
 
 std::array<double, 5> FileInstr::GetScanHKLKiKf(const char* pcH, const char* pcK,
-											const char* pcL, const char* pcE,
-											std::size_t i) const
+						const char* pcL, const char* pcE,
+						std::size_t i) const
 {
 	const t_vecVals& vecH = GetCol(pcH);
 	const t_vecVals& vecK = GetCol(pcK);
 	const t_vecVals& vecL = GetCol(pcL);
 	const t_vecVals& vecE = GetCol(pcE);
 
-	std::size_t minSize = tl::min4(vecH.size(), vecK.size(), vecL.size(), vecE.size());
+	std::size_t minSize = min4(vecH.size(), vecK.size(), vecL.size(), vecE.size());
 	if(i>=minSize)
 	{
-		tl::log_err("Scan position ", i, " out of bounds. Size: ", minSize, ".");
+		log_err("Scan position ", i, " out of bounds. Size: ", minSize, ".");
 		return std::array<double,5>{{0.,0.,0.,0.}};
 	}
 
@@ -110,7 +120,7 @@ void FilePsi::ReadData(std::istream& istr)
 	// header
 	std::string strHdr;
 	std::getline(istr, strHdr);
-	tl::get_tokens<std::string, std::string, t_vecColNames>(strHdr, " \t", m_vecColNames);
+	get_tokens<std::string, std::string, t_vecColNames>(strHdr, " \t", m_vecColNames);
 
 	m_vecData.resize(m_vecColNames.size());
 
@@ -123,11 +133,11 @@ void FilePsi::ReadData(std::istream& istr)
 			continue;
 
 		std::vector<double> vecToks;
-		tl::get_tokens<double, std::string>(strLine, " \t", vecToks);
+		get_tokens<double, std::string>(strLine, " \t", vecToks);
 
 		if(vecToks.size() != m_vecColNames.size())
 		{
-			tl::log_warn("Loader: Line size mismatch.");
+			log_warn("Loader: Line size mismatch.");
 
 			// add zeros
 			while(m_vecColNames.size() > vecToks.size())
@@ -142,18 +152,18 @@ void FilePsi::ReadData(std::istream& istr)
 void FilePsi::GetInternalParams(const std::string& strAll, FilePsi::t_mapIParams& mapPara)
 {
 	std::vector<std::string> vecToks;
-	tl::get_tokens<std::string, std::string>(strAll, ",\n", vecToks);
+	get_tokens<std::string, std::string>(strAll, ",\n", vecToks);
 	//std::cout << strAll << std::endl;
 
 	for(const std::string& strTok : vecToks)
 	{
 		std::pair<std::string, std::string> pair =
-				tl::split_first<std::string>(strTok, "=", 1);
+				split_first<std::string>(strTok, "=", 1);
 
 		if(pair.first == "")
 			continue;
 
-		double dVal = tl::str_to_var<double>(pair.second);
+		double dVal = str_to_var<double>(pair.second);
 		mapPara.insert(t_mapIParams::value_type(pair.first, dVal));
 
 		//std::cout << "Key: " << pair.first << ", Val: " << dVal << std::endl;
@@ -174,7 +184,7 @@ bool FilePsi::Load(const char* pcFile)
 		std::getline(ifstr, strLine);
 
 		std::pair<std::string, std::string> pairLine =
-				tl::split_first<std::string>(strLine, ":", 1);
+				split_first<std::string>(strLine, ":", 1);
 		if(pairLine.first == "DATA_")
 			ReadData(ifstr);
 		else if(pairLine.first == "")
@@ -444,7 +454,7 @@ std::vector<std::string> FilePsi::GetScannedVars() const
 		if(iter != m_mapParams.end())
 		{
 			std::vector<std::string> vecToks;
-			tl::get_tokens<std::string, std::string>(iter->second, " \t", vecToks);
+			get_tokens<std::string, std::string>(iter->second, " \t", vecToks);
 			std::transform(vecToks.begin(), vecToks.end(), vecToks.begin(), str_to_lower<std::string>);
 			std::vector<std::string>::iterator iter = std::find(vecToks.begin(), vecToks.end(), "dqh");
 
@@ -502,7 +512,7 @@ void FileFrm::ReadHeader(std::istream& istr)
 		//std::cout << strLine << std::endl;
 
 		std::pair<std::string, std::string> pairLine =
-				tl::split_first<std::string>(strLine, ":", 1);
+				split_first<std::string>(strLine, ":", 1);
 		if(pairLine.first == "")
 			continue;
 		else
@@ -528,13 +538,13 @@ void FileFrm::ReadData(std::istream& istr)
 	skip_after_char<char>(istr, '#');
 	std::string strLineQuantities;
 	std::getline(istr, strLineQuantities);
-	tl::get_tokens<std::string, std::string, t_vecColNames>
+	get_tokens<std::string, std::string, t_vecColNames>
 		(strLineQuantities, " \t", m_vecQuantities);
 
 	skip_after_char<char>(istr, '#');
 	std::string strLineUnits;
 	std::getline(istr, strLineUnits);
-	tl::get_tokens<std::string, std::string, t_vecColNames>
+	get_tokens<std::string, std::string, t_vecColNames>
 		(strLineQuantities, " \t", m_vecUnits);
 
 
@@ -550,11 +560,11 @@ void FileFrm::ReadData(std::istream& istr)
 			continue;
 
 		std::vector<double> vecToks;
-		tl::get_tokens<double, std::string>(strLine, " \t", vecToks);
+		get_tokens<double, std::string>(strLine, " \t", vecToks);
 
 		if(vecToks.size() != m_vecQuantities.size())
 		{
-			tl::log_warn("Loader: Line size mismatch.");
+			log_warn("Loader: Line size mismatch.");
 
 			// add zeros
 			while(m_vecQuantities.size() > vecToks.size())
@@ -601,10 +611,10 @@ FileInstr::t_vecVals& FileFrm::GetCol(const std::string& strName)
 std::array<double, 3> FileFrm::GetSampleLattice() const
 {
 	t_mapParams::const_iterator iter = m_mapParams.find("Sample_lattice");
-	std::vector<double> vec = tl::get_py_array(iter->second);
+	std::vector<double> vec = get_py_array(iter->second);
 	if(vec.size() != 3)
 	{
-		tl::log_err("Invalid lattice array size.");
+		log_err("Invalid lattice array size.");
 		return std::array<double,3>{{0.,0.,0.}};
 	}
 
@@ -614,10 +624,10 @@ std::array<double, 3> FileFrm::GetSampleLattice() const
 std::array<double, 3> FileFrm::GetSampleAngles() const
 {
 	t_mapParams::const_iterator iter = m_mapParams.find("Sample_angles");
-	std::vector<double> vec = tl::get_py_array(iter->second);
+	std::vector<double> vec = get_py_array(iter->second);
 	if(vec.size() != 3)
 	{
-		tl::log_err("Invalid angle array size.");
+		log_err("Invalid angle array size.");
 		return std::array<double,3>{{0.,0.,0.}};
 	}
 
@@ -629,8 +639,8 @@ std::array<double, 2> FileFrm::GetMonoAnaD() const
 	t_mapParams::const_iterator iterM = m_mapParams.find("mono_dvalue");
 	t_mapParams::const_iterator iterA = m_mapParams.find("ana_dvalue");
 
-	double m = (iterM!=m_mapParams.end() ? tl::str_to_var<double>(iterM->second) : 3.355);
-	double a = (iterA!=m_mapParams.end() ? tl::str_to_var<double>(iterA->second) : 3.355);
+	double m = (iterM!=m_mapParams.end() ? str_to_var<double>(iterM->second) : 3.355);
+	double a = (iterA!=m_mapParams.end() ? str_to_var<double>(iterA->second) : 3.355);
 
 	return std::array<double,2>{{m, a}};
 }
@@ -644,7 +654,7 @@ std::array<bool, 3> FileFrm::GetScatterSenses() const
 	{
 		if(iter->first.find("scatteringsense") != std::string::npos)
 		{
-			vec = tl::get_py_array<std::string, std::vector<int>>(iter->second);
+			vec = get_py_array<std::string, std::vector<int>>(iter->second);
 			break;
 		}
 	}
@@ -661,10 +671,10 @@ std::array<bool, 3> FileFrm::GetScatterSenses() const
 std::array<double, 3> FileFrm::GetScatterPlane0() const
 {
 	t_mapParams::const_iterator iter = m_mapParams.find("Sample_orient1");
-	std::vector<double> vec = tl::get_py_array(iter->second);
+	std::vector<double> vec = get_py_array(iter->second);
 	if(vec.size() != 3)
 	{
-		tl::log_err("Invalid sample peak 1 array size.");
+		log_err("Invalid sample peak 1 array size.");
 		return std::array<double,3>{{0.,0.,0.}};
 	}
 	return std::array<double,3>{{vec[0],vec[1],vec[2]}};
@@ -673,10 +683,10 @@ std::array<double, 3> FileFrm::GetScatterPlane0() const
 std::array<double, 3> FileFrm::GetScatterPlane1() const
 {
 	t_mapParams::const_iterator iter = m_mapParams.find("Sample_orient2");
-	std::vector<double> vec = tl::get_py_array(iter->second);
+	std::vector<double> vec = get_py_array(iter->second);
 	if(vec.size() != 3)
 	{
-		tl::log_err("Invalid sample peak 2 array size.");
+		log_err("Invalid sample peak 2 array size.");
 		return std::array<double,3>{{0.,0.,0.}};
 	}
 	return std::array<double,3>{{-vec[0],-vec[1],-vec[2]}};	// LH -> RH
@@ -687,7 +697,7 @@ double FileFrm::GetKFix() const
 	std::string strKey = (IsKiFixed() ? "ki_value" : "kf_value");
 
 	t_mapParams::const_iterator iter = m_mapParams.find(strKey);
-	return (iter!=m_mapParams.end() ? tl::str_to_var<double>(iter->second) : 0.);
+	return (iter!=m_mapParams.end() ? str_to_var<double>(iter->second) : 0.);
 }
 
 bool FileFrm::IsKiFixed() const
@@ -699,8 +709,8 @@ bool FileFrm::IsKiFixed() const
 	{
 		if(iter->first.find("scanmode") != std::string::npos)
 		{
-			strScanMode = tl::str_to_lower(iter->second);
-			tl::trim(strScanMode);
+			strScanMode = str_to_lower(iter->second);
+			trim(strScanMode);
 			break;
 		}
 	}
@@ -780,8 +790,35 @@ std::string FileFrm::GetSpacegroup() const
 std::vector<std::string> FileFrm::GetScannedVars() const
 {
 	std::vector<std::string> vecVars;
+	
+	// scan command
+	t_mapParams::const_iterator iter = m_mapParams.find("info");
+	if(iter != m_mapParams.end())
+	{
+		const std::string& strInfo = iter->second;
 
-	// TODO
+		const std::string strRegex = R"REX((qscan|qcscan)\((\[.*\])[, ]+(\[.*\]).*\))REX";
+		rex::regex rx(strRegex, rex::regex::ECMAScript);
+		rex::smatch m;
+		if(rex::regex_search(strInfo, m, rx))
+		{
+			if(m.size() > 3)
+			{
+				const std::string& strSteps = m[3];
+				std::vector<double> vecSteps = get_py_array(strSteps);
+				
+				if(vecSteps.size()>0 && !float_equal(vecSteps[0], 0.))
+					vecVars.push_back("h");
+				if(vecSteps.size()>1 && !float_equal(vecSteps[1], 0.))
+					vecVars.push_back("k");
+				if(vecSteps.size()>2 && !float_equal(vecSteps[2], 0.))
+					vecVars.push_back("l");
+				if(vecSteps.size()>3 && !float_equal(vecSteps[3], 0.))
+					vecVars.push_back("E");
+			}
+		}
+	}
+
 	return vecVars;
 }
 
@@ -794,7 +831,7 @@ std::string FileFrm::GetCountVar() const
 std::string FileFrm::GetMonVar() const
 {
 	// TODO
-	return "mon";
+	return "mon1";
 }
 
 
