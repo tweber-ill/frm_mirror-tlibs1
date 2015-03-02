@@ -52,6 +52,8 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 	data = instr["data"];
 	params = instr["params"];
 	scanvars = instr["scanvars"];
+	countvar = instr["countvar"];
+	monvar = instr["monvar"];
 
 	if(!is_valid(labs, data, params, scanvars))
 		return -1;
@@ -96,8 +98,8 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 		scvar = labs[idx_x];
 	}
 
-	idx_y = find(labs, "CNTS");
-	idx_mon = find(labs, "M1");
+	idx_y = find(labs, countvar);
+	idx_mon = find(labs, monvar);
 
 	if(idx_x<0 || idx_y<0)
 	{

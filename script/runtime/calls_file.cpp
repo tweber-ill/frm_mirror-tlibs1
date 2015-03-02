@@ -275,6 +275,8 @@ static Symbol* fkt_loadinstr(const std::vector<Symbol*>& vecSyms,
 	// misc
 	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("cki"), new SymbolInt(pInstr->IsKiFixed())));
 	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("kfix"), new SymbolReal(pInstr->GetKFix())));
+	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("countvar"), new SymbolString(pInstr->GetCountVar())));
+	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("monvar"), new SymbolString(pInstr->GetMonVar())));
 
 
 	delete pInstr;
