@@ -528,6 +528,21 @@ t_wavenumber<Sys,Y> get_other_k(const t_energy<Sys,Y>& E,
 // --------------------------------------------------------------------------------
 
 
+
+// --------------------------------------------------------------------------------
+// kf^3 factor, see e.g. Shirane p. 125
+
+template<class Sys, class Y>
+Y ana_effic_factor(const t_wavenumber<Sys, Y>& kf, const t_length<Sys, Y>& d)
+{
+	t_angle<Sys, Y> theta = 0.5*units::abs(get_mono_twotheta<Sys, Y>(kf, d, true));
+	return kf*kf*kf / units::tan(theta) * angstrom*angstrom*angstrom;
+}
+
+// --------------------------------------------------------------------------------
+
+
+
 // --------------------------------------------------------------------------------
 // spurions
 
