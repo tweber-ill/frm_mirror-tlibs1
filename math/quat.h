@@ -18,61 +18,52 @@ namespace math = boost::math;
 
 // algo from:
 // http://www.j3d.org/matrix_faq/matrfaq_latest.html#Q55
-template<class mat_type=ublas::matrix<double>, class quat_type=math::quaternion<double>>
+template<class mat_type=ublas::matrix<double>,
+	class quat_type=math::quaternion<typename mat_type::value_type>>
 quat_type rot3_to_quat(const mat_type& rot)
 {
 	using T = typename quat_type::value_type;
 
-	T tr = trace(rot) + 1.;
-	T x,y,z,w;
+	const T tr = trace(rot);
+	T v[3], w;
 
-	if(tr > std::numeric_limits<T>::epsilon())				// w largest
+	if(tr > 0.)								// scalar component is largest
 	{
-		T s = std::sqrt(tr) * 2.;
-		x = (rot(2,1) - rot(1,2)) / s;
-		y = (rot(0,2) - rot(2,0)) / s;
-		z = (rot(1,0) - rot(0,1)) / s;
-		w = s/4.;
+		w    = 0.5 * std::sqrt(tr+1.);
+		v[0] = (rot(2,1) - rot(1,2)) / (4.*w);
+		v[1] = (rot(0,2) - rot(2,0)) / (4.*w);
+		v[2] = (rot(1,0) - rot(0,1)) / (4.*w);
 	}
 	else
 	{
-		if(rot(0,0)>=rot(1,1) && rot(0,0)>=rot(2,2))		// x largest
+		for(unsigned int iComp=0; iComp<3; ++iComp)			// find largest vector component
 		{
-			T s = std::sqrt(1. + rot(0,0) - rot(1,1) - rot(2,2)) * 2.;
-			x = s/4.;
-			y = (rot(1,0) + rot(0,1)) / s;
-			z = (rot(0,2) + rot(2,0)) / s;
-			w = (rot(2,1) - rot(1,2)) / s;
-		}
-		else if(rot(1,1)>=rot(0,0) && rot(1,1)>=rot(2,2))	// y largest
-		{
-			T s = std::sqrt(1. + rot(1,1) - rot(0,0) - rot(2,2)) * 2.;
-			x = (rot(1,0) + rot(0,1)) / s;
-			y = s/4.;
-			z = (rot(2,1) + rot(1,2)) / s;
-			w = (rot(0,2) - rot(2,0)) / s;
-		}
-		else if(rot(2,2)>=rot(0,0) && rot(2,2)>=rot(1,1))	// z largest
-		{
-			T s = std::sqrt(1. + rot(2,2) - rot(0,0) - rot(1,1)) * 2.;
-			x = (rot(0,2) + rot(2,0)) / s;
-			y = (rot(2,1) + rot(1,2)) / s;
-			z = s/4.;
-			w = (rot(1,0) - rot(0,1)) / s;
-		}
-		else
-		{
-			throw Err("rot3_to_quat: Invalid condition.");
+			const unsigned int iM = iComp;		// major comp.
+			const unsigned int im1 = (iComp+1)%3;	// minor comp. 1
+			const unsigned int im2 = (iComp+2)%3;	// minor comp. 2
+
+			if(rot(iM,iM)>=rot(im1,im1) && rot(iM,iM)>=rot(im2,im2))
+			{
+				v[iM]  = 0.5 * std::sqrt(1. + rot(iM,iM) - rot(im1,im1) - rot(im2,im2));
+				v[im1] = (rot(im1, iM) + rot(iM, im1)) / (v[iM]*4.);
+				v[im2] = (rot(iM, im2) + rot(im2, iM)) / (v[iM]*4.);
+				w      = (rot(im2,im1) - rot(im1,im2)) / (v[iM]*4.);
+
+				break;
+			}
+
+			if(iComp>=2) throw Err("rot3_to_quat: Invalid condition.");
 		}
 	}
 
-	quat_type quatRet(w,x,y,z);
-	T norm_eucl = math::abs(quatRet); //std::sqrt(w*w + x*x + y*y + z*z);
+	quat_type quatRet(w, v[0],v[1],v[2]);
+	T norm_eucl = math::abs(quatRet);
 	return quatRet/norm_eucl;
 }
 
 
-template<class mat_type=ublas::matrix<double>, class quat_type=math::quaternion<double>>
+template<class mat_type=ublas::matrix<double>,
+	class quat_type=math::quaternion<typename mat_type::value_type>>
 mat_type quat_to_rot3(const quat_type& quat)
 {
 	const quat_type cquat = math::conj(quat);
@@ -94,7 +85,8 @@ mat_type quat_to_rot3(const quat_type& quat)
 }
 
 
-template<class quat_type=math::quaternion<double>, typename T=typename quat_type::value_type>
+template<class quat_type=math::quaternion<double>, 
+	typename T=typename quat_type::value_type>
 std::vector<T> quat_to_euler(const quat_type& quat)
 {
 	T q[] = {quat.R_component_1(),
@@ -164,7 +156,7 @@ t_vec rotation_axis(const math::quaternion<typename t_vec::value_type>& quat)
 }
 
 template<class quat_type=math::quaternion<double>,
-	class vec_type=ublas::vector<double>,
+	class vec_type=ublas::vector<typename quat_type::value_type>,
 	typename T = typename quat_type::value_type>
 quat_type rotation_quat(const vec_type& vec, const T angle)
 {
