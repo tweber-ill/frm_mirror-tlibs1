@@ -9,6 +9,9 @@
 #include "../helper/log.h"
 #include "../helper/py.h"
 #include "../file/file.h"
+#if !defined NO_IOSTR
+	#include "../file/comp.h"
+#endif
 #include "../math/neutrons.hpp"
 #include <fstream>
 
@@ -31,9 +34,19 @@ FileInstr* FileInstr::LoadInstr(const char* pcFile)
 	if(!ifstr.is_open())
 		return nullptr;
 
+#if !defined NO_IOSTR
+	std::istream* pIstr = create_autodecomp_istream(ifstr);
+	std::unique_ptr<std::istream> ptrIstr(pIstr);
+	if(!pIstr)
+		return nullptr;
+#else
+	std::istream* pIstr = &ifstr;
+#endif
+
 	std::string strLine;
-	std::getline(ifstr, strLine);
-	ifstr.close();
+	std::getline(*pIstr, strLine);
+	//pIstr->close();
+
 
 	trim(strLine);
 	strLine = str_to_lower(strLine);
@@ -42,9 +55,9 @@ FileInstr* FileInstr::LoadInstr(const char* pcFile)
 
 	const std::string strNicos("nicos data file");
 
-	if(strLine.find(strNicos) != std::string::npos)			// frm file
+	if(strLine.find(strNicos) != std::string::npos)		// frm file
 		pDat = new FileFrm();
-	else								// psi or ill file
+	else												// psi or ill file
 		pDat = new FilePsi();
 
 	if(pDat && !pDat->Load(pcFile))
@@ -176,17 +189,26 @@ bool FilePsi::Load(const char* pcFile)
 	if(!ifstr.is_open())
 		return false;
 
-	skip_after_line<char>(ifstr, "VVVV", true);
+#if !defined NO_IOSTR
+	std::istream* pIstr = create_autodecomp_istream(ifstr);
+	if(!pIstr) return false;
+	std::unique_ptr<std::istream> ptrIstr(pIstr);
+#else
+	std::istream* pIstr = &ifstr;
+#endif
 
-	while(!ifstr.eof())
+
+	skip_after_line<char>(*pIstr, "VVVV", true);
+
+	while(!pIstr->eof())
 	{
 		std::string strLine;
-		std::getline(ifstr, strLine);
+		std::getline(*pIstr, strLine);
 
 		std::pair<std::string, std::string> pairLine =
 				split_first<std::string>(strLine, ":", 1);
 		if(pairLine.first == "DATA_")
-			ReadData(ifstr);
+			ReadData(*pIstr);
 		else if(pairLine.first == "")
 			continue;
 		else
@@ -237,8 +259,8 @@ void FilePsi::PrintParams(std::ostream& ostr) const
 {
 	for(const t_mapParams::value_type& val : m_mapParams)
 	{
-		std::cout << "Param: " << val.first
-					<< ", Val: " << val.second << "\n";
+		ostr << "Param: " << val.first
+			<< ", Val: " << val.second << "\n";
 	}
 }
 
@@ -583,8 +605,16 @@ bool FileFrm::Load(const char* pcFile)
 	if(!ifstr.is_open())
 		return false;
 
-	ReadHeader(ifstr);
-	ReadData(ifstr);
+#if !defined NO_IOSTR
+	std::istream* pIstr = create_autodecomp_istream(ifstr);
+	if(!pIstr) return false;
+	std::unique_ptr<std::istream> ptrIstr(pIstr);
+#else
+	std::ifstream *pIstr = &ifstr;
+#endif
+
+	ReadHeader(*pIstr);
+	ReadData(*pIstr);
 
 	return true;
 }
@@ -790,7 +820,7 @@ std::string FileFrm::GetSpacegroup() const
 std::vector<std::string> FileFrm::GetScannedVars() const
 {
 	std::vector<std::string> vecVars;
-	
+
 	// scan command
 	t_mapParams::const_iterator iter = m_mapParams.find("info");
 	if(iter != m_mapParams.end())
@@ -805,7 +835,7 @@ std::vector<std::string> FileFrm::GetScannedVars() const
 		{
 			const std::string& strSteps = m[3];
 			std::vector<double> vecSteps = get_py_array(strSteps);
-			
+
 			if(vecSteps.size()>0 && !float_equal(vecSteps[0], 0.))
 				vecVars.push_back("h");
 			if(vecSteps.size()>1 && !float_equal(vecSteps[1], 0.))
