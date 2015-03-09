@@ -218,7 +218,7 @@ bool FilePsi::Load(const char* pcFile)
 			if(iter == m_mapParams.end())
 				m_mapParams.insert(pairLine);
 			else
-				iter->second += "\n" + pairLine.second;
+				iter->second += ", " + pairLine.second;
 		}
 	}
 
@@ -543,7 +543,7 @@ void FileFrm::ReadHeader(std::istream& istr)
 			if(iter == m_mapParams.end())
 				m_mapParams.insert(pairLine);
 			else
-				iter->second += "\n" + pairLine.second;
+				iter->second += ", " + pairLine.second;
 		}
 	}
 }
