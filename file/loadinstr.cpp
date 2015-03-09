@@ -517,13 +517,11 @@ std::string FilePsi::GetMonVar() const
 
 void FileFrm::ReadHeader(std::istream& istr)
 {
-	istr.clear();
-	istr.seekg(0, std::ios_base::beg);
-
 	while(!istr.eof())
 	{
 		std::string strLine;
 		std::getline(istr, strLine);
+		//std::cout << strLine << std::endl;
 		trim(strLine);
 		if(strLine.length()==0 || strLine[0]!='#')
 			continue;
@@ -552,8 +550,6 @@ void FileFrm::ReadHeader(std::istream& istr)
 
 void FileFrm::ReadData(std::istream& istr)
 {
-	istr.clear();
-	istr.seekg(0, std::ios_base::beg);
 	skip_after_line<char>(istr, "### scan data", true, false);
 
 	// column headers
@@ -601,20 +597,31 @@ void FileFrm::ReadData(std::istream& istr)
 
 bool FileFrm::Load(const char* pcFile)
 {
-	std::ifstream ifstr(pcFile);
-	if(!ifstr.is_open())
-		return false;
+	for(int iStep : {0,1})
+	{
+		std::ifstream ifstr(pcFile);
+		if(!ifstr.is_open())
+			return false;
 
 #if !defined NO_IOSTR
-	std::istream* pIstr = create_autodecomp_istream(ifstr);
-	if(!pIstr) return false;
-	std::unique_ptr<std::istream> ptrIstr(pIstr);
+		std::istream* pIstr = create_autodecomp_istream(ifstr);
+		if(!pIstr) return false;
+		std::unique_ptr<std::istream> ptrIstr(pIstr);
 #else
-	std::ifstream *pIstr = &ifstr;
+		std::ifstream *pIstr = &ifstr;
 #endif
+	
+		//std::streampos posIstr = pIstr->tellg();
+		//ReadHeader(*pIstr);
+		//pIstr->seekg(posIstr, std::ios_base::beg);
+		//pIstr->clear();
+		//ReadData(*pIstr);
 
-	ReadHeader(*pIstr);
-	ReadData(*pIstr);
+		if(iStep==0)
+			ReadHeader(*pIstr);
+		else if(iStep==1)
+			ReadData(*pIstr);
+	}
 
 	return true;
 }
