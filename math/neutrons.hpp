@@ -482,7 +482,11 @@ t_angle<Sys,Y> get_sample_twotheta(const t_wavenumber<Sys,Y>& ki,
 	return tt;
 }
 
-// -> from cosine theorem
+
+// again cos theorem:
+// Q_vec = ki_vec - kf_vec
+// Q^2 = ki^2 + kf^2 - 2ki kf cos 2th
+// Q = sqrt(ki^2 + kf^2 - 2ki kf cos 2th)
 template<class Sys, class Y>
 const t_wavenumber<Sys,Y>
 get_sample_Q(const t_wavenumber<Sys,Y>& ki,
@@ -490,8 +494,15 @@ get_sample_Q(const t_wavenumber<Sys,Y>& ki,
 					const t_angle<Sys,Y>& tt)
 {
 	t_dimensionless<Sys,Y> ctt = units::cos(tt);
-	t_wavenumber<Sys,Y>
-		Q = units::sqrt(-ctt*(2.*ki*kf) + ki*ki + kf*kf);
+	decltype(ki*ki) Qsq = ki*ki + kf*kf - 2.*ki*kf*ctt;
+	if(Y(Qsq*angstrom*angstrom) < 0.)
+	{
+		// TODO
+
+		Qsq = -Qsq;
+	}
+
+	t_wavenumber<Sys,Y> Q =  units::sqrt(Qsq);
 	return Q;
 }
 
