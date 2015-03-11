@@ -47,7 +47,7 @@ double Chi2Function::chi2(const std::vector<double>& vecParams) const
 	/*bool bParamsOk = */pfkt->SetParams(vecParams);
 	//if(!bParamsOk)
 	//	return std::numeric_limits<double>::max();
-	
+
 	return tl::chi2<double, decltype(*pfkt)>(*pfkt, m_uiLen, m_px, m_py, m_pdy);
 }
 
@@ -56,7 +56,7 @@ double Chi2Function_nd::chi2(const std::vector<double>& vecParams) const
 	std::unique_ptr<MinuitFuncModel_nd> uptrFkt(m_pfkt->copy());
 	MinuitFuncModel_nd* pfkt = uptrFkt.get();
 
-	bool bParamsOk = pfkt->SetParams(vecParams);
+	/*bool bParamsOk = */pfkt->SetParams(vecParams);
 
 	std::unique_ptr<double[]> uptrX(new double[m_uiDim]);
 	double *px = uptrX.get();

@@ -101,7 +101,6 @@ obj/calls_thread.o: runtime/calls_thread.cpp runtime/calls_thread.h
 	${CC} ${FLAGS} -c -o $@ $<
 obj/calls_fit.o: runtime/calls_fit.cpp runtime/calls_fit.h
 	${CC} ${FLAGS} -c -o $@ $<
-	${CC} ${FLAGS} -c -o obj/calls_fit.o runtime/calls_fit.cpp
 obj/handles.o: lang/handles.cpp lang/handles.h
 	${CC} ${FLAGS} -c -o $@ $<
 obj/gnuplot.o: ../gfx/gnuplot.cpp ../gfx/gnuplot.h

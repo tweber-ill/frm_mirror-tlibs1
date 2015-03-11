@@ -241,6 +241,8 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 
 		if(!fitres["<valid>"])
 			title += "  !! FIT DID NOT CONVERGE !!  ";
+		else
+			title += ", chi2/ndf = " + fitres["<chi2_red>"];
 	}
 
 	plot(plotobjs, 

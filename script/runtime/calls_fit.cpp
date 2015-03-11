@@ -593,6 +593,8 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	}
 
 
+	double dChi2 = chi2fkt(vecLastParams);
+	double dChi2red = dChi2 / double(iSize-vecLastParams.size()-1);
 
 	if(bFitterDebug)
 	{
@@ -617,13 +619,12 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 			}
 		}
 
-		double dChi2 = chi2fkt(vecLastParams);
 		tl::log_info("Chi^2 = ", dChi2);
-		tl::log_info("Chi^2 / ndf = ", dChi2 / double(iSize-vecLastParams.size()-1));
+		tl::log_info("Chi^2 / ndf = ", dChi2red);
 	}
 
-	SymbolInt *pSymFitValid = new SymbolInt(bValidFit);
-	pSymMap->GetMap()[SymbolMapKey("<valid>")] = pSymFitValid;
+	pSymMap->GetMap()[SymbolMapKey("<valid>")] = new SymbolInt(bValidFit);
+	pSymMap->GetMap()[SymbolMapKey("<chi2_red>")] = new SymbolReal(dChi2red);
 	//if(!bValidFit)
 	//	G_CERR << "Error: Fit invalid!" << std::endl;
 	return pSymMap;
