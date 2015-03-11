@@ -619,7 +619,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 
 		double dChi2 = chi2fkt(vecLastParams);
 		tl::log_info("Chi^2 = ", dChi2);
-		tl::log_info("Chi^2 / ndf = ", dChi2 / double(vecLastParams.size()));
+		tl::log_info("Chi^2 / ndf = ", dChi2 / double(iSize-vecLastParams.size()-1));
 	}
 
 	SymbolInt *pSymFitValid = new SymbolInt(bValidFit);

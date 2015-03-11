@@ -44,22 +44,11 @@ double Chi2Function::chi2(const std::vector<double>& vecParams) const
 	std::unique_ptr<MinuitFuncModel> uptrFkt(m_pfkt->copy());
 	MinuitFuncModel* pfkt = uptrFkt.get();
 
-	bool bParamsOk = pfkt->SetParams(vecParams);
+	/*bool bParamsOk = */pfkt->SetParams(vecParams);
 	//if(!bParamsOk)
 	//	return std::numeric_limits<double>::max();
-
-	double dChi2 = 0.;
-	for(unsigned int i=0; i<m_uiLen; ++i)
-	{
-		double d = (*pfkt)(m_px[i]) - m_py[i];
-		double dy = m_pdy ? m_pdy[i] : 0.1*d;	// assume 10% error if none given
-		if(fabs(dy) < std::numeric_limits<double>::min())
-			dy = std::numeric_limits<double>::min();
-
-		d /= dy;
-		dChi2 += d*d;
-	}
-	return dChi2;
+	
+	return tl::chi2<double, decltype(*pfkt)>(*pfkt, m_uiLen, m_px, m_py, m_pdy);
 }
 
 double Chi2Function_nd::chi2(const std::vector<double>& vecParams) const

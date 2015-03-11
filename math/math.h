@@ -170,6 +170,36 @@ std::vector<T> quadratic_solve(T a, T b, T c)
 	return vec;
 }
 
+
+template<class T, class t_func>
+T chi2(const t_func& func, std::size_t N,
+			const T* x, const T* y, const T* dy)
+{
+	T tchi2 = T(0);
+	
+	for(std::size_t i=0; i<N; ++i)
+	{
+		T td = y[i] - func(x[i]);
+		T tdy = dy ? dy[i] : 0.1*td;	// 10% error if none given
+
+		if(std::fabs(tdy) < std::numeric_limits<T>::min())
+			tdy = std::numeric_limits<T>::min();
+
+		T tchi = td / tdy;
+		tchi2 += tchi*tchi;
+	}
+	
+	return tchi2;
+}
+
+template<class t_vec, class t_func>
+typename t_vec::value_type chi2(const t_func& func, 
+			const t_vec& x, const t_vec& y, const t_vec& dy)
+{
+	using T = typename t_vec::value_type;
+	return chi2<T, t_func>(func, x.size(), x.data(), y.data(), dy.size()?dy.data():nullptr);
+}
+
 }
 
 #endif
