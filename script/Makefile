@@ -4,24 +4,32 @@ CC = gcc
 DEBUG = 0
 USE_FFTW = 0
 NO_LAPACK = 1
+USE_BOOST_REX = 0
 
 ifeq (${DEBUG}, 0)
-	OPT_FLAGS = -O3 -fexpensive-optimizations -march=native -DNDEBUG -Wall
+	OPT_FLAGS = -O2 -march=native -DNDEBUG -Wall
 	STRIP = strip
 else
 	OPT_FLAGS = -ggdb -DDEBUG -rdynamic -Wall
 	STRIP = echo debug version: no stripping of
 endif
 
-DEFINES = -DNO_QT -DNO_COMP
+DEFINES = -DNO_QT
 INCS =
-FLAGS = -std=c++14 -fopenmp ${OPT_FLAGS} ${DEFINES} ${INCS}
+FLAGS = -std=c++11 -fopenmp ${OPT_FLAGS} ${DEFINES} ${INCS}
 #FLAGS += -Wall -Wpedantic
 
 LIBS = -L/usr/local/lib
 
+
 # Boost
 LIBS = -lboost_iostreams
+
+ifeq (${USE_BOOST_REX}, 1)
+	LIBS += -lboost_regex
+	DEFINES += -DUSE_BOOST_REX
+endif
+
 
 # FFTW
 ifeq (${USE_FFTW}, 1)
@@ -31,6 +39,7 @@ ifeq (${USE_FFTW}, 1)
 else
 	FFTW_OBJ =
 endif
+
 
 # Minuit
 INCS += -I/usr/include/root
