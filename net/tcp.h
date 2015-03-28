@@ -65,6 +65,8 @@ public:
 
 	bool is_connected();
 
+	void wait();
+
 protected:
 	void flush_write();
 	void read_loop();

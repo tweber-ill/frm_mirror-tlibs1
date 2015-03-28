@@ -74,7 +74,7 @@ bool TcpClient::connect(const std::string& strHost, const std::string& strServic
 		ip::tcp::resolver res(*m_pservice);
 		ip::tcp::resolver::iterator iter = res.resolve({strHost, strService});
 		asio::async_connect(*m_psock, iter,
-		[&](const sys::error_code& err, ip::tcp::resolver::iterator) 
+		[&](const sys::error_code& err, ip::tcp::resolver::iterator)
 		{
 			if(!err)
 				read_loop();
@@ -135,6 +135,12 @@ bool TcpClient::is_connected()
 {
 	if(!m_psock) return 0;
 	return m_psock->is_open();
+}
+
+void TcpClient::wait()
+{
+	if(m_pthread)
+		m_pthread->join();
 }
 
 void TcpClient::write(const std::string& str)
