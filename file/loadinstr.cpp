@@ -15,11 +15,14 @@
 #include "../math/neutrons.hpp"
 #include <fstream>
 
-#include <regex>
-namespace rex = ::std;
 
-//#include <boost/tr1/regex.hpp>
-//namespace rex = ::boost;
+#ifndef USE_BOOST_REX
+	#include <regex>
+	namespace rex = ::std;
+#else
+	#include <boost/tr1/regex.hpp>
+	namespace rex = ::boost;
+#endif
 
 
 namespace tl{

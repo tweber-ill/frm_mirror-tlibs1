@@ -27,12 +27,12 @@
 #include <chrono>
 #include <thread>
 
-#ifdef USE_BOOST_REX
-	#include <boost/tr1/regex.hpp>
-	namespace rex = ::boost;
-#else
+#ifndef USE_BOOST_REX
 	#include <regex>
 	namespace rex = ::std;
+#else
+	#include <boost/tr1/regex.hpp>
+	namespace rex = ::boost;
 #endif
 
 

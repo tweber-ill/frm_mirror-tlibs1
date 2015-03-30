@@ -25,6 +25,7 @@
 //#include <boost/units/systems/temperature/celsius.hpp>
 #include <boost/units/systems/si/codata/universal_constants.hpp>
 #include <boost/units/systems/si/codata/neutron_constants.hpp>
+#include <boost/units/systems/si/codata/electron_constants.hpp>
 #include <boost/units/systems/si/codata/electromagnetic_constants.hpp>
 #include <boost/units/systems/si/codata/physico-chemical_constants.hpp>
 
@@ -126,6 +127,7 @@ static const length meter = meters;
 static const time second = seconds;
 static const energy meV = one_meV;
 static const energy eV = eV;
+static const flux tesla = teslas;
 
 /*
 template<class T=double> T KSQ2E = T((co::hbar*co::hbar / (T(2)*co::m_n)) / one_meV / (angstrom*angstrom));
