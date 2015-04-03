@@ -12,6 +12,7 @@
 #include "../../math/linalg2.h"
 #include "../../math/rand.h"
 #include "../../helper/log.h"
+#include <boost/math/special_functions/erf.hpp>
 
 namespace ublas = boost::numeric::ublas;
 
@@ -1056,6 +1057,7 @@ extern void init_ext_math_calls()
 
 		t_mapFkts::value_type(T_STR"erf", fkt_math_1arg< std::erf >),
 		t_mapFkts::value_type(T_STR"erfc", fkt_math_1arg< std::erfc >),
+		t_mapFkts::value_type(T_STR"erf_inv", fkt_math_1arg< boost::math::erf_inv >),
 		t_mapFkts::value_type(T_STR"tgamma", fkt_math_1arg< std::tgamma >),
 		t_mapFkts::value_type(T_STR"lgamma", fkt_math_1arg< std::lgamma >),
 

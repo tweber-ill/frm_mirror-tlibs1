@@ -181,7 +181,7 @@ static inline int script_main(int argc, char** argv)
 		else if(strArg=="-d4") uiDebugLevel = 4;
 	}
 
-	const std::array<tl::Log*, 5> arrLogs{&tl::log_crit, &tl::log_err, &tl::log_warn, &tl::log_info, &tl::log_debug};
+	const std::array<tl::Log*, 5> arrLogs{{&tl::log_crit, &tl::log_err, &tl::log_warn, &tl::log_info, &tl::log_debug}};
 	for(unsigned int iLog=0; iLog<arrLogs.size(); ++iLog)
 		arrLogs[iLog]->SetEnabled(uiDebugLevel>=iLog);
 
@@ -320,7 +320,7 @@ int main(int argc, char** argv)
 	}
 
 
-	const std::array<tl::Log*, 5> arrLogs{&tl::log_crit, &tl::log_err, &tl::log_warn, &tl::log_info, &tl::log_debug};
+	const std::array<tl::Log*, 5> arrLogs{{&tl::log_crit, &tl::log_err, &tl::log_warn, &tl::log_info, &tl::log_debug}};
 	for(tl::Log* pLog : arrLogs)
 	{
 		pLog->SetShowDate(0);

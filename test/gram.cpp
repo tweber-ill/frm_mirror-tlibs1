@@ -18,5 +18,31 @@ int main()
 	std::cout << "v0 * v2 = " << ublas::inner_prod(vecsOut[0], vecsOut[2]) << std::endl;
 	std::cout << "v1 * v2 = " << ublas::inner_prod(vecsOut[1], vecsOut[2]) << std::endl;
 
+
+
+	// --------------------------------------------------------------------
+	std::cout << "\n";
+
+	ublas::vector<double> vecA = tl::make_vec({-2.,0.,0.});
+	ublas::vector<double> vecB = tl::make_vec({1.,-2.,0.});
+
+	std::vector<ublas::vector<double>> vecsOutC = tl::gram_schmidt({vecA, vecB});
+
+	for(const ublas::vector<double>& vec : vecsOutC)
+		std::cout << vec << ", ";
+	std::cout << std::endl;
+
+
+        ublas::vector<double> vecUp = tl::cross_3(vecA, vecB);
+        vecB = tl::cross_3(vecUp, vecA);
+
+        vecA /= ublas::norm_2(vecA);
+        vecB /= ublas::norm_2(vecB);
+        vecUp /= ublas::norm_2(vecUp);
+
+	for(const ublas::vector<double>& vec : {vecA, vecB, vecUp})
+		std::cout << vec << ", ";
+	std::cout << std::endl;
+
 	return 0;
 }

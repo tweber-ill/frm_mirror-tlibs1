@@ -1429,6 +1429,19 @@ std::vector<t_vec> gram_schmidt(const std::vector<t_vec>& vecs, bool bNorm=1)
 	return vecsOut;
 }
 
+template<typename t_vec = ublas::vector<double>,
+	typename T = typename t_vec::value_type>
+std::vector<t_vec> get_ortho_rhs(const std::vector<t_vec>& vecs)
+{
+	assert(vecs.size() == 2);
+
+	std::vector<t_vec> vecOrtho = gram_schmidt(vecs);
+	t_vec vecUp = cross_3(vecOrtho[0], vecOrtho[1]);
+	vecOrtho.push_back(vecUp);
+
+	return vecOrtho;
+}
+
 }
 
 #endif
