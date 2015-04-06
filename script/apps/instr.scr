@@ -43,10 +43,10 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 		return -1;
 	}
 
-	if(typeof(filenames) == "vector")
+
+	if(typeof(filenames) == "vector" and length(filenames)>1)
 		for(filename : filenames)
 			print("Merged " + filename + " with " + filenames[0] + ".");
-
 
 	labs = instr["labels"];
 	data = instr["data"];
@@ -54,6 +54,8 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 	scanvars = instr["scanvars"];
 	countvar = instr["countvar"];
 	monvar = instr["monvar"];
+	if(monvar == "mon1")
+		monvar = "mon2";
 
 	if(!is_valid(labs, data, params, scanvars))
 		return -1;
@@ -64,7 +66,6 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 		print("Error: Empty data file.");
 		return -1;
 	}
-
 
 	if(is_valid(opts))
 	{

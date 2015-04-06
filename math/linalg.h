@@ -110,39 +110,39 @@ typename vec_type::value_type vec_len(const vec_type& vec)
 template<class vector_type>
 vector_type remove_elem(const vector_type& vec, unsigned int iIdx)
 {
-        vector_type vecret(vec.size()-1);
+	vector_type vecret(vec.size()-1);
 
-        for(unsigned int i=0, j=0; i<vec.size() && j<vecret.size();)
-        {
-                vecret[j] = vec[i];
+	for(unsigned int i=0, j=0; i<vec.size() && j<vecret.size();)
+	{
+		vecret[j] = vec[i];
 
-                if(i!=iIdx) ++j;
-                ++i;
-        }
+		if(i!=iIdx) ++j;
+		++i;
+	}
 
-        return vecret;
+	return vecret;
 }
 
 template<class matrix_type>
 matrix_type submatrix(const matrix_type& mat, unsigned int iRow, unsigned int iCol)
 {
-        matrix_type matret(mat.size1()-1, mat.size2()-1);
+	matrix_type matret(mat.size1()-1, mat.size2()-1);
 
-        for(unsigned int i=0, i0=0; i<mat.size1() && i0<matret.size1();)
-        {
-                for(unsigned int j=0, j0=0; j<mat.size2() && j0<matret.size2();)
-                {
-                        matret(i0,j0) = mat(i,j);
+	for(unsigned int i=0, i0=0; i<mat.size1() && i0<matret.size1();)
+	{
+		for(unsigned int j=0, j0=0; j<mat.size2() && j0<matret.size2();)
+		{
+			matret(i0,j0) = mat(i,j);
 
-                        if(j!=iCol) ++j0;
-                        ++j;
-                }
+			if(j!=iCol) ++j0;
+			++j;
+		}
 
-                if(i!=iRow) ++i0;
-                ++i;
-        }
+		if(i!=iRow) ++i0;
+		++i;
+	}
 
-        return matret;
+	return matret;
 }
 
 template<class matrix_type>
@@ -173,7 +173,7 @@ template<class vec_type>
 void subvector_copy(vec_type& vec, const vec_type& sub, unsigned int iRowBegin)
 {
 	for(unsigned int i=0; i<sub.size(); ++i)
-			vec[iRowBegin+i] = sub[i];
+		vec[iRowBegin+i] = sub[i];
 }
 
 
@@ -196,24 +196,38 @@ template<class vector_type=ublas::vector<double>,
 	class matrix_type=ublas::matrix<typename vector_type::value_type>>
 vector_type get_column(const matrix_type& mat, unsigned int iCol)
 {
-        vector_type vecret(mat.size1());
+	vector_type vecret(mat.size1());
 
-        for(unsigned int i=0; i<mat.size1(); ++i)
-        	vecret[i] = mat(i, iCol);
+	for(unsigned int i=0; i<mat.size1(); ++i)
+		vecret[i] = mat(i, iCol);
 
-        return vecret;
+	return vecret;
+}
+
+template<class vector_type = ublas::vector<double>,
+	class matrix_type = ublas::matrix<typename vector_type::value_type>,
+	class cont_type = std::vector<vector_type>>
+cont_type get_columns(const matrix_type& mat)
+{
+	cont_type vec;
+	vec.reserve(mat.size2());
+
+	for(unsigned int i=0; i<mat.size2(); ++i)
+		vec.push_back(get_column(mat, i));
+
+	return vec;
 }
 
 template<class vector_type=ublas::vector<double>,
 	class matrix_type=ublas::matrix<typename vector_type::value_type>>
 vector_type get_row(const matrix_type& mat, unsigned int iRow)
 {
-        vector_type vecret(mat.size2());
+	vector_type vecret(mat.size2());
 
-        for(unsigned int i=0; i<mat.size2(); ++i)
-        	vecret[i] = mat(iRow, i);
+	for(unsigned int i=0; i<mat.size2(); ++i)
+		vecret[i] = mat(iRow, i);
 
-        return vecret;
+	return vecret;
 }
 
 
@@ -1208,6 +1222,7 @@ template<class t_mat = ublas::matrix<double>,
 	return M2;
 }
 
+// QR decomposition via householder reflections
 template<class t_mat = ublas::matrix<double>,
 	class t_vec = ublas::vector<typename t_mat::value_type>,
 	typename T = typename t_mat::value_type>
@@ -1266,6 +1281,24 @@ bool qr_decomp(const t_mat& M, t_mat& Q, t_mat& R)
 	R = ublas::prod(QT, M);
 
 	return true;
+}
+
+
+template<typename t_vec = ublas::vector<double>,
+	typename T = typename t_vec::value_type>
+std::vector<t_vec> gram_schmidt(const std::vector<t_vec>& vecs, bool bNorm);
+
+// QR decomposition via gram-schmidt orthogonalisation
+template<class t_mat = ublas::matrix<double>,
+	class t_vec = ublas::vector<typename t_mat::value_type>,
+	typename T = typename t_mat::value_type>
+bool qr_decomp_gs(const t_mat& M, t_mat& Q, t_mat& R)
+{
+	Q = column_matrix(gram_schmidt(get_columns(M), 1));
+
+	// M = QR  =>  Q^T M = R
+	R = ublas::prod(ublas::trans(Q), M);
+	return 1;
 }
 
 

@@ -6,10 +6,10 @@
 
 #include "types.h"
 
-#include "../../helper/flags.h"
-#include "../../string/string.h"
-#include "../../string/spec_char.h"
-#include "../../helper/log.h"
+#include "helper/flags.h"
+#include "string/string.h"
+#include "string/spec_char.h"
+#include "helper/log.h"
 
 #include <iostream>
 #include <fstream>

@@ -4,14 +4,14 @@
  * @date 2013
  */
 
-#include "../lang/types.h"
+#include "lang/types.h"
 #include "calls_math.h"
-#include "../lang/calls.h"
-#include "../../math/fourier.h"
-#include "../../math/linalg.h"
-#include "../../math/linalg2.h"
-#include "../../math/rand.h"
-#include "../../helper/log.h"
+#include "lang/calls.h"
+#include "math/fourier.h"
+#include "math/linalg.h"
+#include "math/linalg2.h"
+#include "math/rand.h"
+#include "helper/log.h"
 #include <boost/math/special_functions/erf.hpp>
 
 namespace ublas = boost::numeric::ublas;

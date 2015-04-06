@@ -4,11 +4,11 @@
  * @date dec 2013
  */
 
-#include "../lang/types.h"
+#include "lang/types.h"
 #include "calls_plot.h"
-#include "../lang/calls.h"
-#include "../../gfx/gnuplot.h"
-#include "../../string/string.h"
+#include "lang/calls.h"
+#include "gfx/gnuplot.h"
+#include "string/string.h"
 
 
 // --------------------------------------------------------------------------------

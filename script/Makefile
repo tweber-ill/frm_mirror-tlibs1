@@ -42,7 +42,7 @@ endif
 
 
 # Minuit
-INCS += -I/usr/include/root
+INCS += -I. -I.. -I/usr/include/root
 LIBS += -L/usr/lib64/root -lMinuit2
 
 # std

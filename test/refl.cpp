@@ -18,6 +18,8 @@ int main()
 	std::cout << tl::insert_unity(M, 2) << std::endl;
 
 
+	std::cout << "--------------------------------------" << std::endl;
+	std::cout << "qr via householder algo:" << std::endl;
 	ublas::matrix<double> Q, R;
 	if(tl::qr_decomp(M, Q, R))
 	{
@@ -25,6 +27,17 @@ int main()
 		std::cout << "Q = " << Q << std::endl;
 		std::cout << "R = " << R << std::endl;
 		std::cout << "QR = " << ublas::prod(Q,R) << std::endl;
+	}
+
+	std::cout << "--------------------------------------" << std::endl;
+	std::cout << "qr via gram-schmidt algo:" << std::endl;
+	ublas::matrix<double> Q0, R0;
+	if(tl::qr_decomp_gs(M, Q0, R0))
+	{
+		std::cout << "M = " << M << std::endl;
+		std::cout << "Q = " << Q0 << std::endl;
+		std::cout << "R = " << R0 << std::endl;
+		std::cout << "QR = " << ublas::prod(Q0,R0) << std::endl;
 	}
 
 	return 0;

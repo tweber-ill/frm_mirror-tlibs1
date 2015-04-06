@@ -4,12 +4,12 @@
  * @date dec 2013
  */
 
-#include "../lang/types.h"
-#include "../../helper/flags.h"
-#include "../../string/string.h"
-#include "../../helper/log.h"
+#include "lang/types.h"
+#include "helper/flags.h"
+#include "string/string.h"
+#include "helper/log.h"
 #include "calls_thread.h"
-#include "../lang/calls.h"
+#include "lang/calls.h"
 #include <thread>
 #include <future>
 #include <wait.h>

@@ -7,8 +7,8 @@
 #include "node.h"
 #include "calls.h"
 #include "info.h"
-#include "../../math/math.h"
-#include "../../helper/log.h"
+#include "math/math.h"
+#include "helper/log.h"
 
 template<typename T> typename tl::remove_constref<T>::type plus_op(T a, T b) { return a+b; }
 template<typename T> typename tl::remove_constref<T>::type minus_op(T a, T b) { return a-b; }

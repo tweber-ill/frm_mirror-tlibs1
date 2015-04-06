@@ -7,9 +7,6 @@
 %{
 	#include "lang/info.h"
 	#include "lang/yylexer.h"
-	
-	#include <iostream>
-	#include <math.h>
 
 	static inline void set_linenr(void* dollardollar, void* pParseObj)
 	{

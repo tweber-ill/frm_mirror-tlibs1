@@ -4,13 +4,13 @@
  * @date jan 2014
  */
 
-#include "../lang/types.h"
-#include "../../string/string.h"
-#include "../../helper/log.h"
-#include "../../math/interpolation.h"
+#include "lang/types.h"
+#include "string/string.h"
+#include "helper/log.h"
+#include "math/interpolation.h"
 #include "calls_fit.h"
-#include "../lang/calls.h"
-#include "../lang/node.h"
+#include "lang/calls.h"
+#include "lang/node.h"
 
 
 template<typename T> using t_stdvec = std::vector<T>;

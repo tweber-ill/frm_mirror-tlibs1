@@ -23,8 +23,8 @@ int main()
 	// --------------------------------------------------------------------
 	std::cout << "\n";
 
-	ublas::vector<double> vecA = tl::make_vec({-2.,0.,0.});
-	ublas::vector<double> vecB = tl::make_vec({1.,-2.,0.});
+	ublas::vector<double> vecA = tl::make_vec({-2.,0.5,2.});
+	ublas::vector<double> vecB = tl::make_vec({1.,-2.,1.});
 
 	std::vector<ublas::vector<double>> vecsOutC = tl::gram_schmidt({vecA, vecB});
 
