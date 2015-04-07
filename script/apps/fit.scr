@@ -177,7 +177,7 @@ fit_doublegauss_manual_singlestep(x, y, yerr, peaks_x, peaks_size, peaks_width, 
 			#	"lower_limits":lowerlims, "upper_limits":upperlims,
 			#	"fixed":["offs"], 
 				"debug":1,
-				"steps":strsteps
+				"steps":stepstrs
 			]
 			);
 
@@ -281,7 +281,7 @@ fit_doublegauss(x, y, yerr, E0)
 
 
 # -----------------------------------------------------------------------------
-# double gaussian
+# triple gaussian
 triplegauss_model(x, x0_0, sigma_0, amp_0, x0_1, sigma_1, amp_1, x0_2, sigma_2, amp_2, offs)
 {
 	return amp_0 * exp(-0.5 * ((x-x0_0) / sigma_0)^2.) 
@@ -310,6 +310,59 @@ fit_triplegauss_manual_singlestep(x, y, yerr, peaks_x, peaks_size, peaks_width, 
 			offs/10.];
 
 	fitparams = fit("triplegauss_model", x, y, yerr, 
+			[
+				"hints":hints, "hints_errors":hints_err,
+			#	"lower_limits":lowerlims, "upper_limits":upperlims,
+			#	"fixed":["offs"], 
+				"debug":1,
+				"steps":stepstrs
+			]
+			);
+
+	return fitparams;
+}
+# -----------------------------------------------------------------------------
+
+
+
+# -----------------------------------------------------------------------------
+# quadruple gaussian
+quadgauss_model(x, 
+	x0_0, sigma_0, amp_0, 
+	x0_1, sigma_1, amp_1, 
+	x0_2, sigma_2, amp_2, 
+	x0_3, sigma_3, amp_3, 
+	offs)
+{
+	return amp_0 * exp(-0.5 * ((x-x0_0) / sigma_0)^2.) 
+		+ amp_1 * exp(-0.5 * ((x-x0_1) / sigma_1)^2.) 
+		+ amp_2 * exp(-0.5 * ((x-x0_2) / sigma_2)^2.)
+		+ amp_3 * exp(-0.5 * ((x-x0_3) / sigma_3)^2.)
+		+ offs;
+}
+
+fit_quadgauss_manual_singlestep(x, y, yerr, peaks_x, peaks_size, peaks_width, offs, stepstrs)
+{
+	# Minuit doesn't handle errors == 0
+	yrange = max(y)-min(y);
+	for(thisyerr : yerr)
+	{
+		if(thisyerr eq 0.)
+			thisyerr = yrange*0.001;
+	}
+
+	hints = [peaks_x[0], peaks_width[0], peaks_size[0], 
+			peaks_x[1], peaks_width[1], peaks_size[1],
+			peaks_x[2], peaks_width[2], peaks_size[2],
+			peaks_x[3], peaks_width[3], peaks_size[3],
+			offs];
+
+	hints_err = [peaks_x[0]/10., peaks_width[0]/10., peaks_size[0]/10., 
+				peaks_x[1]/10., peaks_width[1]/10., peaks_size[1]/10.,
+				peaks_x[2]/10., peaks_width[2]/10., peaks_size[2]/10.,
+			offs/10.];
+
+	fitparams = fit("quadgauss_model", x, y, yerr, 
 			[
 				"hints":hints, "hints_errors":hints_err,
 			#	"lower_limits":lowerlims, "upper_limits":upperlims,

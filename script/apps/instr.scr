@@ -12,6 +12,7 @@ module_init()
 
 	global size_pts = 0.75;
 	global size_lines = 1.5;
+	global num_pts = 512;
 	global theterm = "wxt";
 }
 
@@ -159,7 +160,7 @@ plot_gausses(num_peaks, fitres, thedat, plot_dat=0, param_vec=[])
 	#print("Fit values: " + str(params_vals));
 	#print("Fit errors: " + str(params_errs));
 
-	fitx = linspace(minx-xrange, maxx+xrange, 512);
+	fitx = linspace(minx-xrange, maxx+xrange, num_pts);
 
 	if(num_peaks == 1)
 		fity = gauss_model(fitx, *params_vals);
@@ -167,6 +168,8 @@ plot_gausses(num_peaks, fitres, thedat, plot_dat=0, param_vec=[])
 		fity = doublegauss_model(fitx, *params_vals);
 	else if(num_peaks == 3)
 		fity = triplegauss_model(fitx, *params_vals);
+	else if(num_peaks == 4)
+		fity = quadgauss_model(fitx, *params_vals);
 	else
 		fity = multigauss_model(fitx, map_to_vec(params_vals, param_vec));
 
@@ -285,6 +288,7 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 
 	# Fit
 	fitres = 0;
+	plotobjs_fit = [];
 	if(do_fit)
 	{
 		param_vec = [];
