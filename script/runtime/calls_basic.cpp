@@ -279,7 +279,7 @@ static bool _import_file(const t_string& strFile, ParseInfo& info, RuntimeInfo &
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Parser returned with error code " 
 			<< iParseRet 
-			<< "for file \"" << _strFile << "\"." << std::endl;
+			<< " for file \"" << _strFile << "\"." << std::endl;
 		throw tl::Err(ostrErr.str(),0);
 	}
 
@@ -329,7 +329,7 @@ static Symbol* fkt_has_var(const std::vector<Symbol*>& vecSyms,
 	{
 		// check global variables
 		std::lock_guard<std::mutex> _lck(*info.pmutexGlobalSyms);
-		
+
 		if(info.pGlobalSyms->GetSymbol(strVar))
 			bHasVar = 1;
 	}
@@ -714,6 +714,64 @@ static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
 	}
 
 	return pSymIter;
+}
+
+
+static Symbol* fkt_splice(const std::vector<Symbol*>& vecSyms,
+			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+{
+	if(vecSyms.size() == 0)
+	{
+		tl::log_err(linenr(runinfo), "Need argument for splice.");
+		return nullptr;
+	}
+	if(vecSyms[0] == nullptr)
+	{
+		tl::log_err(linenr(runinfo), "Need valid argument for splice.");
+		return nullptr;
+	}
+
+	Symbol *pSymRet = nullptr;
+	const SymbolType tyFirstSym = vecSyms[0]->GetType();
+
+	if(tyFirstSym == SYMBOL_ARRAY)
+		pSymRet = new SymbolArray();
+	else if(tyFirstSym == SYMBOL_MAP)
+		pSymRet = new SymbolMap();
+	else
+	{
+		std::ostringstream ostrErr;
+		ostrErr << linenr(runinfo) << "Cannot splice symbols of type "
+			<< vecSyms[0]->GetTypeName() << "." << std::endl;
+		throw tl::Err(ostrErr.str(),0);
+	}
+
+
+	for(const Symbol* pSym : vecSyms)
+	{
+		if(!pSym || pSym->GetType() != tyFirstSym)
+		{
+			tl::log_warn(linenr(runinfo), "Type mismatch for symbol \"", pSym->GetName(), "\" in splice. Ignoring symbol.");
+			continue;
+		}
+
+		if(tyFirstSym == SYMBOL_ARRAY)
+		{
+			for(const Symbol* pSymInArr : ((SymbolArray*)pSym)->GetArr())
+				((SymbolArray*)pSymRet)->GetArr().push_back(pSymInArr->clone());
+		}
+		else if(tyFirstSym == SYMBOL_MAP)
+		{
+			tl::log_err(linenr(runinfo), "Map splice not yet implemented. Use operator+ instead.");
+			continue;
+		}
+	}
+
+	if(tyFirstSym == SYMBOL_ARRAY)
+		((SymbolArray*)pSymRet)->UpdateIndices();
+	else if(tyFirstSym == SYMBOL_MAP)
+		((SymbolMap*)pSymRet)->UpdateIndices();
+	return pSymRet;
 }
 
 
@@ -1221,6 +1279,7 @@ extern void init_ext_basic_calls()
 		t_mapFkts::value_type(T_STR"cur_iter", fkt_cur_iter),
 		t_mapFkts::value_type(T_STR"zip", fkt_zip),
 		t_mapFkts::value_type(T_STR"sort", fkt_sort),
+		t_mapFkts::value_type(T_STR"splice", fkt_splice),
 
 		// map/array operations
 		t_mapFkts::value_type(T_STR"contains", fkt_contains),
