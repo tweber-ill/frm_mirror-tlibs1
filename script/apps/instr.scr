@@ -156,9 +156,8 @@ plot_gausses(num_peaks, fitres, thedat, plot_dat=0, param_vec=[])
 
 	params_vals = map_vec_to_val(fitres);
 	params_errs = map_vec_to_val(fitres, 1);
-	
-	#print("Fit values: " + str(params_vals));
-	#print("Fit errors: " + str(params_errs));
+	print("Fit values: " + str(params_vals));
+	print("Fit errors: " + str(params_errs));
 
 	fitx = linspace(minx-xrange, maxx+xrange, num_pts);
 
@@ -176,9 +175,18 @@ plot_gausses(num_peaks, fitres, thedat, plot_dat=0, param_vec=[])
 	fity_gausses = vec(num_peaks);
 	for(iPeak=0; iPeak<num_peaks; iPeak+=1)
 	{
-		x0 = "x0_" + iPeak;
-		sigma = "sigma_" + iPeak;
-		amp = "amp_" + iPeak;
+		if(num_peaks != 1)
+		{
+			x0 = "x0_" + iPeak;
+			sigma = "sigma_" + iPeak;
+			amp = "amp_" + iPeak;
+		}
+		else
+		{
+			x0 = "x0";
+			sigma = "sigma";
+			amp = "amp";
+		}
 
 		params_vals_gauss = ["x0":params_vals[x0], "sigma":params_vals[sigma], "amp":params_vals[amp], "offs":params_vals["offs"]];
 		#params_errs_gauss = ["x0":params_errs[x0], "sigma":params_errs[sigma], "amp":params_errs[amp], "offs":params_errs["offs"]];
