@@ -1286,7 +1286,7 @@ bool qr_decomp(const t_mat& M, t_mat& Q, t_mat& R)
 
 template<typename t_vec = ublas::vector<double>,
 	typename T = typename t_vec::value_type>
-std::vector<t_vec> gram_schmidt(const std::vector<t_vec>& vecs, bool bNorm);
+std::vector<t_vec> gram_schmidt(const std::vector<t_vec>& vecs, bool bNorm=true);
 
 // QR decomposition via gram-schmidt orthogonalisation
 template<class t_mat = ublas::matrix<double>,
@@ -1434,9 +1434,9 @@ void sort_eigenvecs(std::vector<ublas::vector<T> >& evecs,
 // --------------------------------------------------------------------------------
 
 
-template<typename t_vec = ublas::vector<double>,
-	typename T = typename t_vec::value_type>
-std::vector<t_vec> gram_schmidt(const std::vector<t_vec>& vecs, bool bNorm=1)
+template<typename t_vec /*= ublas::vector<double>*/,
+	typename T /*= typename t_vec::value_type*/ >
+std::vector<t_vec> gram_schmidt(const std::vector<t_vec>& vecs, bool bNorm/*=1*/)
 {
 	std::vector<t_vec> vecsOut;
 	if(vecs.size() == 0)
@@ -1468,7 +1468,7 @@ std::vector<t_vec> get_ortho_rhs(const std::vector<t_vec>& vecs)
 {
 	assert(vecs.size() == 2);
 
-	std::vector<t_vec> vecOrtho = gram_schmidt(vecs);
+	std::vector<t_vec> vecOrtho = gram_schmidt(vecs, true);
 	t_vec vecUp = cross_3(vecOrtho[0], vecOrtho[1]);
 	vecOrtho.push_back(vecUp);
 
