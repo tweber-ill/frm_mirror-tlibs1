@@ -762,8 +762,10 @@ static Symbol* fkt_splice(const std::vector<Symbol*>& vecSyms,
 		}
 		else if(tyFirstSym == SYMBOL_MAP)
 		{
-			tl::log_err(linenr(runinfo), "Map splice not yet implemented. Use operator+ instead.");
-			continue;
+			typedef SymbolMap::t_map::value_type t_pair;
+
+			for(const t_pair& pair : ((SymbolMap*)pSym)->GetMap())
+				((SymbolMap*)pSymRet)->GetMap().insert(t_pair(pair.first, pair.second->clone()));
 		}
 	}
 

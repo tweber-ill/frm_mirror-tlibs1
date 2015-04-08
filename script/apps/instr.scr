@@ -141,7 +141,7 @@ load_instr(filenames, norm_to_monitor=1, opts=map())
 	return [instr, dat_x, dat_y, dat_yerr, xlab, ylab];
 }
 
-plot_gausses(num_peaks, fitres, thedat, plot_dat=0, param_vec=[])
+get_plotobj_gausses(num_peaks, fitres, thedat, plot_dat=0, param_vec=[])
 {
 	minx = min(thedat[0]);
 	maxx = max(thedat[0]);
@@ -211,6 +211,24 @@ plot_gausses(num_peaks, fitres, thedat, plot_dat=0, param_vec=[])
 	plotmap["ylimits"] = ylims;
 	plotmap["term"] = theterm;
 	return [plotobjs, plotmap];
+}
+
+dualplot(plotobj, plotmap, filename="")
+{
+	plot(plotobj, plotmap);
+	if(filename != "")
+		fileplot(filename, plotobj, plotmap);
+}
+
+plot_gausses(num_gausses, thefit, thedat, title, xlab, ylab, filename)
+{
+	if(!int(thefit["<valid>"]))
+		title += " !! FIT INVALID !! ";
+	else
+		title += ", {/Symbol c}^2/n_d_f = " + thefit["<chi2_red>"];
+
+	[plotobj, plotmap] = get_plotobj_gausses(num_gausses, thefit, thedat, 1, []);
+	dualplot(plotobj, plotmap + ["xlabel":xlab, "ylabel":ylab, "title":title], filename);
 }
 
 fit_gausses(dat_x, dat_y, dat_yerr, peaks_x, peaks_size, peaks_width)
@@ -301,7 +319,7 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 	{
 		param_vec = [];
 		[fitres, param_vec] = fit_gausses(dat_x, dat_y, dat_yerr, peaks_x, peaks_size, peaks_width);
-		plotobjs_fit = plot_gausses(num_peaks, fitres, [dat_x, dat_y, dat_yerr], 0, param_vec);
+		plotobjs_fit = get_plotobj_gausses(num_peaks, fitres, [dat_x, dat_y, dat_yerr], 0, param_vec);
 	}
 
 	plotobjs = [[dat_x, dat_y, dat_yerr, ["size":size_pts]]];
