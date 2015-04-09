@@ -6,6 +6,7 @@
 module_init()
 {
 	global hwhm2sigma = 1./(sqrt(2.*log(2.)));
+	global fit_dbg = 0;
 }
 
 
@@ -128,7 +129,7 @@ fit_multigauss_manual(x, y, yerr, peaks_x, peaks_size, peaks_width)
 						"use_param_vec" : param_vec,
 						"hints":hints, "hints_errors":hints_err,
 						"lower_limits":lowerlims, "upper_limits":upperlims,
-						"debug":1,
+						"debug" : fit_dbg,
 						"steps":fitsteps
 					]
 					);
@@ -176,7 +177,7 @@ fit_doublegauss_manual_singlestep(x, y, yerr, peaks_x, peaks_size, peaks_width, 
 				"hints":hints, "hints_errors":hints_err,
 			#	"lower_limits":lowerlims, "upper_limits":upperlims,
 			#	"fixed":["offs"], 
-				"debug":1,
+				"debug" : fit_dbg,
 				"steps":stepstrs
 			]
 			);
@@ -238,7 +239,7 @@ fit_doublegauss_manual2(x, y, yerr, E0, peaks_x, peaks_size, peaks_width)
 			[
 				"hints":hints, "hints_errors":hints_err,
 				"lower_limits":lowerlims, "upper_limits":upperlims,
-				"fixed":["offs"], "debug":1,
+				"fixed":["offs"], "debug" : fit_dbg,
 				"steps":["frrffff", "ffffrrf", "rfffffr", "fffrffr", "xxxxxxx"]
 			]
 			);
@@ -314,7 +315,7 @@ fit_triplegauss_manual_singlestep(x, y, yerr, peaks_x, peaks_size, peaks_width, 
 				"hints":hints, "hints_errors":hints_err,
 			#	"lower_limits":lowerlims, "upper_limits":upperlims,
 			#	"fixed":["offs"], 
-				"debug":1,
+				"debug" : fit_dbg,
 				"steps":stepstrs
 			]
 			);
@@ -367,7 +368,7 @@ fit_quadgauss_manual_singlestep(x, y, yerr, peaks_x, peaks_size, peaks_width, of
 				"hints":hints, "hints_errors":hints_err,
 			#	"lower_limits":lowerlims, "upper_limits":upperlims,
 			#	"fixed":["offs"], 
-				"debug":1,
+				"debug" : fit_dbg,
 				"steps":stepstrs
 			]
 			);
@@ -406,7 +407,7 @@ fit_gauss_manual(x, y, yerr, peak_x, peak_size, peak_width)
 			[
 				"hints":hints, "hints_errors":hints_err,
 				"lower_limits":lowerlims, "upper_limits":upperlims,
-				"fixed":["offs"], "debug":1,
+				"fixed":["offs"], "debug" : fit_dbg,
 				"steps":["frrf", "rffr", "xxxx"]
 			]
 			);
@@ -432,7 +433,7 @@ fit_gauss_manual_singlestep(x, y, yerr, peak_x, peak_size, peak_width, offs, ste
 				"hints":hints, "hints_errors":hints_err,
 			#	"lower_limits":lowerlims, "upper_limits":upperlims,
 			#	"fixed":["offs"], 
-				"debug":1,
+				"debug" : fit_dbg,
 				"steps":stepstrs
 			]
 			);
@@ -484,7 +485,7 @@ fit_line(x, y, yerr)
 	fitparams = fit("line_model", x, y, yerr,
 			[
 				"hints" : [m_hint, b_hint], "hints_errors" : [m_hint_err, b_hint_err],
-				"debug" : 1,
+				"debug" : fit_dbg,
 				"steps" : ["fr", "rf", "xx"]
 			]);
 	return fitparams;
@@ -498,7 +499,7 @@ fit_line_zero(x, y, yerr)
 	fitparams = fit("line_model_zero", x, y, yerr,
 			[
 				"hints" : [m_hint], "hints_errors" : [m_hint_err],
-				"debug" : 1
+				"debug" : fit_dbg
 			]);
 	return fitparams;
 }
@@ -534,7 +535,7 @@ fit_erf(x, y, yerr)
 				"hints" : [a_hint, m_hint, b_hint, x0_hint],
 				"hints_errors" : [a_hint_err, m_hint_err, b_hint_err, x0_hint_err],
 
-				"debug" : 1
+				"debug" : fit_dbg
 			]);
 }
 

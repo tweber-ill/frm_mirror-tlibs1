@@ -45,7 +45,7 @@ load_instr(filenames, norm_to_monitor=1, opts=map())
 	if(typeof(filenames) == "vector" and length(filenames)>1)
 		for(filename : filenames)
 			if(cur_iter(filename) == 0) 
-				continue;
+				print("Loaded " + filename + ".");
 			else
 				print("Merged " + filename + " with " + filenames[0] + ".");
 
