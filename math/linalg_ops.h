@@ -11,6 +11,8 @@
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 
+#include "../helper/traits.h"
+
 namespace tl {
 
 namespace ublas = boost::numeric::ublas;
