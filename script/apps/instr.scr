@@ -213,8 +213,41 @@ get_plotobj_gausses(num_peaks, fitres, thedat, plot_dat=0, param_vec=[])
 	return [plotobjs, plotmap];
 }
 
+get_gauss_pos(thefit, xvar=0.)
+{
+	pos = [];
+	pos_err = [];
+	x = [];
+
+	posvar = "x0";
+	if(has_key(thefit, posvar))
+	{
+		pos[length(pos)] = thefit[posvar][0];
+		pos_err[length(pos_err)] = thefit[posvar][1];
+		x[length(x)] = xvar;
+	}
+
+	i = 0;
+	while(1)
+	{
+		curposvar = posvar + "_" + str(i);
+		#print(curposvar);
+		if(!has_key(thefit, curposvar))
+			break;
+
+		pos[length(pos)] = thefit[curposvar][0];
+		pos_err[length(pos_err)] = thefit[curposvar][1];
+		x[length(x)] = xvar;
+
+		i += 1;
+	}
+
+	return [x, pos, pos_err];
+}
+
 dualplot(plotobj, plotmap, filename="")
 {
+	#print(plotmap);
 	plot(plotobj, plotmap);
 	if(filename != "")
 		fileplot(filename, plotobj, plotmap);
