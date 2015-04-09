@@ -213,7 +213,7 @@ get_plotobj_gausses(num_peaks, fitres, thedat, plot_dat=0, param_vec=[])
 	return [plotobjs, plotmap];
 }
 
-get_gauss_pos(thefit, xvar=0.)
+get_gauss_pos(thefit, xvar=0., sortmode=">")
 {
 	pos = [];
 	pos_err = [];
@@ -241,6 +241,13 @@ get_gauss_pos(thefit, xvar=0.)
 
 		i += 1;
 	}
+
+	#print("before: " + str(pos));
+	if(sortmode == ">")
+		[pos, pos_err, x] = sort_rev(pos, pos_err, x);
+	else if(sortmode == "<")
+		[pos, pos_err, x] = sort(pos, pos_err, x);
+	#print("after: " + str(pos));
 
 	return [x, pos, pos_err];
 }

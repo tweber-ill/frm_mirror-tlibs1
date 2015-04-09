@@ -779,14 +779,17 @@ static Symbol* fkt_splice(const std::vector<Symbol*>& vecSyms,
 
 typedef std::tuple<const Symbol*, unsigned int> t_symtup;
 
-static void _sortarr(std::vector<t_symtup>& vec)
+static void _sortarr(std::vector<t_symtup>& vec, bool bReverse=0)
 {
-	auto comp = [](const t_symtup& tup1, const t_symtup& tup2) -> bool
+	auto comp = [bReverse](const t_symtup& tup1, const t_symtup& tup2) -> bool
 	{
 		const Symbol* pSym0 = std::get<0>(tup1);
 		const Symbol* pSym1 = std::get<0>(tup2);
 
-		return pSym0->IsLessThan(*pSym1);
+		bool bLess = pSym0->IsLessThan(*pSym1);
+		if(bReverse) bLess = !bLess;
+
+		return bLess;
 	};
 
 	std::sort(vec.begin(), vec.end(), comp);
@@ -799,8 +802,9 @@ static void _rearrangearr(std::vector<Symbol*>& vecSyms, const std::vector<unsig
 		vecSyms[i] = vecTmp[vecIdx[i]];
 }
 
-static Symbol* fkt_sort(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+static Symbol* _fkt_sort(const std::vector<Symbol*>& vecSyms,
+			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab,
+			bool bReverse=0)
 {
 	if(vecSyms.size()<1 || vecSyms[0]->GetType()!=SYMBOL_ARRAY)
 	{
@@ -819,7 +823,7 @@ static Symbol* fkt_sort(const std::vector<Symbol*>& vecSyms,
 	for(unsigned int iElem=0; iElem<iArrSize; ++iElem)
 		vecTups.push_back(t_symtup(pArr->GetArr()[iElem], iElem));
 
-	_sortarr(vecTups);
+	_sortarr(vecTups, bReverse);
 
 	SymbolArray* pArrRet = new SymbolArray();
 	pArrRet->GetArr().reserve(iArrSize);
@@ -869,6 +873,17 @@ static Symbol* fkt_sort(const std::vector<Symbol*>& vecSyms,
 	return pArrArr;
 }
 
+static Symbol* fkt_sort(const std::vector<Symbol*>& vecSyms,
+			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+{
+	return _fkt_sort(vecSyms, info, runinfo, pSymTab, 0);
+}
+
+static Symbol* fkt_sort_rev(const std::vector<Symbol*>& vecSyms,
+			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+{
+	return _fkt_sort(vecSyms, info, runinfo, pSymTab, 1);
+}
 
 static Symbol* fkt_zip(const std::vector<Symbol*>& vecSyms,
 						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
@@ -1281,6 +1296,7 @@ extern void init_ext_basic_calls()
 		t_mapFkts::value_type(T_STR"cur_iter", fkt_cur_iter),
 		t_mapFkts::value_type(T_STR"zip", fkt_zip),
 		t_mapFkts::value_type(T_STR"sort", fkt_sort),
+		t_mapFkts::value_type(T_STR"sort_rev", fkt_sort_rev),
 		t_mapFkts::value_type(T_STR"splice", fkt_splice),
 
 		// map/array operations
