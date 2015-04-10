@@ -1,5 +1,5 @@
 /*
- * Load instrument-specific data file
+ * Loads instrument-specific data file
  * @author tweber
  * @date feb-2015
  * @copyright GPLv2 or GPLv3
@@ -151,6 +151,58 @@ class FileFrm : public FileInstr
 	public:
 		FileFrm() = default;
 		virtual ~FileFrm() = default;
+
+	protected:
+		void ReadHeader(std::istream& istr);
+		void ReadData(std::istream& istr);
+
+	public:
+		virtual bool Load(const char* pcFile) override;
+
+		virtual std::array<double, 3> GetSampleLattice() const override;
+		virtual std::array<double, 3> GetSampleAngles() const override;
+		virtual std::array<double, 2> GetMonoAnaD() const override;
+
+		virtual std::array<bool, 3> GetScatterSenses() const override;
+		virtual std::array<double, 3> GetScatterPlane0() const override;
+		virtual std::array<double, 3> GetScatterPlane1() const override;
+
+		virtual double GetKFix() const override;
+		virtual bool IsKiFixed() const override;
+
+		virtual std::size_t GetScanCount() const override;
+		virtual std::array<double, 5> GetScanHKLKiKf(std::size_t i) const override;
+		virtual bool MergeWith(const FileInstr* pDat) override;
+
+		virtual const t_vecVals& GetCol(const std::string& strName) const override;
+		virtual t_vecVals& GetCol(const std::string& strName) override;
+
+		virtual std::string GetTitle() const override;
+		virtual std::string GetScanNumber() const override;
+		virtual std::string GetSampleName() const override;
+		virtual std::string GetSpacegroup() const override;
+
+		virtual const t_vecDat& GetData() const override { return m_vecData; }
+		virtual const t_vecColNames& GetColNames() const override { return m_vecQuantities; }
+		virtual const t_mapParams& GetAllParams() const override { return m_mapParams; }
+
+		virtual std::vector<std::string> GetScannedVars() const override;
+		virtual std::string GetCountVar() const override;
+		virtual std::string GetMonVar() const override;
+};
+
+
+// macs files
+class FileMacs : public FileInstr
+{
+	protected:
+		t_mapParams m_mapParams;
+		t_vecColNames m_vecQuantities;
+		t_vecDat m_vecData;
+
+	public:
+		FileMacs() = default;
+		virtual ~FileMacs() = default;
 
 	protected:
 		void ReadHeader(std::istream& istr);

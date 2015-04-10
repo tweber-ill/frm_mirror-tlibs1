@@ -1,5 +1,5 @@
 /*
- * Load instrument-specific data file
+ * Loads instrument-specific data file
  * @author tweber
  * @date feb-2015
  * @copyright GPLv2 or GPLv3
@@ -57,9 +57,12 @@ FileInstr* FileInstr::LoadInstr(const char* pcFile)
 		return nullptr;
 
 	const std::string strNicos("nicos data file");
+	const std::string strMacs("ice");
 
 	if(strLine.find(strNicos) != std::string::npos)		// frm file
 		pDat = new FileFrm();
+	else if(strLine.find(strMacs) != std::string::npos)	// macs file
+		pDat = new FileMacs();
 	else												// psi or ill file
 		pDat = new FilePsi();
 
@@ -886,9 +889,354 @@ std::string FileFrm::GetMonVar() const
 }
 
 
+
+
+// -----------------------------------------------------------------------------
+
+
+
+void FileMacs::ReadHeader(std::istream& istr)
+{
+	while(!istr.eof())
+	{
+		std::string strLine;
+		std::getline(istr, strLine);
+
+		trim(strLine);
+		if(strLine.length()==0 || strLine[0]!='#')
+			continue;
+
+		strLine = strLine.substr(1);
+
+		std::pair<std::string, std::string> pairLine =
+				split_first<std::string>(strLine, " ", 1);
+		//std::cout << "key: " << pairLine.first << ", val: " << pairLine.second << std::endl;
+
+		if(pairLine.first == "")
+			continue;
+		else if(pairLine.first == "Columns")
+		{
+			tl::get_tokens<std::string, std::string>(pairLine.second, " \t", m_vecQuantities);
+			//for(const std::string& strCol : m_vecQuantities)
+			//	std::cout << "column: \"" << strCol << "\"" << std::endl;
+			continue;
+		}
+		else
+		{
+			t_mapParams::iterator iter = m_mapParams.find(pairLine.first);
+
+			if(iter == m_mapParams.end())
+				m_mapParams.insert(pairLine);
+			else
+				iter->second += ", " + pairLine.second;
+		}
+	}
+}
+
+void FileMacs::ReadData(std::istream& istr)
+{
+	m_vecData.resize(m_vecQuantities.size());
+
+	// data
+	while(!istr.eof())
+	{
+		std::string strLine;
+		std::getline(istr, strLine);
+		trim(strLine);
+		if(strLine.length()==0 || strLine[0]=='#')
+			continue;
+
+		std::vector<double> vecToks;
+		get_tokens<double, std::string>(strLine, " \t", vecToks);
+
+		if(vecToks.size() != m_vecQuantities.size())
+		{
+			log_warn("Loader: Line size mismatch.");
+
+			// add zeros
+			while(m_vecQuantities.size() > vecToks.size())
+				vecToks.push_back(0.);
+		}
+
+		for(std::size_t iTok=0; iTok<vecToks.size(); ++iTok)
+			m_vecData[iTok].push_back(vecToks[iTok]);
+	}
 }
 
 
+bool FileMacs::Load(const char* pcFile)
+{
+	for(int iStep : {0,1})
+	{
+		std::ifstream ifstr(pcFile);
+		if(!ifstr.is_open())
+			return false;
+
+#if !defined NO_IOSTR
+		std::istream* pIstr = create_autodecomp_istream(ifstr);
+		if(!pIstr) return false;
+		std::unique_ptr<std::istream> ptrIstr(pIstr);
+#else
+		std::ifstream *pIstr = &ifstr;
+#endif
+
+		if(iStep==0)
+			ReadHeader(*pIstr);
+		else if(iStep==1)
+			ReadData(*pIstr);
+	}
+
+	return true;
+}
+
+const FileInstr::t_vecVals& FileMacs::GetCol(const std::string& strName) const
+{
+	return const_cast<FileMacs*>(this)->GetCol(strName);
+}
+
+FileInstr::t_vecVals& FileMacs::GetCol(const std::string& strName)
+{
+	static std::vector<double> vecNull;
+
+	for(std::size_t i=0; i<m_vecQuantities.size(); ++i)
+	{
+		if(m_vecQuantities[i] == strName)
+			return m_vecData[i];
+	}
+
+	return vecNull;
+}
+
+
+std::array<double, 3> FileMacs::GetSampleLattice() const
+{
+	t_mapParams::const_iterator iter = m_mapParams.find("Lattice");
+
+	std::vector<double> vecToks;
+	tl::get_tokens<double, std::string>(iter->second, " \t", vecToks);
+	if(vecToks.size() != 6)
+	{
+		log_err("Invalid sample lattice array size.");
+		return std::array<double,3>{{0.,0.,0.}};
+	}
+
+	return std::array<double,3>{{vecToks[0], vecToks[1], vecToks[2]}};
+}
+
+std::array<double, 3> FileMacs::GetSampleAngles() const
+{
+	t_mapParams::const_iterator iter = m_mapParams.find("Lattice");
+
+	std::vector<double> vecToks;
+	tl::get_tokens<double, std::string>(iter->second, " \t", vecToks);
+	if(vecToks.size() != 6)
+	{
+		log_err("Invalid sample lattice array size.");
+		return std::array<double,3>{{0.,0.,0.}};
+	}
+
+	return std::array<double,3>{{vecToks[3]/180.*M_PI, 
+			vecToks[4]/180.*M_PI, 
+			vecToks[5]/180.*M_PI}};
+}
+
+std::array<double, 2> FileMacs::GetMonoAnaD() const
+{
+	t_mapParams::const_iterator iterM = m_mapParams.find("MonoSpacing");
+	t_mapParams::const_iterator iterA = m_mapParams.find("AnaSpacing");
+
+	double m = (iterM!=m_mapParams.end() ? str_to_var<double>(iterM->second) : 3.355);
+	double a = (iterA!=m_mapParams.end() ? str_to_var<double>(iterA->second) : 3.355);
+
+	return std::array<double,2>{{m, a}};
+}
+
+std::array<bool, 3> FileMacs::GetScatterSenses() const
+{
+	return std::array<bool,3>{{0, 1, 0}};
+}
+
+std::array<double, 3> FileMacs::GetScatterPlane0() const
+{
+	t_mapParams::const_iterator iter = m_mapParams.find("Orient");
+	std::vector<double> vecToks;
+	tl::get_tokens<double, std::string>(iter->second, " \t", vecToks);
+	if(vecToks.size() != 6)
+	{
+		log_err("Invalid sample orientation array size.");
+		return std::array<double,3>{{0.,0.,0.}};
+	}
+	
+	return std::array<double,3>{{vecToks[0],vecToks[1],vecToks[2]}};
+}
+
+std::array<double, 3> FileMacs::GetScatterPlane1() const
+{
+	t_mapParams::const_iterator iter = m_mapParams.find("Orient");
+	std::vector<double> vecToks;
+	tl::get_tokens<double, std::string>(iter->second, " \t", vecToks);
+	if(vecToks.size() != 6)
+	{
+		log_err("Invalid sample orientation array size.");
+		return std::array<double,3>{{0.,0.,0.}};
+	}
+	
+	return std::array<double,3>{{vecToks[3],vecToks[4],vecToks[5]}};
+}
+
+double FileMacs::GetKFix() const
+{
+	// 1) look in data columns
+	const std::string strKey = (IsKiFixed() ? "Ei" : "Ef");
+	const t_vecVals& vecVals = GetCol(strKey);
+	if(vecVals.size() != 0)
+	{
+		bool bImag;
+		double k = tl::E2k(vecVals[0] * tl::meV, bImag) * tl::angstrom;
+		return k;
+	}
+
+
+	// 2) look in header
+	t_mapParams::const_iterator iter = m_mapParams.find("FixedE");
+	if(iter==m_mapParams.end())
+	{
+		tl::log_err("Cannot determine kfix.");
+		return 0.;
+	}
+		
+	std::vector<std::string> vecToks;
+	tl::get_tokens<std::string, std::string>(iter->second, " \t", vecToks);
+	
+	if(vecToks.size()<2)
+	{
+		tl::log_err("Cannot determine kfix.");
+		return 0.;
+	}
+		
+	double dEfix = tl::str_to_var<double>(vecToks[1]);
+	bool bImag;
+	double k = tl::E2k(dEfix * tl::meV, bImag) * tl::angstrom;
+	return k;
+}
+
+bool FileMacs::IsKiFixed() const
+{
+	t_mapParams::const_iterator iter = m_mapParams.find("FixedE");
+	if(iter==m_mapParams.end())
+		return 0;	// assume ckf
+
+	std::vector<std::string> vecToks;
+	tl::get_tokens<std::string, std::string>(iter->second, " \t", vecToks);
+	
+	if(vecToks.size()==0)
+		return 0;	// assume ckf
+
+	std::string strFixedE = vecToks[0];
+	tl::trim(strFixedE);
+
+	if(strFixedE == "Ef")
+		return 0;
+	else if(strFixedE == "Ei")
+		return 1;
+		
+	return 0;		// assume ckf
+}
+
+std::size_t FileMacs::GetScanCount() const
+{
+	if(m_vecData.size() < 1)
+		return 0;
+	return m_vecData[0].size();
+}
+
+std::array<double, 5> FileMacs::GetScanHKLKiKf(std::size_t i) const
+{
+	return FileInstr::GetScanHKLKiKf("QX", "QY", "QZ", "E", i);
+}
+
+bool FileMacs::MergeWith(const FileInstr* pDat)
+{
+	if(!FileInstr::MergeWith(pDat))
+		return false;
+
+	std::string strNr = pDat->GetScanNumber();
+	if(strNr.length() != 0)
+	{
+		// include merged scan number
+		t_mapParams::iterator iter = m_mapParams.find("Filename");
+		if(iter != m_mapParams.end())
+			iter->second += std::string(" + ") + strNr;
+	}
+
+	return true;
+}
+
+
+std::string FileMacs::GetTitle() const
+{
+	std::string strTitle;
+	t_mapParams::const_iterator iter = m_mapParams.find("ExptID");
+	if(iter != m_mapParams.end())
+		strTitle = iter->second;
+		
+	iter = m_mapParams.find("ExptName");
+	if(iter != m_mapParams.end() && iter->second != "")
+		strTitle += " - " + iter->second;
+
+	return strTitle;
+}
+
+std::string FileMacs::GetScanNumber() const
+{
+	std::string strTitle;
+	t_mapParams::const_iterator iter = m_mapParams.find("Filename");
+	if(iter != m_mapParams.end())
+		strTitle = iter->second;
+	return strTitle;
+}
+
+std::string FileMacs::GetSampleName() const
+{
+	return "";
+}
+
+std::string FileMacs::GetSpacegroup() const
+{
+	return "";
+}
+
+std::vector<std::string> FileMacs::GetScannedVars() const
+{
+	std::vector<std::string> vecScan;
+	
+	t_mapParams::const_iterator iter = m_mapParams.find("Scan");
+	if(iter != m_mapParams.end())
+	{
+		std::vector<std::string> vecToks;
+		tl::get_tokens<std::string, std::string>(iter->second, " \t", vecToks);
+		
+		if(vecToks.size() >= 2)
+			vecScan.push_back(vecToks[1]);
+	}
+
+	return vecScan;
+}
+
+std::string FileMacs::GetCountVar() const
+{
+	// TODO
+	return "SPEC";
+}
+
+std::string FileMacs::GetMonVar() const
+{
+	// TODO
+	return "Monitor";
+}
+
+
+}
 
 
 // -----------------------------------------------------------------------------
@@ -896,11 +1244,13 @@ std::string FileFrm::GetMonVar() const
 
 /*
 // test
-// gcc -o 0 file/loadinstr.cpp helper/log.cpp -std=c++11 -lstdc++
+// gcc -DNO_IOSTR -o 0 file/loadinstr.cpp helper/log.cpp -std=c++11 -lstdc++ -lm
 int main()
 {
-	tl::FileFrm dat;
-	if(!dat.Load("/home/tweber/tmp/tst.dat"))
+	//tl::FileFrm dat;
+	tl::FileMacs dat;
+	//if(!dat.Load("/home/tweber/tmp/tst.dat"))
+	if(!dat.Load("/home/tweber/Messdaten/MACS_2014/data/Escan_31896.ng0"))
 	{
 		tl::log_err("Cannot load data file.");
 		return -1;
