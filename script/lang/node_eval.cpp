@@ -141,7 +141,6 @@ Symbol* NodeCall::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym)
 	std::vector<Symbol*> &vecArgSyms = arrArgs.GetArr();
 	for(const Node* pNode : m_vecArgs)
 	{
-		// TODO: Unpack operation for vector.
 		if(pNode->GetType() == NODE_UNPACK)
 		{
 			Node *pChild = ((NodeUnaryOp*)pNode)->GetChild();
@@ -153,33 +152,65 @@ Symbol* NodeCall::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym)
 				throw tl::Err(ostrErr.str(),0);
 			}
 			Symbol *pSymChild = pChild->eval(info, runinfo, pSym);
-			if(pSymChild->GetType() != SYMBOL_MAP)
+			//std::cout << pSymChild->GetTypeName() << std::endl;
+
+			if(pSymChild->GetType() == SYMBOL_MAP)
+			{
+				if(!pFkt)
+				{
+					std::ostringstream ostrErr;
+					ostrErr << linenr(runinfo)
+						<< "Tried to unpack map for (external) function with unnamed parameters." << std::endl;
+					throw tl::Err(ostrErr.str(),0);
+				}
+
+				SymbolMap::t_map& mapSyms = ((SymbolMap*)pSymChild)->GetMap();
+				const std::vector<t_string> vecParamNames = pFkt->GetParamNames();
+
+				for(unsigned int iParam=vecArgSyms.size(); iParam<vecParamNames.size(); ++iParam)
+				{
+					const t_string& strParamName = vecParamNames[iParam];
+					SymbolMap::t_map::iterator iter = mapSyms.find(SymbolMapKey(strParamName));
+					if(iter == mapSyms.end())
+					{
+						tl::log_err(linenr(runinfo), "Parameter \"", strParamName,
+							"\" not in map. Using 0.");
+
+						vecArgSyms.push_back(new SymbolReal(0.));
+						continue;
+					}
+
+					Symbol *pSymClone = nullptr;
+					clone_if_needed(iter->second, pSymClone);
+					vecArgSyms.push_back(pSymClone);
+				}
+			}
+			else if(pSymChild->GetType() == SYMBOL_ARRAY)
+			{
+				SymbolArray::t_arr& arrSyms = ((SymbolArray*)pSymChild)->GetArr();
+				//std::cout << std::hex << ((void*)pFkt) << std::endl;
+				std::vector<t_string> vecParamNames;
+				if(pFkt) vecParamNames = pFkt->GetParamNames();
+
+				for(unsigned int iParam=0; iParam<arrSyms.size(); ++iParam)
+				{
+					if(pFkt && vecArgSyms.size()>=vecParamNames.size())
+					{
+						tl::log_err(linenr(runinfo), "Exceeded call parameter size in vector-unpack.");
+						break;
+					}
+
+					Symbol *pSymClone = nullptr;
+					clone_if_needed(arrSyms[iParam], pSymClone);
+					vecArgSyms.push_back(pSymClone);
+				}
+			}
+			else
 			{
 				std::ostringstream ostrErr;
 				ostrErr << linenr(runinfo)
-					<< "Cannot unpack non-map." << std::endl;
+					<< "Unpack only valid for maps or vectors." << std::endl;
 				throw tl::Err(ostrErr.str(),0);
-			}
-
-			SymbolMap::t_map& mapSyms = ((SymbolMap*)pSymChild)->GetMap();
-
-			std::vector<t_string> vecParamNames = pFkt->GetParamNames();
-			for(unsigned int iParam=vecArgSyms.size(); iParam<vecParamNames.size(); ++iParam)
-			{
-				const t_string& strParamName = vecParamNames[iParam];
-				SymbolMap::t_map::iterator iter = mapSyms.find(SymbolMapKey(strParamName));
-				if(iter == mapSyms.end())
-				{
-					tl::log_err(linenr(runinfo), "Parameter \"", strParamName,
-						"\" not in map. Using 0.");
-
-					vecArgSyms.push_back(new SymbolReal(0.));
-					continue;
-				}
-
-				Symbol *pSymClone = 0;
-				clone_if_needed(iter->second, pSymClone);
-				vecArgSyms.push_back(pSymClone);
 			}
 
 			safe_delete(pSymChild, pSym, &info);

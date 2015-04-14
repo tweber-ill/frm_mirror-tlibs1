@@ -377,6 +377,18 @@ void GnuPlot::SetYRange(double dMin, double dMax)
 	m_postr->flush();
 }
 
+void GnuPlot::SetGrid(bool bOn)
+{
+	if(!IsReady()) return;
+
+	if(bOn)
+		(*m_postr) << "set grid\n";
+	else
+		(*m_postr) << "unset grid\n";
+
+	m_postr->flush();
+}
+
 void GnuPlot::SetColorBarRange(double dMin, double dMax, bool bCyclic)
 {
 	if(!IsReady()) return;

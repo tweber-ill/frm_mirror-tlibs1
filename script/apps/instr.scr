@@ -11,9 +11,10 @@ module_init()
 	import("apps/dialog.scr");
 
 	global size_pts = 0.75;
-	global size_lines = 1.5;
+	global size_lines = 1.75;
 	global num_pts = 512;
 	global theterm = "wxt";
+	global usegrid = 0;
 }
 
 norm_to_mon(dat_y, dat_yerr, dat_mon, dat_monerr)
@@ -24,6 +25,22 @@ norm_to_mon(dat_y, dat_yerr, dat_mon, dat_monerr)
 		da = dat_yerr[i];
 		b = dat_mon[i];
 		db = dat_monerr[i];
+
+		if(a < 0.)
+		{
+			a = 0.;
+			da = 0.;
+
+			print("Error: Negative counts for point " + (i+1) + ", assuming 0!");
+		}
+
+		if(a == 0. and b == 0.)
+		{
+			#dat_y[i] = 0.;
+			#dat_yerr[i] = 999.;
+
+			print("Warning: Monitor and counts are zero for point " + (i+1) + "!");
+		}
 
 		dat_y[i] = a/b;
 		dat_yerr[i] = sqrt((1./b * da)^2. + (a/b^2. * db)^2.);
@@ -43,11 +60,17 @@ load_instr(filenames, norm_to_monitor=1, opts=map())
 
 
 	if(typeof(filenames) == "vector" and length(filenames)>1)
+	{
 		for(filename : filenames)
 			if(cur_iter(filename) == 0) 
 				print("Loaded " + filename + ".");
 			else
 				print("Merged " + filename + " with " + filenames[0] + ".");
+	}
+	else
+	{
+		print("Loaded " + filenames + ".");
+	}
 
 	labs = instr["labels"];
 	data = instr["data"];
@@ -210,16 +233,96 @@ get_plotobj_gausses(num_peaks, fitres, thedat, plot_dat=0, param_vec=[])
 	plotmap["xlimits"] = xlims;
 	plotmap["ylimits"] = ylims;
 	plotmap["term"] = theterm;
+	plotmap["grid"] = usegrid;
 	return [plotobjs, plotmap];
 }
 
-get_gauss_pos(thefit, xvar=0., sortmode=">")
+get_gauss_params(thefit, xvar=0., sortmode=">")
+{
+	posvar = "x0";
+	sigvar = "sigma";
+	ampvar = "amp";
+
+	pos = [];
+	amp = [];
+	sig = [];
+	pos_err = [];
+	amp_err = [];
+	sig_err = [];
+	x = [];
+
+	if(has_key(thefit, posvar))
+	{
+		pos[length(pos)] = thefit[posvar][0];
+		pos_err[length(pos_err)] = thefit[posvar][1];
+		x[length(x)] = xvar;
+	}
+	if(has_key(thefit, sigvar))
+	{
+		sig[length(sig)] = thefit[sigvar][0];
+		sig_err[length(sig_err)] = thefit[sigvar][1];
+	}
+	if(has_key(thefit, ampvar))
+	{
+		amp[length(amp)] = thefit[ampvar][0];
+		amp_err[length(amp_err)] = thefit[ampvar][1];
+	}
+
+	i = 0;
+	while(1)
+	{
+		curposvar = posvar + "_" + str(i);
+		#print(curposvar);
+		if(!has_key(thefit, curposvar))
+			break;
+
+		pos[length(pos)] = thefit[curposvar][0];
+		pos_err[length(pos_err)] = thefit[curposvar][1];
+		x[length(x)] = xvar;
+
+		i += 1;
+	}
+	i = 0;
+	while(1)
+	{
+		cursigvar = sigvar + "_" + str(i);
+		if(!has_key(thefit, cursigvar))
+			break;
+
+		sig[length(sig)] = thefit[cursigvar][0];
+		sig_err[length(sig_err)] = thefit[cursigvar][1];
+
+		i += 1;
+	}
+	i = 0;
+	while(1)
+	{
+		curampvar = ampvar + "_" + str(i);
+		if(!has_key(thefit, curampvar))
+			break;
+
+		amp[length(amp)] = thefit[curampvar][0];
+		amp_err[length(amp_err)] = thefit[curampvar][1];
+
+		i += 1;
+	}
+
+	#print("before: " + str(pos));
+	if(sortmode == ">")
+		[pos, pos_err, sig, sig_err, amp, amp_err, x] = sort_rev(pos, pos_err, sig, sig_err, amp, amp_err, x);
+	else if(sortmode == "<")
+		[pos, pos_err, sig, sig_err, amp, amp_err, x] = sort(pos, pos_err, sig, sig_err, amp, amp_err, x);
+	#print("after: " + str(pos));
+
+	return [x, pos, pos_err, sig, sig_err, amp, amp_err];
+}
+
+get_gauss_param(thefit, xvar=0., posvar="x0", sortmode=">")
 {
 	pos = [];
 	pos_err = [];
 	x = [];
 
-	posvar = "x0";
 	if(has_key(thefit, posvar))
 	{
 		pos[length(pos)] = thefit[posvar][0];
@@ -379,6 +482,7 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 		"xlabel" : xlab,
 		"ylabel" : ylab,
 		"title" : title,
+		"grid" : usegrid,
 		"term" : theterm]);
 
 	if(is_valid(outfile) && length(outfile) != 0)
@@ -389,6 +493,7 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 			"xlabel" : xlab,
 			"ylabel" : ylab,
 			"title" : title,
+			"grid" : usegrid,
 			"term" : theterm]);
 	}
 

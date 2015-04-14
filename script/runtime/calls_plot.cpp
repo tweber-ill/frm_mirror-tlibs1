@@ -164,6 +164,10 @@ static void set_plot_params(tl::GnuPlot& plot, const SymbolMap* pParamMap,
 	if(bHasVal) strTerm = strUserTerm;
 
 
+	int iGrid = pParamMap->GetIntVal(T_STR"grid", &bHasVal);
+	if(bHasVal) plot.SetGrid(iGrid!=0);
+
+
 	// legend options
 	t_string strLegendOpts = pParamMap->GetStringVal(T_STR"legend_opts", &bHasVal);
 	if(bHasVal) plot.SetLegendOpts(WSTR_TO_STR(strLegendOpts));

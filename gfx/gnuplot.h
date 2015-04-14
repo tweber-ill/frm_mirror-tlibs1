@@ -89,6 +89,7 @@ public:
 	void SetXLabel(const char* pcLab);
 	void SetYLabel(const char* pcLab);
 	void SetTitle(const char* pcTitle);
+	void SetGrid(bool bOn);
 
 	void SetXRange(double dMin, double dMax);
 	void SetYRange(double dMin, double dMax);
