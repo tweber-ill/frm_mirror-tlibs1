@@ -10,7 +10,8 @@
  
 #include <unordered_set>
 #include <tuple>
-#include <boost/functional/hash.hpp>
+#include <initializer_list>
+#include "../helper/hash.h"
  
 namespace tl {
 
@@ -23,55 +24,21 @@ class Powder
 	private:
 		static size_t hash_peak(const t_peak& peak)
 		{
-			boost::hash<t_int> hsh;
-
-			std::size_t iseed = 0;
-			boost::hash_combine(iseed, hsh(std::get<0>(peak)));
-			boost::hash_combine(iseed, hsh(std::get<1>(peak)));
-			boost::hash_combine(iseed, hsh(std::get<2>(peak)));
-
-			return iseed;
+			return tl::hash_ordered<std::initializer_list<t_int>>
+				({
+					std::get<0>(peak), 
+					std::get<1>(peak),
+					std::get<2>(peak)
+				});
 		}
 		static size_t hash_peak_unique(const t_peak& peak)
 		{
-			boost::hash<t_int> hsh;
-			
-			std::size_t iHsh0 = hsh(std::abs(std::get<0>(peak)));
-			std::size_t iHsh1 = hsh(std::abs(std::get<1>(peak)));
-			std::size_t iHsh2 = hsh(std::abs(std::get<2>(peak)));
-
-			// TODO: find a hash_combine where call order doesn't matter
-			std::size_t iseed0 = 0;
-			boost::hash_combine(iseed0, iHsh0);
-			boost::hash_combine(iseed0, iHsh1);
-			boost::hash_combine(iseed0, iHsh2);
-
-			std::size_t iseed1 = 0;
-			boost::hash_combine(iseed1, iHsh0);
-			boost::hash_combine(iseed1, iHsh2);
-			boost::hash_combine(iseed1, iHsh1);
-
-			std::size_t iseed2 = 0;
-			boost::hash_combine(iseed2, iHsh1);
-			boost::hash_combine(iseed2, iHsh0);
-			boost::hash_combine(iseed2, iHsh2);
-
-			std::size_t iseed3 = 0;
-			boost::hash_combine(iseed3, iHsh1);
-			boost::hash_combine(iseed3, iHsh2);
-			boost::hash_combine(iseed3, iHsh0);
-
-			std::size_t iseed4 = 0;
-			boost::hash_combine(iseed4, iHsh2);
-			boost::hash_combine(iseed4, iHsh0);
-			boost::hash_combine(iseed4, iHsh1);
-
-			std::size_t iseed5 = 0;
-			boost::hash_combine(iseed5, iHsh2);
-			boost::hash_combine(iseed5, iHsh1);
-			boost::hash_combine(iseed5, iHsh0);
-			
-			return iseed0 + iseed1 + iseed2 + iseed3 + iseed4 + iseed5;
+			return tl::hash_unordered<std::initializer_list<t_int>>
+				({
+					std::abs(std::get<0>(peak)), 
+					std::abs(std::get<1>(peak)),
+					std::abs(std::get<2>(peak))
+				});
 		}
 		
 		static bool equ_peak(const t_peak& peak0, const t_peak& peak1)
