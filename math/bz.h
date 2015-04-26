@@ -67,6 +67,7 @@ class Brillouin2D
 		{
 			m_vecNeighbours.clear();
 			m_vecVertices.clear();
+			m_bValid = 0;
 		}
 
 		bool IsValid() const { return m_bValid; }

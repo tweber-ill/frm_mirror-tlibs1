@@ -12,9 +12,13 @@ main()
 	print("sorted:      " + str(sorted));
 	print("rev. sorted: " + str(sorted_rev));
 
+	print();
 	print(sort(["def", "abc", "123", "ghi"]));
 
 
+	print();
 	vec3 = [vec0, vec1, vec2];
-	print(sort(*vec3));
+	print("org:         " + str(vec3));
+	print("sorted:      " + str(sort(*vec3)));
+	print("rev. sorted: " + str(sort_rev(*vec3)));
 }

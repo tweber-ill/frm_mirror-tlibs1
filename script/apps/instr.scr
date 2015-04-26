@@ -363,7 +363,7 @@ dualplot(plotobj, plotmap, filename="")
 		fileplot(filename, plotobj, plotmap);
 }
 
-plot_gausses(num_gausses, thefit, thedat, title, xlab, ylab, filename)
+plot_gausses(num_gausses, thefit, thedat, title, xlab, ylab, filename, restplotmap=map())
 {
 	if(!int(thefit["<valid>"]))
 		title += " !! FIT INVALID !! ";
@@ -371,6 +371,7 @@ plot_gausses(num_gausses, thefit, thedat, title, xlab, ylab, filename)
 		title += ", {/Symbol c}^2/n_d_f = " + thefit["<chi2_red>"];
 
 	[plotobj, plotmap] = get_plotobj_gausses(num_gausses, thefit, thedat, 1, []);
+	plotmap = restplotmap + plotmap;
 	dualplot(plotobj, plotmap + ["xlabel":xlab, "ylabel":ylab, "title":title], filename);
 }
 
