@@ -11,11 +11,12 @@
 #include <unordered_set>
 #include <tuple>
 #include <initializer_list>
+#include "lattice.h"
 #include "../helper/hash.h"
  
 namespace tl {
 
-template<class t_int = int>
+template<class t_int=int, class t_real=double>
 class Powder
 {
 	public:
@@ -59,6 +60,9 @@ class Powder
 	protected:
 		t_peaks m_peaks;
 		t_peaks_unique m_peaks_unique;
+		
+		// associated reciprocal lattice
+		const Lattice<t_real> *m_pLatticeRecip = nullptr;
 	
 	public:
 		Powder() 
@@ -103,10 +107,24 @@ class Powder
 			return iMult;
 		}
 		
+		void SetRecipLattice(const Lattice<t_real>* pLatt)
+		{
+			m_pLatticeRecip = pLatt;
+		}
+		
+		ublas::vector<t_real> GetRecipLatticePos(double dh, double dk, double dl) const
+		{ 
+			if(m_pLatticeRecip)
+				return m_pLatticeRecip->GetPos(dh, dk, dl);
+			
+			return ublas::vector<t_real>();
+		}
+		
 		void clear()
 		{
 			m_peaks.clear();
 			m_peaks_unique.clear();
+			m_pLatticeRecip = nullptr;
 		}
 };
 
