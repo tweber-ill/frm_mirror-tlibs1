@@ -532,7 +532,20 @@ void FileFrm::ReadHeader(std::istream& istr)
 		if(strLine.length()==0 || strLine[0]!='#')
 			continue;
 		if(strLine.length()>=3 && strLine[0]=='#' && strLine[1]=='#' && strLine[2]=='#')
+		{
+			std::string strCreatedAt("created at");
+			std::size_t iPosCreated = strLine.find(strCreatedAt);
+			if(iPosCreated != std::string::npos)
+			{
+				iPosCreated += strCreatedAt.length();
+				std::string strDate = strLine.substr(iPosCreated);
+				tl::trim(strDate);
+
+				m_mapParams["file_timestamp"] = strDate;
+			}
+
 			continue;
+		}
 
 		strLine = strLine.substr(1);
 		//std::cout << strLine << std::endl;
@@ -616,7 +629,7 @@ bool FileFrm::Load(const char* pcFile)
 #else
 		std::ifstream *pIstr = &ifstr;
 #endif
-	
+
 		//std::streampos posIstr = pIstr->tellg();
 		//ReadHeader(*pIstr);
 		//pIstr->seekg(posIstr, std::ios_base::beg);
