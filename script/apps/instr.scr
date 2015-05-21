@@ -98,8 +98,8 @@ load_instr(filenames, norm_to_monitor=1, opts=map())
 			cntremove = opts["remove_front"];
 			print("Removing first " + cntremove + " data points.");
 
-			for(dat : data)
-				dat = dat[cntremove:length(dat)];
+			for(thedat : data)
+				thedat = thedat[cntremove:length(thedat)];
 		}
 
 		if(has_key(opts, "remove_back"))
@@ -107,8 +107,8 @@ load_instr(filenames, norm_to_monitor=1, opts=map())
 			cntremove = opts["remove_back"];
 			print("Removing last " + cntremove + " data points.");
 
-			for(dat : data)
-				dat = dat[0: length(dat)-cntremove];
+			for(thedat : data)
+				thedat = thedat[0: length(thedat)-cntremove];
 		}
 
 		#print(data);
@@ -382,7 +382,7 @@ fit_gausses(dat_x, dat_y, dat_yerr, peaks_x, peaks_size, peaks_width)
 	param_vec = [];
 	if(num_peaks == 1)
 		fitres = fit_gauss_manual(dat_x, dat_y, dat_yerr, peaks_x[0], peaks_size[0], peaks_width[0]);
-	if(num_peaks == 2)
+	else if(num_peaks == 2)
 		fitres = fit_doublegauss_manual(dat_x, dat_y, dat_yerr, peaks_x, peaks_size, peaks_width);
 	else			
 		[fitres, param_vec] = fit_multigauss_manual(dat_x, dat_y, dat_yerr, peaks_x, peaks_size, peaks_width);
