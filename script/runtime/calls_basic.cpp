@@ -1237,6 +1237,26 @@ static Symbol* fkt_has_key(const std::vector<Symbol*>& vecSyms,
 	return new SymbolInt(bHasKey);
 }
 
+static Symbol* fkt_rm_key(const std::vector<Symbol*>& vecSyms,
+			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+{
+	if(!check_args(runinfo, vecSyms, {SYMBOL_MAP, SYMBOL_ANY}, {0,0}, "rm_key"))
+		return 0;
+
+	SymbolMap* pMap = (SymbolMap*)vecSyms[0];
+	SymbolMap::t_map::iterator iter = pMap->GetMap().find(vecSyms[1]);
+
+	Symbol *pErasedSym = nullptr;
+	bool bHasKey = (iter != pMap->GetMap().end());
+	if(bHasKey)
+	{
+		pErasedSym = iter->second;
+		pMap->GetMap().erase(iter);
+	}
+
+	return pErasedSym;
+}
+
 // --------------------------------------------------------------------------------
 
 
@@ -1302,6 +1322,7 @@ extern void init_ext_basic_calls()
 		// map/array operations
 		t_mapFkts::value_type(T_STR"contains", fkt_contains),
 		t_mapFkts::value_type(T_STR"has_key", fkt_has_key),
+		t_mapFkts::value_type(T_STR"rm_key", fkt_rm_key),
 		t_mapFkts::value_type(T_STR"find", fkt_find),
 	};
 

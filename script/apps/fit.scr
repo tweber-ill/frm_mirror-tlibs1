@@ -362,6 +362,7 @@ fit_quadgauss_manual_singlestep(x, y, yerr, peaks_x, peaks_size, peaks_width, of
 	hints_err = [peaks_x[0]/10., peaks_width[0]/10., peaks_size[0]/10., 
 				peaks_x[1]/10., peaks_width[1]/10., peaks_size[1]/10.,
 				peaks_x[2]/10., peaks_width[2]/10., peaks_size[2]/10.,
+				peaks_x[3]/10., peaks_width[3]/10., peaks_size[3]/10.,
 			offs/10.];
 
 	fitparams = fit("quadgauss_model", x, y, yerr, 
@@ -378,6 +379,124 @@ fit_quadgauss_manual_singlestep(x, y, yerr, peaks_x, peaks_size, peaks_width, of
 }
 # -----------------------------------------------------------------------------
 
+
+
+# -----------------------------------------------------------------------------
+# quintuple gaussian
+pentgauss_model(x, 
+	x0_0, sigma_0, amp_0, 
+	x0_1, sigma_1, amp_1, 
+	x0_2, sigma_2, amp_2, 
+	x0_3, sigma_3, amp_3, 
+	x0_4, sigma_4, amp_4, 
+	offs)
+{
+	return amp_0 * exp(-0.5 * ((x-x0_0) / sigma_0)^2.) 
+		+ amp_1 * exp(-0.5 * ((x-x0_1) / sigma_1)^2.) 
+		+ amp_2 * exp(-0.5 * ((x-x0_2) / sigma_2)^2.)
+		+ amp_3 * exp(-0.5 * ((x-x0_3) / sigma_3)^2.)
+		+ amp_4 * exp(-0.5 * ((x-x0_4) / sigma_4)^2.)
+		+ offs;
+}
+
+fit_pentgauss_manual_singlestep(x, y, yerr, peaks_x, peaks_size, peaks_width, offs, stepstrs)
+{
+	# Minuit doesn't handle errors == 0
+	yrange = max(y)-min(y);
+	for(thisyerr : yerr)
+	{
+		if(thisyerr eq 0.)
+			thisyerr = yrange*0.001;
+	}
+
+	hints = [peaks_x[0], peaks_width[0], peaks_size[0], 
+			peaks_x[1], peaks_width[1], peaks_size[1],
+			peaks_x[2], peaks_width[2], peaks_size[2],
+			peaks_x[3], peaks_width[3], peaks_size[3],
+			peaks_x[4], peaks_width[4], peaks_size[4],
+			offs];
+
+	hints_err = [peaks_x[0]/10., peaks_width[0]/10., peaks_size[0]/10., 
+				peaks_x[1]/10., peaks_width[1]/10., peaks_size[1]/10.,
+				peaks_x[2]/10., peaks_width[2]/10., peaks_size[2]/10.,
+				peaks_x[3]/10., peaks_width[3]/10., peaks_size[3]/10.,
+				peaks_x[4]/10., peaks_width[4]/10., peaks_size[4]/10.,
+			offs/10.];
+
+	fitparams = fit("pentgauss_model", x, y, yerr, 
+			[
+				"hints":hints, "hints_errors":hints_err,
+			#	"lower_limits":lowerlims, "upper_limits":upperlims,
+			#	"fixed":["offs"], 
+				"debug" : fit_dbg,
+				"steps":stepstrs
+			]
+			);
+
+	return fitparams;
+}
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# sextuple gaussian
+hexagauss_model(x, 
+	x0_0, sigma_0, amp_0, 
+	x0_1, sigma_1, amp_1, 
+	x0_2, sigma_2, amp_2, 
+	x0_3, sigma_3, amp_3, 
+	x0_4, sigma_4, amp_4, 
+	x0_5, sigma_5, amp_5, 
+	offs)
+{
+	return amp_0 * exp(-0.5 * ((x-x0_0) / sigma_0)^2.) 
+		+ amp_1 * exp(-0.5 * ((x-x0_1) / sigma_1)^2.) 
+		+ amp_2 * exp(-0.5 * ((x-x0_2) / sigma_2)^2.)
+		+ amp_3 * exp(-0.5 * ((x-x0_3) / sigma_3)^2.)
+		+ amp_4 * exp(-0.5 * ((x-x0_4) / sigma_4)^2.)
+		+ amp_5 * exp(-0.5 * ((x-x0_5) / sigma_5)^2.)
+		+ offs;
+}
+
+fit_hexagauss_manual_singlestep(x, y, yerr, peaks_x, peaks_size, peaks_width, offs, stepstrs)
+{
+	# Minuit doesn't handle errors == 0
+	yrange = max(y)-min(y);
+	for(thisyerr : yerr)
+	{
+		if(thisyerr eq 0.)
+			thisyerr = yrange*0.001;
+	}
+
+	hints = [peaks_x[0], peaks_width[0], peaks_size[0], 
+			peaks_x[1], peaks_width[1], peaks_size[1],
+			peaks_x[2], peaks_width[2], peaks_size[2],
+			peaks_x[3], peaks_width[3], peaks_size[3],
+			peaks_x[4], peaks_width[4], peaks_size[4],
+			peaks_x[5], peaks_width[5], peaks_size[5],
+			offs];
+
+	hints_err = [peaks_x[0]/10., peaks_width[0]/10., peaks_size[0]/10., 
+				peaks_x[1]/10., peaks_width[1]/10., peaks_size[1]/10.,
+				peaks_x[2]/10., peaks_width[2]/10., peaks_size[2]/10.,
+				peaks_x[3]/10., peaks_width[3]/10., peaks_size[3]/10.,
+				peaks_x[4]/10., peaks_width[4]/10., peaks_size[4]/10.,
+				peaks_x[5]/10., peaks_width[5]/10., peaks_size[5]/10.,
+			offs/10.];
+
+	fitparams = fit("hexagauss_model", x, y, yerr, 
+			[
+				"hints":hints, "hints_errors":hints_err,
+			#	"lower_limits":lowerlims, "upper_limits":upperlims,
+			#	"fixed":["offs"], 
+				"debug" : fit_dbg,
+				"steps":stepstrs
+			]
+			);
+
+	return fitparams;
+}
+# -----------------------------------------------------------------------------
 
 
 

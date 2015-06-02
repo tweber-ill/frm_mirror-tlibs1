@@ -192,6 +192,10 @@ get_plotobj_gausses(num_peaks, fitres, thedat, plot_dat=0, param_vec=[])
 		fity = triplegauss_model(fitx, *params_vals);
 	else if(num_peaks == 4)
 		fity = quadgauss_model(fitx, *params_vals);
+	else if(num_peaks == 5)
+		fity = pentgauss_model(fitx, *params_vals);
+	else if(num_peaks == 6)
+		fity = hexagauss_model(fitx, *params_vals);
 	else
 		fity = multigauss_model(fitx, map_to_vec(params_vals, param_vec));
 

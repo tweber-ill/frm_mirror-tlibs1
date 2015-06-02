@@ -26,7 +26,7 @@ namespace tl {
 
 template<class t_str=std::string> const t_str& get_dir_seps();
 template<class t_str=std::string> const t_str& get_trim_chars();
-	
+
 template<> inline const std::string& get_dir_seps()
 {
 	static const std::string strSeps("\\/");
@@ -138,7 +138,7 @@ t_str str_to_lower(const t_str& str)
 
 	for(t_char ch : str)
 		strOut.push_back(std::tolower(ch));
-		
+
 	return strOut;
 }
 
@@ -200,6 +200,18 @@ void trim(t_str& str)
 		++posLast;
 
 	str.erase(str.begin()+posLast, str.end());
+}
+
+template<class t_str=std::string>
+t_str remove_char(const t_str& str, typename t_str::value_type ch)
+{
+	t_str strRet;
+
+	for(typename t_str::value_type c : str)
+		if(c != ch)
+			strRet.push_back(c);
+
+	return strRet;
 }
 
 

@@ -353,7 +353,11 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 			get_values(vecParamNames, iterLimitsMax->second, vecLimMax, vecLimMaxActive);
 
 		if(iterSteps != mapSym.end())
+		{
 			vecFittingSteps = sym_to_vec<t_stdvec, t_string>(iterSteps->second);
+			for(t_string& strStep : vecFittingSteps)
+				strStep = tl::remove_char(strStep, ' ');
+		}
 
 		if(iterFixed != mapSym.end())
 			vecFixedParams = sym_to_vec<t_stdvec, t_string>(iterFixed->second);

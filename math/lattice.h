@@ -264,10 +264,9 @@ ublas::matrix<T> get_UB(const Lattice<T>& lattice_real,
 	t_mat matU = row_matrix(get_ortho_rhs({vec1, vec2}));
 	t_mat matUB = ublas::prod(matU, matB);
 
-	/*std::cout << "orient = " << matOrient << std::endl;
-	std::cout << "orientB = " << matOrientB << std::endl;
-	std::cout << "U = " << matU << std::endl;
-	std::cout << "UB = " << matUB << std::endl;*/
+//	std::cout << "U = " << matU << std::endl;
+//	std::cout << "B = " << matB << std::endl;
+//	std::cout << "UB = " << matUB << std::endl;
 	return matUB;
 }
 
