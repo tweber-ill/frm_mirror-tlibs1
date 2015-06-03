@@ -61,6 +61,7 @@ protected:
 	bool m_bHasLegend = false;
 
 	std::string m_strLegendOpts;
+	std::string m_strLegendPlacement = "default";
 
 	void RefreshVars();
 
@@ -100,6 +101,7 @@ public:
 	void UnlockTerminal() { m_bTermLocked = 0; }
 
 	void SetLegendOpts(const std::string& strOpts) { m_strLegendOpts = strOpts; }
+	void SetLegendPlace(const std::string& strPlace) { m_strLegendPlacement = strPlace; }
 };
 }
 

@@ -171,6 +171,8 @@ static void set_plot_params(tl::GnuPlot& plot, const SymbolMap* pParamMap,
 	// legend options
 	t_string strLegendOpts = pParamMap->GetStringVal(T_STR"legend_opts", &bHasVal);
 	if(bHasVal) plot.SetLegendOpts(WSTR_TO_STR(strLegendOpts));
+	t_string strLegendPlace = pParamMap->GetStringVal(T_STR"legend_place", &bHasVal);
+	if(bHasVal) plot.SetLegendPlace(WSTR_TO_STR(strLegendPlace));
 
 
 	int iPlotWnd = 0;
