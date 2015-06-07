@@ -176,7 +176,7 @@ T chi2(const t_func& func, std::size_t N,
 			const T* x, const T* y, const T* dy)
 {
 	T tchi2 = T(0);
-	
+
 	for(std::size_t i=0; i<N; ++i)
 	{
 		T td = y[i] - func(x[i]);
@@ -188,7 +188,7 @@ T chi2(const t_func& func, std::size_t N,
 		T tchi = td / tdy;
 		tchi2 += tchi*tchi;
 	}
-	
+
 	return tchi2;
 }
 

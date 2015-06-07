@@ -8,6 +8,17 @@ double fkt(double x)
 	return x*x*x;
 }
 
+
+double fkt1(double x)
+{
+	return std::sin(x);
+}
+
+double fkt2(double x)
+{
+	return std::cos(x);
+}
+
 int main()
 {
 	std::function<double(double)> f(fkt);
@@ -18,6 +29,16 @@ int main()
 	std::cout << "simpN: " << tl::numint_simpN(f, 3., 5., 128) << std::endl;
 
 	std::cout << "calc: " << 0.25*5.*5.*5.*5. - 0.25*3.*3.*3.*3. << std::endl;
+
+
+	std::cout << std::endl;
+
+	for(double dX=-1.; dX<=1.; dX+=0.1)
+		std::cout << "x = " << dX << ", y = "
+			<< tl::convolute(std::function<double(double)>(fkt1),
+				std::function<double(double)>(fkt2),
+				dX, -M_PI/2., M_PI/2., 128)
+			<< std::endl;
 
 	return 0;
 }

@@ -8,6 +8,7 @@
 #define __NUMINT_H__
 
 #include <functional>
+#include <vector>
 
 namespace tl {
 
@@ -72,6 +73,50 @@ R numint_simpN(const std::function<R(A)>& fkt,
 
 	xsum *= xstep/3.;
 	return xsum;
+}
+
+
+// --------------------------------------------------------------------------------
+
+template<class R=double, class A=double>
+R convolute(const std::function<R(A)>& fkt0, const std::function<R(A)>& fkt1, 
+	A x, A x0, A x1, unsigned int N)
+{
+	// convolution of fkt0 and fkt1...
+	std::function<R(A,A)> fkt = [&fkt0, &fkt1](A t, A tau) -> R
+	{
+		return fkt0(tau) * fkt1(t-tau);
+	};
+
+	// ... at fixed arg x
+	std::function<R(A)> fktbnd = std::bind1st(fkt, x);
+
+	return numint_simpN(fktbnd, x0, x1, N);
+}
+
+
+
+template<class cont_type = std::vector<double>>
+cont_type convolute_discrete(const cont_type& f, const cont_type& g)
+{
+	const std::size_t M = f.size();
+	const std::size_t N = g.size();
+
+	cont_type conv;
+	conv.reserve(M+N-1);
+
+	for(std::size_t n=0; n<M+N-1; ++n)
+	{
+		typename cont_type::value_type val = 0.;
+
+		for(std::size_t m=0; m<M; ++m)
+			if(n>=m && n-m<N)
+				val += f[m] * g[n-m];
+
+		conv.push_back(val);
+	}
+
+	return conv;
 }
 
 
