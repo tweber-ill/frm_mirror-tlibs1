@@ -2,6 +2,7 @@
  * simple numerical integration
  * @author tweber
  * @date june-2015
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __NUMINT_H__
