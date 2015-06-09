@@ -52,16 +52,18 @@ template<class T=double>
 class Kd
 {
 private:
-	static KdNode<T>* make_kd(std::list<std::vector<T>>& lstPoints, unsigned int iLevel=0)
+	static KdNode<T>* make_kd(std::list<std::vector<T>>& lstPoints, 
+		int &iDim, unsigned int iLevel=0)
 	{
 		const unsigned int iSize = lstPoints.size();
 		if(iSize == 0) return nullptr;
 		
-		const unsigned int iDim = lstPoints.begin()->size();
+		if(iDim < 0)
+			iDim = lstPoints.begin()->size();
 		const unsigned int iAxis = iLevel % iDim;
-		
+
 		KdNode<T> *pNode = new KdNode<T>;
-		
+
 		if(iSize == 1)
 		{
 			pNode->vecMid = *lstPoints.begin();
@@ -81,8 +83,8 @@ private:
 		std::list<std::vector<T>> lstLeft(lstPoints.begin(), iterMid);
 		std::list<std::vector<T>> lstRight(std::next(iterMid), lstPoints.end());
 
-		pNode->pLeft = make_kd(lstLeft, iLevel+1);
-		pNode->pRight = make_kd(lstRight, iLevel+1);
+		pNode->pLeft = make_kd(lstLeft, iDim, iLevel+1);
+		pNode->pRight = make_kd(lstRight, iDim, iLevel+1);
 
 		return pNode;
 	}
@@ -98,6 +100,7 @@ private:
 
 protected:
 	KdNode<T> *m_pNode = nullptr;
+	unsigned int m_iDim = 3;
 	
 public:
 	void Unload()
@@ -107,10 +110,11 @@ public:
 	}
 
 	// alters lstPoints!
-	void Load(std::list<std::vector<T>>& lstPoints)
+	void Load(std::list<std::vector<T>>& lstPoints, int iDim=-1)
 	{
 		Unload();
-		m_pNode = make_kd(lstPoints);
+		m_pNode = make_kd(lstPoints, iDim);
+		m_iDim = unsigned(iDim);
 	}
 
 	Kd() = default;
