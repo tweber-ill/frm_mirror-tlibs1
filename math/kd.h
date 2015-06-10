@@ -17,7 +17,9 @@
 template<class T=double>
 struct KdNode
 {
+	unsigned int iAxis = 0;
 	std::vector<T> vecMid;
+	KdNode<T> *pParent = nullptr;
 	KdNode<T> *pLeft = nullptr;
 	KdNode<T> *pRight = nullptr;
 	
@@ -69,9 +71,9 @@ private:
 			pNode->vecMid = *lstPoints.begin();
 			return pNode;
 		}
-		
+
 		//std::cout << "level: " << iLevel << ", size: " << iSize << ", mid: " << iSize/2 << std::endl;
-		
+
 		lstPoints.sort(
 			[iAxis](const std::vector<T>& vec0, const std::vector<T>& vec1) -> bool
 			{
@@ -80,15 +82,65 @@ private:
 
 		typename std::list<std::vector<T>>::iterator iterMid = std::next(lstPoints.begin(), iSize/2);
 		pNode->vecMid = *iterMid;
+		pNode->iAxis = iAxis;
 		std::list<std::vector<T>> lstLeft(lstPoints.begin(), iterMid);
 		std::list<std::vector<T>> lstRight(std::next(iterMid), lstPoints.end());
 
 		pNode->pLeft = make_kd(lstLeft, iDim, iLevel+1);
 		pNode->pRight = make_kd(lstRight, iDim, iLevel+1);
+		
+		if(pNode->pLeft) pNode->pLeft->pParent = pNode;
+		if(pNode->pRight) pNode->pRight->pParent = pNode;
 
 		return pNode;
 	}
 
+	static T get_radius_sq(const std::vector<T>& vec0, const std::vector<T>& vec1, unsigned int iDim)
+	{
+		T tRad = T(0);
+		for(unsigned int i=0; i<iDim; ++i)
+			tRad += (vec0[i]-vec1[i])*(vec0[i]-vec1[i]);
+		return tRad;
+	}
+	
+	static void get_best_match(const KdNode<T>* pNode, const std::vector<T>& vec,
+		const KdNode<T>** ppBestNode, T* pRad, unsigned int iDim)
+	{
+		T tRad = get_radius_sq(pNode->vecMid, vec, iDim);
+		//std::cout << "rad: " << tRad << std::endl;
+		if(tRad <= *pRad)
+		{
+			*pRad = tRad;
+			*ppBestNode = pNode;
+		}
+
+
+		T tDistVecCut = vec[pNode->iAxis] - pNode->vecMid[pNode->iAxis];
+		T tDistVecCutSq = tDistVecCut*tDistVecCut;
+		
+		if(tDistVecCutSq <= *pRad)							// intersects cut line?
+		{
+			if(pNode->pLeft)
+				get_best_match(pNode->pLeft, vec, ppBestNode, pRad, iDim);
+
+			if(tDistVecCutSq <= *pRad && pNode->pRight)		// still intersects cut line?
+				get_best_match(pNode->pRight, vec, ppBestNode, pRad, iDim);
+		}
+		else
+		{
+			if(tDistVecCut <= 0)
+			{
+				if(pNode->pLeft)
+					get_best_match(pNode->pLeft, vec, ppBestNode, pRad, iDim);
+			}
+			else
+			{
+				if(pNode->pRight)
+					get_best_match(pNode->pRight, vec, ppBestNode, pRad, iDim);
+			}
+		}
+	}
+	
 	static void clear_kd(KdNode<T> *pNode)
 	{
 		if(!pNode) return;
@@ -101,7 +153,7 @@ private:
 protected:
 	KdNode<T> *m_pNode = nullptr;
 	unsigned int m_iDim = 3;
-	
+
 public:
 	void Unload()
 	{
@@ -115,6 +167,15 @@ public:
 		Unload();
 		m_pNode = make_kd(lstPoints, iDim);
 		m_iDim = unsigned(iDim);
+	}
+	
+	const std::vector<T>& GetNearestNode(const std::vector<T>& vec) const
+	{
+		const KdNode<T>** ppBestNode = const_cast<const KdNode<T>**>(&m_pNode);
+		T tRad = get_radius_sq(m_pNode->vecMid, vec, m_iDim);
+		get_best_match(m_pNode, vec, ppBestNode, &tRad, m_iDim);
+		
+		return (*ppBestNode)->vecMid;
 	}
 
 	Kd() = default;
