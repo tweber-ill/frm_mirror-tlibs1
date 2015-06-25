@@ -55,7 +55,7 @@ void GnuPlot::Init()
 
 	(*m_postr) << "set grid\n";
 	(*m_postr) << "set nokey\n";
-	//(*m_postr) << "set noborder\n";
+	//(*m_postr) << "unset border\n";
 	(*m_postr) << "set size 1,1\n";
 	(*m_postr) << "set palette rgbformulae 33,13,10\n";
 	//(*m_postr) << "set termopt dashed\n";
