@@ -445,7 +445,8 @@ t_angle<Sys,Y> get_mono_twotheta(const t_wavenumber<Sys,Y>& k,
 				const t_length<Sys,Y>& d,
 				bool bPosSense=1)
 {
-	t_angle<Sys,Y> tt = 2. * units::asin(M_PI/(d*k));
+	const Y dOrder = 1.;
+	t_angle<Sys,Y> tt = bragg_real_twotheta(d, k2lam(k), dOrder);
 	if(!bPosSense)
 		tt = -tt;
 	return tt;
@@ -460,7 +461,8 @@ t_wavenumber<Sys,Y> get_mono_k(const t_angle<Sys,Y>& _theta,
 	if(!bPosSense)
 		theta = -theta;
 
-	return M_PI/(units::sin(theta) * d);
+	const Y dOrder = 1.;
+	return lam2k(bragg_real_lam(d, 2.*theta, dOrder));
 }
 
 
