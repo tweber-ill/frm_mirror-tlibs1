@@ -55,7 +55,7 @@ void GnuPlot::Init()
 
 	(*m_postr) << "set grid\n";
 	(*m_postr) << "set nokey\n";
-	//(*m_postr) << "unset border\n";
+	//(*m_postr) << "set noborder\n";
 	(*m_postr) << "set size 1,1\n";
 	(*m_postr) << "set palette rgbformulae 33,13,10\n";
 	//(*m_postr) << "set termopt dashed\n";
@@ -118,10 +118,25 @@ void GnuPlot::RefreshVars()
 }
 
 void GnuPlot::SimplePlot(const std::vector<double>& vecX, const std::vector<double>& vecY,
-		const std::vector<double>& vecYErr, const std::vector<double>& vecXErr)
+		const std::vector<double>& vecYErr, const std::vector<double>& vecXErr,
+		LineStyle style)
 {
 	if(!IsReady()) return;
-	(*m_postr) << "plot '-'\n";
+	(*m_postr) << "plot '-' ";
+
+	switch(style)
+	{
+		case STYLE_LINES_SOLID:
+			(*m_postr) << "with lines lt 1 lw 1";
+			break;
+		case STYLE_LINES_DASHED:
+			(*m_postr) << "with lines lt 2 lw 1";
+			break;
+		default:
+		case STYLE_POINTS:
+			break;
+	}
+	(*m_postr) << "\n";
 
 	std::ostream* postr = m_postr;
 	std::string strTable = BuildTable(vecX, vecY, vecYErr, vecXErr);

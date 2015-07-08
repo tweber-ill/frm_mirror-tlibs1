@@ -83,7 +83,8 @@ public:
 	void FinishPlot();
 
 	void SimplePlot(const std::vector<double>& vecX, const std::vector<double>& vecY,
-			const std::vector<double>& vecYErr, const std::vector<double>& vecXErr);
+			const std::vector<double>& vecYErr, const std::vector<double>& vecXErr,
+			LineStyle style=STYLE_POINTS);
 	void SimplePlot2d(const std::vector<std::vector<double> >& vec,
 			double dMinX=0., double dMaxX=-1., double dMinY=0., double dMaxY=-1.);
 

@@ -598,7 +598,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 
 
 	double dChi2 = chi2fkt(vecLastParams);
-	double dChi2red = dChi2 / double(iSize-(vecLastParams.size()-vecFixedParams.size()+1));
+	double dChi2red = dChi2 / double(iSize-(vecLastParams.size()-vecFixedParams.size()));
 
 	if(bFitterDebug)
 	{

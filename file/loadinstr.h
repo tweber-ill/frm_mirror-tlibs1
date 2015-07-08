@@ -56,6 +56,8 @@ class FileInstr
 		virtual bool MergeWith(const FileInstr* pDat) = 0;
 
 		virtual std::string GetTitle() const = 0;
+		virtual std::string GetUser() const = 0;
+		virtual std::string GetLocalContact() const = 0;
 		virtual std::string GetScanNumber() const = 0;
 		virtual std::string GetSampleName() const = 0;
 		virtual std::string GetSpacegroup() const = 0;
@@ -67,6 +69,8 @@ class FileInstr
 		virtual std::vector<std::string> GetScannedVars() const = 0;
 		virtual std::string GetCountVar() const = 0;
 		virtual std::string GetMonVar() const = 0;
+
+		virtual std::string GetScanCommand() const = 0;
 
 	public:
 		static FileInstr* LoadInstr(const char* pcFile);
@@ -126,6 +130,8 @@ class FilePsi : public FileInstr
 		virtual bool MergeWith(const FileInstr* pDat) override;
 
 		virtual std::string GetTitle() const override;
+		virtual std::string GetUser() const override;
+		virtual std::string GetLocalContact() const override;
 		virtual std::string GetScanNumber() const override;
 		virtual std::string GetSampleName() const override;
 		virtual std::string GetSpacegroup() const override;
@@ -137,6 +143,8 @@ class FilePsi : public FileInstr
 		virtual std::vector<std::string> GetScannedVars() const override;
 		virtual std::string GetCountVar() const override;
 		virtual std::string GetMonVar() const override;
+
+		virtual std::string GetScanCommand() const override;
 };
 
 
@@ -178,6 +186,8 @@ class FileFrm : public FileInstr
 		virtual t_vecVals& GetCol(const std::string& strName) override;
 
 		virtual std::string GetTitle() const override;
+		virtual std::string GetUser() const override;
+		virtual std::string GetLocalContact() const override;
 		virtual std::string GetScanNumber() const override;
 		virtual std::string GetSampleName() const override;
 		virtual std::string GetSpacegroup() const override;
@@ -189,6 +199,8 @@ class FileFrm : public FileInstr
 		virtual std::vector<std::string> GetScannedVars() const override;
 		virtual std::string GetCountVar() const override;
 		virtual std::string GetMonVar() const override;
+
+		virtual std::string GetScanCommand() const override;
 };
 
 
@@ -230,6 +242,8 @@ class FileMacs : public FileInstr
 		virtual t_vecVals& GetCol(const std::string& strName) override;
 
 		virtual std::string GetTitle() const override;
+		virtual std::string GetUser() const override;
+		virtual std::string GetLocalContact() const override;
 		virtual std::string GetScanNumber() const override;
 		virtual std::string GetSampleName() const override;
 		virtual std::string GetSpacegroup() const override;
@@ -241,6 +255,8 @@ class FileMacs : public FileInstr
 		virtual std::vector<std::string> GetScannedVars() const override;
 		virtual std::string GetCountVar() const override;
 		virtual std::string GetMonVar() const override;
+
+		virtual std::string GetScanCommand() const override;
 };
 
 }

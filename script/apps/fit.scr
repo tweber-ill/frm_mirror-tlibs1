@@ -528,7 +528,7 @@ fit_gauss_manual(x, y, yerr, peak_x, peak_size, peak_width)
 				"hints":hints, "hints_errors":hints_err,
 				"lower_limits":lowerlims, "upper_limits":upperlims,
 				"fixed":["offs"], "debug" : fit_dbg,
-				"steps":["frrf", "rffr", "xxxx"]
+				"steps":["frr f", "rff r", "xxx x"]
 			]
 			);
 
@@ -537,6 +537,11 @@ fit_gauss_manual(x, y, yerr, peak_x, peak_size, peak_width)
 
 fit_gauss_manual_singlestep(x, y, yerr, peak_x, peak_size, peak_width, offs, stepstrs)
 {
+	if(typeof(peak_x) == "vector") peak_x = peak_x[0];
+	if(typeof(peak_size) == "vector") peak_size = peak_size[0];
+	if(typeof(peak_width) == "vector") peak_width = peak_width[0];
+
+
 	# Minuit doesn't handle errors == 0
 	yrange = max(y)-min(y);
 	for(thisyerr : yerr)

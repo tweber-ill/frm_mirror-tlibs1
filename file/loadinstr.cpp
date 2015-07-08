@@ -438,6 +438,24 @@ std::string FilePsi::GetTitle() const
 	return strTitle;
 }
 
+std::string FilePsi::GetUser() const
+{
+	std::string strUser;
+	t_mapParams::const_iterator iter = m_mapParams.find("USER_");
+	if(iter != m_mapParams.end())
+		strUser = iter->second;
+	return strUser;
+}
+
+std::string FilePsi::GetLocalContact() const
+{
+	std::string strUser;
+	t_mapParams::const_iterator iter = m_mapParams.find("LOCAL");
+	if(iter != m_mapParams.end())
+		strUser = iter->second;
+	return strUser;
+}
+
 std::string FilePsi::GetScanNumber() const
 {
 	std::string strTitle;
@@ -516,6 +534,14 @@ std::string FilePsi::GetMonVar() const
 	return "M1";
 }
 
+std::string FilePsi::GetScanCommand() const
+{
+	std::string strCmd;
+	t_mapParams::const_iterator iter = m_mapParams.find("COMND");
+	if(iter != m_mapParams.end())
+		strCmd = iter->second;
+	return strCmd;
+}
 
 // -----------------------------------------------------------------------------
 
@@ -815,6 +841,24 @@ std::string FileFrm::GetTitle() const
 	return strTitle;
 }
 
+std::string FileFrm::GetUser() const
+{
+	std::string strUser;
+	t_mapParams::const_iterator iter = m_mapParams.find("Exp_users");
+	if(iter != m_mapParams.end())
+		strUser = iter->second;
+	return strUser;
+}
+
+std::string FileFrm::GetLocalContact() const
+{
+	std::string strUser;
+	t_mapParams::const_iterator iter = m_mapParams.find("Exp_localcontact");
+	if(iter != m_mapParams.end())
+		strUser = iter->second;
+	return strUser;
+}
+
 std::string FileFrm::GetScanNumber() const
 {
 	std::string strTitle;
@@ -901,6 +945,14 @@ std::string FileFrm::GetMonVar() const
 	return "mon1";
 }
 
+std::string FileFrm::GetScanCommand() const
+{
+	std::string strCmd;
+	t_mapParams::const_iterator iter = m_mapParams.find("info");
+	if(iter != m_mapParams.end())
+		strCmd = iter->second;
+	return strCmd;
+}
 
 
 
@@ -1048,8 +1100,8 @@ std::array<double, 3> FileMacs::GetSampleAngles() const
 		return std::array<double,3>{{0.,0.,0.}};
 	}
 
-	return std::array<double,3>{{vecToks[3]/180.*M_PI, 
-			vecToks[4]/180.*M_PI, 
+	return std::array<double,3>{{vecToks[3]/180.*M_PI,
+			vecToks[4]/180.*M_PI,
 			vecToks[5]/180.*M_PI}};
 }
 
@@ -1079,7 +1131,7 @@ std::array<double, 3> FileMacs::GetScatterPlane0() const
 		log_err("Invalid sample orientation array size.");
 		return std::array<double,3>{{0.,0.,0.}};
 	}
-	
+
 	return std::array<double,3>{{vecToks[0],vecToks[1],vecToks[2]}};
 }
 
@@ -1093,7 +1145,7 @@ std::array<double, 3> FileMacs::GetScatterPlane1() const
 		log_err("Invalid sample orientation array size.");
 		return std::array<double,3>{{0.,0.,0.}};
 	}
-	
+
 	return std::array<double,3>{{vecToks[3],vecToks[4],vecToks[5]}};
 }
 
@@ -1117,16 +1169,16 @@ double FileMacs::GetKFix() const
 		tl::log_err("Cannot determine kfix.");
 		return 0.;
 	}
-		
+
 	std::vector<std::string> vecToks;
 	tl::get_tokens<std::string, std::string>(iter->second, " \t", vecToks);
-	
+
 	if(vecToks.size()<2)
 	{
 		tl::log_err("Cannot determine kfix.");
 		return 0.;
 	}
-		
+
 	double dEfix = tl::str_to_var<double>(vecToks[1]);
 	bool bImag;
 	double k = tl::E2k(dEfix * tl::meV, bImag) * tl::angstrom;
@@ -1141,7 +1193,7 @@ bool FileMacs::IsKiFixed() const
 
 	std::vector<std::string> vecToks;
 	tl::get_tokens<std::string, std::string>(iter->second, " \t", vecToks);
-	
+
 	if(vecToks.size()==0)
 		return 0;	// assume ckf
 
@@ -1152,7 +1204,7 @@ bool FileMacs::IsKiFixed() const
 		return 0;
 	else if(strFixedE == "Ei")
 		return 1;
-		
+
 	return 0;		// assume ckf
 }
 
@@ -1192,13 +1244,26 @@ std::string FileMacs::GetTitle() const
 	t_mapParams::const_iterator iter = m_mapParams.find("ExptID");
 	if(iter != m_mapParams.end())
 		strTitle = iter->second;
-		
+
 	iter = m_mapParams.find("ExptName");
 	if(iter != m_mapParams.end() && iter->second != "")
 		strTitle += " - " + iter->second;
 
 	return strTitle;
 }
+
+std::string FileMacs::GetUser() const
+{
+	// TODO
+	return "";
+}
+
+std::string FileMacs::GetLocalContact() const
+{
+	// TODO
+	return "";
+}
+
 
 std::string FileMacs::GetScanNumber() const
 {
@@ -1222,13 +1287,13 @@ std::string FileMacs::GetSpacegroup() const
 std::vector<std::string> FileMacs::GetScannedVars() const
 {
 	std::vector<std::string> vecScan;
-	
+
 	t_mapParams::const_iterator iter = m_mapParams.find("Scan");
 	if(iter != m_mapParams.end())
 	{
 		std::vector<std::string> vecToks;
 		tl::get_tokens<std::string, std::string>(iter->second, " \t", vecToks);
-		
+
 		if(vecToks.size() >= 2)
 			vecScan.push_back(vecToks[1]);
 	}
@@ -1246,6 +1311,12 @@ std::string FileMacs::GetMonVar() const
 {
 	// TODO
 	return "Monitor";
+}
+
+std::string FileMacs::GetScanCommand() const
+{
+	// TODO
+	return "";
 }
 
 
