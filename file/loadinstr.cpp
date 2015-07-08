@@ -63,7 +63,7 @@ FileInstr* FileInstr::LoadInstr(const char* pcFile)
 		pDat = new FileFrm();
 	else if(strLine.find(strMacs) != std::string::npos)	// macs file
 		pDat = new FileMacs();
-	else												// psi or ill file
+	else							// psi or ill file
 		pDat = new FilePsi();
 
 	if(pDat && !pDat->Load(pcFile))
@@ -203,13 +203,13 @@ bool FilePsi::Load(const char* pcFile)
 	std::istream* pIstr = &ifstr;
 #endif
 
-
-	skip_after_line<char>(*pIstr, "VVVV", true);
-
 	while(!pIstr->eof())
 	{
 		std::string strLine;
 		std::getline(*pIstr, strLine);
+
+		if(strLine.substr(0,4) == "RRRR")
+			skip_after_line<char>(*pIstr, "VVVV", true);
 
 		std::pair<std::string, std::string> pairLine =
 				split_first<std::string>(strLine, ":", 1);
@@ -500,25 +500,46 @@ std::vector<std::string> FilePsi::GetScannedVars() const
 		if(iter != m_mapParams.end())
 		{
 			std::vector<std::string> vecToks;
+			//std::cout << iter->second << std::endl;
 			get_tokens<std::string, std::string>(iter->second, " \t", vecToks);
-			std::transform(vecToks.begin(), vecToks.end(), vecToks.begin(), str_to_lower<std::string>);
-			std::vector<std::string>::iterator iter = std::find(vecToks.begin(), vecToks.end(), "dqh");
+			for(std::string& strTok : vecToks)
+				tl::trim(strTok);
 
-			if(iter != vecToks.end())
+			std::transform(vecToks.begin(), vecToks.end(), vecToks.begin(), str_to_lower<std::string>);
+			std::vector<std::string>::iterator iterTok = std::find(vecToks.begin(), vecToks.end(), "dqh");
+
+			if(iterTok != vecToks.end())
 			{
-				double dh = str_to_var<double>(*(++iter));
-				double dk = str_to_var<double>(*(++iter));
-				double dl = str_to_var<double>(*(++iter));
-				double dE = str_to_var<double>(*iter);
+				double dh = str_to_var<double>(*(++iterTok));
+				double dk = str_to_var<double>(*(++iterTok));
+				double dl = str_to_var<double>(*(++iterTok));
+				double dE = str_to_var<double>(*(++iterTok));
 
 				if(!float_equal(dh, 0.)) vecVars.push_back("QH");
 				if(!float_equal(dk, 0.)) vecVars.push_back("QK");
 				if(!float_equal(dl, 0.)) vecVars.push_back("QL");
 				if(!float_equal(dE, 0.)) vecVars.push_back("EN");
 			}
+
+
+			// still nothing found, try regex
+			if(!vecVars.size())
+			{
+				const std::string strRegex = R"REX((SC|SCAN|sc|scan)[ \t]+([A-Za-z0-9]+)[ \t]+[0-9\.-]+[ \t]+[d|D]([A-Za-z0-9]+).*)REX";
+				rex::regex rx(strRegex, rex::regex::ECMAScript);
+				rex::smatch m;
+				if(rex::regex_search(iter->second, m, rx) && m.size()>3)
+				{
+					const std::string& strSteps = m[3];
+					vecVars.push_back(str_to_upper(strSteps));
+				}
+			}
 		}
 	}
 
+	//for(std::string& strVar : vecVars)
+	//	tl::log_info("Scan var: ", strVar);
+	//tl::log_info("--------");
 	return vecVars;
 }
 

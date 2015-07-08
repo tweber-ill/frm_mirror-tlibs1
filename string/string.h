@@ -143,6 +143,20 @@ t_str str_to_lower(const t_str& str)
 }
 
 template<class t_str=std::string>
+t_str str_to_upper(const t_str& str)
+{
+	typedef typename std::string::value_type t_char;
+
+	t_str strOut;
+	strOut.reserve(str.length());
+
+	for(t_char ch : str)
+		strOut.push_back(std::toupper(ch));
+
+	return strOut;
+}
+
+template<class t_str=std::string>
 bool str_is_equal(const t_str& str0, const t_str& str1, bool bCase=0)
 {
 	if(str0.size() != str1.size())
@@ -372,7 +386,7 @@ t_str var_to_str(const T& t, std::streamsize iPrec=10, int iGroup=-1)
 
 
 template<typename t_char=char>
-void skip_after_line(std::basic_istream<t_char>& istr,
+bool skip_after_line(std::basic_istream<t_char>& istr,
 		const std::basic_string<t_char>& strLineBegin,
 		bool bTrim=true, bool bCase=0)
 {
@@ -387,17 +401,18 @@ void skip_after_line(std::basic_istream<t_char>& istr,
 			continue;
 
 		std::basic_string<t_char> strSub = strLine.substr(0, strLineBegin.size());
-		
+
 		if(str_is_equal<std::basic_string<t_char>>(strSub, strLineBegin, bCase))
-			break;
+			return true;
 	}
+	return false;
 }
 
 template<typename t_char=char>
 void skip_after_char(std::basic_istream<t_char>& istr, t_char ch, bool bCase=0)
 {
 	if(!bCase) ch = std::tolower(ch);
-	
+
 	while(!istr.eof())
 	{
 		t_char c;
