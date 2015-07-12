@@ -49,6 +49,30 @@ norm_to_mon(dat_y, dat_yerr, dat_mon, dat_monerr)
 	return [dat_y, dat_yerr];
 }
 
+get_col_mean(instrdat, thelabel)
+{
+	labels = instrdat["labels"];
+
+	idx = -1;
+	for(label : labels)
+	{
+		if(thelabel == label)
+		{
+			idx = cur_iter(label);
+			break;
+		}
+	}
+
+	if(idx < 0)
+		return [0., 0.];
+
+	thedat = instrdat["data"][idx];
+	m = mean(thedat);
+	s = stddev(thedat);
+
+	return [m, s];	
+}
+
 load_instr(filenames, norm_to_monitor=1, opts=map())
 {
 	instr = loadinstr(filenames);

@@ -148,7 +148,11 @@ void FilePsi::ReadData(std::istream& istr)
 	{
 		std::string strLine;
 		std::getline(istr, strLine);
+		tl::trim(strLine);
+
 		if(strLine.length() == 0)
+			continue;
+		if(strLine[0] == '#')
 			continue;
 
 		std::vector<double> vecToks;
@@ -535,6 +539,13 @@ std::vector<std::string> FilePsi::GetScannedVars() const
 				}
 			}
 		}
+	}
+
+	if(!vecVars.size())
+	{
+		tl::log_warn("Could not determine scan variable, using first column.");
+		if(m_vecColNames.size() >= 1)
+			vecVars.push_back(m_vecColNames[0]);
 	}
 
 	//for(std::string& strVar : vecVars)

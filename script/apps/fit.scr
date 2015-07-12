@@ -8,6 +8,8 @@ module_init()
 	global hwhm2sigma = 1./(sqrt(2.*log(2.)));
 	global sigma2hwhm = 1./hwhm2sigma;
 	global fit_dbg = 0;
+
+	global kB = k_B_eVperK*1000.;
 }
 
 
@@ -663,5 +665,98 @@ fit_erf(x, y, yerr)
 				"debug" : fit_dbg
 			]);
 }
+
+# -----------------------------------------------------------------------------
+
+
+
+# -----------------------------------------------------------------------------
+# lorentzian
+
+lorentzian_model(E, E0, hwhm, amp, offs)
+{
+	return amp * hwhm^2. / ((E-E0)^2. + hwhm^2. ) + offs;
+}
+
+fit_lorentzian_manual_singlestep(x, y, yerr, peak_x, peak_size, peak_width, offs, stepstrs)
+{
+	if(typeof(peak_x) == "vector") peak_x = peak_x[0];
+	if(typeof(peak_size) == "vector") peak_size = peak_size[0];
+	if(typeof(peak_width) == "vector") peak_width = peak_width[0];
+
+
+	# Minuit doesn't handle errors == 0
+	yrange = max(y)-min(y);
+	for(thisyerr : yerr)
+	{
+		if(thisyerr eq 0.)
+			thisyerr = yrange*0.001;
+	}
+
+	hints = [peak_x, peak_width, peak_size, offs];
+	hints_err = [peak_x/10., peak_width/10., peak_size/10., offs/10.];
+
+	fitparams = fit("lorentzian_model", x, y, yerr, 
+			[
+				"hints":hints, "hints_errors":hints_err,
+			#	"lower_limits":lowerlims, "upper_limits":upperlims,
+			#	"fixed":["offs"], 
+				"debug" : fit_dbg,
+				"steps":stepstrs
+			]
+			);
+
+	return fitparams;
+}
+
+
+
+# -----------------------------------------------------------------------------
+# DHO
+
+bose(E, T)
+{
+	return 1./(exp(abs(E)/(kB*T)) - 1.) + 1.;
+}
+
+DHO_model(E, T, E0, hwhm, amp, offs)
+{
+	if(E0^2. - hwhm^2. < 0.) return 0.;
+
+	E_bose = bose(E, T);
+
+# TODO
+	return 0.;
+}
+
+fit_DHO_manual_singlestep(x, y, yerr, peak_T, peak_x, peak_size, peak_width, offs, stepstrs)
+{
+	if(typeof(peak_x) == "vector") peak_x = peak_x[0];
+	if(typeof(peak_size) == "vector") peak_size = peak_size[0];
+	if(typeof(peak_width) == "vector") peak_width = peak_width[0];
+	if(typeof(peak_T) == "vector") peak_T = peak_T[0];
+
+	# Minuit doesn't handle errors == 0
+	yrange = max(y)-min(y);
+	for(thisyerr : yerr)
+	{
+		if(thisyerr eq 0.)
+			thisyerr = yrange*0.001;
+	}
+
+	hints = [peak_T, peak_x, peak_width, peak_size, offs];
+	hints_err = [peak_T/10., peak_x/10., peak_width/10., peak_size/10., offs/10.];
+
+	fitparams = fit("DHO_model", x, y, yerr, 
+			[
+				"hints":hints, "hints_errors":hints_err,
+				"debug" : fit_dbg,
+				"steps":stepstrs
+			]
+			);
+
+	return fitparams;
+}
+
 
 # -----------------------------------------------------------------------------
