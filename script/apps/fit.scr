@@ -634,6 +634,45 @@ fit_line_zero(x, y, yerr)
 
 
 
+
+# -----------------------------------------------------------------------------
+# sine
+sine_model(x, a, f)
+{
+	return a*sin(f*x);
+}
+
+sine_model_2(x, a)
+{
+	return a*sin(x*pi/2.);
+}
+
+fit_sine(x, y, yerr)
+{
+	fitparams = fit("sine_model", x, y, yerr,
+			[
+				"hints" : [1., 1.], "hints_errors" : [0.5, 0.5],
+				"debug" : fit_dbg,
+				"steps" : ["rf", "fr", "xx"]
+			]);
+	return fitparams;
+}
+
+fit_sine_2(x, y, yerr)
+{
+	fitparams = fit("sine_model_2", x, y, yerr,
+			[
+				"hints" : [1.], "hints_errors" : [0.5],
+				"debug" : fit_dbg,
+				"steps" : ["x"]
+			]);
+	return fitparams;
+}
+
+# -----------------------------------------------------------------------------
+
+
+
 # -----------------------------------------------------------------------------
 # error function
 
@@ -719,14 +758,13 @@ bose(E, T)
 	return 1./(exp(abs(E)/(kB*T)) - 1.) + 1.;
 }
 
+# see: B. Fak, B. Dorner, Physica B 234-236 (1997) pp. 1107-1108
 DHO_model(E, T, E0, hwhm, amp, offs)
 {
 	if(E0^2. - hwhm^2. < 0.) return 0.;
 
 	E_bose = bose(E, T);
-
-# TODO
-	return 0.;
+	return E_bose*amp/(E0*pi) * (hwhm/((E-E0)^2. + hwhm^2.) - hwhm/((E+E0)^2. + hwhm^2.));
 }
 
 fit_DHO_manual_singlestep(x, y, yerr, peak_T, peak_x, peak_size, peak_width, offs, stepstrs)

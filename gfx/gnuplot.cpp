@@ -405,6 +405,19 @@ void GnuPlot::SetGrid(bool bOn)
 	m_postr->flush();
 }
 
+void GnuPlot::AddArrow(double dX0, double dY0, double dX1, double dY1, bool bHead)
+{
+	if(!IsReady()) return;
+
+	(*m_postr) << "set arrow from " << dX0 << "," << dY0
+			<< " to " << dX1 << "," << dY1;
+	if(!bHead)
+		(*m_postr) << " nohead";
+
+	(*m_postr) << "\n";
+	m_postr->flush();
+}
+
 void GnuPlot::SetColorBarRange(double dMin, double dMax, bool bCyclic)
 {
 	if(!IsReady()) return;

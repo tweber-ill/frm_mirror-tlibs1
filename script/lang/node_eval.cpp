@@ -677,9 +677,21 @@ Symbol* NodeArrayAccess::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable
 		SymbolMapKey key = SymbolMapKey(pSymExpr);
 		SymbolMap::t_map::iterator iterMap = pMap->GetMap().find(key);
 
+		std::ostringstream ostrHash;
+		ostrHash << std::hex << "0x" << key.key;
+
 		// key not yet in map -> insert it
 		if(iterMap == pMap->GetMap().end())
 		{
+			/*tl::log_info(linenr(runinfo), "Key \"", key.strKey, "\" (hash: ", ostrHash.str(), ") not in map, inserting.");
+			tl::log_info("Available keys:");
+			for(const auto& theiter : pMap->GetMap())
+			{
+				std::ostringstream ostrHash0;
+				ostrHash0 << std::hex << "0x" << theiter.first.key;
+				tl::log_info("key: ", theiter.first.strKey, ", hash: ", ostrHash0.str());
+			}*/
+
 			SymbolString *pNewSym = new SymbolString();
 			pNewSym->SetConst(1);
 			iterMap = pMap->GetMap().insert(SymbolMap::t_map::value_type(key, pNewSym)).first;

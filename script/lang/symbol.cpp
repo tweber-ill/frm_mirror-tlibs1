@@ -45,7 +45,7 @@ SymbolMapKey::SymbolMapKey(t_string&& _str)
 
 SymbolMapKey::SymbolMapKey(const Symbol* pSym) 
 	: key(pSym->hash()), 
-		strKey(pSym->GetType()==SYMBOL_STRING?pSym->print():""), 
+		strKey(pSym->GetType()==SYMBOL_STRING ? pSym->print() : ""), 
 		tyKey(pSym->GetType())
 {}
 

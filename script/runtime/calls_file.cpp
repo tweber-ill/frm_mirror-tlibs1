@@ -141,6 +141,7 @@ static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
 		SymbolString *pSymStrVal = new SymbolString;
 		pSymStrVal->SetVal(STR_TO_WSTR(val.second));
 
+		//std::cout << "Inserting \"" << strKey << "\" = " << pSymStrVal->GetVal() << std::endl;
 		pSymMap->GetMap().insert(SymbolMap::t_map::value_type(strKey, pSymStrVal));
 	}
 	pArr->GetArr().push_back(pSymMap);
@@ -258,6 +259,8 @@ static Symbol* fkt_loadinstr(const std::vector<Symbol*>& vecSyms,
 	{
 		const t_string& strKey = pair.first;
 		SymbolString *pVal = new SymbolString(pair.second);
+
+		//std::cout << "Inserting \"" << strKey << "\" = \"" << pair.second << "\"" << std::endl;
 		pmapParams->GetMap().insert(SymbolMap::t_map::value_type(strKey, pVal));
 	}
 

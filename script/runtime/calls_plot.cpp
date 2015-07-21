@@ -168,6 +168,24 @@ static void set_plot_params(tl::GnuPlot& plot, const SymbolMap* pParamMap,
 	if(bHasVal) plot.SetGrid(iGrid!=0);
 
 
+	t_string strArr = pParamMap->GetStringVal(T_STR"arrow", &bHasVal);
+	if(bHasVal)
+	{
+		std::vector<t_string> vecArrToks;
+		tl::get_tokens<t_string, t_string>(strArr, ",", vecArrToks);
+
+		for(const t_string& strArrTok : vecArrToks)
+		{
+			std::istringstream istrArr(strArrTok);
+			double dX0, dY0, dX1, dY1;
+			bool bHead = 0;
+			istrArr >> dX0 >> dY0 >> dX1 >> dY1 >> bHead;
+
+			plot.AddArrow(dX0, dY0, dX1, dY1, bHead);
+		}
+	}
+
+
 	// legend options
 	t_string strLegendOpts = pParamMap->GetStringVal(T_STR"legend_opts", &bHasVal);
 	if(bHasVal) plot.SetLegendOpts(WSTR_TO_STR(strLegendOpts));

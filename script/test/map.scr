@@ -1,5 +1,9 @@
 main()
 {
+	amap = ["ABC":123.45, "xYz":987.6];
+	print(amap["xYz"]);
+
+
 	map0 = map();
 	map0[12.3] = 45.6;
 	map0[5] = 789;

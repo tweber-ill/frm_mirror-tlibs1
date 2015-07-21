@@ -16,8 +16,10 @@ main()
 
 	params3 = params2;
 	params3["window"] = 1;
+	params3["arrow"] = "6 -1 6 1 0, 7 -1 7 1 0";
 
 	plot([[x,y1, yerr, params], [x,y2, params2]]);
 	#fileplot("tst.pdf", [[x,y1, yerr, params], [x,y2, params2]]);
+
 	plot(x, cos(x), params3);
 }
