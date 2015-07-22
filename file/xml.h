@@ -13,7 +13,7 @@
 #include <map>
 #include <mutex>
 
-#include <QtCore/QBuffer>
+#include <QBuffer>
 
 namespace tl {
 

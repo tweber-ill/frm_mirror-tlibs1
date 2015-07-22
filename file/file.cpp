@@ -14,7 +14,7 @@
 #include <cstdio>
 
 #ifndef NO_QT
-	#include <QtCore/QDir>
+	#include <QDir>
 #else
 	#include <sys/types.h>
 	#include <dirent.h>

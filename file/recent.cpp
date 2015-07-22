@@ -8,7 +8,7 @@
 #include "recent.h"
 #include <algorithm>
 #include <iostream>
-#include <QtGui/QAction>
+#include <QAction>
 
 
 namespace tl {

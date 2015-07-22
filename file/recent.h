@@ -8,11 +8,11 @@
 #ifndef __RECENT_FILE_H__
 #define __RECENT_FILE_H__
 
-#include <QtCore/QSettings>
-#include <QtCore/QString>
-#include <QtCore/QStringList>
-#include <QtCore/QSignalMapper>
-#include <QtGui/QMenu>
+#include <QSettings>
+#include <QString>
+#include <QStringList>
+#include <QSignalMapper>
+#include <QMenu>
 
 
 namespace tl {

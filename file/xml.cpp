@@ -9,11 +9,11 @@
 #include "../string/string.h"
 #include "../helper/misc.h"
 
-#include <QtXmlPatterns/QXmlQuery>
-#include <QtCore/QString>
-#include <QtCore/QStringList>
-#include <QtCore/QFile>
-#include <QtCore/QTextStream>
+#include <QXmlQuery>
+#include <QString>
+#include <QStringList>
+#include <QFile>
+#include <QTextStream>
 
 #include <fstream>
 #include <list>
