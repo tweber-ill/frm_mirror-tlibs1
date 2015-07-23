@@ -575,6 +575,15 @@ std::string FilePsi::GetScanCommand() const
 	return strCmd;
 }
 
+std::string FilePsi::GetTimestamp() const
+{
+	std::string strDate;
+	t_mapParams::const_iterator iter = m_mapParams.find("DATE_");
+	if(iter != m_mapParams.end())
+		strDate = iter->second;
+	return strDate;
+}
+
 // -----------------------------------------------------------------------------
 
 
@@ -986,6 +995,14 @@ std::string FileFrm::GetScanCommand() const
 	return strCmd;
 }
 
+std::string FileFrm::GetTimestamp() const
+{
+	std::string strDate;
+	t_mapParams::const_iterator iter = m_mapParams.find("file_timestamp");
+	if(iter != m_mapParams.end())
+		strDate = iter->second;
+	return strDate;
+}
 
 
 // -----------------------------------------------------------------------------
@@ -1351,6 +1368,11 @@ std::string FileMacs::GetScanCommand() const
 	return "";
 }
 
+std::string FileMacs::GetTimestamp() const
+{
+	// TODO
+	return "";
+}
 
 }
 

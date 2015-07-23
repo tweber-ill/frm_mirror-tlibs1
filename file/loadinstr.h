@@ -61,6 +61,7 @@ class FileInstr
 		virtual std::string GetScanNumber() const = 0;
 		virtual std::string GetSampleName() const = 0;
 		virtual std::string GetSpacegroup() const = 0;
+		virtual std::string GetTimestamp() const = 0;
 
 		virtual const t_vecDat& GetData() const = 0;
 		virtual const t_vecColNames& GetColNames() const = 0;
@@ -135,6 +136,7 @@ class FilePsi : public FileInstr
 		virtual std::string GetScanNumber() const override;
 		virtual std::string GetSampleName() const override;
 		virtual std::string GetSpacegroup() const override;
+		virtual std::string GetTimestamp() const override;
 
 		virtual const t_vecDat& GetData() const override { return m_vecData; }
 		virtual const t_vecColNames& GetColNames() const override { return m_vecColNames; }
@@ -191,6 +193,7 @@ class FileFrm : public FileInstr
 		virtual std::string GetScanNumber() const override;
 		virtual std::string GetSampleName() const override;
 		virtual std::string GetSpacegroup() const override;
+		virtual std::string GetTimestamp() const override;
 
 		virtual const t_vecDat& GetData() const override { return m_vecData; }
 		virtual const t_vecColNames& GetColNames() const override { return m_vecQuantities; }
@@ -247,6 +250,7 @@ class FileMacs : public FileInstr
 		virtual std::string GetScanNumber() const override;
 		virtual std::string GetSampleName() const override;
 		virtual std::string GetSpacegroup() const override;
+		virtual std::string GetTimestamp() const override;
 
 		virtual const t_vecDat& GetData() const override { return m_vecData; }
 		virtual const t_vecColNames& GetColNames() const override { return m_vecQuantities; }
