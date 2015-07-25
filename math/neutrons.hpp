@@ -524,7 +524,6 @@ t_energy<Sys,Y> get_energy_transfer(const t_wavenumber<Sys,Y>& ki,
 // (hbar*ki)^2 / (2*mn)  -  (hbar*kf)^2 / (2mn)  =  E
 // 1) ki^2  =  +E * 2*mn / hbar^2  +  kf^2
 // 2) kf^2  =  -E * 2*mn / hbar^2  +  ki^2
-
 template<class Sys, class Y>
 t_wavenumber<Sys,Y> get_other_k(const t_energy<Sys,Y>& E,
 				const t_wavenumber<Sys,Y>& kfix,

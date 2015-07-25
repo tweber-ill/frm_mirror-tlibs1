@@ -309,7 +309,7 @@ void get_tas_angles(const Lattice<T>& lattice_real,
 
 		*pTwoTheta = get_sample_twotheta(dKi/angstrom, dKf/angstrom, dQ/angstrom, bSense) / radians;
 		T dKiQ = get_angle_ki_Q(dKi/angstrom, dKf/angstrom, dQ/angstrom, /*bSense*/1) / radians;
-		vecQ.resize(2,true);
+		vecQ.resize(2, true);
 
 		T dAngleKiOrient1 = -dKiQ - vec_angle(vecQ);
 		*pTheta = dAngleKiOrient1 + M_PI;		// a3 convention

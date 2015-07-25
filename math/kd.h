@@ -4,7 +4,7 @@
  * @date jun-2015
  * @license GPLv2 or GPLv3
  */
- 
+
 #ifndef __TLIBS_KD_H__
 #define __TLIBS_KD_H__
 
@@ -22,7 +22,7 @@ struct KdNode
 	KdNode<T> *pParent = nullptr;
 	KdNode<T> *pLeft = nullptr;
 	KdNode<T> *pRight = nullptr;
-	
+
 	void print(std::ostream& ostr, unsigned int iLevel=0) const
 	{
 		for(unsigned int i=0; i<iLevel; ++i) ostr << "\t";
@@ -30,7 +30,7 @@ struct KdNode
 		for(T t : vecMid)
 			ostr << t << ", ";
 
-		if(pLeft) 
+		if(pLeft)
 		{
 			ostr << "\n";
 			for(unsigned int i=0; i<iLevel; ++i) ostr << "\t";
@@ -44,7 +44,7 @@ struct KdNode
 			ostr << "right:\n";
 			pRight->print(ostr, iLevel+1);
 		}
-		
+
 		ostr << "\n";
 	}
 };
@@ -54,12 +54,12 @@ template<class T=double>
 class Kd
 {
 private:
-	static KdNode<T>* make_kd(std::list<std::vector<T>>& lstPoints, 
+	static KdNode<T>* make_kd(std::list<std::vector<T>>& lstPoints,
 		int &iDim, unsigned int iLevel=0)
 	{
 		const unsigned int iSize = lstPoints.size();
 		if(iSize == 0) return nullptr;
-		
+
 		if(iDim < 0)
 			iDim = lstPoints.begin()->size();
 		const unsigned int iAxis = iLevel % iDim;
@@ -88,7 +88,7 @@ private:
 
 		pNode->pLeft = make_kd(lstLeft, iDim, iLevel+1);
 		pNode->pRight = make_kd(lstRight, iDim, iLevel+1);
-		
+
 		if(pNode->pLeft) pNode->pLeft->pParent = pNode;
 		if(pNode->pRight) pNode->pRight->pParent = pNode;
 
@@ -102,7 +102,7 @@ private:
 			tRad += (vec0[i]-vec1[i])*(vec0[i]-vec1[i]);
 		return tRad;
 	}
-	
+
 	static void get_best_match(const KdNode<T>* pNode, const std::vector<T>& vec,
 		const KdNode<T>** ppBestNode, T* pRad, unsigned int iDim)
 	{
@@ -117,7 +117,7 @@ private:
 
 		T tDistVecCut = vec[pNode->iAxis] - pNode->vecMid[pNode->iAxis];
 		T tDistVecCutSq = tDistVecCut*tDistVecCut;
-		
+
 		if(tDistVecCutSq <= *pRad)							// intersects cut line?
 		{
 			if(pNode->pLeft)
@@ -128,7 +128,7 @@ private:
 		}
 		else
 		{
-			if(tDistVecCut <= 0)
+			if(tDistVecCut <= 0.)
 			{
 				if(pNode->pLeft)
 					get_best_match(pNode->pLeft, vec, ppBestNode, pRad, iDim);
@@ -140,11 +140,11 @@ private:
 			}
 		}
 	}
-	
+
 	static void clear_kd(KdNode<T> *pNode)
 	{
 		if(!pNode) return;
-		
+
 		if(pNode->pLeft) clear_kd(pNode->pLeft);
 		if(pNode->pRight) clear_kd(pNode->pRight);
 		delete pNode;
@@ -168,20 +168,26 @@ public:
 		m_pNode = make_kd(lstPoints, iDim);
 		m_iDim = unsigned(iDim);
 	}
-	
+
 	const std::vector<T>& GetNearestNode(const std::vector<T>& vec) const
 	{
-		const KdNode<T>** ppBestNode = const_cast<const KdNode<T>**>(&m_pNode);
+		static const std::vector<T> vecNull;
+
+		const KdNode<T> *pnodeBest = nullptr;
+		const KdNode<T>** ppBestNode = const_cast<const KdNode<T>**>(&pnodeBest);
+
 		T tRad = get_radius_sq(m_pNode->vecMid, vec, m_iDim);
 		get_best_match(m_pNode, vec, ppBestNode, &tRad, m_iDim);
-		
-		return (*ppBestNode)->vecMid;
+
+		if(pnodeBest)
+			return pnodeBest->vecMid;
+		return vecNull;
 	}
 
 	Kd() = default;
 	Kd(std::list<std::vector<T>>& lstPoints) { Load(lstPoints); }
 	virtual ~Kd() { Unload(); }
-	
+
 	const KdNode<T>* GetRootNode() const { return m_pNode; }
 };
 
