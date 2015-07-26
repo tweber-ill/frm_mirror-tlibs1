@@ -153,18 +153,48 @@ private:
 protected:
 	KdNode<T> *m_pNode = nullptr;
 	unsigned int m_iDim = 3;
+	std::vector<T> m_vecMin, m_vecMax;
 
 public:
 	void Unload()
 	{
 		clear_kd(m_pNode);
 		m_pNode = nullptr;
+		m_vecMin.clear();
+		m_vecMax.clear();
 	}
 
 	// alters lstPoints!
 	void Load(std::list<std::vector<T>>& lstPoints, int iDim=-1)
 	{
 		Unload();
+
+		// get min/max
+		for(typename std::list<std::vector<T>>::const_iterator iter = lstPoints.begin();
+			iter != lstPoints.end(); ++iter)
+		{
+			int iTheDim = iDim;
+			if(iTheDim < 0)
+				iTheDim = iter->size();
+
+			if(m_vecMin.size()==0)
+			{
+				m_vecMin.resize(iTheDim);
+				m_vecMax.resize(iTheDim);
+
+				for(int i0=0; i0<iTheDim; ++i0)
+					m_vecMin[i0] = m_vecMax[i0] = (*iter)[i0];
+			}
+			else
+			{
+				for(int i0=0; i0<iTheDim; ++i0)
+				{
+					m_vecMin[i0] = std::min(m_vecMin[i0], (*iter)[i0]);
+					m_vecMax[i0] = std::max(m_vecMax[i0], (*iter)[i0]);
+				}
+			}
+		}
+
 		m_pNode = make_kd(lstPoints, iDim);
 		m_iDim = unsigned(iDim);
 	}
@@ -182,6 +212,14 @@ public:
 		if(pnodeBest)
 			return pnodeBest->vecMid;
 		return vecNull;
+	}
+
+	bool IsPointInGrid(const std::vector<T>& vec) const
+	{
+		for(int i=0; i<m_iDim; ++i)
+			if(vec[i] < m_vecMin[i] || vec[i] > m_vecMax[i])
+				return false;
+		return true;
 	}
 
 	Kd() = default;
