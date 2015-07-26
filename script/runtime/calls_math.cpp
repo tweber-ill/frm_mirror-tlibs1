@@ -480,6 +480,18 @@ static Symbol* fkt_length(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 	return new SymbolReal(dLen);
 }
 
+static Symbol* fkt_modf(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+{
+	if(!check_args(runinfo, vecSyms, {SYMBOL_DOUBLE}, {0}, "modf"))
+		return 0;
+
+	t_real d = vecSyms[0]->GetValDouble();
+	t_real dIntPart = 0.;
+	t_real dFracPart = std::modf(d, &dIntPart);
+
+	return new SymbolArray({new SymbolReal(dIntPart), new SymbolReal(dFracPart)});
+}
+
 static Symbol* fkt_mean(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY}, {0}, "mean"))
@@ -1078,6 +1090,8 @@ extern void init_ext_math_calls()
 
 		t_mapFkts::value_type(T_STR"conj", fkt_math_1arg<nullptr, std::conj<t_real> >),
 		t_mapFkts::value_type(T_STR"cnorm", fkt_math_cnorm),
+
+		t_mapFkts::value_type(T_STR"modf", fkt_modf),
 
 		// statistical stuff
 		t_mapFkts::value_type(T_STR"mean", fkt_mean),
