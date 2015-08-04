@@ -2,6 +2,7 @@
  * external fit functions
  * @author tweber
  * @date jan 2014
+ * @license GPLv2 or GPLv3
  */
 
 #include "lang/types.h"

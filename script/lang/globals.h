@@ -2,6 +2,7 @@
  * global symbols
  * @author tweber
  * @date 2013-2014
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __SCRIPT_GLOBALS_H__

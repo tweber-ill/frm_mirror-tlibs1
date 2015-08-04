@@ -2,6 +2,7 @@
  * external fitter functions
  * @author tweber
  * @date jan 2014
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __SCRIPT_CALLS_FIT_H__

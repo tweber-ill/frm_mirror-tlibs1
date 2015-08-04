@@ -2,6 +2,7 @@
  * Data types
  * @author tweber
  * @date 08-mar-2014
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __SCRIPT_TYPES_H__

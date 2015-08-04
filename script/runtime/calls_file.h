@@ -2,6 +2,7 @@
  * external file functions
  * @author tweber
  * @date dec-2013
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __SCRIPT_CALLS_FILE_H__

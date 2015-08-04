@@ -2,6 +2,7 @@
  * external functions
  * @author tweber
  * @date 2013-2014
+ * @license GPLv2 or GPLv3
  */
 #ifndef __EXT_CALLS__
 #define __EXT_CALLS__

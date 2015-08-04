@@ -3,6 +3,7 @@
  * Node evaluation
  * @author tweber
  * @date 10 oct 2013
+ * @license GPLv2 or GPLv3
  */
 
 #include "node.h"

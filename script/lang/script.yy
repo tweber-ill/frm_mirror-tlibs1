@@ -2,6 +2,7 @@
  * Hermelin Script grammar
  * @author tweber
  * @date 2013, 2014
+ * @license GPLv2 or GPLv3
  */
 
 %{

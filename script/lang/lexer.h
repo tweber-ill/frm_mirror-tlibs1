@@ -2,6 +2,7 @@
  * Lexer
  * @author tweber
  * @date 2013
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __MIEZE_LEXER__

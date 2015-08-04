@@ -1074,7 +1074,7 @@ typename T::value_type vec_angle_unsigned(const T& q1, const T& q2)
 // -----------------------------------------------------------------------------
 
 
-// see: http://run.usc.edu/cs520-s12/assign2/p245-shoemake.pdf
+// see: K. Shoemake, "Animating rotation with quaternion curves": http://dx.doi.org/10.1145/325334.325242
 template<class T>
 T slerp(const T& q1, const T& q2, typename T::value_type t)
 {

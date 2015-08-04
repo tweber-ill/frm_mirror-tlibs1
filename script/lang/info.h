@@ -2,6 +2,7 @@
  * Parse & Runtime Info
  * @author tweber
  * @date 12-oct-14
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __SCRIPT_INFOS_H__

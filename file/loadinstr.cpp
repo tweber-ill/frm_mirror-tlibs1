@@ -734,6 +734,9 @@ FileInstr::t_vecVals& FileFrm::GetCol(const std::string& strName)
 std::array<double, 3> FileFrm::GetSampleLattice() const
 {
 	t_mapParams::const_iterator iter = m_mapParams.find("Sample_lattice");
+	if(iter == m_mapParams.end())
+		return std::array<double,3>{{0.,0.,0.}};
+
 	std::vector<double> vec = get_py_array(iter->second);
 	if(vec.size() != 3)
 	{
@@ -747,6 +750,9 @@ std::array<double, 3> FileFrm::GetSampleLattice() const
 std::array<double, 3> FileFrm::GetSampleAngles() const
 {
 	t_mapParams::const_iterator iter = m_mapParams.find("Sample_angles");
+	if(iter == m_mapParams.end())
+		return std::array<double,3>{{0.,0.,0.}};
+
 	std::vector<double> vec = get_py_array(iter->second);
 	if(vec.size() != 3)
 	{
@@ -794,6 +800,9 @@ std::array<bool, 3> FileFrm::GetScatterSenses() const
 std::array<double, 3> FileFrm::GetScatterPlane0() const
 {
 	t_mapParams::const_iterator iter = m_mapParams.find("Sample_orient1");
+	if(iter == m_mapParams.end())
+		return std::array<double,3>{{0.,0.,0.}};
+
 	std::vector<double> vec = get_py_array(iter->second);
 	if(vec.size() != 3)
 	{
@@ -806,6 +815,9 @@ std::array<double, 3> FileFrm::GetScatterPlane0() const
 std::array<double, 3> FileFrm::GetScatterPlane1() const
 {
 	t_mapParams::const_iterator iter = m_mapParams.find("Sample_orient2");
+	if(iter == m_mapParams.end())
+		return std::array<double,3>{{0.,0.,0.}};
+
 	std::vector<double> vec = get_py_array(iter->second);
 	if(vec.size() != 3)
 	{
@@ -961,7 +973,7 @@ std::vector<std::string> FileFrm::GetScannedVars() const
 		if(vecVars.size() == 0)
 		{
 			// try scan/cscan
-			const std::string strRegexDevScan = R"REX((scan|cscan)\(([A-Za-z0-9_]+)[, ]+.*\))REX";
+			const std::string strRegexDevScan = R"REX((scan|cscan)\(([A-Za-z0-9_\.]+)[, ]+.*\))REX";
 			rex::regex rxDev(strRegexDevScan, rex::regex::ECMAScript);
 			rex::smatch mDev;
 			if(rex::regex_search(strInfo, mDev, rxDev) && mDev.size()>2)
@@ -1125,6 +1137,8 @@ FileInstr::t_vecVals& FileMacs::GetCol(const std::string& strName)
 std::array<double, 3> FileMacs::GetSampleLattice() const
 {
 	t_mapParams::const_iterator iter = m_mapParams.find("Lattice");
+	if(iter == m_mapParams.end())
+		return std::array<double,3>{{0.,0.,0.}};
 
 	std::vector<double> vecToks;
 	tl::get_tokens<double, std::string>(iter->second, " \t", vecToks);
@@ -1140,6 +1154,8 @@ std::array<double, 3> FileMacs::GetSampleLattice() const
 std::array<double, 3> FileMacs::GetSampleAngles() const
 {
 	t_mapParams::const_iterator iter = m_mapParams.find("Lattice");
+	if(iter == m_mapParams.end())
+		return std::array<double,3>{{0.,0.,0.}};
 
 	std::vector<double> vecToks;
 	tl::get_tokens<double, std::string>(iter->second, " \t", vecToks);
@@ -1173,6 +1189,9 @@ std::array<bool, 3> FileMacs::GetScatterSenses() const
 std::array<double, 3> FileMacs::GetScatterPlane0() const
 {
 	t_mapParams::const_iterator iter = m_mapParams.find("Orient");
+	if(iter == m_mapParams.end())
+		return std::array<double,3>{{0.,0.,0.}};
+
 	std::vector<double> vecToks;
 	tl::get_tokens<double, std::string>(iter->second, " \t", vecToks);
 	if(vecToks.size() != 6)
@@ -1187,6 +1206,9 @@ std::array<double, 3> FileMacs::GetScatterPlane0() const
 std::array<double, 3> FileMacs::GetScatterPlane1() const
 {
 	t_mapParams::const_iterator iter = m_mapParams.find("Orient");
+	if(iter == m_mapParams.end())
+		return std::array<double,3>{{0.,0.,0.}};
+
 	std::vector<double> vecToks;
 	tl::get_tokens<double, std::string>(iter->second, " \t", vecToks);
 	if(vecToks.size() != 6)

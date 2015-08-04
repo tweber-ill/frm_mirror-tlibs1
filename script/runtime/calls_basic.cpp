@@ -2,6 +2,7 @@
  * basic external functions
  * @author tweber
  * @date dec-2013
+ * @license GPLv2 or GPLv3
  */
 
 #include "helper/flags.h"

@@ -2,6 +2,7 @@
  * Simple Script
  * @author tweber
  * @date 2013
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __SCRIPT_HELPER__

@@ -2,6 +2,7 @@
  * Optimizer
  * @author tweber
  * @date 27-sep-2014
+ * @license GPLv2 or GPLv3
  */
 
 #include "node.h"

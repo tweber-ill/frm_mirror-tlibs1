@@ -2,6 +2,7 @@
  * external plot functions
  * @author tweber
  * @date dec 2013
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __SCRIPT_CALLS_PLOT_H__

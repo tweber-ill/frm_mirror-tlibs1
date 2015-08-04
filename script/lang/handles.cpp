@@ -2,6 +2,7 @@
  * Handles
  * @author tweber
  * @date 09-oct-2013
+ * @license GPLv2 or GPLv3
  */
 
 #include "handles.h"

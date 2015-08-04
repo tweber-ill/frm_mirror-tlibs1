@@ -1,7 +1,8 @@
 /*
- * Simple Script
+ * Hermelin script interpreter
  * @author tweber
  * @date 2013
+ * @license GPLv2 or GPLv3
  */
 
 #include "types.h"
