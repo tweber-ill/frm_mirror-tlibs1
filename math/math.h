@@ -32,6 +32,10 @@ T sign(T t)
 
 template<typename T> T cot(T t) { return T(1)/std::tan(t); }
 
+
+// -----------------------------------------------------------------------------
+
+
 template<class vec_type>
 typename vec_type::value_type mean_value(const vec_type& vec)
 {
@@ -65,6 +69,8 @@ typename vec_type::value_type std_dev(const vec_type& vec)
 }
 
 
+// -----------------------------------------------------------------------------
+
 
 template<typename T=double>
 void diff(unsigned int N, const T* pXIn, const T* pYIn, T* pYOut)
@@ -75,6 +81,9 @@ void diff(unsigned int N, const T* pXIn, const T* pYIn, T* pYOut)
 	// copy last value
 	pYOut[N-1] = pYOut[N-2];
 }
+
+// -----------------------------------------------------------------------------
+
 
 template<typename T> T t_abs(const T& t)
 {
@@ -88,6 +97,9 @@ bool float_equal(T t1, T t2, T eps = std::numeric_limits<T>::epsilon())
 {
 	return t_abs<T>(t1-t2) < eps;
 }
+
+
+// -----------------------------------------------------------------------------
 
 
 // x=0..1
@@ -107,6 +119,13 @@ T bilinear_interp(T x0y0, T x1y0, T x0y1, T x1y1, T x, T y)
 
 	return linear_interp<T>(bottom, top, y);
 }
+
+template<class T, typename REAL=double>
+T lerp(const T& a, const T& b, REAL val)
+{
+	return a + T((b-a)*val);
+}
+
 
 template<typename T=double, typename REAL=double>
 std::vector<T> linspace(const T& tmin, const T& tmax, unsigned int iNum)
@@ -129,11 +148,9 @@ std::vector<T> logspace(const T& tmin, const T& tmax, unsigned int iNum, T tBase
 	return vec;
 }
 
-template<class T, typename REAL=double>
-T lerp(const T& a, const T& b, REAL val)
-{
-	return a + T((b-a)*val);
-}
+
+// -----------------------------------------------------------------------------
+
 
 // solve a*x^2 + b*x + c for x
 template<class T=double>
@@ -171,6 +188,9 @@ std::vector<T> quadratic_solve(T a, T b, T c)
 }
 
 
+// -----------------------------------------------------------------------------
+
+
 template<class T, class t_func>
 T chi2(const t_func& func, std::size_t N,
 			const T* x, const T* y, const T* dy)
@@ -193,11 +213,33 @@ T chi2(const t_func& func, std::size_t N,
 }
 
 template<class t_vec, class t_func>
-typename t_vec::value_type chi2(const t_func& func, 
+typename t_vec::value_type chi2(const t_func& func,
 			const t_vec& x, const t_vec& y, const t_vec& dy)
 {
 	using T = typename t_vec::value_type;
 	return chi2<T, t_func>(func, x.size(), x.data(), y.data(), dy.size()?dy.data():nullptr);
+}
+
+
+// -----------------------------------------------------------------------------
+
+
+/*
+template<class T=double> static const T SIGMA2FWHM = T(2)*std::sqrt(T(2)*std::log(T(2)));
+template<class T=double> static const T SIGMA2HWHM = std::sqrt(T(2)*std::log(T(2)));
+template<class T=double> static const T FWHM2SIGMA = T(1)/SIGMA2FWHM<T>;
+template<class T=double> static const T HWHM2SIGMA = T(1)/SIGMA2HWHM<T>;
+*/
+
+static const double SIGMA2FWHM = 2.*std::sqrt(2.*std::log(2.));
+static const double SIGMA2HWHM = SIGMA2FWHM/2.;
+static const double HWHM2SIGMA = 1./SIGMA2HWHM;
+static const double FWHM2SIGMA = 1./SIGMA2FWHM;
+
+template<class T=double>
+T gauss_model(T x, T x0, T sigma, T amp, T offs)
+{
+	return amp * std::exp(-0.5 * ((x-x0)/sigma)*((x-x0)/sigma)) + offs;
 }
 
 }

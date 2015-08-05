@@ -37,18 +37,6 @@ namespace tl {
 namespace units = boost::units;
 namespace co = boost::units::si::constants::codata;
 
-/*
-template<class T=double> static const T SIGMA2FWHM = T(2)*std::sqrt(T(2)*std::log(T(2)));
-template<class T=double> static const T SIGMA2HWHM = std::sqrt(T(2)*std::log(T(2)));
-template<class T=double> static const T FWHM2SIGMA = T(1)/SIGMA2FWHM<T>;
-template<class T=double> static const T HWHM2SIGMA = T(1)/SIGMA2HWHM<T>;
-*/
-
-static const double SIGMA2FWHM = 2.*std::sqrt(2.*std::log(2.));
-static const double SIGMA2HWHM = SIGMA2FWHM/2.;
-static const double HWHM2SIGMA = 1./SIGMA2HWHM;
-static const double FWHM2SIGMA = 1./SIGMA2FWHM;
-
 
 // general quantities
 template<class Sys, class T=double> using t_length =
@@ -742,6 +730,29 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 
 
 // --------------------------------------------------------------------------------
+
+
+template<class t_real=double>
+t_real bose(t_real E, t_real T)
+{
+	t_real kB = co::k_B * units::si::kelvin/tl::meV;
+
+	if(E >= 0.)
+		return 1./(std::exp(std::abs(E)/(kB*T)) - 1.) + 1.;
+	else
+		return 1./(std::exp(std::abs(E)/(kB*T)) - 1.);
+}
+
+// see: B. Fak, B. Dorner, Physica B 234-236 (1997) pp. 1107-1108
+template<class t_real=double>
+t_real DHO_model(t_real E, t_real T, t_real E0, t_real hwhm, t_real amp, t_real offs)
+{
+	if(E0*E0 - hwhm*hwhm < 0.) return 0.;
+	return bose<t_real>(E, T)*amp/(E0*M_PI) *
+		(hwhm/((E-E0)*(E-E0) + hwhm*hwhm) - hwhm/((E+E0)*(E+E0) + hwhm*hwhm))
+		+ offs;
+}
+
 
 }
 
