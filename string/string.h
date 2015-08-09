@@ -66,6 +66,15 @@ static inline std::string wstr_to_str(const std::wstring& str)
 
 // -----------------------------------------------------------------------------
 
+template<class t_str=std::string>
+t_str get_file_noext(const t_str& str)
+{
+	std::size_t iPos = str.find_last_of('.');
+
+	if(iPos == t_str::npos)
+		return str;
+	return str.substr(0, iPos);
+}
 
 template<class t_str=std::string>
 t_str get_fileext(const t_str& str)
