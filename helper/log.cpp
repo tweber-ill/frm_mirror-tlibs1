@@ -130,7 +130,7 @@ void log_backtrace()
 	void *pBtrBuf[512];
 	int iBtr = backtrace(pBtrBuf, 512);
 	char **ppcBtr = backtrace_symbols(pBtrBuf, iBtr);
-	for(unsigned int _iBtr=0; _iBtr<iBtr; ++_iBtr)
+	for(int _iBtr=0; _iBtr<iBtr; ++_iBtr)
 		log_debug("Backtrace ", _iBtr, ": ", ppcBtr[_iBtr]);
 }
 #else
