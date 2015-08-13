@@ -1325,8 +1325,11 @@ std::string FileMacs::GetTitle() const
 
 std::string FileMacs::GetUser() const
 {
-	// TODO
-	return "";
+	std::string str;
+	t_mapParams::const_iterator iter = m_mapParams.find("User");
+	if(iter != m_mapParams.end())
+		str = iter->second;
+	return str;
 }
 
 std::string FileMacs::GetLocalContact() const
@@ -1392,8 +1395,11 @@ std::string FileMacs::GetScanCommand() const
 
 std::string FileMacs::GetTimestamp() const
 {
-	// TODO
-	return "";
+	std::string str;
+	t_mapParams::const_iterator iter = m_mapParams.find("Date");
+	if(iter != m_mapParams.end())
+		str = iter->second;
+	return str;
 }
 
 }
