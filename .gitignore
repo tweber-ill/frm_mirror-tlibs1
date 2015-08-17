@@ -7,6 +7,7 @@
 *.a
 .~lock*
 *~
+*.cmake
 .directory
 *.kate-swp
 Debug/*
@@ -23,6 +24,9 @@ script/.clang/*
 script/.codelite/*
 script/Debug/*
 script/Release/*
+script/CMakeFiles/*
+script/CMakeCache.txt
+script/Makefile
 .clang/*
 .codelite/*
 .settings/*

@@ -335,8 +335,7 @@ struct _str_to_var_impl<T, t_str, 0>
 
 
 template<class T, class t_str=std::string, class t_cont=std::vector<T>>
-void get_tokens(const t_str& str, const t_str& strDelim,
-				t_cont& vecRet)
+void get_tokens(const t_str& str, const t_str& strDelim, t_cont& vecRet)
 {
 	typedef typename t_str::value_type t_char;
 
