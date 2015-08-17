@@ -209,20 +209,20 @@ bool str_contains(const t_str& str, const t_str& strSub, bool bCase=0)
 template<class t_str=std::string>
 void trim(t_str& str)
 {
-	std::size_t posFirst = str.find_first_not_of(get_trim_chars<t_str>());
-	if(posFirst==t_str::npos)
-		posFirst = str.length();
-
-	str.erase(str.begin(), str.begin()+posFirst);
-
-
 	std::size_t posLast = str.find_last_not_of(get_trim_chars<t_str>());
-	if(posLast==std::string::npos)
+	if(posLast == std::string::npos)
 			posLast = str.length();
 	else
 		++posLast;
 
 	str.erase(str.begin()+posLast, str.end());
+
+
+	std::size_t posFirst = str.find_first_not_of(get_trim_chars<t_str>());
+	if(posFirst == t_str::npos)
+		posFirst = str.length();
+
+	str.erase(str.begin(), str.begin()+posFirst);
 }
 
 template<class t_str=std::string>
