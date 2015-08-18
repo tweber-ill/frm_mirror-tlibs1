@@ -76,23 +76,20 @@ void Log::end_log()
 
 void Log::inc_depth()
 {
-	s_mtx.lock();
+	std::lock_guard<decltype(s_mtx)> _lck(s_mtx);
+
 	if(m_iDepth++ == 0)
-	{
 		begin_log();
-	}
-	s_mtx.unlock();
 }
 
 void Log::dec_depth()
 {
-	s_mtx.lock();
+	std::lock_guard<decltype(s_mtx)> _lck(s_mtx);
 	if(--m_iDepth <= 0)
 	{
 		m_iDepth = 0;
 		end_log();
 	}
-	s_mtx.unlock();
 }
 
 Log::Log() : m_vecOstrs{&std::cerr}

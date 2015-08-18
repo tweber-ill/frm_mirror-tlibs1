@@ -13,6 +13,7 @@
 #include <mutex>
 #include <list>
 #include <functional>
+#include <algorithm>
 #include <type_traits>
 #include <condition_variable>
 //#include <iostream>
@@ -32,7 +33,7 @@ class ThreadPool
 		t_task m_lstTasks;
 		t_fut m_lstFutures;
 
-		std::mutex m_mtx, m_mtxStart;
+		mutable std::mutex m_mtx, m_mtxStart;
 		std::condition_variable m_signalStart;
 		bool m_bStart = 0;
 
@@ -69,8 +70,13 @@ class ThreadPool
 		{
 			JoinAll();
 
-			for(std::thread *pThread : m_lstThreads)
-				delete pThread;
+			std::for_each(m_lstThreads.begin(), m_lstThreads.end(),
+				[](std::thread* pThread)
+				{
+					if(pThread)
+						delete pThread;
+				});
+
 			m_lstThreads.clear();
 		}
 
@@ -96,8 +102,12 @@ class ThreadPool
 
 		void JoinAll()
 		{
-			for(std::thread *pThread : m_lstThreads)
-				pThread->join();
+			std::for_each(m_lstThreads.begin(), m_lstThreads.end(),
+				[](std::thread* pThread)
+				{
+					if(pThread)
+						pThread->join();
+				});
 		}
 };
 

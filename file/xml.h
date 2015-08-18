@@ -22,7 +22,7 @@ class Xml
 protected:
 	QBuffer m_bufXml;
 	bool m_bOK;
-	std::mutex m_mutex;
+	mutable std::mutex m_mutex;
 
 public:
 	Xml();

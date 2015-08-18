@@ -172,7 +172,7 @@ static Symbol* fkt_thread_task(const std::vector<Symbol*>& vecSyms,
 		std::launch policy = std::launch::async /*| std::launch::deferred*/;
 		unsigned int iNumThreads = info.phandles->CountAllThreads();
 		//log_debug("Number of threads running: ", iNumThreads);
-		
+
 		// start deferred
 		if(iNumThreads >= std::thread::hardware_concurrency())
 		{
@@ -184,8 +184,8 @@ static Symbol* fkt_thread_task(const std::vector<Symbol*>& vecSyms,
 		//else log_debug("starting as thread");
 
 		std::future<Symbol*> *pFuture = new std::future<Symbol*>(
-					std::async(policy, ::task_proc, 
-							   pFunc, &info, vecThreadSymsClone));
+					std::async(policy, ::task_proc,
+						pFunc, &info, vecThreadSymsClone));
 		iHandle = info.phandles->AddHandle(new HandleTask(pFuture, bIsThread));
 	}
 	else
