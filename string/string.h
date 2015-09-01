@@ -182,6 +182,16 @@ bool str_is_equal(const t_str& str0, const t_str& str1, bool bCase=0)
 }
 
 template<class t_str=std::string>
+bool str_is_equal_to_either(const t_str& str0,
+	const std::initializer_list<t_str>& lststr1, bool bCase=0)
+{
+	for(const t_str& str1 : lststr1)
+		if(str_is_equal<t_str>(str0, str1, bCase))
+			return true;
+	return false;
+}
+
+template<class t_str=std::string>
 t_str str_tolower(const t_str& str)
 {
 	t_str strLower;

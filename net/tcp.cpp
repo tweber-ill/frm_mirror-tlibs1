@@ -3,8 +3,8 @@
  * @author tweber
  * @date aug-2014
  * @license GPLv2 or GPLv3
- * based on chat client by C. M. Kohlhoff:
- * 	www.boost.org/doc/libs/1_56_0/doc/html/boost_asio/example/cpp11/chat/chat_client.cpp
+ * @desc based on chat client by C. M. Kohlhoff:
+ * @desc	www.boost.org/doc/libs/1_56_0/doc/html/boost_asio/example/cpp11/chat/chat_client.cpp
  */
 
 #include "tcp.h"
@@ -14,7 +14,7 @@
 
 namespace tl {
 
-static inline bool get_cmd_tokens(const std::string& str, const std::string& strDelim, 
+static inline bool get_cmd_tokens(const std::string& str, const std::string& strDelim,
 				std::vector<std::string>& vecStr, std::string& strRemainder)
 {
 	boost::char_separator<char> delim(strDelim.c_str(), "", boost::keep_empty_tokens);
@@ -73,6 +73,7 @@ bool TcpClient::connect(const std::string& strHost, const std::string& strServic
 
 		ip::tcp::resolver res(*m_pservice);
 		ip::tcp::resolver::iterator iter = res.resolve({strHost, strService});
+
 		asio::async_connect(*m_psock, iter,
 		[&](const sys::error_code& err, ip::tcp::resolver::iterator)
 		{
@@ -146,7 +147,7 @@ void TcpClient::wait()
 void TcpClient::write(const std::string& str)
 {
 	//m_mutexWrite.lock();
-	//std::cout << "push_back: " << str << std::endl;
+	//std::cout << "write: " << str << std::endl;
 	m_listWriteBuffer.push_back(str);
 	//m_mutexWrite.unlock();
 	m_pservice->post([&](){ flush_write(); });
@@ -213,7 +214,7 @@ void TcpClient::read_loop()
 
 			for(const std::string& strCmd : vecCmds)
 			{
-				//std::cout << "msg: " << strCmd << std::endl;
+				//std::cout << "read: " << strCmd << std::endl;
 				m_sigRecv(strCmd);
 			}
 		}

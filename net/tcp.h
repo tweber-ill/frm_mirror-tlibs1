@@ -3,10 +3,9 @@
  * @author tweber
  * @date aug-2014
  * @license GPLv2 or GPLv3
- * based on chat client by C. M. Kohlhoff:
- * 	www.boost.org/doc/libs/1_56_0/doc/html/boost_asio/example/cpp11/chat/chat_client.cpp
+ * @desc based on chat client by C. M. Kohlhoff:
+ * @desc	www.boost.org/doc/libs/1_56_0/doc/html/boost_asio/example/cpp11/chat/chat_client.cpp
  */
-
 
 #ifndef __TCP_CLIENT__
 #define __TCP_CLIENT__
