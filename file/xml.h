@@ -5,28 +5,27 @@
  * @license GPLv2 or GPLv3
  */
 
-#ifndef __MIEZE_XML__
-#define __MIEZE_XML__
+#ifndef __TLIBS_XML__
+#define __TLIBS_XML__
 
 #include <string>
 #include <sstream>
 #include <map>
 #include <mutex>
-
-#include <QBuffer>
+#include <boost/property_tree/ptree.hpp>
 
 namespace tl {
 
 class Xml
 {
 protected:
-	QBuffer m_bufXml;
-	bool m_bOK;
+	boost::property_tree::ptree m_xml;
+	bool m_bOK = 0;
 	mutable std::mutex m_mutex;
 
 public:
-	Xml();
-	virtual ~Xml();
+	Xml() = default;
+	virtual ~Xml() = default;
 
 	bool Load(const char* pcFile);
 

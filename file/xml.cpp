@@ -8,43 +8,31 @@
 #include "xml.h"
 #include "../string/string.h"
 #include "../helper/misc.h"
-
-#include <QXmlQuery>
-#include <QString>
-#include <QStringList>
-#include <QFile>
-#include <QTextStream>
-
 #include <fstream>
 #include <list>
 #include <vector>
+#include <boost/property_tree/xml_parser.hpp>
 
 
 namespace tl {
 
-Xml::Xml() : m_bOK(0)
-{}
+// -------------------------------------------------------------------------------
+// loading
 
-Xml::~Xml()
-{}
+namespace prop = boost::property_tree;
+
 
 bool Xml::Load(const char* pcFile)
 {
-	QFile file(pcFile);
-	if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
+	try
+	{
+		prop::read_xml(pcFile, m_xml);
+	}
+	catch(const prop::xml_parser_error&)
 	{
 		m_bOK = 0;
 		return false;
 	}
-
-	QTextStream istr(&file);
-	QString strXml = istr.readAll();
-
-	m_bufXml.close();
-	m_bufXml.setData(strXml.toUtf8());
-	m_bufXml.open(QIODevice::ReadOnly);
-
-	file.close();
 
 	m_bOK = 1;
 	return true;
@@ -58,40 +46,29 @@ std::string Xml::QueryString(const char* pcAdr, const char* pcDef, bool *pbOk)
 	trim(strAdr);
 	if(strAdr.length()==0)
 	{
-		if(pbOk) *pbOk=0;
+		if(pbOk) *pbOk = 0;
 		return "";
 	}
-	if(strAdr[0] != '/')
-		strAdr = std::string("/") + strAdr;
 
-	std::ostringstream ostrQuery;
-	ostrQuery << "doc($xml)" << strAdr << "/string()";
+	if(strAdr[0] == '/')
+		strAdr = strAdr.substr(1);
 
-	QStringList strlstOut;
-	bool bOk = 0;
+	prop::string_path<std::string, prop::id_translator<std::string>> path(strAdr, '/');
+	std::string strOut;
+	try
 	{
 		std::lock_guard<std::mutex> _lck(m_mutex);
-		m_bufXml.seek(0);
-		QXmlQuery query;
-		query.bindVariable("xml", &m_bufXml);
-		query.setQuery(QString(ostrQuery.str().c_str()));
-
-		bOk = query.evaluateTo(&strlstOut);
+		strOut = m_xml.get<std::string>(path);
 	}
-
-	if(!bOk || strlstOut.size()==0)
+	catch(const prop::ptree_bad_path&)
 	{
-		if(pbOk) *pbOk = false;
-
-		if(pcDef)
-			return std::string(pcDef);
+		if(pbOk) *pbOk = 0;
+		if(pcDef) return pcDef;
 		return "";
 	}
 
-	if(pbOk) *pbOk = true;
-	std::string strOut = strlstOut.at(0).toStdString();
 	trim(strOut);
-
+	if(pbOk) *pbOk = 1;
 	return strOut;
 }
 
@@ -102,9 +79,9 @@ bool Xml::Exists(const char* pcAdr)
 	if(strQuery.length() == 0)
 		bOk = 0;
 
-	//std::cout << "exists: " << bOk << std::endl;
 	return bOk;
 }
+
 
 
 // -------------------------------------------------------------------------------
