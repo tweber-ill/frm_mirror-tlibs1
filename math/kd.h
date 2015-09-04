@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <iostream>
 
+namespace tl {
+
 
 template<class T=double>
 struct KdNode
@@ -229,4 +231,5 @@ public:
 	const KdNode<T>* GetRootNode() const { return m_pNode; }
 };
 
+}
 #endif
