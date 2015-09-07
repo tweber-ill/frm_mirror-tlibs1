@@ -124,7 +124,6 @@ private:
 		{
 			if(pNode->pLeft)
 				get_best_match(pNode->pLeft, vec, ppBestNode, pRad, iDim);
-
 			if(tDistVecCutSq <= *pRad && pNode->pRight)		// still intersects cut line?
 				get_best_match(pNode->pRight, vec, ppBestNode, pRad, iDim);
 		}
