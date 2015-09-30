@@ -8,6 +8,7 @@
 #include "lang/types.h"
 #include "calls_math.h"
 #include "lang/calls.h"
+#include "math/math.h"
 #include "math/fourier.h"
 #include "math/linalg.h"
 #include "math/linalg2.h"
@@ -83,7 +84,7 @@ const T& math_fkt(const T& t1, const T& t2)
 
 template<MathFkts fkt>
 static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size() < 1)
 	{
@@ -154,7 +155,7 @@ static Symbol* fkt_math_for_every(const std::vector<Symbol*>& vecSyms,
 
 template<t_real (*FKT)(t_real), t_complex (*FKT_C)(const t_complex&)=nullptr>
 static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ANY}, {0}, "fkt_math_1arg"))
 		return 0;
@@ -177,7 +178,7 @@ static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 	}
 	else
 	{
-		if(vecSyms[0]->GetType() == SYMBOL_COMPLEX)
+		if(vecSyms[0]->GetType() == SYMBOL_COMPLEX || (FKT_C && !FKT))
 		{
 			if(FKT_C == nullptr)
 			{
@@ -185,7 +186,7 @@ static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 				return 0;
 			}
 
-			t_complex cResult = FKT_C(((SymbolComplex*)vecSyms[0])->GetVal());
+			t_complex cResult = FKT_C(vecSyms[0]->GetValComplex());
 			return new SymbolComplex(std::move(cResult));
 		}
 		else
@@ -1028,6 +1029,7 @@ static Symbol* fkt_minmax(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 	return new SymbolArray({pArr->GetArr()[iIdxMin]->clone(), pArr->GetArr()[iIdxMax]->clone()});
 }
 
+
 // --------------------------------------------------------------------------------
 
 
@@ -1073,6 +1075,12 @@ extern void init_ext_math_calls()
 		t_mapFkts::value_type(T_STR"erf_inv", fkt_math_1arg< boost::math::erf_inv >),
 		t_mapFkts::value_type(T_STR"tgamma", fkt_math_1arg< std::tgamma >),
 		t_mapFkts::value_type(T_STR"lgamma", fkt_math_1arg< std::lgamma >),
+
+#ifdef HAS_COMPLEX_ERF
+		t_mapFkts::value_type(T_STR"erf_cplx", fkt_math_1arg< nullptr, tl::erf<t_real> >),
+		t_mapFkts::value_type(T_STR"erfc_cplx", fkt_math_1arg< nullptr, tl::erfc<t_real> >),
+		t_mapFkts::value_type(T_STR"faddeeva", fkt_math_1arg< nullptr, tl::faddeeva<t_real> >),
+#endif
 
 		t_mapFkts::value_type(T_STR"round", fkt_math_1arg< std::round >),
 		t_mapFkts::value_type(T_STR"trunc", fkt_math_1arg< std::trunc >),

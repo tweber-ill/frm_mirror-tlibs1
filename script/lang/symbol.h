@@ -119,6 +119,7 @@ public:
 	// cast value without converting or cloning symbol
 	virtual t_int GetValInt() const { return 0; }
 	virtual t_real GetValDouble() const { return 0.; }
+	virtual t_complex GetValComplex() const { return t_complex(0.,0.); }
 
 	virtual bool IsScalar() const { return 0; }
 
@@ -176,6 +177,7 @@ public:
 
 	virtual t_int GetValInt() const override { return t_int(m_dVal); }
 	virtual t_real GetValDouble() const override { return m_dVal; }
+	virtual t_complex GetValComplex() const override { return t_complex(m_dVal, 0.); }
 
 	static const int GetDefPrec() { return m_defprec; }
 	static const int GetPrec() { return m_prec; }
@@ -217,6 +219,7 @@ public:
 
 	virtual t_int GetValInt() const override { return m_iVal; }
 	virtual t_real GetValDouble() const override { return t_real(m_iVal); }
+	virtual t_complex GetValComplex() const override { return t_complex(t_real(m_iVal), 0.); }
 
 	void SetVal(int iVal) { m_iVal = iVal; }
 	const t_int& GetVal() const { return m_iVal; }
@@ -297,6 +300,7 @@ public:
 
 	virtual t_int GetValInt() const override { throw tl::Err("Cannot convert complex to scalar type."); /*return t_int(GetValReal());*/ }
 	virtual t_real GetValDouble() const override { throw tl::Err("Cannot convert complex to scalar type."); /*return GetValReal();*/ }
+	virtual t_complex GetValComplex() const override { return m_val; }
 
 	static const int GetDefPrec() { return m_defprec; }
 	static const int GetPrec() { return m_prec; }

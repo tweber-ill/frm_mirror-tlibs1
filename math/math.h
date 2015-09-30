@@ -10,6 +10,8 @@
 #define __TLIBS_MATH__
 
 #include <cmath>
+//#include <ctgmath>
+#include <complex>
 #include <vector>
 #include <limits>
 
@@ -223,7 +225,6 @@ typename t_vec::value_type chi2(const t_func& func,
 
 // -----------------------------------------------------------------------------
 
-
 /*
 template<class T=double> static const T SIGMA2FWHM = T(2)*std::sqrt(T(2)*std::log(T(2)));
 template<class T=double> static const T SIGMA2HWHM = std::sqrt(T(2)*std::log(T(2)));
@@ -241,6 +242,43 @@ T gauss_model(T x, T x0, T sigma, T amp, T offs)
 {
 	return amp * std::exp(-0.5 * ((x-x0)/sigma)*((x-x0)/sigma)) + offs;
 }
+
+
+
+#ifdef HAS_COMPLEX_ERF
+
+}
+#include <Faddeeva.hh>
+namespace tl{
+
+template<class T=double>
+std::complex<T> erf(const std::complex<T>& z)
+{
+	return ::Faddeeva::erf(z);
+}
+
+template<class T=double>
+std::complex<T> erfc(const std::complex<T>& z)
+{
+	return ::Faddeeva::erfc(z);
+}
+
+template<class T=double>
+std::complex<T> faddeeva(const std::complex<T>& z)
+{
+	std::complex<T> i(0, 1.);
+	return std::exp(-z*z) * erfc(-i*z);
+}
+
+template<class T=double>
+T voigt_model(T x, T x0, T sigma, T gamma, T amp, T offs)
+{
+	std::complex<T> z = std::complex<T>(x-x0, gamma) / (sigma * std::sqrt(2.));
+	return amp * (faddeeva<T>(z)).real() / (sigma * std::sqrt(2.*M_PI)) + offs;
+}
+
+#endif
+
 
 }
 
