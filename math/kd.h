@@ -217,7 +217,7 @@ public:
 
 	bool IsPointInGrid(const std::vector<T>& vec) const
 	{
-		for(int i=0; i<m_iDim; ++i)
+		for(unsigned int i=0; i<m_iDim; ++i)
 			if(vec[i] < m_vecMin[i] || vec[i] > m_vecMax[i])
 				return false;
 		return true;
