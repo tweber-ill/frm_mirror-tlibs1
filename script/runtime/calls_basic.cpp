@@ -120,7 +120,7 @@ static Symbol* fkt_call(const std::vector<Symbol*>& vecSyms,
 	}
 	else		// system function
 	{
-		pSymRet = ext_call(strFkt, pArr ? pArr->GetArr() : std::vector<Symbol*>(), 
+		pSymRet = ext_call(strFkt, pArr ? pArr->GetArr() : std::vector<Symbol*>(),
 						   info, runinfo, pSymTab);
 	}
 
@@ -145,10 +145,28 @@ static Symbol* fkt_double(const std::vector<Symbol*>& vecSyms,
 	if(vecSyms.size() == 0)
 		return new SymbolReal(0.);
 
-	// delegate to other "real" function
-	if(vecSyms[0]->GetType() == SYMBOL_COMPLEX)
+	// real([1,2,3])
+	else if(vecSyms[0]->GetType() == SYMBOL_ARRAY)
+	{
+		SymbolArray *pArr = new SymbolArray();
+
+		for(Symbol* pSym : ((SymbolArray*)vecSyms[0])->GetArr())
+		{
+			std::vector<Symbol*> vecTmp{pSym};
+			Symbol* pSymElem = fkt_double(vecTmp, info, runinfo, pSymTab);
+
+			pArr->GetArr().push_back(pSymElem);
+		}
+
+		pArr->UpdateIndices();
+		return pArr;
+	}
+
+	// for complex args delegate to other "real" function
+	else if(vecSyms[0]->GetType() == SYMBOL_COMPLEX)
 		return fkt_cplx_real(vecSyms, info, runinfo, pSymTab);
 
+	// cast arg to real value
 	return vecSyms[0]->ToType(SYMBOL_DOUBLE);
 }
 
@@ -265,7 +283,7 @@ static bool _import_file(const t_string& strFile, ParseInfo& info, RuntimeInfo &
 	if(!par.pLexer->IsOk())
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(runinfo) << "Lexer returned with errors" 
+		ostrErr << linenr(runinfo) << "Lexer returned with errors"
 			<< " for file \"" << _strFile << "\"."<< std::endl;
 		throw tl::Err(ostrErr.str(),0);
 	}
@@ -278,8 +296,8 @@ static bool _import_file(const t_string& strFile, ParseInfo& info, RuntimeInfo &
 	if(iParseRet != 0)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(runinfo) << "Parser returned with error code " 
-			<< iParseRet 
+		ostrErr << linenr(runinfo) << "Parser returned with error code "
+			<< iParseRet
 			<< " for file \"" << _strFile << "\"." << std::endl;
 		throw tl::Err(ostrErr.str(),0);
 	}
@@ -446,10 +464,30 @@ static Symbol* fkt_complex(const std::vector<Symbol*>& vecSyms,
 {
 	if(vecSyms.size() == 0)
 		return new SymbolComplex(0., 0.);
+	// complex(z)
 	else if(vecSyms.size() == 1 && vecSyms[0]->GetType()==SYMBOL_COMPLEX)
 		return vecSyms[0]->clone();
+	// complex([1,2,3])
+	else if(vecSyms.size() >= 1 && vecSyms[0]->GetType()==SYMBOL_ARRAY)
+	{
+		SymbolArray *pSymArr = new SymbolArray();
+		for(const Symbol* pSym : ((SymbolArray*)vecSyms[0])->GetArr())
+		{
+			std::vector<Symbol*> vecTmp{const_cast<Symbol*>(pSym)};
+			for(unsigned int iRest=1; iRest<vecSyms.size(); ++iRest)
+				vecTmp.push_back(vecSyms[iRest]);
+
+			Symbol *pSymNew = fkt_complex(vecTmp, info, runinfo, pSymTab);
+			pSymArr->GetArr().push_back(pSymNew);
+		}
+		pSymArr->UpdateIndices();
+
+		return pSymArr;
+	}
+	// complex(1)
 	else if(vecSyms.size() == 1)
 		return new SymbolComplex(vecSyms[0]->GetValDouble(), 0.);
+	// complex(1,2)
 	else if(vecSyms.size() > 1)
 		return new SymbolComplex(vecSyms[0]->GetValDouble(), vecSyms[1]->GetValDouble());
 
@@ -810,8 +848,8 @@ static Symbol* _fkt_sort(const std::vector<Symbol*>& vecSyms,
 	if(vecSyms.size()<1 || vecSyms[0]->GetType()!=SYMBOL_ARRAY)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(runinfo) 
-			<< "Arguments to sort have to be arrays." 
+		ostrErr << linenr(runinfo)
+			<< "Arguments to sort have to be arrays."
 			<< std::endl;
 		throw tl::Err(ostrErr.str(),0);
 	}
@@ -1075,7 +1113,7 @@ static Symbol* fkt_replace_regex(const std::vector<Symbol*>& vecSyms,
 	}
 	catch(const std::exception& ex)
 	{
-		tl::log_err(linenr(runinfo), "Regex evaluation failed with error: ", ex.what()); 
+		tl::log_err(linenr(runinfo), "Regex evaluation failed with error: ", ex.what());
 		return 0;
 	}
 

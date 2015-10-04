@@ -12,13 +12,7 @@ main()
 #	print(voigt(0., 1., 1.));
 
 	x = linspace(-10., 10., 128);
-	y = [];
-	for(thex : x)
-	{
-		they = voigt(thex, 1., 1.);
-		y[length(y)] = they;
-		
-	}
+	y = voigt(x, 1., 1.);
 
 	plot(x,y, ["style":"line"]);
 }

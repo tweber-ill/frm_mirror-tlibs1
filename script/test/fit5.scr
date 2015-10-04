@@ -1,0 +1,36 @@
+voigt(x, x0, sigma, gamma, amp)
+{
+        z = complex(x-x0, gamma) / (sigma * sqrt(2.));
+        return amp * real(faddeeva(z)) / (sigma * sqrt(2.*pi));
+}
+
+main()
+{
+	x = linspace(0, 10, 32);
+	y = voigt(x, 4., 1., 0.5, 125.);
+
+	for(val : y)
+		val += rand_real(0., 10.);
+	yerr = sqrt(y);
+
+
+	hints = [4., 1.1, 0.1, 12.];
+	hints_err = [0.4, 0.4, 0.4, 2.];
+
+	params = fit("voigt", x, y, yerr, 
+	[
+		"hints":hints, "hints_errors":hints_err,
+		"lower_limits":["amp":0., "sigma":0., "gamma":0],
+		"steps":["rfff", "frff", "ffrf", "fffr", "xxxx"]
+	]);
+	print("fit parameters: " + str(params));
+
+	params_vals = map_vec_to_val(params);
+	params_errs = map_vec_to_val(params, 1);
+	print("values: " + str(params_vals));
+	print("errors: " + str(params_errs));
+
+	fitx = linspace(min(x), max(x), 128);
+	fity = voigt(fitx, *params_vals);
+	plot([x,y,yerr], [fitx, fity, ["style":"lines", "term":"wxt", "size":1.5, "color":0xff0000]]);
+}
