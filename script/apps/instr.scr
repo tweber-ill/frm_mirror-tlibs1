@@ -206,22 +206,13 @@ get_plotobj_gausses(num_peaks, fitres, thedat, plot_dat=0, param_vec=[])
 	print("Fit values: " + str(params_vals));
 	print("Fit errors: " + str(params_errs));
 
-	fitx = linspace(minx-xrange, maxx+xrange, num_pts);
+	fitfkt = fitres["<model>"];
+	fitfkt_single = "gauss_model";
+	if(find(fitfkt, "voigt") >= 0)
+		fitfkt_single = "voigt_model";
 
-	if(num_peaks == 1)
-		fity = gauss_model(fitx, *params_vals);
-	else if(num_peaks == 2)
-		fity = doublegauss_model(fitx, *params_vals);
-	else if(num_peaks == 3)
-		fity = triplegauss_model(fitx, *params_vals);
-	else if(num_peaks == 4)
-		fity = quadgauss_model(fitx, *params_vals);
-	else if(num_peaks == 5)
-		fity = pentgauss_model(fitx, *params_vals);
-	else if(num_peaks == 6)
-		fity = hexagauss_model(fitx, *params_vals);
-	else
-		fity = multigauss_model(fitx, map_to_vec(params_vals, param_vec));
+	fitx = linspace(minx-xrange, maxx+xrange, num_pts);
+	fity = call(fitfkt, params_vals + ["x":fitx]);
 
 	fity_gausses = vec(num_peaks);
 	for(iPeak=0; iPeak<num_peaks; iPeak+=1)
@@ -231,18 +222,20 @@ get_plotobj_gausses(num_peaks, fitres, thedat, plot_dat=0, param_vec=[])
 			x0 = "x0_" + iPeak;
 			sigma = "sigma_" + iPeak;
 			amp = "amp_" + iPeak;
+			gamma = "gamma_" + iPeak;
 		}
 		else
 		{
 			x0 = "x0";
 			sigma = "sigma";
 			amp = "amp";
+			gamma = "gamma";
 		}
 
-		params_vals_gauss = ["x0":params_vals[x0], "sigma":params_vals[sigma], "amp":params_vals[amp], "offs":params_vals["offs"]];
-		#params_errs_gauss = ["x0":params_errs[x0], "sigma":params_errs[sigma], "amp":params_errs[amp], "offs":params_errs["offs"]];
+		params_vals_gauss = ["x0":params_vals[x0], "gamma":params_vals[gamma], "sigma":params_vals[sigma], "amp":params_vals[amp], "offs":params_vals["offs"]];
+		#params_errs_gauss = ["x0":params_errs[x0], "gamma":params_errs[gamma], "sigma":params_errs[sigma], "amp":params_errs[amp], "offs":params_errs["offs"]];
 
-		fity_gausses[iPeak] = gauss_model(fitx, *params_vals_gauss);
+		fity_gausses[iPeak] = call(fitfkt_single, ["x":fitx] + params_vals_gauss);
 	}
 
 

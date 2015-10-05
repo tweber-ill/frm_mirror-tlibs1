@@ -91,16 +91,16 @@ static Symbol* fkt_is_rval(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_null(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	return 0;
 }
 
 // call("fkt", [arg1, arg2, ...]);
 static Symbol* fkt_call(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING, SYMBOL_ARRAY}, {0,1}, "call", "Function name needed."))
+	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING, SYMBOL_ARRAY|SYMBOL_MAP}, {0,1}, "call", "Function name needed."))
 		return 0;
 
 	const t_string& strFkt = ((SymbolString*)vecSyms[0])->GetVal();
@@ -113,6 +113,29 @@ static Symbol* fkt_call(const std::vector<Symbol*>& vecSyms,
 	Symbol *pSymRet = 0;
 	if(pFkt)	// user function
 	{
+		// map to function args
+		if(vecSyms.size()>=2 && vecSyms[1]->GetType() == SYMBOL_MAP)
+		{
+			if(!pArr) pArr = new SymbolArray();
+
+			SymbolMap::t_map& mapSyms = ((SymbolMap*)vecSyms[1])->GetMap();
+			const std::vector<t_string> vecParamNames = pFkt->GetParamNames();
+
+			for(unsigned int iArg=0; iArg<vecParamNames.size(); ++iArg)
+			{
+				const t_string& strParamName = vecParamNames[iArg];
+				SymbolMap::t_map::iterator iter = mapSyms.find(SymbolMapKey(strParamName));
+				if(iter == mapSyms.end())
+				{
+					tl::log_err(linenr(runinfo), "Parameter \"", strParamName, "\" not in argument map. Using 0.");
+					pArr->GetArr().push_back(new SymbolReal(0.));
+					continue;
+				}
+
+				pArr->GetArr().push_back(iter->second->clone());
+			}
+		}
+
 		pSymTab->InsertSymbol(T_STR"<args>", pArr);
 		pSymRet = pFkt->eval(info, runinfo, pSymTab);
 		runinfo.bWantReturn = 0;
@@ -121,7 +144,7 @@ static Symbol* fkt_call(const std::vector<Symbol*>& vecSyms,
 	else		// system function
 	{
 		pSymRet = ext_call(strFkt, pArr ? pArr->GetArr() : std::vector<Symbol*>(),
-						   info, runinfo, pSymTab);
+			  info, runinfo, pSymTab);
 	}
 
 	return pSymRet;
@@ -711,7 +734,7 @@ static Symbol* fkt_find(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_contains(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	int iIdx = -1;
 	Symbol *pFind = fkt_find(vecSyms, info, runinfo, pSymTab);
@@ -725,7 +748,7 @@ static Symbol* fkt_contains(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ANY}, {0}, "cur_iter"))
 		return 0;

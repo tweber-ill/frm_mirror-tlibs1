@@ -251,7 +251,7 @@ static void get_values(const std::vector<t_string>& vecParamNames,
 
 // fit("function", x, y, yerr, params)
 static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	int iDebug = 0;
 	bool bDoMinos = 0;
@@ -628,6 +628,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		tl::log_info("Chi^2 / ndf = ", dChi2red);
 	}
 
+	pSymMap->GetMap()[SymbolMapKey("<model>")] = new SymbolString(strFkt);
 	pSymMap->GetMap()[SymbolMapKey("<valid>")] = new SymbolInt(bValidFit);
 	pSymMap->GetMap()[SymbolMapKey("<chi2_red>")] = new SymbolReal(dChi2red);
 	//if(!bValidFit)

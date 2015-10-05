@@ -175,7 +175,7 @@ Symbol* NodeCall::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym)
 					if(iter == mapSyms.end())
 					{
 						tl::log_err(linenr(runinfo), "Parameter \"", strParamName,
-							"\" not in map. Using 0.");
+							"\" not in argument map. Using 0.");
 
 						vecArgSyms.push_back(new SymbolReal(0.));
 						continue;
