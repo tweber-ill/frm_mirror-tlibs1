@@ -134,6 +134,7 @@ static Symbol* fkt_call(const std::vector<Symbol*>& vecSyms,
 
 				pArr->GetArr().push_back(iter->second->clone());
 			}
+			pArr->UpdateIndices();
 		}
 
 		pSymTab->InsertSymbol(T_STR"<args>", pArr);

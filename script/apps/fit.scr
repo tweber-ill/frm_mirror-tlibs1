@@ -886,4 +886,19 @@ fit_DHO_manual_singlestep(x, y, yerr, peak_T, peak_x, peak_size, peak_width, off
 }
 
 
+
 # -----------------------------------------------------------------------------
+# helpers
+
+
+# creates fitted curve for plotting
+fit_points(fitres, xmin, xmax, numpts=128)
+{
+	fitres_vals = map_vec_to_val(fitres);
+	fitres_errs = map_vec_to_val(fitres, 1);
+
+	x_fine = linspace(xmin, xmax, numpts);
+	y_fit = call(fitres["<model>"], fitres_vals + ["x":x_fine]);
+
+	return [x_fine, y_fit];
+}

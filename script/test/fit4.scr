@@ -7,5 +7,9 @@ main()
 	yerr = y/10.;
 
 	fitparams = fit_line(x, y, yerr);
+	fitpts = fit_points(fitparams, 0., 10.);
+
 	print(fitparams);
+
+	plot([x,y,yerr], [fitpts[0], fitpts[1], ["style":"line"]]);
 }
