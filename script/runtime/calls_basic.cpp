@@ -351,6 +351,16 @@ static Symbol* fkt_import(const std::vector<Symbol*>& vecSyms,
 		{
 			const t_string& strFile = ((SymbolString*)pSym)->GetVal();
 			bool bOk = _import_file(strFile, info, runinfo, pSymTab);
+
+#ifdef INSTALL_PREFIX
+			if(!bOk)
+			{
+				t_string strInstPrefix = t_string(INSTALL_PREFIX) + "/share/hermelin/";
+				tl::log_debug("Importing from ", strInstPrefix);
+
+				bOk = _import_file(strInstPrefix + strFile, info, runinfo, pSymTab);
+			}
+#endif
 		}
 
 	return 0;

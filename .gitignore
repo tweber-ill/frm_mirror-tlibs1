@@ -8,6 +8,7 @@
 .~lock*
 *~
 *.cmake
+!script/FindMinuit2.cmake
 .directory
 *.kate-swp
 Debug/*
