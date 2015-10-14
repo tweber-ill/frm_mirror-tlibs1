@@ -731,7 +731,6 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 
 // --------------------------------------------------------------------------------
 
-
 template<class t_real=double>
 t_real bose(t_real E, t_real T)
 {
@@ -741,6 +740,12 @@ t_real bose(t_real E, t_real T)
 		return 1./(std::exp(std::abs(E)/(kB*T)) - 1.) + 1.;
 	else
 		return 1./(std::exp(std::abs(E)/(kB*T)) - 1.);
+}
+
+template<class Sys, class Y>
+Y bose(const t_energy<Sys,Y>& E, const t_temperature<Sys,Y>& T)
+{
+	return bose<Y>(Y(E/tl::meV), Y(T/tl::kelvin));
 }
 
 // see: B. Fak, B. Dorner, Physica B 234-236 (1997) pp. 1107-1108

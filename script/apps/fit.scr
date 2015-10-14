@@ -173,7 +173,7 @@ fit_doublegauss_manual_singlestep(x, y, yerr, peaks_x, peaks_size, peaks_width, 
 	for(thisyerr : yerr)
 	{
 		if(thisyerr eq 0.)
-			thisyerr = yrange*0.001;
+			thisyerr = yrange*0.005;
 	}
 
 	hints = [peaks_x[idx_lt], peaks_width[idx_lt], peaks_size[idx_lt], 
@@ -210,7 +210,7 @@ fit_doublevoigt_manual_singlestep(x, y, yerr, peaks_x, peaks_size, instr_width, 
 	for(thisyerr : yerr)
 	{
 		if(thisyerr eq 0.)
-			thisyerr = yrange*0.001;
+			thisyerr = yrange*0.005;
 	}
 
 	hints = [peaks_x[idx_lt], instr_width[idx_lt], peaks_width[idx_lt], peaks_size[idx_lt], 
@@ -265,7 +265,7 @@ fit_doublegauss_manual2(x, y, yerr, E0, peaks_x, peaks_size, peaks_width)
 	for(thisyerr : yerr)
 	{
 		if(thisyerr eq 0.)
-			thisyerr = yrange*0.001;
+			thisyerr = yrange*0.005;
 	}
 
 	hints = [peaks_x[idx_lt], peaks_width[idx_lt], peaks_size[idx_lt], 
@@ -351,7 +351,7 @@ fit_triplegauss_manual_singlestep(x, y, yerr, peaks_x, peaks_size, peaks_width, 
 	for(thisyerr : yerr)
 	{
 		if(thisyerr eq 0.)
-			thisyerr = yrange*0.001;
+			thisyerr = yrange*0.005;
 	}
 
 	hints = [peaks_x[0], peaks_width[0], peaks_size[0], 
@@ -402,7 +402,7 @@ fit_quadgauss_manual_singlestep(x, y, yerr, peaks_x, peaks_size, peaks_width, of
 	for(thisyerr : yerr)
 	{
 		if(thisyerr eq 0.)
-			thisyerr = yrange*0.001;
+			thisyerr = yrange*0.005;
 	}
 
 	hints = [peaks_x[0], peaks_width[0], peaks_size[0], 
@@ -458,7 +458,7 @@ fit_pentgauss_manual_singlestep(x, y, yerr, peaks_x, peaks_size, peaks_width, of
 	for(thisyerr : yerr)
 	{
 		if(thisyerr eq 0.)
-			thisyerr = yrange*0.001;
+			thisyerr = yrange*0.005;
 	}
 
 	hints = [peaks_x[0], peaks_width[0], peaks_size[0], 
@@ -517,7 +517,7 @@ fit_hexagauss_manual_singlestep(x, y, yerr, peaks_x, peaks_size, peaks_width, of
 	for(thisyerr : yerr)
 	{
 		if(thisyerr eq 0.)
-			thisyerr = yrange*0.001;
+			thisyerr = yrange*0.005;
 	}
 
 	hints = [peaks_x[0], peaks_width[0], peaks_size[0], 
@@ -572,7 +572,7 @@ fit_gauss_manual(x, y, yerr, peak_x, peak_size, peak_width)
 	for(thisyerr : yerr)
 	{
 		if(thisyerr eq 0.)
-			thisyerr = yrange*0.001;
+			thisyerr = yrange*0.005;
 	}
 
 	hints = [peak_x, peak_width, peak_size, min(y)];
@@ -605,7 +605,7 @@ fit_gauss_manual_singlestep(x, y, yerr, peak_x, peak_size, peak_width, offs, ste
 	for(thisyerr : yerr)
 	{
 		if(thisyerr eq 0.)
-			thisyerr = yrange*0.001;
+			thisyerr = yrange*0.005;
 	}
 
 	hints = [peak_x, peak_width, peak_size, offs];
@@ -637,11 +637,11 @@ fit_voigt_manual_singlestep(x, y, yerr, peak_x, peak_size, instr_width, peak_wid
 	for(thisyerr : yerr)
 	{
 		if(thisyerr eq 0.)
-			thisyerr = yrange*0.001;
+			thisyerr = yrange*0.005;
 	}
 
 	hints = [peak_x, instr_width, peak_width, peak_size, offs];
-	hints_err = [peak_x/10., instr_width/10., peak_width/10., peak_size/10., offs/10.];
+	hints_err = [peak_x/5., instr_width/5., peak_width/5., peak_size/5., offs/5.];
 
 	fitparams = fit("voigt_model", x, y, yerr, 
 			[
@@ -818,7 +818,7 @@ fit_lorentzian_manual_singlestep(x, y, yerr, peak_x, peak_size, peak_width, offs
 	for(thisyerr : yerr)
 	{
 		if(thisyerr eq 0.)
-			thisyerr = yrange*0.001;
+			thisyerr = yrange*0.005;
 	}
 
 	hints = [peak_x, peak_width, peak_size, offs];
@@ -868,7 +868,7 @@ fit_DHO_manual_singlestep(x, y, yerr, peak_T, peak_x, peak_size, peak_width, off
 	for(thisyerr : yerr)
 	{
 		if(thisyerr eq 0.)
-			thisyerr = yrange*0.001;
+			thisyerr = yrange*0.005;
 	}
 
 	hints = [peak_T, peak_x, peak_width, peak_size, offs];
