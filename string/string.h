@@ -391,7 +391,12 @@ t_str var_to_str(const T& t, std::streamsize iPrec=10, int iGroup=-1)
 		ostr.imbue(std::locale(ostr.getloc(), pSep));
 	}
 
-	ostr << t;
+
+	// prevents printing "-0"
+	T t0 = t;
+	if(t0==T(-0)) t0 = T(0);
+
+	ostr << t0;
 	t_str str = ostr.str();
 
 	if(pSep)
