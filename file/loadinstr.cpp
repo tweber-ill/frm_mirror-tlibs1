@@ -989,6 +989,13 @@ std::vector<std::string> FileFrm::GetScannedVars() const
 		}
 	}
 
+	if(!vecVars.size())
+	{
+		tl::log_warn("Could not determine scan variable, using first column.");
+		if(m_vecQuantities.size() >= 1)
+			vecVars.push_back(m_vecQuantities[0]);
+	}
+
 	return vecVars;
 }
 
@@ -1378,6 +1385,13 @@ std::vector<std::string> FileMacs::GetScannedVars() const
 			vecScan.push_back(vecToks[1]);
 	}
 
+	if(!vecScan.size())
+	{
+		tl::log_warn("Could not determine scan variable, using first column.");
+		if(m_vecQuantities.size() >= 1)
+			vecScan.push_back(m_vecQuantities[0]);
+	}
+
 	return vecScan;
 }
 
@@ -1697,6 +1711,13 @@ std::vector<std::string> FileTrisp::GetScannedVars() const
 	t_mapParams::const_iterator iter = m_mapParams.find("scan_vars");
 	if(iter != m_mapParams.end())
 		tl::get_tokens<std::string, std::string>(iter->second, " \t", vecScan);
+
+	if(!vecScan.size())
+	{
+		tl::log_warn("Could not determine scan variable, using first column.");
+		if(m_vecQuantities.size() >= 1)
+			vecScan.push_back(m_vecQuantities[0]);
+	}
 
 	return vecScan;
 }
