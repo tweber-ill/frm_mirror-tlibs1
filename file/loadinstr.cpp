@@ -1,8 +1,8 @@
 /*
- * Loads instrument-specific data file
+ * Loads instrument-specific data files
  * @author tweber
  * @date feb-2015
- * @copyright GPLv2 or GPLv3
+ * @license GPLv2 or GPLv3
  */
 
 #include "loadinstr.h"
@@ -46,13 +46,17 @@ FileInstr* FileInstr::LoadInstr(const char* pcFile)
 	std::istream* pIstr = &ifstr;
 #endif
 
-	std::string strLine;
+	std::string strLine, strLine2;
 	std::getline(*pIstr, strLine);
+	std::getline(*pIstr, strLine2);
 	//pIstr->close();
 
 
 	trim(strLine);
+	trim(strLine2);
 	strLine = str_to_lower(strLine);
+	strLine2 = str_to_lower(strLine2);
+
 	if(strLine == "")
 		return nullptr;
 
@@ -63,6 +67,8 @@ FileInstr* FileInstr::LoadInstr(const char* pcFile)
 		pDat = new FileFrm();
 	else if(strLine.find(strMacs) != std::string::npos)	// macs file
 		pDat = new FileMacs();
+	else if(strLine2.find("scan start") != std::string::npos)
+		pDat = new FileTrisp();
 	else							// psi or ill file
 		pDat = new FilePsi();
 
@@ -1035,7 +1041,7 @@ void FileMacs::ReadHeader(std::istream& istr)
 		strLine = strLine.substr(1);
 
 		std::pair<std::string, std::string> pairLine =
-				split_first<std::string>(strLine, " ", 1);
+				split_first<std::string>(strLine, " \t", 1);
 		//std::cout << "key: " << pairLine.first << ", val: " << pairLine.second << std::endl;
 
 		if(pairLine.first == "")
@@ -1402,6 +1408,321 @@ std::string FileMacs::GetTimestamp() const
 	return str;
 }
 
+
+
+// -----------------------------------------------------------------------------
+
+
+
+void FileTrisp::ReadHeader(std::istream& istr)
+{
+	bool bInVarSection = 0;
+	while(!istr.eof())
+	{
+		std::string strLine;
+		std::getline(istr, strLine);
+
+		trim(strLine);
+		if(strLine.length()==0)
+			continue;
+
+		if(str_contains<std::string>(strLine, "----", 0))	// new variable section beginning
+		{
+			bInVarSection = 1;
+			//std::cout << "Section: " << strLine << std::endl;
+
+			if(str_contains<std::string>(strLine, "steps", 0))
+				break;
+			continue;
+		}
+
+		if(bInVarSection)
+		{
+			std::pair<std::string, std::string> pairLine =
+					split_first<std::string>(strLine, " \t", 1);
+
+			if(pairLine.first == "")
+				continue;
+			//std::cout << "key: " << pairLine.first << ", val: " << pairLine.second << std::endl;
+
+			t_mapParams::iterator iter = m_mapParams.find(pairLine.first);
+
+			if(iter == m_mapParams.end())
+				m_mapParams.insert(pairLine);
+			else
+				iter->second += ", " + pairLine.second;
+		}
+		else
+		{
+			if(begins_with<std::string>(str_to_lower(strLine), "scan start:"))
+				m_mapParams["scan_start_timestamp"] = trimmed(strLine.substr(11));
+			else if(begins_with<std::string>(str_to_lower(strLine), "sc"))
+				m_mapParams["scan_command"] = strLine;
+		}
+	}
+}
+
+void FileTrisp::ReadData(std::istream& istr)
+{
+	bool bAtStepsBeginning = 0;
+	bool bInFooter = 0;
+
+	// data
+	while(!istr.eof())
+	{
+		std::string strLine;
+		std::getline(istr, strLine);
+		trim(strLine);
+
+		if(!bAtStepsBeginning)
+		{
+			if(begins_with<std::string>(str_to_lower(strLine), "pnt"))
+			{
+				get_tokens<std::string, std::string>(strLine, " \t", m_vecQuantities);
+				//for(const std::string& strCol : m_vecQuantities)
+				//	std::cout << "col: " << strCol << std::endl;
+
+				bAtStepsBeginning = 1;
+				m_vecData.resize(m_vecQuantities.size());
+			}
+			continue;
+		}
+
+		if(strLine.length()==0 || strLine[0]=='#')
+			continue;
+
+
+		// character in scan data -> beginning of footer
+		for(std::string::value_type c : split_first<std::string>(strLine, " \t", 1).first)
+		{
+			if(std::isalpha(c))
+			{
+				if(begins_with<std::string>(str_to_lower(strLine), "scan end:"))
+					m_mapParams["scan_finish_timestamp"] = trimmed(strLine.substr(9));
+				else if(begins_with<std::string>(str_to_lower(strLine), "scan"))
+				{
+					std::pair<std::string, std::string> pairLine = 
+						split_first<std::string>(strLine, " \t", 1);
+
+					m_mapParams["scan_vars"] = trimmed(pairLine.second);
+				}
+
+				bInFooter = 1;
+			}
+		}
+
+
+		if(!bInFooter)
+		{
+			std::vector<double> vecToks;
+			get_tokens<double, std::string>(strLine, " \t", vecToks);
+
+			if(vecToks.size() != m_vecQuantities.size())
+			{
+				log_warn("Loader: Line size mismatch.");
+
+				// add zeros
+				while(m_vecQuantities.size() > vecToks.size())
+					vecToks.push_back(0.);
+			}
+
+			for(std::size_t iTok=0; iTok<vecToks.size(); ++iTok)
+				m_vecData[iTok].push_back(vecToks[iTok]);
+		}
+	}
+}
+
+
+bool FileTrisp::Load(const char* pcFile)
+{
+	std::ifstream ifstr(pcFile);
+	if(!ifstr.is_open())
+		return false;
+
+#if !defined NO_IOSTR
+	std::istream* pIstr = create_autodecomp_istream(ifstr);
+	if(!pIstr) return false;
+	std::unique_ptr<std::istream> ptrIstr(pIstr);
+#else
+	std::ifstream *pIstr = &ifstr;
+#endif
+
+	ReadHeader(*pIstr);
+	ReadData(*pIstr);
+
+	return true;
+}
+
+const FileInstr::t_vecVals& FileTrisp::GetCol(const std::string& strName) const
+{
+	return const_cast<FileTrisp*>(this)->GetCol(strName);
+}
+
+FileInstr::t_vecVals& FileTrisp::GetCol(const std::string& strName)
+{
+	static std::vector<double> vecNull;
+
+	for(std::size_t i=0; i<m_vecQuantities.size(); ++i)
+	{
+		if(m_vecQuantities[i] == strName)
+			return m_vecData[i];
+	}
+
+	return vecNull;
+}
+
+std::array<double,3> FileTrisp::GetSampleLattice() const
+{
+	t_mapParams::const_iterator iterA = m_mapParams.find("AS");
+	t_mapParams::const_iterator iterB = m_mapParams.find("BS");
+	t_mapParams::const_iterator iterC = m_mapParams.find("CS");
+
+	double a = (iterA!=m_mapParams.end() ? str_to_var<double>(iterA->second) : 0.);
+	double b = (iterB!=m_mapParams.end() ? str_to_var<double>(iterB->second) : 0.);
+	double c = (iterC!=m_mapParams.end() ? str_to_var<double>(iterC->second) : 0.);
+
+	return std::array<double,3>{{a,b,c}};
+}
+
+std::array<double,3> FileTrisp::GetSampleAngles() const
+{
+	t_mapParams::const_iterator iterA = m_mapParams.find("AA");
+	t_mapParams::const_iterator iterB = m_mapParams.find("BB");
+	t_mapParams::const_iterator iterC = m_mapParams.find("CC");
+
+	double alpha = (iterA!=m_mapParams.end() ? str_to_var<double>(iterA->second)/180.*M_PI : M_PI/2.);
+	double beta = (iterB!=m_mapParams.end() ? str_to_var<double>(iterB->second)/180.*M_PI : M_PI/2.);
+	double gamma = (iterC!=m_mapParams.end() ? str_to_var<double>(iterC->second)/180.*M_PI : M_PI/2.);
+
+	return std::array<double,3>{{alpha, beta, gamma}};
+}
+
+std::array<double,2> FileTrisp::GetMonoAnaD() const
+{
+	t_mapParams::const_iterator iterM = m_mapParams.find("DM");
+	t_mapParams::const_iterator iterA = m_mapParams.find("DA");
+
+	double m = (iterM!=m_mapParams.end() ? str_to_var<double>(iterM->second) : 3.355);
+	double a = (iterA!=m_mapParams.end() ? str_to_var<double>(iterA->second) : 3.355);
+
+	return std::array<double,2>{{m, a}};
+}
+
+std::array<bool, 3> FileTrisp::GetScatterSenses() const
+{
+	t_mapParams::const_iterator iterM = m_mapParams.find("SM");
+	t_mapParams::const_iterator iterS = m_mapParams.find("SS");
+	t_mapParams::const_iterator iterA = m_mapParams.find("SA");
+
+	bool m = (iterM!=m_mapParams.end() ? (str_to_var<int>(iterM->second)>0) : 0);
+	bool s = (iterS!=m_mapParams.end() ? (str_to_var<int>(iterS->second)>0) : 1);
+	bool a = (iterA!=m_mapParams.end() ? (str_to_var<int>(iterA->second)>0) : 0);
+
+	return std::array<bool,3>{{m, s, a}};
+}
+
+std::array<double, 3> FileTrisp::GetScatterPlane0() const
+{
+	t_mapParams::const_iterator iterX = m_mapParams.find("AX");
+	t_mapParams::const_iterator iterY = m_mapParams.find("AY");
+	t_mapParams::const_iterator iterZ = m_mapParams.find("AZ");
+
+	double x = (iterX!=m_mapParams.end() ? str_to_var<double>(iterX->second) : 1.);
+	double y = (iterY!=m_mapParams.end() ? str_to_var<double>(iterY->second) : 0.);
+	double z = (iterZ!=m_mapParams.end() ? str_to_var<double>(iterZ->second) : 0.);
+
+	return std::array<double,3>{{x,y,z}};
+}
+
+std::array<double, 3> FileTrisp::GetScatterPlane1() const
+{
+	t_mapParams::const_iterator iterX = m_mapParams.find("BX");
+	t_mapParams::const_iterator iterY = m_mapParams.find("BY");
+	t_mapParams::const_iterator iterZ = m_mapParams.find("BZ");
+
+	double x = (iterX!=m_mapParams.end() ? str_to_var<double>(iterX->second) : 0.);
+	double y = (iterY!=m_mapParams.end() ? str_to_var<double>(iterY->second) : 1.);
+	double z = (iterZ!=m_mapParams.end() ? str_to_var<double>(iterZ->second) : 0.);
+
+	return std::array<double,3>{{x,y,z}};
+}
+
+double FileTrisp::GetKFix() const
+{
+	const std::string strKey = IsKiFixed() ? "KI" : "KF";
+	
+	t_mapParams::const_iterator iter = m_mapParams.find(strKey);
+	if(iter==m_mapParams.end())
+	{
+		tl::log_err("Cannot determine kfix.");
+		return 0.;
+	}
+
+	return tl::str_to_var<double>(iter->second);
+}
+
+bool FileTrisp::IsKiFixed() const
+{
+	return 0;		// assume ckf
+}
+
+std::size_t FileTrisp::GetScanCount() const
+{
+	if(m_vecData.size() < 1)
+		return 0;
+	return m_vecData[0].size();
+}
+
+std::array<double, 5> FileTrisp::GetScanHKLKiKf(std::size_t i) const
+{
+	return FileInstr::GetScanHKLKiKf("QH", "QK", "QL", "E", i);
+}
+
+bool FileTrisp::MergeWith(const FileInstr* pDat) 
+{ 
+	return FileInstr::MergeWith(pDat); 
+}
+
+std::string FileTrisp::GetTitle() const { return ""; }
+std::string FileTrisp::GetUser() const { return ""; }
+std::string FileTrisp::GetLocalContact() const { return ""; }
+std::string FileTrisp::GetScanNumber() const { return ""; }
+std::string FileTrisp::GetSampleName() const { return ""; }
+std::string FileTrisp::GetSpacegroup() const { return ""; }
+
+std::vector<std::string> FileTrisp::GetScannedVars() const
+{
+	std::vector<std::string> vecScan;
+
+	t_mapParams::const_iterator iter = m_mapParams.find("scan_vars");
+	if(iter != m_mapParams.end())
+		tl::get_tokens<std::string, std::string>(iter->second, " \t", vecScan);
+
+	return vecScan;
+}
+
+std::string FileTrisp::GetCountVar() const { return "c1"; }
+std::string FileTrisp::GetMonVar() const { return "mon"; }
+
+std::string FileTrisp::GetScanCommand() const
+{
+	std::string str;
+	t_mapParams::const_iterator iter = m_mapParams.find("scan_command");
+	if(iter != m_mapParams.end())
+		str = iter->second;
+	return str;
+}
+
+std::string FileTrisp::GetTimestamp() const
+{
+	std::string str;
+	t_mapParams::const_iterator iter = m_mapParams.find("scan_start_timestamp");
+	if(iter != m_mapParams.end())
+		str = iter->second;
+	return str;
+}
+
+
 }
 
 
@@ -1414,15 +1735,17 @@ std::string FileMacs::GetTimestamp() const
 int main()
 {
 	//tl::FileFrm dat;
-	tl::FileMacs dat;
+	//tl::FileMacs dat;
+	tl::FileTrisp dat;
 	//if(!dat.Load("/home/tweber/tmp/tst.dat"))
-	if(!dat.Load("/home/tweber/Messdaten/MACS_2014/data/Escan_31896.ng0"))
+	//if(!dat.Load("/home/tweber/Messdaten/MACS_2014/data/Escan_31896.ng0"))
+	if(!dat.Load("/home/tweber/Messdaten/trisp-15/data/sc77087.log"))
 	{
 		tl::log_err("Cannot load data file.");
 		return -1;
 	}
 
-	std::array<double,3> latt = dat.GetSampleAngles();
+	std::array<double,3> latt = dat.GetSampleLattice();
 	std::cout << latt[0] << ", " << latt[1] << ", " << latt[2] << std::endl;
 
 	std::cout << "kfix = " << dat.GetKFix() << std::endl;

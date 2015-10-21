@@ -40,12 +40,12 @@ template<> inline const std::wstring& get_dir_seps()
 
 template<> inline const std::string& get_trim_chars()
 {
-	static const std::string strC(" \t");
+	static const std::string strC(" \t\r");
 	return strC;
 }
 template<> inline const std::wstring& get_trim_chars()
 {
-	static const std::wstring strC(L" \t");
+	static const std::wstring strC(L" \t\r");
 	return strC;
 }
 
@@ -236,6 +236,14 @@ void trim(t_str& str)
 }
 
 template<class t_str=std::string>
+t_str trimmed(const t_str& str)
+{
+	t_str strret = str;
+	trim(strret);
+	return strret;
+}
+
+template<class t_str=std::string>
 t_str remove_char(const t_str& str, typename t_str::value_type ch)
 {
 	t_str strRet;
@@ -296,7 +304,7 @@ split_first(const t_str& str, const t_str& strSep, bool bTrim=0)
 {
 	t_str str1, str2;
 
-	std::size_t pos = str.find(strSep);
+	std::size_t pos = str.find_first_of(strSep);
 	if(pos != t_str::npos)
 	{
 		str1 = str.substr(0, pos);
