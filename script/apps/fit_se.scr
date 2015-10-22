@@ -95,7 +95,7 @@ do_seseries(files, taus)
 	{
 		print("Processing file(s): " + str(curfile[0]) + " with tau = " + curfile[1] + " ps.");
 
-		[instr, dat_x, dat_y, dat_yerr, xlab, ylab] = load_instr(curfile);
+		[instr, dat_x, dat_y, dat_yerr, xlab, ylab] = load_instr(curfile[0]);
 		[[P, dP, ph, dph], [xfine, yfit]] = fit_sesine(dat_x, dat_y, dat_yerr);
 		print("P = " + P + " +- " + dP);
 		print("ph = " + (ph/pi*180.) + " +- " + (dph/pi*180.));
