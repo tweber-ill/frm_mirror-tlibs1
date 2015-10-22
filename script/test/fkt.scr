@@ -12,4 +12,6 @@ main()
 {
 	ret = func(1, 2.5, "test");
 	print("ret = " + ret);
+
+	print("args: " + str(get_argnames("func")));
 }

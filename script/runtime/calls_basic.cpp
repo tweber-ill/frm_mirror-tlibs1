@@ -96,6 +96,32 @@ static Symbol* fkt_null(const std::vector<Symbol*>& vecSyms,
 	return 0;
 }
 
+static Symbol* fkt_getargnames(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+{
+	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING}, {0}, "get_argnames", "Function name needed."))
+		return 0;
+
+	const t_string& strFkt = ((SymbolString*)vecSyms[0])->GetVal();
+	NodeFunction *pFkt = info.GetFunction(strFkt);
+	if(!pFkt)
+	{
+		std::ostringstream ostrErr;
+		ostrErr << linenr(runinfo) << "Unknown user function \"" << strFkt << "\"." << std::endl;
+		throw tl::Err(ostrErr.str(),0);
+	}
+
+
+	SymbolArray *pSymArr = new SymbolArray();
+
+	std::vector<t_string> vecParams = pFkt->GetParamNames();
+	for(const t_string& strParam : vecParams)
+		pSymArr->GetArr().push_back(new SymbolString(strParam));
+	pSymArr->UpdateIndices();
+
+	return pSymArr;
+}
+
 // call("fkt", [arg1, arg2, ...]);
 static Symbol* fkt_call(const std::vector<Symbol*>& vecSyms,
 	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
@@ -1344,6 +1370,7 @@ extern void init_ext_basic_calls()
 		t_mapFkts::value_type(T_STR"is_valid", fkt_is_valid),
 		t_mapFkts::value_type(T_STR"null", fkt_null),
 		t_mapFkts::value_type(T_STR"call", fkt_call),
+		t_mapFkts::value_type(T_STR"get_argnames", fkt_getargnames),
 		t_mapFkts::value_type(T_STR"is_rval", fkt_is_rval),
 		t_mapFkts::value_type(T_STR"traceback", fkt_traceback),
 

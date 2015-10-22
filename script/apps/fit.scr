@@ -7,7 +7,7 @@ module_init()
 {
 	global hwhm2sigma = 1./(sqrt(2.*log(2.)));
 	global sigma2hwhm = 1./hwhm2sigma;
-	global fit_dbg = 0;
+	global fit_dbg = 1;
 
 	global kB = k_B_eVperK*1000.;
 }
@@ -151,8 +151,7 @@ doublegauss_model(x, x0_0, sigma_0, amp_0, x0_1, sigma_1, amp_1, offs)
 		+ offs;
 }
 
-doublevoigt_model(x, x0_0, sigma_0, gamma_0, amp_0, 
-	x0_1, sigma_1, gamma_1, amp_1, offs)
+doublevoigt_model(x, x0_0, sigma_0, gamma_0, amp_0, x0_1, sigma_1, gamma_1, amp_1, offs)
 {
         z0 = complex(x-x0_0, gamma_0) / (sigma_0 * sqrt(2.));
         pk0 = amp_0 * real(faddeeva(z0)) / (sigma_0 * sqrt(2.*pi));
@@ -898,7 +897,9 @@ fit_points(fitres, xmin, xmax, numpts=128)
 	fitres_errs = map_vec_to_val(fitres, 1);
 
 	x_fine = linspace(xmin, xmax, numpts);
-	y_fit = call(fitres["<model>"], fitres_vals + ["x":x_fine]);
+	fitfkt = fitres["<model>"];
+	fitfktarg0 = get_argnames(fitfkt)[0];
+	y_fit = call(fitfkt, fitres_vals + [fitfktarg0:x_fine]);
 
 	return [x_fine, y_fit];
 }
