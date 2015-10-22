@@ -3,6 +3,7 @@
 # @author tw
 # @date oct-2015
 
+
 module_init()
 {
 	import("apps/instr.scr");
@@ -11,6 +12,14 @@ module_init()
 	global hbar_mueVps = hbar_eVs * 1e6 * 1e12;
 }
 
+
+# -----------------------------------------------------------------------------
+
+# omega = phi / tau
+phi2dE(phi, tau)
+{ 
+	return phi*hbar_mueVps / tau;
+}
 
 # -----------------------------------------------------------------------------
 
@@ -96,17 +105,21 @@ do_seseries(files, taus)
 		print("Processing file(s): " + str(curfile[0]) + " with tau = " + curfile[1] + " ps.");
 
 		[instr, dat_x, dat_y, dat_yerr, xlab, ylab] = load_instr(curfile[0]);
+
 		[[P, dP, ph, dph], [xfine, yfit]] = fit_sesine(dat_x, dat_y, dat_yerr);
 		print("P = " + P + " +- " + dP);
 		print("ph = " + (ph/pi*180.) + " +- " + (dph/pi*180.));
 
+		rangex = max(dat_x) - min(dat_x);
+		xlims = (min(dat_x)-rangex*0.05) + " " + (max(dat_x)+rangex*0.05);
 		ylims = "0 " + str(max(dat_y)+max(dat_yerr)*2.);
 
 		sintitle = "P = " + P + " +- " + dP + ", phi = " + (ph/pi*180.) + " deg +- " + (dph/pi*180.) + " deg";
 
-		plot([[dat_x, dat_y, dat_yerr, ["style":"points"]],
-			[xfine, yfit, ["style":"line"]]], 
-			["title":sintitle, "xlabel":xlab, "ylabel":ylab, "ylimits":ylims]);
+		plot([[dat_x, dat_y, dat_yerr, ["style" : "points"]],
+			[xfine, yfit, ["style" : "line"]]], 
+			["title" : sintitle, "xlabel" : xlab, "ylabel" : ylab, 
+			"xlimits" : xlims, "ylimits" : ylims]);
 
 
 		Ps[length(Ps)] = P; P_errs[length(P_errs)] = dP;
@@ -121,7 +134,51 @@ do_seseries(files, taus)
 	exptitle = "Gamma = " + G + " mueV +- " + dG + " mueV";
 	plot([taus, Ps, P_errs, ["style":"points"]], [taus_fine, pol_fit, ["style":"line"]],
 		["xlabel" : "tau (ps)", "ylabel" : "Polarisation", "title" : exptitle, 
-		"xlimits" : "0 " + (max(taus)+1.), "ylimits" : "0 1"]);
+		"xlimits" : "0 " + (max(taus)+1.), "ylimits" : "0 0.5"]);
+}
+
+do_Eshiftseries(files, tau, tempcol, Eoffs=0.)
+{
+	phs = []; ph_errs = [];
+	Es = []; E_errs = [];
+	Ps = []; P_errs = [];
+	Ts = []; T_errs = [];
+
+	for(curfile : files)
+	{
+		print("Processing file: " + curfile + " with tau = " + tau + " ps.");
+
+		[instr, dat_x, dat_y, dat_yerr, xlab, ylab] = load_instr(curfile);
+
+		[T, dT] = get_col_mean(instr, tempcol);
+		Ts[length(Ts)] = T; T_errs[length(T_errs)] = dT;
+
+		[[P, dP, ph, dph], [xfine, yfit]] = fit_sesine(dat_x, dat_y, dat_yerr);
+		print("P = " + P + " +- " + dP);
+		print("ph = " + (ph/pi*180.) + " +- " + (dph/pi*180.));
+
+		rangex = max(dat_x) - min(dat_x);
+		xlims = (min(dat_x)-rangex*0.05) + " " + (max(dat_x)+rangex*0.05);
+		ylims = "0 " + str(max(dat_y)+max(dat_yerr)*2.);
+
+		sintitle = "P = " + P + " +- " + dP + ", phi = " + (ph/pi*180.) + " deg +- " + (dph/pi*180.) + " deg";
+
+		plot([[dat_x, dat_y, dat_yerr, ["style" : "points"]],
+			[xfine, yfit, ["style" : "line"]]], 
+			["title" : sintitle, "xlabel" : xlab, "ylabel" : ylab, 
+			"xlimits" : xlims, "ylimits" : ylims]);
+
+
+		Ps[length(Ps)] = P; P_errs[length(P_errs)] = dP;
+		phs[length(phs)] = ph; ph_errs[length(ph_errs)] = dph;
+		Es[length(Es)] = phi2dE(ph, tau) + Eoffs; E_errs[length(E_errs)] = phi2dE(dph, tau);
+
+		print("-"*80);
+	}
+
+	plot(Ts, Es, E_errs, 
+		["xlabel" : "T (K)", "ylabel" : "dE (mueV)", "title" : "tau = " + tau + " ps",
+		"xlimits" : "0 " + (max(Ts)+10), "ylimits" : (min(Es)-50) + " " + (max(Es)+50)]);
 }
 
 
