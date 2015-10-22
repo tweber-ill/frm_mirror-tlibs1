@@ -95,7 +95,7 @@ fit_seexp(tau, P, Perr, P0=-1.)
 # -----------------------------------------------------------------------------
 
 
-do_seseries(files, taus)
+do_seseries(files, taus, P0=1.)
 {
 	phs = []; ph_errs = [];
 	Ps = []; P_errs = [];
@@ -129,12 +129,14 @@ do_seseries(files, taus)
 	}
 
 
-	[[G, dG, P0, dP0], [taus_fine, pol_fit]] = fit_seexp(taus, Ps, P_errs, 1.);
+	[[G, dG, P0, dP0], [taus_fine, pol_fit]] = fit_seexp(taus, Ps, P_errs, P0);
 
 	exptitle = "Gamma = " + G + " mueV +- " + dG + " mueV";
 	plot([taus, Ps, P_errs, ["style":"points"]], [taus_fine, pol_fit, ["style":"line"]],
 		["xlabel" : "tau (ps)", "ylabel" : "Polarisation", "title" : exptitle, 
 		"xlimits" : "0 " + (max(taus)+1.), "ylimits" : "0 0.5"]);
+
+	return [G, dG];
 }
 
 do_Eshiftseries(files, tau, tempcol, Eoffs=0.)
