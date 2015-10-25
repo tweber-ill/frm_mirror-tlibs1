@@ -5,11 +5,28 @@
 
 module_init()
 {
+	import("apps/bose.scr");
+
+
 	global hwhm2sigma = 1./(sqrt(2.*log(2.)));
 	global sigma2hwhm = 1./hwhm2sigma;
 	global fit_dbg = 1;
 
 	global kB = k_B_eVperK*1000.;
+	
+	global gaussmodel = "gauss_model";
+	global doublegaussmodel = "doublegauss_model";
+	global triplegaussmodel = "triplegauss_model";
+	global quadgaussmodel = "quadgauss_model";
+	global pentgaussmodel = "pentgauss_model";
+	global hexagaussmodel = "hexagauss_model";
+	global multigaussmodel = "multigauss_model";
+	global voigtmodel = "voigt_model";
+	global doublevoigtmodel = "doublevoigt_model";
+	global lorentzianmodel = "lorentzian_model";
+	global dhomodel = "DHO_model";
+
+	global curT = 300.;
 }
 
 
@@ -127,7 +144,7 @@ fit_multigauss_manual(x, y, yerr, peaks_x, peaks_size, peaks_width)
 
 	fitsteps[length(fitsteps)] = "x"*(numgauss*3 + 1);
 
-	fitparams = fit("multigauss_model", x, y, yerr,
+	fitparams = fit(multigaussmodel, x, y, yerr,
 					[
 						"use_param_vec" : param_vec,
 						"hints":hints, "hints_errors":hints_err,
@@ -186,7 +203,7 @@ fit_doublegauss_manual_singlestep(x, y, yerr, peaks_x, peaks_size, peaks_width, 
 	#lowerlims = ["amp_0":min(y), "amp_1":min(y), "sigma_0":0., "sigma_1":0., "offs":min(y)];
 	#upperlims = ["amp_0":max(y), "amp_1":max(y), "offs":max(y)];
 
-	fitparams = fit("doublegauss_model", x, y, yerr, 
+	fitparams = fit(doublegaussmodel, x, y, yerr, 
 			[
 				"hints" : hints, "hints_errors" : hints_err,
 			#	"lower_limits" : lowerlims, "upper_limits" : upperlims,
@@ -225,7 +242,7 @@ fit_doublevoigt_manual_singlestep(x, y, yerr, peaks_x, peaks_size, instr_width, 
 		"gamma_0":0., "gamma_1":0., 
 		"offs":0.];
 
-	fitparams = fit("doublevoigt_model", x, y, yerr, 
+	fitparams = fit(doublevoigtmodel, x, y, yerr, 
 			[
 				"hints" : hints, "hints_errors" : hints_err,
 				"lower_limits" : lowerlims, 
@@ -287,7 +304,7 @@ fit_doublegauss_manual2(x, y, yerr, E0, peaks_x, peaks_size, peaks_width)
 	lowerlims = ["amp_0":min(y), "amp_1":min(y), "sigma_0":0., "sigma_1":0., "offs":min(y)];
 	upperlims = ["amp_0":max(y), "amp_1":max(y), "offs":max(y)];
 
-	fitparams = fit("doublegauss_model", x, y, yerr, 
+	fitparams = fit(doublegaussmodel, x, y, yerr, 
 			[
 				"hints":hints, "hints_errors":hints_err,
 				"lower_limits":lowerlims, "upper_limits":upperlims,
@@ -362,7 +379,7 @@ fit_triplegauss_manual_singlestep(x, y, yerr, peaks_x, peaks_size, peaks_width, 
 				peaks_x[1]/10., peaks_width[1]/10., peaks_size[1]/10.,
 			offs/10.];
 
-	fitparams = fit("triplegauss_model", x, y, yerr, 
+	fitparams = fit(triplegaussmodel, x, y, yerr, 
 			[
 				"hints":hints, "hints_errors":hints_err,
 			#	"lower_limits":lowerlims, "upper_limits":upperlims,
@@ -416,7 +433,7 @@ fit_quadgauss_manual_singlestep(x, y, yerr, peaks_x, peaks_size, peaks_width, of
 				peaks_x[3]/10., peaks_width[3]/10., peaks_size[3]/10.,
 			offs/10.];
 
-	fitparams = fit("quadgauss_model", x, y, yerr, 
+	fitparams = fit(quadgaussmodel, x, y, yerr, 
 			[
 				"hints":hints, "hints_errors":hints_err,
 			#	"lower_limits":lowerlims, "upper_limits":upperlims,
@@ -474,7 +491,7 @@ fit_pentgauss_manual_singlestep(x, y, yerr, peaks_x, peaks_size, peaks_width, of
 				peaks_x[4]/10., peaks_width[4]/10., peaks_size[4]/10.,
 			offs/10.];
 
-	fitparams = fit("pentgauss_model", x, y, yerr, 
+	fitparams = fit(pentgaussmodel, x, y, yerr, 
 			[
 				"hints":hints, "hints_errors":hints_err,
 			#	"lower_limits":lowerlims, "upper_limits":upperlims,
@@ -535,7 +552,7 @@ fit_hexagauss_manual_singlestep(x, y, yerr, peaks_x, peaks_size, peaks_width, of
 				peaks_x[5]/10., peaks_width[5]/10., peaks_size[5]/10.,
 			offs/10.];
 
-	fitparams = fit("hexagauss_model", x, y, yerr, 
+	fitparams = fit(hexagaussmodel, x, y, yerr, 
 			[
 				"hints":hints, "hints_errors":hints_err,
 			#	"lower_limits":lowerlims, "upper_limits":upperlims,
@@ -580,7 +597,7 @@ fit_gauss_manual(x, y, yerr, peak_x, peak_size, peak_width)
 	lowerlims = ["amp":min(y), "sigma":0., "offs":min(y)];
 	upperlims = ["amp":max(y), "offs":max(y)];
 
-	fitparams = fit("gauss_model", x, y, yerr, 
+	fitparams = fit(gaussmodel, x, y, yerr, 
 			[
 				"hints":hints, "hints_errors":hints_err,
 				"lower_limits":lowerlims, "upper_limits":upperlims,
@@ -610,7 +627,7 @@ fit_gauss_manual_singlestep(x, y, yerr, peak_x, peak_size, peak_width, offs, ste
 	hints = [peak_x, peak_width, peak_size, offs];
 	hints_err = [peak_x/10., peak_width/10., peak_size/10., offs/10.];
 
-	fitparams = fit("gauss_model", x, y, yerr, 
+	fitparams = fit(gaussmodel, x, y, yerr, 
 			[
 				"hints":hints, "hints_errors":hints_err,
 			#	"lower_limits":lowerlims, "upper_limits":upperlims,
@@ -642,7 +659,7 @@ fit_voigt_manual_singlestep(x, y, yerr, peak_x, peak_size, instr_width, peak_wid
 	hints = [peak_x, instr_width, peak_width, peak_size, offs];
 	hints_err = [peak_x/5., instr_width/5., peak_width/5., peak_size/5., offs/5.];
 
-	fitparams = fit("voigt_model", x, y, yerr, 
+	fitparams = fit(voigtmodel, x, y, yerr, 
 			[
 				"hints" : hints, "hints_errors" : hints_err,
 				"lower_limits" : ["sigma":0., "gamma":0., "amp":0., "offs":0.], 
@@ -823,7 +840,7 @@ fit_lorentzian_manual_singlestep(x, y, yerr, peak_x, peak_size, peak_width, offs
 	hints = [peak_x, peak_width, peak_size, offs];
 	hints_err = [peak_x/10., peak_width/10., peak_size/10., offs/10.];
 
-	fitparams = fit("lorentzian_model", x, y, yerr, 
+	fitparams = fit(lorentzianmodel, x, y, yerr, 
 			[
 				"hints":hints, "hints_errors":hints_err,
 			#	"lower_limits":lowerlims, "upper_limits":upperlims,
@@ -841,17 +858,12 @@ fit_lorentzian_manual_singlestep(x, y, yerr, peak_x, peak_size, peak_width, offs
 # -----------------------------------------------------------------------------
 # DHO
 
-bose(E, T)
-{
-	return 1./(exp(abs(E)/(kB*T)) - 1.) + 1.;
-}
-
 # see: B. Fak, B. Dorner, Physica B 234-236 (1997) pp. 1107-1108
 DHO_model(E, T, E0, hwhm, amp, offs)
 {
 	if(E0^2. - hwhm^2. < 0.) return 0.;
 
-	E_bose = bose(E, T);
+	E_bose = bose_both(T, E);
 	return E_bose*amp/(E0*pi) * (hwhm/((E-E0)^2. + hwhm^2.) - hwhm/((E+E0)^2. + hwhm^2.));
 }
 
@@ -873,7 +885,7 @@ fit_DHO_manual_singlestep(x, y, yerr, peak_T, peak_x, peak_size, peak_width, off
 	hints = [peak_T, peak_x, peak_width, peak_size, offs];
 	hints_err = [peak_T/10., peak_x/10., peak_width/10., peak_size/10., offs/10.];
 
-	fitparams = fit("DHO_model", x, y, yerr, 
+	fitparams = fit(dhomodel, x, y, yerr, 
 			[
 				"hints":hints, "hints_errors":hints_err,
 				"debug" : fit_dbg,
@@ -902,4 +914,25 @@ fit_points(fitres, xmin, xmax, numpts=128)
 	y_fit = call(fitfkt, fitres_vals + [fitfktarg0:x_fine]);
 
 	return [x_fine, y_fit];
+}
+
+
+# -----------------------------------------------------------------------------
+
+voigt_model_bose(x, x0, sigma, gamma, amp, offs)
+{
+	return voigt_model(x, x0, sigma, gamma, amp, offs) * bose_both(curT, x);
+}
+
+doublevoigt_model_bose(x, x0_0, sigma_0, gamma_0, amp_0, x0_1, sigma_1, gamma_1, amp_1, offs)
+{
+	return doublevoigt_model(x, x0_0, sigma_0, gamma_0, amp_0, 
+		x0_1, sigma_1, gamma_1, amp_1, offs) 
+			* bose_both(curT, x);
+}
+
+set_bose_fits()
+{
+	voigtmodel = "voigt_model_bose";
+	doublevoigtmodel = "doublevoigt_model_bose";
 }

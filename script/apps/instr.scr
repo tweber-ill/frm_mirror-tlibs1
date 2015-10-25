@@ -207,9 +207,9 @@ get_plotobj_gausses(num_peaks, fitres, thedat, plot_dat=0, param_vec=[])
 	print("Fit errors: " + str(params_errs));
 
 	fitfkt = fitres["<model>"];
-	fitfkt_single = "gauss_model";
+	fitfkt_single = gaussmodel;
 	if(find(fitfkt, "voigt") >= 0)
-		fitfkt_single = "voigt_model";
+		fitfkt_single = voigtmodel;
 
 	fitx = linspace(minx-xrange, maxx+xrange, num_pts);
 	fity = call(fitfkt, params_vals + ["x":fitx]);

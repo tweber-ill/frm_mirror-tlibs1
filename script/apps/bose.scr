@@ -3,9 +3,15 @@
 # Calculate Bose factors
 #
 
+module_init()
+{
+	global k_B_meVperK = 1000. * k_B_eVperK;
+}
+
+
 bose_n(T, E)
 {
-	n = 1. / (exp(E / (k_B_eVperK * T)) - 1.);
+	n = 1. / (exp(E / (k_B_meVperK * T)) - 1.);
 	return n;
 }
 
@@ -17,19 +23,29 @@ bose_nplus1(T, E)
 
 bose_both(T, Es)
 {
-	facs = vec(vec_size(Es));
-
-	for(E : Es)
+	if(typeof(Es) == "vector")
 	{
-		iter = cur_iter(E);
+		facs = vec(vec_size(Es));
 
-		if(E geq 0.)
-			facs[iter] = bose_nplus1(T, E);
-		else
-			facs[iter] = bose_n(T, -E);
+		for(E : Es)
+		{
+			iter = cur_iter(E);
+
+			if(E >= 0.)
+				facs[iter] = bose_nplus1(T, E);
+			else
+				facs[iter] = bose_n(T, -E);
+		}
+
+		return facs;
 	}
-
-	return facs;
+	else
+	{
+		if(Es >= 0.)
+			return bose_nplus1(T, Es);
+		else
+			return bose_n(T, -Es);
+	}
 }
 
 # S(-Q, -om) / S(Q, om)
@@ -104,7 +120,7 @@ main(args)
 	strT = "T = " + T + "K";
 
 
-	E = linspace(Emin*1e-3, Emax*1e-3, 128);
+	E = linspace(Emin, Emax, 128);
 	b_n = bose_n(T, E);
 	b_n1 = bose_nplus1(T, E);
 
@@ -112,8 +128,8 @@ main(args)
 
 	if(show_bose)
 	{
-		plot([[E*1e3, b_n, ["style":"line", "legend":"<n>"]], 
-			[E*1e3, b_n1, ["style":"line", "legend":"<n+1>"]]
+		plot([[E, b_n, ["style":"line", "legend":"<n>"]], 
+			[E, b_n1, ["style":"line", "legend":"<n+1>"]]
 			],
 
 			["title" : "Bose occupation factors for " + strT, 
@@ -121,7 +137,7 @@ main(args)
 			"ylabel" : "Occupation", 
 			"window" : 0]);
 
-		plot(E*1e3, rel,
+		plot(E, rel,
 
 			["xlabel" : "E (meV)", 
 			"ylabel" : "<n+1> / <n>", 
@@ -132,12 +148,12 @@ main(args)
 
 	if(show_peaks)
 	{
-		E = linspace(-Emax*1e-3, Emax*1e-3, 256);
+		E = linspace(-Emax, Emax, 256);
 		amp = abs(bose_both(T, E) * E);
 
-		elast = gauss(E, 0., sigma_inc*1e-3, amp) + back*1e-3;
-#		elast = lorentzian(E, 0., sigma_inc*1e-3, amp) + back*1e-3;
-		plot(E*1e3, elast, 
+		elast = gauss(E, 0., sigma_inc, amp) + back;
+#		elast = lorentzian(E, 0., sigma_inc, amp) + back;
+		plot(E, elast, 
 			["style" : "line", 
 			"xlabel" : "E (meV)", 
 			"ylabel" : "Intensity", 
@@ -145,10 +161,10 @@ main(args)
 			"window" : 2]);
 
 
-		inelast = gauss(E, E0*1e-3, sigma*1e-3, amp) + gauss(E, -E0*1e-3, sigma*1e-3, amp) + back*1e-3;
-#		inelast = lorentzian(E, E0*1e-3, sigma*1e-3, amp) 
-#				+ lorentzian(E, -E0*1e-3, sigma*1e-3, amp) + back*1e-3;
-		plot(E*1e3, inelast, 
+		inelast = gauss(E, E0, sigma, amp) + gauss(E, -E0, sigma, amp) + back;
+#		inelast = lorentzian(E, E0, sigma, amp) 
+#				+ lorentzian(E, -E0, sigma, amp) + back;
+		plot(E, inelast, 
 			["style" : "line", 
 			"xlabel" : "E (meV)", 
 			"ylabel" : "Intensity", 
