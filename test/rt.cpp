@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <list>
-#include "../math/kd.h"
+#include "../math/rt.h"
 
 int main()
 {
@@ -20,11 +20,9 @@ int main()
 		{20,15}
 	};
 
-	tl::Kd<int> kd(lst);
-	kd.GetRootNode()->print(std::cout);
-	std::cout << std::endl;
+	tl::Rt<int, 2> rt(lst);
 
-	const std::vector<int>& vecN = kd.GetNearestNode(std::vector<int>{20,20});
+	const std::vector<int>& vecN = rt.GetNearestNode(std::vector<int>{20,20});
 	std::cout << "nearest: ";
 	for(int i : vecN)
 		std::cout << i << ", ";
