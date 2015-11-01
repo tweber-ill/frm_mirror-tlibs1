@@ -11,7 +11,7 @@
 #include <string>
 #include <sstream>
 #include <map>
-#include <mutex>
+//#include <mutex>
 #include <boost/property_tree/ptree.hpp>
 
 namespace tl {
@@ -21,7 +21,7 @@ class Xml
 protected:
 	boost::property_tree::ptree m_xml;
 	bool m_bOK = 0;
-	mutable std::mutex m_mutex;
+	//mutable std::mutex m_mutex;
 
 public:
 	Xml() = default;

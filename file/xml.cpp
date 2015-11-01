@@ -57,7 +57,7 @@ std::string Xml::QueryString(const char* pcAdr, const char* pcDef, bool *pbOk)
 	std::string strOut;
 	try
 	{
-		std::lock_guard<std::mutex> _lck(m_mutex);
+		//std::lock_guard<std::mutex> _lck(m_mutex);
 		strOut = m_xml.get<std::string>(path);
 	}
 	catch(const prop::ptree_bad_path&)
