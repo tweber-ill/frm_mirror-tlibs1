@@ -122,22 +122,6 @@ std::vector<ublas::vector<T>> get_neighbour_atoms(UCType crys, int iDist=0, T a=
 
 // ----------------------------------------------------------------------------
 
-// structure factor
-template<typename T=double, typename t_cont=std::initializer_list<ublas::vector<T>>>
-std::complex<T> structfact(const t_cont& lstAtoms, const typename t_cont::value_type& vecG)
-{
-	constexpr std::complex<T> i(0., 1.);
-	std::complex<T> F(0., 0.);
-
-	for(const ublas::vector<T>& vecAtom : lstAtoms)
-		F += std::exp(-i * ublas::inner_prod(vecG, vecAtom));
-
-	return F;
-}
-
-
-// ----------------------------------------------------------------------------
-
 // coupling J and atom position
 template<typename T=double> using t_magatompos = std::pair<T, ublas::vector<T>>;
 
@@ -164,4 +148,4 @@ T ferromag(const t_cont& lstAtoms, const ublas::vector<T>& vecq, T tS)
 
 }
 #endif
- 
+

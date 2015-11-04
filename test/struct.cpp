@@ -1,20 +1,28 @@
 // clang -o struct test/struct.cpp -lstdc++ -lm -std=c++11
 
+#include "../math/atoms.h"
 #include "../math/disp.h"
 #include <iostream>
 
 int main()
 {
-	std::complex<double> F = tl::structfact({
-		tl::make_vec({1., 0., 0.}),
-		tl::make_vec({-1., 0., 0.}),
-		tl::make_vec({0., 1., 0.}),
-		tl::make_vec({0., -1., 0.}),
-		tl::make_vec({0., 0., 1.}),
-		tl::make_vec({0., 0., -1.}),
-			},
-		tl::make_vec({1, 0., 0.}));
+	double a = 5.;
+	double h = 0., k = 0., l = 0.;
 
-	std::cout << F << std::endl;
+	while(1)
+	{
+		std::cout << "Enter hkl: ";
+		std::cin >> h >> k >> l;
+
+		std::complex<double> F = tl::structfact(
+			{
+				tl::make_vec({0., 0., 0.}),
+				tl::make_vec({a*0.5, a*0.5, a*0.5}),
+			},
+			{1., 1.},
+			tl::make_vec({h*2.*M_PI/a, k*2.*M_PI/a, l*2.*M_PI/a}));
+
+		std::cout << "F = " << F << std::endl;
+	}
 	return 0;
 }
