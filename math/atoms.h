@@ -50,10 +50,37 @@ t_cont<t_vec> generate_atoms(const t_cont<t_mat>& trafos, const t_vec& vecAtom)
 
 
 /**
+ * calculates atomic form factors
+ * @param G Length of lattice vector
+ * @param vecA "a" coefficients
+ * @param vecB "b" coefficients
+ * @param c "c" coefficient
+ * @return form factor
+ * see: Waasmaier and Kirfel, Acta Cryst. A51, 416-431 (1995)
+ */
+template<class T=double, template<class...> class t_cont>
+T formfact(T G, const t_cont<T>& vecA, const t_cont<T>& vecB, T c)
+{
+	T ff = T(0);
+	T s = G / T(4.*M_PI);
+
+	typename t_cont<T>::const_iterator iterA = vecA.begin();
+	typename t_cont<T>::const_iterator iterB = vecB.begin();
+
+	for(; iterA!=vecA.end() && iterB!=vecB.end(); ++iterA, ++iterB)
+		ff += (*iterA)*std::exp(-(*iterB)*s*s);
+	ff += c;
+
+	return ff;
+}
+
+
+
+/**
  * calculates the structure factor
  * @param lstAtoms: List of atom positions
  * @param lstf: Atomic form factors
- * @vecG: Lattice vector
+ * @param vecG: Lattice vector
  * @return structure factor
  */
 template<typename T=double,

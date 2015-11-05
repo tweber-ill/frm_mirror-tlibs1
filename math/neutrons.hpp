@@ -114,7 +114,6 @@ static const temp kelvin = kelvins;
 static const length meter = meters;
 static const time second = seconds;
 static const energy meV = one_meV;
-static const energy eV = eV;
 static const flux tesla = teslas;
 
 /*
