@@ -46,6 +46,9 @@ class wrapper_array
 			: m_pt(p), m_len(len)
 		{}
 
+		wrapper_array() = default;
+		~wrapper_array() = default;
+
 		size_type size() const { return m_len; }
 
 		iterator begin() { return m_pt; }
