@@ -78,9 +78,9 @@ T formfact(T G, const t_cont<T>& vecA, const t_cont<T>& vecB, T c)
 
 /**
  * calculates the structure factor
- * @param lstAtoms: List of atom positions
- * @param lstf: Atomic form factors
- * @param vecG: Lattice vector
+ * @param lstAtoms List of atom positions
+ * @param lstf Atomic form factors
+ * @param vecG Lattice vector
  * @return structure factor
  */
 template<typename T=double,

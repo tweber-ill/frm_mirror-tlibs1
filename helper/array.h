@@ -45,8 +45,8 @@ class wrapper_array
 		const_iterator begin() const { return m_pt; }
 		const_iterator end() const { return m_pt+m_len; }
 
-		T& operator[](size_type i) { return m_pt[i]; }
-		const T& operator[](size_type i) const { return m_pt[i]; }
+		reference operator[](size_type i) { return m_pt[i]; }
+		const_reference operator[](size_type i) const { return m_pt[i]; }
 };
 
 
