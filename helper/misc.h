@@ -16,8 +16,11 @@
 #include <iterator>
 #include <tuple>
 #include "../math/math.h"
+#include "array.h"
+
 
 namespace tl {
+
 
 template<typename T=double>
 T max3(T t1, T t2, T t3)
@@ -211,38 +214,8 @@ void sort_3(Iter begin1, Iter end1, Iter begin2, Iter begin3)
 }
 
 
-// sort tuple-vector
-template<const int isortidx, class... Ts>
-void sorttuples(std::vector<std::tuple<Ts...> >& vec)
-{
-	std::sort(vec.begin(), vec.end(),
-		[](const std::tuple<Ts...>& tup1, const std::tuple<Ts...>& tup2) -> bool
-		{ return std::get<isortidx>(tup1) < std::get<isortidx>(tup2);});
-}
-
-
 // -----------------------------------------------------------------------------
 
-template<typename T>
-std::list<T> vector_to_list(const std::vector<T>& vec)
-{
-	std::list<T> lst;
-	for(const T& t : vec)
-		lst.push_back(t);
-	return lst;
-}
-
-template<typename T>
-T* vec_to_array(const std::vector<T>& vec)
-{
-	T* t_arr = new T[vec.size()];
-
-	unsigned int i=0;
-	for(const T& t : vec)
-		t_arr[i++] = t;
-
-	return t_arr;
-}
 
 template<typename T1, typename T2>
 void merge_map(std::map<T1, T2>& mapThis, const std::map<T1, T2>& mapOther)

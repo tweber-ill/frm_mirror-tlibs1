@@ -9,6 +9,14 @@
 #ifndef __TLIBS_ARRAYS_H__
 #define __TLIBS_ARRAYS_H__
 
+#include <cstddef>
+#include <vector>
+#include <list>
+#include <array>
+#include <tuple>
+#include <algorithm>
+
+
 namespace tl {
 
 
@@ -48,6 +56,59 @@ class wrapper_array
 		reference operator[](size_type i) { return m_pt[i]; }
 		const_reference operator[](size_type i) const { return m_pt[i]; }
 };
+
+
+
+// ----------------------------------------------------------------------------
+// conversions
+
+/**
+ * Converts a t_cont_in to a t_cont_out
+ */
+template<template<class...> class t_cont_out, class t_cont_in>
+t_cont_out<typename t_cont_in::value_type> convert_containers(const t_cont_in& cont1)
+{
+	using T = typename t_cont_in::value_type;
+
+	t_cont_out<T> cont2;
+
+	for(const T& val : cont1)
+		cont2.push_back(val);
+
+	return cont2;
+}
+
+template<typename T>
+std::list<T> vector_to_list(const std::vector<T>& vec)
+{
+	return convert_containers<std::list, std::vector<T>>(vec);
+}
+
+template<typename T>
+T* vec_to_array(const std::vector<T>& vec)
+{
+	T* t_arr = new T[vec.size()];
+
+	std::size_t i=0;
+	for(const T& t : vec)
+		t_arr[i++] = t;
+
+	return t_arr;
+}
+
+// ----------------------------------------------------------------------------
+
+
+// sort tuple-vector
+template<const std::size_t isortidx,
+	class... Ts,
+	template<class...> class t_cont = std::vector>
+void sorttuples(t_cont<std::tuple<Ts...> >& vec)
+{
+	std::sort(vec.begin(), vec.end(),
+		[](const std::tuple<Ts...>& tup1, const std::tuple<Ts...>& tup2) -> bool
+		{ return std::get<isortidx>(tup1) < std::get<isortidx>(tup2);});
+}
 
 
 }

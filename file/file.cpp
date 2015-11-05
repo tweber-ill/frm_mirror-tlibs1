@@ -40,7 +40,7 @@ bool dir_exists(const char* pcDir)
 // -----------------------------------------------------------------------------
 
 
-TmpFile::TmpFile() : m_strPrefix("cattus"), m_iHandle(-1)
+TmpFile::TmpFile() : m_strPrefix("tlibs_tmp"), m_iHandle(-1)
 {}
 
 TmpFile::~TmpFile()
