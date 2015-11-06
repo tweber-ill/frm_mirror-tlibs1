@@ -1,0 +1,4 @@
+Make using CMake:
+	* cmake .
+	* make
+	* make install (as root)

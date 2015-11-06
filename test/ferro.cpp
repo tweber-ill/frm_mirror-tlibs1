@@ -1,6 +1,6 @@
 // clang -o ferro test/ferro.cpp gfx/gnuplot.cpp helper/log.cpp  -lstdc++ -lm -lboost_iostreams -std=c++11
 
-#include "../math/disp.h"
+#include "../math/mag.h"
 #include "../math/neutrons.hpp"
 #include "../gfx/gnuplot.h"
 #include <iostream>

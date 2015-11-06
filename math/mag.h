@@ -1,11 +1,11 @@
 /*
- * dispersion relations
+ * magnetic dispersion relations
  * @author tweber
  * @date 7-jul-15
  */
 
-#ifndef __TLIBS_DISP_H__
-#define __TLIBS_DISP_H__
+#ifndef __TLIBS_MAGDISP_H__
+#define __TLIBS_MAGDISP_H__
 
 #include <initializer_list>
 #include <vector>
@@ -26,8 +26,11 @@ enum class UCType
 	BCC,
 };
 
-// iDist == 0: nearest neighbours
-// iDist == 1: next-nearest neighbours
+/**
+ * Next neighbours
+ * iDist == 0: nearest neighbours
+ * iDist == 1: next-nearest neighbours
+ */
 template<typename T=double>
 std::vector<ublas::vector<T>> get_neighbour_atoms(UCType crys, int iDist=0, T a=1.)
 {
@@ -125,6 +128,14 @@ std::vector<ublas::vector<T>> get_neighbour_atoms(UCType crys, int iDist=0, T a=
 // coupling J and atom position
 template<typename T=double> using t_magatompos = std::pair<T, ublas::vector<T>>;
 
+
+/**
+ * Simple ferromagnetic dispersion
+ * @param lstAtoms list of atoms and their coupling constants
+ * @param vecq q position
+ * @param tS spin
+ * @return E(q)
+ */
 template<typename T=double, typename t_cont=std::initializer_list<t_magatompos<T>>>
 T ferromag(const t_cont& lstAtoms, const ublas::vector<T>& vecq, T tS)
 {
@@ -148,4 +159,3 @@ T ferromag(const t_cont& lstAtoms, const ublas::vector<T>& vecq, T tS)
 
 }
 #endif
-

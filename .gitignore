@@ -31,3 +31,8 @@ script/Makefile
 .clang/*
 .codelite/*
 .settings/*
+CMakeFiles/*
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+build/*
