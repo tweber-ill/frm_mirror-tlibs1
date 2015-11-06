@@ -48,6 +48,7 @@ add_library(tlibs SHARED
 	net/tcp.cpp
 	string/spec_char.cpp
 	gfx/gl.cpp  gfx/gnuplot.cpp
+	version.cpp
 )
 
 

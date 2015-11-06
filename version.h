@@ -10,4 +10,11 @@
 
 #define TLIBS_VERSION "0.59"
 
+namespace tl {
+
+extern const char* get_tlibs_version();
+extern const char* get_tlibs_infos();
+extern bool check_tlibs_version(const char* pcHdrVer);
+
+}
 #endif
