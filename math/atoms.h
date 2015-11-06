@@ -21,7 +21,7 @@ namespace tl{
 template<class t_mat, class t_vec, template<class ...Args> class t_cont>
 t_cont<t_vec> generate_atoms(const t_cont<t_mat>& trafos, const t_vec& vecAtom)
 {
-	typedef typename t_mat::value_type t_real;
+	//typedef typename t_mat::value_type t_real;
 	t_cont<t_vec> vecvecRes;
 
 	for(const t_mat& mat : trafos)
