@@ -255,6 +255,31 @@ t_str remove_char(const t_str& str, typename t_str::value_type ch)
 	return strRet;
 }
 
+/**
+ * Removes substring between strStart and strEnd
+ * @return Number of removed substrings
+ */
+template<class t_str = std::string>
+unsigned int string_rm(t_str& str, const t_str& strStart, const t_str& strEnd)
+{
+	unsigned int iNumFound = 0;
+
+	while(1)
+	{
+		std::size_t iStart = str.find(strStart);
+		std::size_t iEnd = str.find(strEnd);
+
+		if(iStart == t_str::npos || iEnd == t_str::npos)
+			break;
+		if(iStart >= iEnd)
+			break;
+
+		str.erase(iStart, iEnd-iStart+strEnd.length());
+		++iNumFound;
+	}
+
+	return iNumFound;
+}
 
 template<class t_str=std::string>
 bool find_and_replace(t_str& str1, const t_str& str_old,
