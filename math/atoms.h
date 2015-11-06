@@ -77,10 +77,10 @@ T formfact(T G, const t_cont<T>& vecA, const t_cont<T>& vecB, T c)
 
 
 /**
- * calculates the structure factor f(Q) (for neutrons only f(0) is relevant!)
+ * calculates the structure factor F
  * @param lstAtoms List of atom positions
  * @param vecG Lattice vector
- * @param lstf Atomic form factors (optional)
+ * @param lstf G-dependent Atomic form factors (x-rays) or coherent scattering length (neutrons)
  * @return structure factor
  */
 template<typename T=double,
