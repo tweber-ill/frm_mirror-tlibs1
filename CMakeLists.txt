@@ -9,7 +9,7 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}" ".")
 set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}")
 #set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
 
-find_package(Boost REQUIRED COMPONENTS iostreams system filesystem regex python REQUIRED)
+find_package(Boost REQUIRED COMPONENTS iostreams system filesystem regex REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Qt4 REQUIRED)
 find_package(Freetype REQUIRED)
@@ -60,16 +60,27 @@ target_link_libraries(tlibs ${Boost_LIBRARIES} Threads::Threads
 
 install(TARGETS tlibs  DESTINATION lib)
 
-install(FILES ${PROJECT_SOURCE_DIR}/*.h  DESTINATION include/tlibs)
-install(FILES ${PROJECT_SOURCE_DIR}/file/*.h  DESTINATION include/tlibs/file)
-install(FILES ${PROJECT_SOURCE_DIR}/helper/*.h  DESTINATION include/tlibs/helper)
-install(FILES ${PROJECT_SOURCE_DIR}/math/*.h ${PROJECT_SOURCE_DIR}/math/*.hpp  DESTINATION include/tlibs/math)
-install(FILES ${PROJECT_SOURCE_DIR}/net/*.h  DESTINATION include/tlibs/net)
-install(FILES ${PROJECT_SOURCE_DIR}/string/*.h  DESTINATION include/tlibs/string)
-install(FILES ${PROJECT_SOURCE_DIR}/gfx/*.h  DESTINATION include/tlibs/gfx)
-install(FILES ${PROJECT_SOURCE_DIR}/time/*.h  DESTINATION include/tlibs/time)
-install(FILES ${PROJECT_SOURCE_DIR}/cl/*.h  DESTINATION include/tlibs/cl)
+file(GLOB tlibs_rt  ${PROJECT_SOURCE_DIR}/*.h)
+file(GLOB tlibs_file  ${PROJECT_SOURCE_DIR}/file/*.h)
+file(GLOB tlibs_helper  ${PROJECT_SOURCE_DIR}/helper/*.h)
+file(GLOB tlibs_math  ${PROJECT_SOURCE_DIR}/math/*.h ${PROJECT_SOURCE_DIR}/math/*.hpp)
+file(GLOB tlibs_net  ${PROJECT_SOURCE_DIR}/net/*.h)
+file(GLOB tlibs_string  ${PROJECT_SOURCE_DIR}/string/*.h)
+file(GLOB tlibs_gfx  ${PROJECT_SOURCE_DIR}/gfx/*.h)
+file(GLOB tlibs_time  ${PROJECT_SOURCE_DIR}/time/*.h)
+file(GLOB tlibs_cl  ${PROJECT_SOURCE_DIR}/cl/*.h)
 
-install(FILES ${PROJECT_SOURCE_DIR}/COPYING ${PROJECT_SOURCE_DIR}/AUTHORS ${PROJECT_SOURCE_DIR}/LICENSES
+install(FILES ${tlibs_rt}  DESTINATION include/tlibs)
+install(FILES ${tlibs_file}  DESTINATION include/tlibs/file)
+install(FILES ${tlibs_helper}  DESTINATION include/tlibs/helper)
+install(FILES ${tlibs_math}  DESTINATION include/tlibs/math)
+install(FILES ${tlibs_net}  DESTINATION include/tlibs/net)
+install(FILES ${tlibs_string}  DESTINATION include/tlibs/string)
+install(FILES ${tlibs_gfx}  DESTINATION include/tlibs/gfx)
+install(FILES ${tlibs_time}  DESTINATION include/tlibs/time)
+install(FILES ${tlibs_cl}  DESTINATION include/tlibs/cl)
+
+install(FILES ${PROJECT_SOURCE_DIR}/COPYING.GPLv2 ${PROJECT_SOURCE_DIR}/COPYING.GPLv3 
+	${PROJECT_SOURCE_DIR}/AUTHORS ${PROJECT_SOURCE_DIR}/LICENSES
         DESTINATION share/tlibs
 )
