@@ -83,24 +83,25 @@ T formfact(T G, const t_cont<T>& vecA, const t_cont<T>& vecB, T c)
  * @param lstf G-dependent Atomic form factors (x-rays) or coherent scattering length (neutrons)
  * @return structure factor
  */
-template<typename T=double,
+template<typename T=double, typename t_ff = std::complex<T>,
 	class t_vec=ublas::vector<T>,
 	template<class ...> class t_cont=std::initializer_list>
-std::complex<T> structfact(const t_cont<t_vec>& lstAtoms, const t_vec& vecG, const t_cont<T>& lstf = t_cont<T>())
+std::complex<T> structfact(const t_cont<t_vec>& lstAtoms, const t_vec& vecG, 
+	const t_cont<t_ff>& lstf = t_cont<t_ff>())
 {
 	constexpr std::complex<T> i(0., 1.);
 	std::complex<T> F(0., 0.);
 
 	using t_iter_atoms = typename t_cont<t_vec>::const_iterator;
-	using t_iter_ffact = typename t_cont<T>::const_iterator;
+	using t_iter_ffact = typename t_cont<t_ff>::const_iterator;
 
-	t_iter_atoms iterAtom=lstAtoms.begin();
-	t_iter_ffact iterFFact=lstf.begin();
+	t_iter_atoms iterAtom = lstAtoms.begin();
+	t_iter_ffact iterFFact = lstf.begin();
 
 	for(; iterAtom!=lstAtoms.end(); ++iterAtom)
 	{
-		// only use form factor when available
-		T tFF = T(1);
+		// only use form factors or scattering lengths when available
+		t_ff tFF = T(1);
 		if(iterFFact != lstf.end())
 			tFF = *iterFFact;
 

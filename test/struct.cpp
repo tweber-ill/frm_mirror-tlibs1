@@ -17,9 +17,9 @@ int main()
 		std::complex<double> F = tl::structfact(
 			{
 				tl::make_vec({0., 0., 0.}),
-				tl::make_vec({a*0.5, a*0.5, a*0.5}),
+				tl::make_vec({0.5, 0.5, 0.5})*a,
 			},
-			tl::make_vec({h*2.*M_PI/a, k*2.*M_PI/a, l*2.*M_PI/a}),
+			tl::make_vec({h, k, l}) * 2.*M_PI/a,
 			{1., 1.});
 
 		std::cout << "F = " << F << std::endl;
