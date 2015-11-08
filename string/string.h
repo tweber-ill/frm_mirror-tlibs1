@@ -10,11 +10,15 @@
 
 #include <string>
 #include <cstring>
-#include <boost/tokenizer.hpp>
 #include <iostream>
 #include <sstream>
 #include <locale>
 #include <map>
+
+#ifndef NO_BOOST
+	#include <boost/tokenizer.hpp>
+	#include <boost/algorithm/string.hpp>
+#endif
 
 #include "../helper/exception.h"
 #include "../helper/misc.h"
@@ -123,13 +127,11 @@ t_str get_file(const t_str& str)
 
 
 template<class t_str=std::string>
-t_str insert_before(const t_str& str,
-					const t_str& strChar,
-					const t_str& strInsert)
+t_str insert_before(const t_str& str, const t_str& strChar, const t_str& strInsert)
 {
 	std::size_t pos = str.find(strChar);
 	if(pos==t_str::npos)
-			return str;
+		return str;
 
 	t_str strRet = str;
 	strRet.insert(pos, strInsert);
@@ -219,9 +221,20 @@ bool str_contains(const t_str& str, const t_str& strSub, bool bCase=0)
 template<class t_str=std::string>
 void trim(t_str& str)
 {
+	using t_char = typename t_str::value_type;
+
+#ifndef NO_BOOST
+
+	boost::trim_if(str, [](t_char c) -> bool
+	{
+		return get_trim_chars<t_str>().find(c) != t_str::npos;
+	});
+
+#else
+
 	std::size_t posLast = str.find_last_not_of(get_trim_chars<t_str>());
 	if(posLast == std::string::npos)
-			posLast = str.length();
+		posLast = str.length();
 	else
 		++posLast;
 
@@ -233,6 +246,8 @@ void trim(t_str& str)
 		posFirst = str.length();
 
 	str.erase(str.begin(), str.begin()+posFirst);
+
+#endif
 }
 
 template<class t_str=std::string>
@@ -283,11 +298,11 @@ unsigned int string_rm(t_str& str, const t_str& strStart, const t_str& strEnd)
 
 template<class t_str=std::string>
 bool find_and_replace(t_str& str1, const t_str& str_old,
-						const t_str& str_new)
+	const t_str& str_new)
 {
 	std::size_t pos = str1.find(str_old);
 	if(pos==t_str::npos)
-			return false;
+		return false;
 
 	str1.replace(pos, str_old.length(), str_new);
 	return true;
@@ -295,7 +310,7 @@ bool find_and_replace(t_str& str1, const t_str& str_old,
 
 template<class t_str=std::string>
 void find_all_and_replace(t_str& str1, const t_str& str_old,
-						const t_str& str_new)
+	const t_str& str_new)
 {
 	std::size_t pos=0;
 	while(pos < str1.length())
@@ -377,6 +392,10 @@ struct _str_to_var_impl<T, t_str, 0>
 };
 
 
+#ifndef NO_BOOST
+/**
+ * Tokenises string on any of the chars in strDelim
+ */
 template<class T, class t_str=std::string, class t_cont=std::vector<T>>
 void get_tokens(const t_str& str, const t_str& strDelim, t_cont& vecRet)
 {
@@ -392,6 +411,31 @@ void get_tokens(const t_str& str, const t_str& strDelim, t_cont& vecRet)
 		vecRet.push_back(std::move(t));
 	}
 }
+
+/**
+ * Tokenises string on strDelim
+ */
+template<class T, class t_str=std::string, class t_cont=std::vector<T>>
+void get_tokens_seq(const t_str& str, const t_str& strDelim, t_cont& vecRet,
+	bool bCase=1)
+{
+	namespace algo = boost::algorithm;
+	using t_char = typename t_str::value_type;
+
+	algo::iter_split(vecRet, str, algo::first_finder(strDelim,
+		[bCase](t_char c1, t_char c2) -> bool
+		{
+			if(!bCase)
+			{
+				c1 = std::tolower(c1);
+				c2 = std::tolower(c2);
+			}
+
+			return c1==c2;
+		}));
+}
+#endif
+
 
 template<typename T, class t_str=std::string>
 T str_to_var(const t_str& str)
@@ -443,8 +487,8 @@ t_str var_to_str(const T& t, std::streamsize iPrec=10, int iGroup=-1)
 
 template<typename t_char=char>
 bool skip_after_line(std::basic_istream<t_char>& istr,
-		const std::basic_string<t_char>& strLineBegin,
-		bool bTrim=true, bool bCase=0)
+	const std::basic_string<t_char>& strLineBegin,
+	bool bTrim=true, bool bCase=0)
 {
 	while(!istr.eof())
 	{
