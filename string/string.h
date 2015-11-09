@@ -415,14 +415,15 @@ void get_tokens(const t_str& str, const t_str& strDelim, t_cont& vecRet)
 /**
  * Tokenises string on strDelim
  */
-template<class T, class t_str=std::string, class t_cont=std::vector<T>>
-void get_tokens_seq(const t_str& str, const t_str& strDelim, t_cont& vecRet,
+template<class T, class t_str=std::string, template<class...> class t_cont=std::vector>
+void get_tokens_seq(const t_str& str, const t_str& strDelim, t_cont<T>& vecRet,
 	bool bCase=1)
 {
 	namespace algo = boost::algorithm;
 	using t_char = typename t_str::value_type;
 
-	algo::iter_split(vecRet, str, algo::first_finder(strDelim,
+	t_cont<t_str> vecStr;
+	algo::iter_split(vecStr, str, algo::first_finder(strDelim,
 		[bCase](t_char c1, t_char c2) -> bool
 		{
 			if(!bCase)
@@ -433,6 +434,12 @@ void get_tokens_seq(const t_str& str, const t_str& strDelim, t_cont& vecRet,
 
 			return c1==c2;
 		}));
+
+	for(const t_str& strTok : vecStr)
+	{
+		T t = _str_to_var_impl<T, t_str, !std::is_fundamental<T>::value>()(strTok);
+		vecRet.push_back(std::move(t));
+	}
 }
 #endif
 

@@ -14,7 +14,7 @@ int main()
 
 
 	std::vector<std::string> vecToks2;
-	tl::get_tokens_seq<std::string, std::string, std::vector<std::string>>(str, "<:>", vecToks2);
+	tl::get_tokens_seq<std::string, std::string, std::vector>(str, "<:>", vecToks2);
 	std::cout << std::endl;
 	for(const std::string& strTok : vecToks2) std::cout << strTok << std::endl;
 
@@ -23,9 +23,18 @@ int main()
 	std::string str2("TestSeparatorxyzSEPARATOR123456");
 
 	std::vector<std::string> vecToks3;
-	tl::get_tokens_seq<std::string, std::string, std::vector<std::string>>(str2, "Separator", vecToks3, 0);
+	tl::get_tokens_seq<std::string, std::string, std::vector>(str2, "Separator", vecToks3, 0);
 	std::cout << std::endl;
 	for(const std::string& strTok : vecToks3) std::cout << strTok << std::endl;
+
+
+
+	std::string str3("1234-.-5678-.-9012");
+
+	std::vector<int> vecToks4;
+	tl::get_tokens_seq<int, std::string, std::vector>(str3, "-.-", vecToks4, 0);
+	std::cout << std::endl;
+	for(int iTok : vecToks4) std::cout << iTok << std::endl;
 
 	return 0;
 }
