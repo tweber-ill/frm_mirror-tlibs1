@@ -875,6 +875,21 @@ static Symbol* fkt_splice(const std::vector<Symbol*>& vecSyms,
 	return pSymRet;
 }
 
+static Symbol* fkt_append(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+{
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY, SYMBOL_ANY}, {0,0}, "append"))
+		return 0;
+	//if(vecSyms[1].GetType() == SYMBOL_ARRAY)
+	//	return fkt_splice(vecSyms, info, runinfo, pSymTab);
+
+	((SymbolArray*)vecSyms[0])->GetArr().push_back(vecSyms[1]->clone());
+	((SymbolArray*)vecSyms[0])->UpdateIndices();
+
+	return vecSyms[0];
+}
+
+
 
 typedef std::tuple<const Symbol*, unsigned int> t_symtup;
 
@@ -1418,6 +1433,7 @@ extern void init_ext_basic_calls()
 		t_mapFkts::value_type(T_STR"sort", fkt_sort),
 		t_mapFkts::value_type(T_STR"sort_rev", fkt_sort_rev),
 		t_mapFkts::value_type(T_STR"splice", fkt_splice),
+		t_mapFkts::value_type(T_STR"append", fkt_append),
 
 		// map/array operations
 		t_mapFkts::value_type(T_STR"contains", fkt_contains),

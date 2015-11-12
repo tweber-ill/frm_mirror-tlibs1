@@ -570,9 +570,12 @@ fit_hexagauss_manual_singlestep(x, y, yerr, peaks_x, peaks_size, peaks_width, of
 
 # -----------------------------------------------------------------------------
 # single gaussian
-gauss_model(x, x0, sigma, amp, offs)
+gauss_model(x, x0, sigma, amp, offs) { return amp * exp(-0.5 * ((x-x0) / sigma)^2.) + offs; }
+gauss_area(sigma, amp) { return amp*sigma*sqrt(2.*pi); }
+gauss_area_err(sig, amp, dsig, damp)
 {
-	return amp * exp(-0.5 * ((x-x0) / sigma)^2.) + offs;
+	return sqrt((amp*dsig*sqrt(2.*pi))^2. 
+		+ (damp*sig*sqrt(2.*pi))^2.);
 }
 
 voigt_model(x, x0, sigma, gamma, amp, offs)
