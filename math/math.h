@@ -25,6 +25,9 @@ namespace tl {
 template<typename INT=int> bool is_even(INT i) { return (i%2 == 0); }
 template<typename INT=int> bool is_odd(INT i) { return !is_even<INT>(i); }
 
+template<class T=double> T r2d(T rad) { return rad/T(M_PI)*T(180); }
+template<class T=double> T d2r(T deg) { return deg/T(180)*T(M_PI); }
+
 template<typename T>
 T sign(T t)
 {

@@ -384,9 +384,9 @@ std::ostream& operator<<(std::ostream& ostr, const Lattice<T>& lat)
 	ostr << "b = " << lat.GetB() << ", ";
 	ostr << "c = " << lat.GetC() << "; ";
 
-	ostr << "alpha = " << lat.GetAlpha() /M_PI*180. << " deg, ";
-	ostr << "beta = " << lat.GetBeta() /M_PI*180. << " deg, ";
-	ostr << "gamma = " << lat.GetGamma() /M_PI*180. << " deg; ";
+	ostr << "alpha = " << tl::r2d(lat.GetAlpha()) << " deg, ";
+	ostr << "beta = " << tl::r2d(lat.GetBeta()) << " deg, ";
+	ostr << "gamma = " << tl::r2d(lat.GetGamma()) << " deg; ";
 
 /*	ostr << "\n";
 	ostr << "vec0 = " << lat.GetVec(0) << ", ";

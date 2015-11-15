@@ -669,13 +669,13 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 	bool bKiqParallel = 0, bkiqAntiParallel = 0;
 	bool bKfqParallel = 0, bKfqAntiParallel = 0;
 
-	if(float_equal(dAngleKiq, 0., dAngleSensitivity/180.*M_PI))
+	if(float_equal(dAngleKiq, 0., tl::d2r(dAngleSensitivity)))
 		bKiqParallel = 1;
-	else if(float_equal(dAngleKiq, M_PI, dAngleSensitivity/180.*M_PI))
+	else if(float_equal(dAngleKiq, M_PI, tl::d2r(dAngleSensitivity)))
 		bkiqAntiParallel = 1;
-	if(float_equal(dAngleKfq, 0., dAngleSensitivity/180.*M_PI))
+	if(float_equal(dAngleKfq, 0., tl::d2r(dAngleSensitivity)))
 		bKfqParallel = 1;
-	else if(float_equal(dAngleKfq, M_PI, dAngleSensitivity/180.*M_PI))
+	else if(float_equal(dAngleKfq, M_PI, tl::d2r(dAngleSensitivity)))
 		bKfqAntiParallel = 1;
 
 	// type A: q || kf, kf > ki

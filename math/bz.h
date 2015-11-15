@@ -159,7 +159,7 @@ class Brillouin2D
 					ublas::vector<T>& vecUpper = vecPts[iPt].first;
 					ublas::vector<T>& vecLower = vecPts[iPt].second;
 
-					T tDistUpper, tDistLower;
+					T tDistUpper=T(0), tDistLower=T(0);
 					bool bSideUpper = line.GetSide(vecUpper, &tDistUpper);
 					bool bSideLower = line.GetSide(vecLower, &tDistLower);
 

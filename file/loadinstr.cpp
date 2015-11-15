@@ -300,9 +300,9 @@ std::array<double,3> FilePsi::GetSampleAngles() const
 	t_mapIParams::const_iterator iterB = m_mapParameters.find("BB");
 	t_mapIParams::const_iterator iterC = m_mapParameters.find("CC");
 
-	double alpha = (iterA!=m_mapParameters.end() ? iterA->second/180.*M_PI : M_PI/2.);
-	double beta = (iterB!=m_mapParameters.end() ? iterB->second/180.*M_PI : M_PI/2.);
-	double gamma = (iterC!=m_mapParameters.end() ? iterC->second/180.*M_PI : M_PI/2.);
+	double alpha = (iterA!=m_mapParameters.end() ? tl::d2r(iterA->second) : M_PI/2.);
+	double beta = (iterB!=m_mapParameters.end() ? tl::d2r(iterB->second) : M_PI/2.);
+	double gamma = (iterC!=m_mapParameters.end() ? tl::d2r(iterC->second) : M_PI/2.);
 
 	return std::array<double,3>{{alpha, beta, gamma}};
 }
@@ -766,7 +766,7 @@ std::array<double, 3> FileFrm::GetSampleAngles() const
 		return std::array<double,3>{{0.,0.,0.}};
 	}
 
-	return std::array<double,3>{{vec[0]/180.*M_PI, vec[1]/180.*M_PI, vec[2]/180.*M_PI}};
+	return std::array<double,3>{{tl::d2r(vec[0]), tl::d2r(vec[1]), tl::d2r(vec[2])}};
 }
 
 std::array<double, 2> FileFrm::GetMonoAnaD() const
@@ -1178,9 +1178,7 @@ std::array<double, 3> FileMacs::GetSampleAngles() const
 		return std::array<double,3>{{0.,0.,0.}};
 	}
 
-	return std::array<double,3>{{vecToks[3]/180.*M_PI,
-			vecToks[4]/180.*M_PI,
-			vecToks[5]/180.*M_PI}};
+	return std::array<double,3>{{tl::d2r(vecToks[3]), tl::d2r(vecToks[4]), tl::d2r(vecToks[5])}};
 }
 
 std::array<double, 2> FileMacs::GetMonoAnaD() const
@@ -1604,9 +1602,9 @@ std::array<double,3> FileTrisp::GetSampleAngles() const
 	t_mapParams::const_iterator iterB = m_mapParams.find("BB");
 	t_mapParams::const_iterator iterC = m_mapParams.find("CC");
 
-	double alpha = (iterA!=m_mapParams.end() ? str_to_var<double>(iterA->second)/180.*M_PI : M_PI/2.);
-	double beta = (iterB!=m_mapParams.end() ? str_to_var<double>(iterB->second)/180.*M_PI : M_PI/2.);
-	double gamma = (iterC!=m_mapParams.end() ? str_to_var<double>(iterC->second)/180.*M_PI : M_PI/2.);
+	double alpha = (iterA!=m_mapParams.end() ? tl::d2r(str_to_var<double>(iterA->second)) : M_PI/2.);
+	double beta = (iterB!=m_mapParams.end() ? tl::d2r(str_to_var<double>(iterB->second)) : M_PI/2.);
+	double gamma = (iterC!=m_mapParams.end() ? tl::d2r(str_to_var<double>(iterC->second)) : M_PI/2.);
 
 	return std::array<double,3>{{alpha, beta, gamma}};
 }
