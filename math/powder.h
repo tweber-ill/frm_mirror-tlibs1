@@ -14,7 +14,9 @@
 #include <unordered_set>
 #include <initializer_list>
 #include "lattice.h"
+#include "../string/string.h"
 #include "../helper/hash.h"
+//#include <iostream>
 
 namespace tl {
 
@@ -22,26 +24,39 @@ template<class t_int=int, class t_real=double>
 class Powder
 {
 	public:
-		typedef std::tuple<t_int, t_int, t_int> t_peak;
+		// hkl G F
+		typedef std::tuple<t_int, t_int, t_int, t_real, t_real> t_peak;
+		typedef std::string t_str;
 
 	private:
+		static t_str to_str(t_real t)
+		{
+			static const int iPrec = 8;
+			return tl::var_to_str<t_real, t_str>(t, iPrec);
+		}
+
+		static bool is_eq(t_real t0, t_real t1)
+		{
+			t_str str0 = to_str(t0);
+			t_str str1 = to_str(t1);
+			return str0 == str1;
+		}
+
 		static size_t hash_peak(const t_peak& peak)
 		{
 			return tl::hash_ordered<std::initializer_list<t_int>>
-				({
-					std::get<0>(peak),
-					std::get<1>(peak),
-					std::get<2>(peak)
-				});
+			({
+				std::get<0>(peak),
+				std::get<1>(peak),
+				std::get<2>(peak)
+			});
 		}
 		static size_t hash_peak_unique(const t_peak& peak)
 		{
-			return tl::hash_unordered<std::initializer_list<t_int>>
-				({
-					std::abs(std::get<0>(peak)),
-					std::abs(std::get<1>(peak)),
-					std::abs(std::get<2>(peak))
-				});
+			t_str strG = to_str(std::get<3>(peak));
+			t_str strF = to_str(std::get<4>(peak));
+
+			return tl::hash_ordered<std::initializer_list<std::string>>({strG, strF});
 		}
 
 		static bool equ_peak(const t_peak& peak0, const t_peak& peak1)
@@ -52,16 +67,10 @@ class Powder
 		}
 		static bool equ_peak_unique(const t_peak& peak0, const t_peak& peak1)
 		{
-			std::vector<t_int> pk0({ std::get<0>(peak0), std::get<1>(peak0), std::get<2>(peak0) });
-			std::vector<t_int> pk1({ std::get<0>(peak1), std::get<1>(peak1), std::get<2>(peak1) });
+			bool bGEq = is_eq(std::get<3>(peak0), std::get<3>(peak1));
+			bool bFEq = is_eq(std::get<4>(peak0), std::get<4>(peak1));
 
-			std::transform(pk0.begin(), pk0.end(), pk0.begin(), (t_int(*)(t_int))std::abs);
-			std::transform(pk1.begin(), pk1.end(), pk1.begin(), (t_int(*)(t_int))std::abs);
-
-			std::sort(pk0.begin(), pk0.end());
-			std::sort(pk1.begin(), pk1.end());
-
-			return pk0 == pk1;
+			return bGEq && bFEq;
 		}
 
 	public:
@@ -69,8 +78,8 @@ class Powder
 		typedef std::unordered_set<t_peak, decltype(&hash_peak_unique), decltype(&equ_peak_unique)> t_peaks_unique;
 
 	protected:
-		t_peaks m_peaks;
-		t_peaks_unique m_peaks_unique;
+		t_peaks m_peaks;			// hashes & compares hkl
+		t_peaks_unique m_peaks_unique;		// hashes & compares F & G
 
 		// associated reciprocal lattice
 		const Lattice<t_real> *m_pLatticeRecip = nullptr;
@@ -81,13 +90,33 @@ class Powder
 			  m_peaks_unique(10, &hash_peak_unique, &equ_peak_unique)
 		{}
 
-		void AddPeak(t_int h, t_int k, t_int l)
+		ublas::vector<t_real> GetRecipLatticePos(double dh, double dk, double dl) const
 		{
-			t_peak peak(h,k,l);
-			t_peak peakabs(std::abs(h),std::abs(k),std::abs(l));
+			if(m_pLatticeRecip)
+				return m_pLatticeRecip->GetPos(dh, dk, dl);
+
+			return ublas::vector<t_real>();
+		}
+
+		t_real GetG(double dh, double dk, double dl) const
+		{
+			ublas::vector<t_real> vecG = GetRecipLatticePos(dh, dk, dl);
+			if(vecG.size())
+				return ublas::norm_2(vecG);
+			return 0.;
+		}
+
+		void AddPeak(t_int h, t_int k, t_int l, t_real F=0.)
+		{
+			t_peak peak(h,k,l, GetG(h,k,l), F);
 
 			m_peaks.insert(peak);
-			m_peaks_unique.insert(peakabs);
+			m_peaks_unique.insert(peak);
+		}
+
+		void SetRecipLattice(const Lattice<t_real>* pLatt)
+		{
+			m_pLatticeRecip = pLatt;
 		}
 
 		const t_peaks& GetPeaks() const { return m_peaks; }
@@ -98,37 +127,43 @@ class Powder
 			t_peak peak(h,k,l);
 			return m_peaks.find(peak) != m_peaks.end();
 		}
-		bool HasUniquePeak(int h, int k, int l) const
+
+		bool HasUniquePeak(int h, int k, int l, t_real F) const
 		{
-			t_peak peak(h,k,l);
-			return m_peaks_unique.find(peak) != m_peaks_unique.end();
+			const t_real G = GetG(h,k,l);
+
+			for(const t_peak& pk : m_peaks_unique)
+			{
+				if(is_eq(G, std::get<3>(pk)) && is_eq(F, std::get<4>(pk)))
+					return 1;
+			}
+			return 0;
 		}
 
 		std::size_t GetMultiplicity(t_int h, t_int k, t_int l) const
 		{
-			t_peak peak(h,k,l);
+			t_real G = GetG(h,k,l);
 
 			std::size_t iMult = 0;
 			for(const t_peak& pk : m_peaks)
 			{
-				if(equ_peak_unique(pk, peak))
+				if(is_eq(G, std::get<3>(pk)))
 					++iMult;
 			}
-
 			return iMult;
 		}
 
-		void SetRecipLattice(const Lattice<t_real>* pLatt)
+		std::size_t GetMultiplicity(t_int h, t_int k, t_int l, t_real F) const
 		{
-			m_pLatticeRecip = pLatt;
-		}
+			t_real G = GetG(h,k,l);
 
-		ublas::vector<t_real> GetRecipLatticePos(double dh, double dk, double dl) const
-		{
-			if(m_pLatticeRecip)
-				return m_pLatticeRecip->GetPos(dh, dk, dl);
-
-			return ublas::vector<t_real>();
+			std::size_t iMult = 0;
+			for(const t_peak& pk : m_peaks)
+			{
+				if(is_eq(G, std::get<3>(pk)) && is_eq(F, std::get<4>(pk)))
+					++iMult;
+			}
+			return iMult;
 		}
 
 		void clear()
@@ -143,14 +178,14 @@ class Powder
 
 #include <ostream>
 
-template<class t_int=int>
-std::ostream& operator<<(std::ostream& ostr, const tl::Powder<t_int>& powder)
+template<class t_int=int, class t_real=double>
+std::ostream& operator<<(std::ostream& ostr, const tl::Powder<t_int,t_real>& powder)
 {
-	const typename tl::Powder<t_int>::t_peaks& peaks = powder.GetPeaks();
-	const typename tl::Powder<t_int>::t_peaks_unique& peaks_unique = powder.GetUniquePeaks();
+	const typename tl::Powder<t_int,t_real>::t_peaks& peaks = powder.GetPeaks();
+	const typename tl::Powder<t_int,t_real>::t_peaks_unique& peaks_unique = powder.GetUniquePeaks();
 
 	ostr << "Peaks:\n";
-	for(const typename tl::Powder<t_int>::t_peak& pk : peaks)
+	for(const typename tl::Powder<t_int,t_real>::t_peak& pk : peaks)
 	{
 		t_int h = std::get<0>(pk);
 		t_int k = std::get<1>(pk);
@@ -160,7 +195,7 @@ std::ostream& operator<<(std::ostream& ostr, const tl::Powder<t_int>& powder)
 	}
 
 	ostr << "Unique Peaks:\n";
-	for(const typename tl::Powder<t_int>::t_peak& pk : peaks_unique)
+	for(const typename tl::Powder<t_int,t_real>::t_peak& pk : peaks_unique)
 	{
 		t_int h = std::get<0>(pk);
 		t_int k = std::get<1>(pk);
