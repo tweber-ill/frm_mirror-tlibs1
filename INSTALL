@@ -1,5 +1,5 @@
 Make using CMake:
-	* make build
+	* mkdir build
 	* cd build
 	* cmake ..
 	* make
