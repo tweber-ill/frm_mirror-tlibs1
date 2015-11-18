@@ -166,7 +166,8 @@ Symbol* NodeCall::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym)
 				}
 
 				SymbolMap::t_map& mapSyms = ((SymbolMap*)pSymChild)->GetMap();
-				const std::vector<t_string> vecParamNames = pFkt->GetParamNames();
+				std::vector<t_string> vecParamNames;
+				if(pFkt) vecParamNames = pFkt->GetParamNames();
 
 				for(unsigned int iParam=vecArgSyms.size(); iParam<vecParamNames.size(); ++iParam)
 				{
@@ -234,7 +235,7 @@ Symbol* NodeCall::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym)
 		pSym->RemoveSymbolNoDelete(T_STR"<args>");
 		runinfo.bWantReturn = 0;
 	}
-	else				// call system function
+	else if(has_ext_call(strFkt))		// call system function
 	{
 		if(info.bEnableDebug)
 		{
@@ -249,6 +250,10 @@ Symbol* NodeCall::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym)
 		{
 			info.PopTraceback();
 		}
+	}
+	else
+	{
+		tl::log_err(linenr(runinfo), "Tried to call undefined function \"", strFkt, "\".");
 	}
 
 	arrArgs.ClearIndices();

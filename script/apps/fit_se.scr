@@ -42,7 +42,10 @@ fit_sesine(x, y, yerr, thefreq=-1.)
 	ymid = 0.5*yrange + ymin;
 
 	if(thefreq < 0.)
+	{
 		thefreq = 2.*pi / xrange;
+		print("Using frequency: " + thefreq);
+	}
 
 	hints = [ymax-ymid, thefreq, 0., ymid];
 	hints_err = [0.1*hints[0], 0.1*hints[1], pi, 0.1*hints[2]];
@@ -95,7 +98,7 @@ fit_seexp(tau, P, Perr, P0=-1.)
 # -----------------------------------------------------------------------------
 
 
-do_seseries(files, taus, P0=1.)
+do_seseries(files, taus, P0=1., freqs=[])
 {
 	phs = []; ph_errs = [];
 	Ps = []; P_errs = [];
@@ -104,9 +107,16 @@ do_seseries(files, taus, P0=1.)
 	{
 		print("Processing file(s): " + str(curfile[0]) + " with tau = " + curfile[1] + " ps.");
 
+		freq = -1.;
+		if(length(freqs) > 0.)
+		{
+			freq = freqs[cur_iter(curfile)];
+			print("Using supplied frequency of " + freq + ".");
+		}
+
 		[instr, dat_x, dat_y, dat_yerr, xlab, ylab] = load_instr(curfile[0]);
 
-		[[P, dP, ph, dph], [xfine, yfit]] = fit_sesine(dat_x, dat_y, dat_yerr);
+		[[P, dP, ph, dph], [xfine, yfit]] = fit_sesine(dat_x, dat_y, dat_yerr, freq);
 		print("P = " + P + " +- " + dP);
 		print("ph = " + (ph/pi*180.) + " +- " + (dph/pi*180.));
 
@@ -126,6 +136,7 @@ do_seseries(files, taus, P0=1.)
 		phs[length(phs)] = ph; ph_errs[length(ph_errs)] = dph;
 
 		print("-"*80);
+		#sleep(1000.);
 	}
 
 
@@ -139,7 +150,7 @@ do_seseries(files, taus, P0=1.)
 	return [G, dG];
 }
 
-do_Eshiftseries(files, tau, tempcol, Eoffs=0.)
+do_Eshiftseries(files, tau, tempcol, Eoffs=0., freqs=[])
 {
 	phs = []; ph_errs = [];
 	Es = []; E_errs = [];
@@ -150,12 +161,19 @@ do_Eshiftseries(files, tau, tempcol, Eoffs=0.)
 	{
 		print("Processing file: " + curfile + " with tau = " + tau + " ps.");
 
+                freq = -1.;
+		if(length(freqs) > 0.)
+		{
+			freq = freqs[cur_iter(curfile)];
+			print("Using supplied frequency of " + freq + ".");
+		}
+
 		[instr, dat_x, dat_y, dat_yerr, xlab, ylab] = load_instr(curfile);
 
 		[T, dT] = get_col_mean(instr, tempcol);
 		Ts[length(Ts)] = T; T_errs[length(T_errs)] = dT;
 
-		[[P, dP, ph, dph], [xfine, yfit]] = fit_sesine(dat_x, dat_y, dat_yerr);
+		[[P, dP, ph, dph], [xfine, yfit]] = fit_sesine(dat_x, dat_y, dat_yerr, freq);
 		print("P = " + P + " +- " + dP);
 		print("ph = " + (ph/pi*180.) + " +- " + (dph/pi*180.));
 
