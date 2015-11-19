@@ -71,13 +71,13 @@ protected:
 
 public:
 	GenericModel(const GenericModel& mod)
-			: m_pFkt((NodeFunction*)mod.m_pFkt/*->clone()->optimize()*/),
-			  m_pinfo(mod.m_pinfo),
-			  m_pCallerSymTab(mod.m_pCallerSymTab),
-			  m_pTable(new SymbolTable()),
-			  m_strFreeParam(mod.m_strFreeParam),
-			  m_vecParamNames(mod.m_vecParamNames),
-			  m_bUseVecParams(mod.m_bUseVecParams)
+		: m_pFkt((NodeFunction*)mod.m_pFkt/*->clone()->optimize()*/),
+		  m_pinfo(mod.m_pinfo),
+		  m_pCallerSymTab(mod.m_pCallerSymTab),
+		  m_pTable(new SymbolTable()),
+		  m_strFreeParam(mod.m_strFreeParam),
+		  m_vecParamNames(mod.m_vecParamNames),
+		  m_bUseVecParams(mod.m_bUseVecParams)
 	{
 		if(m_bUseVecParams)
 		{
@@ -94,11 +94,11 @@ public:
 	}
 
 	GenericModel(const NodeFunction *pFkt, ParseInfo& info,
-				 SymbolTable *pCallerSymTab, const std::vector<t_string>* pvecParamNames=0)
-				: m_pFkt((NodeFunction*)pFkt/*->clone()->optimize()*/),
-				  m_pinfo(&info),
-				  m_pCallerSymTab(pCallerSymTab),
-				  m_pTable(new SymbolTable())
+		 SymbolTable *pCallerSymTab, const std::vector<t_string>* pvecParamNames=0)
+		: m_pFkt((NodeFunction*)pFkt/*->clone()->optimize()*/),
+		  m_pinfo(&info),
+		  m_pCallerSymTab(pCallerSymTab),
+		  m_pTable(new SymbolTable())
 	{
 		std::vector<std::string> vecParams = /*convert_string_vector*/(m_pFkt->GetParamNames());
 		m_strFreeParam = vecParams[0];
@@ -214,8 +214,7 @@ public:
 
 
 static void get_values(const std::vector<t_string>& vecParamNames,
-						const Symbol* pSym,
-						std::vector<t_real>& vec, std::vector<bool>& vecActive)
+	const Symbol* pSym, std::vector<t_real>& vec, std::vector<bool>& vecActive)
 {
 	vecActive.resize(vecParamNames.size());
 
@@ -654,7 +653,7 @@ enum FktParam
 // bezier(x, y, 128)
 // spline(x, y, 128, degree)
 static Symbol* _fkt_param(FktParam whichfkt, const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size() < 2 || !is_vec(vecSyms[0]) || !is_vec(vecSyms[1]))
 	{
@@ -719,19 +718,19 @@ static Symbol* _fkt_param(FktParam whichfkt, const std::vector<Symbol*>& vecSyms
 }
 
 static Symbol* fkt_bezier(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	return _fkt_param(FKT_BEZIER, vecSyms, info, runinfo, pSymTab);
 }
 
 static Symbol* fkt_spline(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	return _fkt_param(FKT_SPLINE, vecSyms, info, runinfo, pSymTab);
 }
 
 static Symbol* fkt_find_peaks(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size() < 2)
 	{
@@ -767,7 +766,7 @@ static Symbol* fkt_find_peaks(const std::vector<Symbol*>& vecSyms,
 
 // ["a" : [val0, val1]]  =>  ["a" : val0]
 static Symbol* fkt_map_vec_to_val(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size()<1 || vecSyms[0]->GetType()!=SYMBOL_MAP)
 	{

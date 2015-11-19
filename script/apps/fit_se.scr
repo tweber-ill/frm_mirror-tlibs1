@@ -98,59 +98,75 @@ fit_seexp(tau, P, Perr, P0=-1.)
 # -----------------------------------------------------------------------------
 
 
-do_seseries(files, taus, P0=1., freqs=[])
+do_seseries(files, taus, P0s=[], freqs=[], outdir="tmp", P0max=1.)
 {
 	phs = []; ph_errs = [];
 	Ps = []; P_errs = [];
 
 	for(curfile : zip(files, taus))
 	{
-		print("Processing file(s): " + str(curfile[0]) + " with tau = " + curfile[1] + " ps.");
+		tau = curfile[1];
+		print("Processing file(s): " + str(curfile[0]) + " with tau = " + tau + " ps.");
 
 		freq = -1.;
-		if(length(freqs) > 0.)
+		if(length(freqs) > 0)
 		{
 			freq = freqs[cur_iter(curfile)];
 			print("Using supplied frequency of " + freq + ".");
+		}
+		P0 = 1.;
+		if(length(P0s) > 0)
+		{
+			P0 = P0s[cur_iter(curfile)];
+			print("Using supplied P0 of " + P0 + ".");
 		}
 
 		[instr, dat_x, dat_y, dat_yerr, xlab, ylab] = load_instr(curfile[0]);
 
 		[[P, dP, ph, dph], [xfine, yfit]] = fit_sesine(dat_x, dat_y, dat_yerr, freq);
 		print("P = " + P + " +- " + dP);
+		P /= P0; dP /= P0;
+		print("Pnorm = " + P + " +- " + dP);
 		print("ph = " + (ph/pi*180.) + " +- " + (dph/pi*180.));
 
 		rangex = max(dat_x) - min(dat_x);
 		xlims = (min(dat_x)-rangex*0.05) + " " + (max(dat_x)+rangex*0.05);
 		ylims = "0 " + str(max(dat_y)+max(dat_yerr)*2.);
 
-		sintitle = "P = " + P + " +- " + dP + ", phi = " + (ph/pi*180.) + " deg +- " + (dph/pi*180.) + " deg";
-
-		plot([[dat_x, dat_y, dat_yerr, ["style" : "points"]],
-			[xfine, yfit, ["style" : "line"]]], 
+		sintitle = "tau = " + tau + " ps" + 
+			", P = " + P + " +- " + dP + 
+			", phi = " + (ph/pi*180.) + " deg +- " + (dph/pi*180.) + " deg";
+		plot([[dat_x, dat_y, dat_yerr, ["style" : "points", "size" : size_pts]],
+			[xfine, yfit, ["style" : "line", "size" : size_lines]]], 
 			["title" : sintitle, "xlabel" : xlab, "ylabel" : ylab, 
-			"xlimits" : xlims, "ylimits" : ylims]);
+			"xlimits" : xlims, "ylimits" : ylims,
+			"outfile" : outdir + "/" + tau + ".pdf",
+			"term" : theterm]);
 
 
-		Ps[length(Ps)] = P; P_errs[length(P_errs)] = dP;
-		phs[length(phs)] = ph; ph_errs[length(ph_errs)] = dph;
+		append(Ps, P); append(P_errs, dP);
+		append(phs, ph); append(ph_errs, dph);
 
 		print("-"*80);
 		#sleep(1000.);
 	}
 
 
-	[[G, dG, P0, dP0], [taus_fine, pol_fit]] = fit_seexp(taus, Ps, P_errs, P0);
+	[[G, dG, P0, dP0], [taus_fine, pol_fit]] = fit_seexp(taus, Ps, P_errs, P0max);
 
 	exptitle = "Gamma = " + G + " mueV +- " + dG + " mueV";
-	plot([taus, Ps, P_errs, ["style":"points"]], [taus_fine, pol_fit, ["style":"line"]],
+	plot([taus, Ps, P_errs, ["style":"points", "size" : size_pts]], 
+		[taus_fine, pol_fit, ["style":"line", "size" : size_lines]],
 		["xlabel" : "tau (ps)", "ylabel" : "Polarisation", "title" : exptitle, 
-		"xlimits" : "0 " + (max(taus)+1.), "ylimits" : "0 0.5"]);
+		"xlimits" : "0 " + (max(taus)+1.), "ylimits" : "0 0.75",
+		"outfile" : outdir + "/gamma.pdf",
+		"term" : theterm]);
 
 	return [G, dG];
 }
 
-do_Eshiftseries(files, tau, tempcol, Eoffs=0., freqs=[])
+
+do_Eshiftseries(files, tau, tempcol, Eoffs=0., freqs=[], outdir="tmp")
 {
 	phs = []; ph_errs = [];
 	Es = []; E_errs = [];
@@ -181,24 +197,35 @@ do_Eshiftseries(files, tau, tempcol, Eoffs=0., freqs=[])
 		xlims = (min(dat_x)-rangex*0.05) + " " + (max(dat_x)+rangex*0.05);
 		ylims = "0 " + str(max(dat_y)+max(dat_yerr)*2.);
 
-		sintitle = "P = " + P + " +- " + dP + ", phi = " + (ph/pi*180.) + " deg +- " + (dph/pi*180.) + " deg";
-
-		plot([[dat_x, dat_y, dat_yerr, ["style" : "points"]],
-			[xfine, yfit, ["style" : "line"]]], 
+		sintitle = "tau = " + tau + 
+			", P = " + P + " +- " + dP + 
+			", phi = " + (ph/pi*180.) + " deg +- " + (dph/pi*180.) + " deg";
+		plot([[dat_x, dat_y, dat_yerr, ["style" : "points", "size" : size_pts]],
+			[xfine, yfit, ["style" : "line", "size" : size_lines]]], 
 			["title" : sintitle, "xlabel" : xlab, "ylabel" : ylab, 
-			"xlimits" : xlims, "ylimits" : ylims]);
+			"xlimits" : xlims, "ylimits" : ylims,
+			"outfile" : outdir + "/" + T + ".pdf",
+			"term" : theterm]);
 
 
-		Ps[length(Ps)] = P; P_errs[length(P_errs)] = dP;
-		phs[length(phs)] = ph; ph_errs[length(ph_errs)] = dph;
-		Es[length(Es)] = phi2dE(ph, tau) + Eoffs; E_errs[length(E_errs)] = phi2dE(dph, tau);
+		append(Ps, P); append(P_errs, dP);
+		append(phs, ph); append(ph_errs, dph);
+		append(Es, phi2dE(ph, tau) + Eoffs); append(E_errs, phi2dE(dph, tau));
 
 		print("-"*80);
 	}
 
+	plot(Ts, Ps, P_errs, 
+		["xlabel" : "T (K)", "ylabel" : "P", "title" : "tau = " + tau + " ps",
+		"xlimits" : "0 " + (max(Ts)+10), "ylimits" : (min(Ps)-0.05) + " " + (max(Ps)+0.05),
+		"size" : size_pts, "outfile" : outdir + "/P.pdf",
+		"term" : theterm]);
+
 	plot(Ts, Es, E_errs, 
 		["xlabel" : "T (K)", "ylabel" : "dE (mueV)", "title" : "tau = " + tau + " ps",
-		"xlimits" : "0 " + (max(Ts)+10), "ylimits" : (min(Es)-50) + " " + (max(Es)+50)]);
+		"xlimits" : "0 " + (max(Ts)+10), "ylimits" : (min(Es)-50) + " " + (max(Es)+50),
+		"size" : size_pts, "outfile" : outdir + "/E.pdf",
+		"term" : theterm]);
 }
 
 
