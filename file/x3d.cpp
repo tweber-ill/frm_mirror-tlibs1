@@ -30,6 +30,22 @@ void X3dElem::Write(std::ostream& ostr) const
 		pElem->Write(ostr);
 }
 
+void X3dElem::WriteColor(std::ostream& ostr, const t_vec& vecColor)
+{
+	if(vecColor.size() >= 3)
+	{
+		ostr << "<Appearance>\n";
+			ostr << "<Material diffuseColor=\""
+				<< vecColor[0] << " " << vecColor[1] << " " << vecColor[2]
+				<< "\" ";
+		if(vecColor.size() >= 4)
+			ostr << "transparency=\"" << vecColor[3] << "\" ";
+		ostr << "/>\n";
+		ostr << "</Appearance>\n";
+	}
+
+}
+
 // -----------------------------------------------------------------------------
 
 void X3dScene::Write(std::ostream& ostr) const
@@ -80,15 +96,35 @@ void X3dSphere::Write(std::ostream& ostr) const
 	ostr << "<Shape>\n";
 		ostr << "<Sphere radius=\"" << m_dRadius << "\" />\n";
 
-	if(m_vecColor.size() >= 3)
-	{
-		ostr << "<Appearance>\n";
-			ostr << "<Material diffuseColor=\""
-				<< m_vecColor[0] << " " << m_vecColor[1] << " " << m_vecColor[2]
-				<< "\" />\n";
-		ostr << "</Appearance>\n";
-	}
+	X3dElem::WriteColor(ostr, m_vecColor);
+	ostr << "</Shape>\n";
 
+	// TODO: child elements?
+	//X3dElem::Write(ostr);
+}
+
+void X3dCube::Write(std::ostream& ostr) const
+{
+	ostr << "<Shape>\n";
+		ostr << "<Box size=\""
+			<< m_vecLength[0] << " "
+			<< m_vecLength[1] << " "
+			<< m_vecLength[2] << "\" />\n";
+
+	X3dElem::WriteColor(ostr, m_vecColor);
+	ostr << "</Shape>\n";
+
+	// TODO: child elements?
+	//X3dElem::Write(ostr);
+}
+
+void X3dCylinder::Write(std::ostream& ostr) const
+{
+	ostr << "<Shape>\n";
+		ostr << "<Cylinder height=\"" << m_dHeight << "\""
+			<< " radius=\"" << m_dRadius << "\" />\n";
+
+	X3dElem::WriteColor(ostr, m_vecColor);
 	ostr << "</Shape>\n";
 
 	// TODO: child elements?

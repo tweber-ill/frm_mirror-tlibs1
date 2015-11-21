@@ -20,6 +20,15 @@ namespace tl{
 class X3dElem;
 class X3dElem
 {
+	public:
+		typedef double t_real;
+		typedef ublas::vector<t_real> t_vec;
+		typedef ublas::matrix<t_real> t_mat;
+		typedef math::quaternion<t_real> t_quat;
+
+	protected:
+		static void WriteColor(std::ostream& ostr, const t_vec& vecColor);
+
 	protected:
 		std::vector<X3dElem*> m_vecChildren;
 
@@ -42,12 +51,6 @@ class X3dScene : public X3dElem
 
 class X3dTrafo : public X3dElem
 {
-	public:
-		typedef double t_real;
-		typedef ublas::vector<t_real> t_vec;
-		typedef ublas::matrix<t_real> t_mat;
-		typedef math::quaternion<t_real> t_quat;
-
 	protected:
 		t_vec m_vecTrans;
 		t_vec m_vecScale;
@@ -65,12 +68,9 @@ class X3dTrafo : public X3dElem
 		void SetRot(const t_quat& quat) { m_quatRot = quat; m_bHasRot = 1; }
 };
 
+// sphere
 class X3dSphere : public X3dElem
 {
-	public:
-		typedef double t_real;
-		typedef ublas::vector<t_real> t_vec;
-
 	protected:
 		t_real m_dRadius = 1.;
 		t_vec m_vecColor;
@@ -83,6 +83,46 @@ class X3dSphere : public X3dElem
 		virtual void Write(std::ostream& ostr) const override;
 
 		void SetRadius(t_real dRad) { m_dRadius = dRad; }
+		void SetColor(const t_vec& vecCol) { m_vecColor = vecCol; }
+};
+
+// cuboid
+class X3dCube : public X3dElem
+{
+	protected:
+		t_vec m_vecLength;
+		t_vec m_vecColor;
+
+	public:
+		X3dCube() = default;
+		X3dCube(t_real dW, t_real dH, t_real dL)
+			: m_vecLength(tl::make_vec({dW, dH, dL})) {}
+		virtual ~X3dCube() = default;
+
+		virtual void Write(std::ostream& ostr) const override;
+
+		void SetLengths(const t_vec& vec) { m_vecLength = vec; }
+		void SetColor(const t_vec& vecCol) { m_vecColor = vecCol; }
+};
+
+// cylinder
+class X3dCylinder : public X3dElem
+{
+	protected:
+		t_real m_dRadius;
+		t_real m_dHeight;
+		t_vec m_vecColor;
+
+	public:
+		X3dCylinder() = default;
+		X3dCylinder(t_real dRadius, t_real dHeight)
+			: m_dRadius(dRadius), m_dHeight(dHeight) {}
+		virtual ~X3dCylinder() = default;
+
+		virtual void Write(std::ostream& ostr) const override;
+
+		void SetRadius(const t_real dRad) { m_dRadius = dRad; }
+		void SetHeight(const t_real dHeight) { m_dHeight = dHeight; }
 		void SetColor(const t_vec& vecCol) { m_vecColor = vecCol; }
 };
 
