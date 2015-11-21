@@ -85,6 +85,7 @@ typedef units::quantity<units::si::energy> energy;
 typedef units::quantity<units::si::momentum> momentum;
 typedef units::quantity<units::si::velocity> velocity;
 typedef units::quantity<units::si::length> length;
+typedef units::quantity<units::si::area> area;
 typedef units::quantity<units::si::time> time;
 typedef units::quantity<units::si::magnetic_flux_density> flux;
 typedef units::quantity<units::si::frequency> frequency;
@@ -102,6 +103,7 @@ static const time seconds = 1.*units::si::seconds;
 static const angle radians = 1.*units::si::radians;
 static const temp kelvins = 1.*units::si::kelvins;
 static const mass amu = co::m_u;
+static const area barns = 1e-28 * units::si::meters*units::si::meters;
 
 static const energy one_meV = 1e-3 * co::e * units::si::volts;
 static const energy one_eV = co::e * units::si::volts;
@@ -115,6 +117,7 @@ static const length meter = meters;
 static const time second = seconds;
 static const energy meV = one_meV;
 static const flux tesla = teslas;
+static const area barn = barns;
 
 /*
 template<class T=double> T KSQ2E = T((co::hbar*co::hbar / (T(2)*co::m_n)) / one_meV / (angstrom*angstrom));
@@ -225,8 +228,7 @@ t_wavenumber<Sys,Y> E2k(const t_energy<Sys,Y>& E, bool &bImag)
 // real: n * lam = 2d * sin(twotheta/2)
 template<class Sys, class Y>
 t_length<Sys,Y> bragg_real_lam(const t_length<Sys,Y>& d,
-				const t_angle<Sys,Y>& twotheta,
-				Y n)
+	const t_angle<Sys,Y>& twotheta, Y n)
 {
 	return 2.*d/n * sin(twotheta/2.);
 }
@@ -241,8 +243,7 @@ t_length<Sys,Y> bragg_real_d(const t_length<Sys,Y>& lam,
 
 template<class Sys, class Y>
 t_angle<Sys,Y> bragg_real_twotheta(const t_length<Sys,Y>& d,
-					const t_length<Sys,Y>& lam,
-					Y n)
+	const t_length<Sys,Y>& lam, Y n)
 {
 	return asin(n*lam/(2.*d)) * 2.;
 }
@@ -250,24 +251,21 @@ t_angle<Sys,Y> bragg_real_twotheta(const t_length<Sys,Y>& d,
 // reciprocal: Q * lam = 4pi * sin(twotheta/2)
 template<class Sys, class Y>
 t_angle<Sys,Y> bragg_recip_twotheta(const t_wavenumber<Sys,Y>& Q,
-					const t_length<Sys,Y>& lam,
-					Y n)
+	const t_length<Sys,Y>& lam, Y n)
 {
 	return asin(Q*n*lam/(4.*M_PI)) * 2.;
 }
 
 template<class Sys, class Y>
 t_wavenumber<Sys,Y> bragg_recip_Q(const t_length<Sys,Y>& lam,
-				const t_angle<Sys,Y>& twotheta,
-				Y n)
+	const t_angle<Sys,Y>& twotheta, Y n)
 {
 	return 4.*M_PI / (n*lam) * sin(twotheta/2.);
 }
 
 template<class Sys, class Y>
 t_length<Sys,Y> bragg_recip_lam(const t_wavenumber<Sys,Y>& Q,
-					const t_angle<Sys,Y>& twotheta,
-					Y n)
+	const t_angle<Sys,Y>& twotheta, Y n)
 {
 	return 4.*M_PI / Q * sin(twotheta/2.) / n;
 }
@@ -277,9 +275,8 @@ t_length<Sys,Y> bragg_recip_lam(const t_wavenumber<Sys,Y>& Q,
 // --------------------------------------------------------------------------------
 template<class Sys, class Y>
 t_wavenumber<Sys,Y> kinematic_plane(bool bFixedKi,
-						const t_energy<Sys,Y>& EiEf,
-						const t_energy<Sys,Y>& DeltaE,
-						const t_angle<Sys,Y>& twotheta)
+	const t_energy<Sys,Y>& EiEf, const t_energy<Sys,Y>& DeltaE,
+	const t_angle<Sys,Y>& twotheta)
 {
 	const t_energy<Sys,Y> dE = DeltaE;
 	if(bFixedKi)
@@ -294,9 +291,8 @@ t_wavenumber<Sys,Y> kinematic_plane(bool bFixedKi,
 
 template<class Sys, class Y>
 t_energy<Sys,Y> kinematic_plane(bool bFixedKi, bool bBranch,
-					const t_energy<Sys,Y>& EiEf,
-					const t_wavenumber<Sys,Y>& Q,
-					const t_angle<Sys,Y>& twotheta)
+	const t_energy<Sys,Y>& EiEf, const t_wavenumber<Sys,Y>& Q,
+	const t_angle<Sys,Y>& twotheta)
 {
 	auto c = 2.*co::m_n / (co::hbar*co::hbar);
 	Y ctt = units::cos(twotheta);
@@ -331,10 +327,8 @@ t_energy<Sys,Y> kinematic_plane(bool bFixedKi, bool bBranch,
 
 template<class Sys, class Y>
 Y debye_waller_high_T(const t_temperature<Sys,Y>& T_D,
-					const t_temperature<Sys,Y>& T,
-					const t_mass<Sys,Y>& M,
-					const t_wavenumber<Sys,Y>& Q,
-					t_length_square<Sys,Y>* pZeta_sq=0)
+	const t_temperature<Sys,Y>& T, const t_mass<Sys,Y>& M,
+	const t_wavenumber<Sys,Y>& Q, t_length_square<Sys,Y>* pZeta_sq=0)
 {
 	t_length_square<Sys,Y> zeta_sq;
 	zeta_sq = 9.*co::hbar*co::hbar / (co::k_B * T_D * M) * T/T_D;
@@ -347,10 +341,8 @@ Y debye_waller_high_T(const t_temperature<Sys,Y>& T_D,
 
 template<class Sys, class Y>
 Y debye_waller_low_T(const t_temperature<Sys,Y>& T_D,
-					const t_temperature<Sys,Y>& T,
-					const t_mass<Sys,Y>& M,
-					const t_wavenumber<Sys,Y>& Q,
-					t_length_square<Sys,Y>* pZeta_sq=0)
+	const t_temperature<Sys,Y>& T, const t_mass<Sys,Y>& M, 
+	const t_wavenumber<Sys,Y>& Q, t_length_square<Sys,Y>* pZeta_sq=0)
 {
 	t_length_square<Sys,Y> zeta_sq;
 	zeta_sq = 9.*co::hbar*co::hbar / (4.*co::k_B*T_D*M) * (1. + 2./3. * M_PI*M_PI * (T/T_D)*(T/T_D));
@@ -372,10 +364,9 @@ Y debye_waller_low_T(const t_temperature<Sys,Y>& T_D,
 // cos th = (-kf^2 + ki^2 + Q^2) / (2kiQ)
 template<class Sys, class Y>
 t_angle<Sys,Y> get_angle_ki_Q(const t_wavenumber<Sys,Y>& ki,
-		const t_wavenumber<Sys,Y>& kf,
-		const t_wavenumber<Sys,Y>& Q,
-		bool bPosSense=1,
-		bool bAngleOutsideTriag=0)
+	const t_wavenumber<Sys,Y>& kf,
+	const t_wavenumber<Sys,Y>& Q,
+	bool bPosSense=1, bool bAngleOutsideTriag=0)
 {
 	t_angle<Sys,Y> angle;
 
@@ -402,10 +393,9 @@ t_angle<Sys,Y> get_angle_ki_Q(const t_wavenumber<Sys,Y>& ki,
 // cos th = (ki^2 - Q^2 - kf^2) / (2Q kf)
 template<class Sys, class Y>
 t_angle<Sys,Y> get_angle_kf_Q(const t_wavenumber<Sys,Y>& ki,
-		const t_wavenumber<Sys,Y>& kf,
-		const t_wavenumber<Sys,Y>& Q,
-		bool bPosSense=1,
-		bool bAngleOutsideTriag=1)
+	const t_wavenumber<Sys,Y>& kf,
+	const t_wavenumber<Sys,Y>& Q,
+	bool bPosSense=1, bool bAngleOutsideTriag=1)
 {
 	t_angle<Sys,Y> angle;
 
@@ -429,8 +419,7 @@ t_angle<Sys,Y> get_angle_kf_Q(const t_wavenumber<Sys,Y>& ki,
 
 template<class Sys, class Y>
 t_angle<Sys,Y> get_mono_twotheta(const t_wavenumber<Sys,Y>& k,
-				const t_length<Sys,Y>& d,
-				bool bPosSense=1)
+	const t_length<Sys,Y>& d, bool bPosSense=1)
 {
 	const Y dOrder = 1.;
 	t_angle<Sys,Y> tt = bragg_real_twotheta(d, k2lam(k), dOrder);
@@ -441,8 +430,7 @@ t_angle<Sys,Y> get_mono_twotheta(const t_wavenumber<Sys,Y>& k,
 
 template<class Sys, class Y>
 t_wavenumber<Sys,Y> get_mono_k(const t_angle<Sys,Y>& _theta,
-				const t_length<Sys,Y>& d,
-				bool bPosSense=1)
+	const t_length<Sys,Y>& d, bool bPosSense=1)
 {
 	t_angle<Sys,Y> theta = _theta;
 	if(!bPosSense)
@@ -458,9 +446,8 @@ t_wavenumber<Sys,Y> get_mono_k(const t_angle<Sys,Y>& _theta,
 // cos 2th = (-Q^2 + ki^2 + kf^2) / (2ki kf)
 template<class Sys, class Y>
 t_angle<Sys,Y> get_sample_twotheta(const t_wavenumber<Sys,Y>& ki,
-					const t_wavenumber<Sys,Y>& kf,
-					const t_wavenumber<Sys,Y>& Q,
-					bool bPosSense=1)
+	const t_wavenumber<Sys,Y>& kf, const t_wavenumber<Sys,Y>& Q,
+	bool bPosSense=1)
 {
 	t_dimensionless<Sys,Y> ttCos = (ki*ki + kf*kf - Q*Q)/(2.*ki*kf);
 	if(units::abs(ttCos) > 1.)
@@ -481,8 +468,7 @@ t_angle<Sys,Y> get_sample_twotheta(const t_wavenumber<Sys,Y>& ki,
 template<class Sys, class Y>
 const t_wavenumber<Sys,Y>
 get_sample_Q(const t_wavenumber<Sys,Y>& ki,
-					const t_wavenumber<Sys,Y>& kf,
-					const t_angle<Sys,Y>& tt)
+	const t_wavenumber<Sys,Y>& kf, const t_angle<Sys,Y>& tt)
 {
 	t_dimensionless<Sys,Y> ctt = units::cos(tt);
 	decltype(ki*ki) Qsq = ki*ki + kf*kf - 2.*ki*kf*ctt;
@@ -501,7 +487,7 @@ get_sample_Q(const t_wavenumber<Sys,Y>& ki,
 
 template<class Sys, class Y>
 t_energy<Sys,Y> get_energy_transfer(const t_wavenumber<Sys,Y>& ki,
-					const t_wavenumber<Sys,Y>& kf)
+	const t_wavenumber<Sys,Y>& kf)
 {
 	return co::hbar*co::hbar*ki*ki/(2.*co::m_n)
 			- co::hbar*co::hbar*kf*kf/(2.*co::m_n);
@@ -513,8 +499,7 @@ t_energy<Sys,Y> get_energy_transfer(const t_wavenumber<Sys,Y>& ki,
 // 2) kf^2  =  -E * 2*mn / hbar^2  +  ki^2
 template<class Sys, class Y>
 t_wavenumber<Sys,Y> get_other_k(const t_energy<Sys,Y>& E,
-				const t_wavenumber<Sys,Y>& kfix,
-				bool bFixedKi)
+	const t_wavenumber<Sys,Y>& kfix, bool bFixedKi)
 {
 	auto kE_sq = E*2.*co::m_n/co::hbar/co::hbar;
 	if(bFixedKi) kE_sq = -kE_sq;
@@ -549,8 +534,8 @@ Y ana_effic_factor(const t_wavenumber<Sys, Y>& kf, const t_length<Sys, Y>& d)
 
 // Bragg tail -> see Shirane p. 152
 template<class Sys, class Y>
-t_energy<Sys,Y> get_bragg_tail(t_wavenumber<Sys,Y> k, t_wavenumber<Sys,Y> q,
-								bool bConstEi=0)
+t_energy<Sys,Y> get_bragg_tail(t_wavenumber<Sys,Y> k, 
+	t_wavenumber<Sys,Y> q, bool bConstEi=0)
 {
 	Y t = q / (2.*k);
 	if(!bConstEi)
@@ -563,9 +548,8 @@ t_energy<Sys,Y> get_bragg_tail(t_wavenumber<Sys,Y> k, t_wavenumber<Sys,Y> q,
 
 // inelastic spurions -> Shirane pp. 146-148
 template<class Sys, class Y>
-t_energy<Sys,Y> get_inelastic_spurion(bool bConstEi,
-		t_energy<Sys,Y> E,
-		unsigned int iOrderMono, unsigned int iOrderAna)
+t_energy<Sys,Y> get_inelastic_spurion(bool bConstEi, t_energy<Sys,Y> E, 
+	unsigned int iOrderMono, unsigned int iOrderAna)
 {
 	const Y dOrderMonoSq = Y(iOrderMono)*Y(iOrderMono);
 	const Y dOrderAnaSq = Y(iOrderAna)*Y(iOrderAna);
@@ -591,10 +575,8 @@ struct InelasticSpurion
 
 template<class Sys, class Y>
 std::vector<InelasticSpurion<Y>> check_inelastic_spurions(bool bConstEi,
-			t_energy<Sys,Y> Ei,
-			t_energy<Sys,Y> Ef,
-			t_energy<Sys,Y> E,
-			unsigned int iMaxOrder=5)
+	t_energy<Sys,Y> Ei, t_energy<Sys,Y> Ef,
+	t_energy<Sys,Y> E, unsigned int iMaxOrder=5)
 {
 	const Y dESensitivity = 0.25;	// meV
 
@@ -639,8 +621,7 @@ struct ElasticSpurion
 // accidental elastic spurions -> Shirane pp. 150-155 (esp. fig. 6.2)
 template<typename T=double>
 ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
-							const ublas::vector<T>& kf,
-							const ublas::vector<T>& q)
+	const ublas::vector<T>& kf, const ublas::vector<T>& q)
 {
 	const T dKi = ublas::norm_2(ki);
 	const T dKf = ublas::norm_2(kf);
@@ -757,6 +738,17 @@ t_real DHO_model(t_real E, t_real T, t_real E0, t_real hwhm, t_real amp, t_real 
 		+ offs;
 }
 
+
+// --------------------------------------------------------------------------------
+
+
+// get macroscopic from microscopic cross-section
+template<class Sys, class Y=double>
+t_length_inverse<Sys, Y> macro_xsect(const t_area<Sys, Y>& xsect,
+	unsigned int iNumAtoms, const t_volume<Sys, Y>& volUC)
+{
+	return xsect * Y(iNumAtoms) / volUC;
+}
 
 }
 
