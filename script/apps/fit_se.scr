@@ -10,6 +10,7 @@ module_init()
 	import("apps/fit.scr");
 
 	global hbar_mueVps = hbar_eVs * 1e6 * 1e12;
+	global tempvar = "TT";
 }
 
 
@@ -102,6 +103,7 @@ do_seseries(files, taus, P0s=[], freqs=[], outdir="tmp", P0max=1.)
 {
 	phs = []; ph_errs = [];
 	Ps = []; P_errs = [];
+	Tm = []; Ts = [];
 
 	for(curfile : zip(files, taus))
 	{
@@ -121,7 +123,13 @@ do_seseries(files, taus, P0s=[], freqs=[], outdir="tmp", P0max=1.)
 			print("Using supplied P0 of " + P0 + ".");
 		}
 
+
 		[instr, dat_x, dat_y, dat_yerr, xlab, ylab] = load_instr(curfile[0]);
+
+		temp = get_col_mean(instr, tempvar);
+		append(Tm, temp[0]); append(Ts, temp[1]);
+		print("T = " + temp[0] + " +- " + temp[1]);
+
 
 		[[P, dP, ph, dph], [xfine, yfit]] = fit_sesine(dat_x, dat_y, dat_yerr, freq);
 		print("P = " + P + " +- " + dP);
@@ -154,7 +162,9 @@ do_seseries(files, taus, P0s=[], freqs=[], outdir="tmp", P0max=1.)
 
 	[[G, dG, P0, dP0], [taus_fine, pol_fit]] = fit_seexp(taus, Ps, P_errs, P0max);
 
-	exptitle = "Gamma = " + G + " mueV +- " + dG + " mueV";
+	T = mean(Tm);
+	exptitle = "T = " + T + " K, ";
+	exptitle += "Gamma = " + G + " mueV +- " + abs(dG) + " mueV";
 	plot([taus, Ps, P_errs, ["style":"points", "size" : size_pts]], 
 		[taus_fine, pol_fit, ["style":"line", "size" : size_lines]],
 		["xlabel" : "tau (ps)", "ylabel" : "Polarisation", "title" : exptitle, 
@@ -216,7 +226,7 @@ do_Eshiftseries(files, tau, tempcol, Eoffs=0., freqs=[], outdir="tmp")
 	}
 
 	plot(Ts, Ps, P_errs, 
-		["xlabel" : "T (K)", "ylabel" : "P", "title" : "tau = " + tau + " ps",
+		["xlabel" : "T (K)", "ylabel" : "Polarisation", "title" : "tau = " + tau + " ps",
 		"xlimits" : "0 " + (max(Ts)+10), "ylimits" : (min(Ps)-0.05) + " " + (max(Ps)+0.05),
 		"size" : size_pts, "outfile" : outdir + "/P.pdf",
 		"term" : theterm]);

@@ -18,8 +18,9 @@
 
 namespace ublas = boost::numeric::ublas;
 
+
 static inline Symbol* _fkt_linlogspace(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab, bool bLog)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab, bool bLog)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_SCALAR, SYMBOL_SCALAR, SYMBOL_INT}, {0,0,0}, "linspace"))
 		return 0;
@@ -48,13 +49,13 @@ static inline Symbol* _fkt_linlogspace(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_linspace(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	return _fkt_linlogspace(vecSyms, info, runinfo, pSymTab, false);
 }
 
 static Symbol* fkt_logspace(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	return _fkt_linlogspace(vecSyms, info, runinfo, pSymTab, true);
 }
@@ -220,7 +221,7 @@ static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 // TODO: for arrays
 template<t_real (*FKT)(t_real, t_real), t_complex (*FKT_C)(const t_complex&, const t_complex&)=nullptr>
 static Symbol* fkt_math_2args(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ANY, SYMBOL_ANY}, {0,0}, "fkt_math_2args"))
 		return 0;
@@ -278,7 +279,7 @@ template<> t_real myabs(t_real t) { return ::fabs(t); }
 
 // TODO: integrate with fkt_math_1arg
 static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ANY}, {0}, "abs"))
 		return 0;
@@ -325,7 +326,7 @@ static Symbol* fkt_math_abs(const std::vector<Symbol*>& vecSyms,
 
 // complex norm = abs^2
 static Symbol* fkt_math_cnorm(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ANY}, {0}, "cnorm"))
 		return 0;
@@ -341,15 +342,20 @@ static Symbol* fkt_math_cnorm(const std::vector<Symbol*>& vecSyms,
 	return new SymbolReal(dVal);
 }
 
-
+// functions with boolean return value
 template<bool (*FKT)(t_real)>
 static Symbol* fkt_math_1arg_bret(const std::vector<Symbol*>& vecSyms,
-				ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ANY}, {0}, "fkt_math_1arg_bret"))
 		return 0;
 
-	if(vecSyms[0]->GetType() == SYMBOL_ARRAY)
+	if(vecSyms[0]->GetType() == SYMBOL_COMPLEX)
+	{
+		tl::log_err(linenr(runinfo), "Function not implemented for complex values.");
+		return 0;
+	}
+	else if(vecSyms[0]->GetType() == SYMBOL_ARRAY)
 	{
 		SymbolArray* pArrRet = new SymbolArray();
 
@@ -379,8 +385,8 @@ static Symbol* fkt_math_1arg_bret(const std::vector<Symbol*>& vecSyms,
 // FFT
 
 static Symbol* _fkt_fft(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab,
-						bool bInv)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab,
+	bool bInv)
 {
 	void (tl::Fourier::*pFkt)(const t_real*, const t_real*, t_real*, t_real*)
 						= (bInv ? &tl::Fourier::ifft : &tl::Fourier::fft);
@@ -1032,6 +1038,12 @@ static Symbol* fkt_minmax(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 
 // --------------------------------------------------------------------------------
 
+template<class t_ret, class t_arg=t_ret> t_ret cot(t_arg t);
+template<> t_real cot(t_real t) { return std::cos(t)/std::sin(t); }
+template<> t_complex cot(const t_complex& t) { return std::cos<t_real>(t)/std::sin<t_real>(t); }
+
+// --------------------------------------------------------------------------------
+
 
 
 extern void init_ext_math_calls()
@@ -1057,6 +1069,7 @@ extern void init_ext_math_calls()
 		t_mapFkts::value_type(T_STR"sin", fkt_math_1arg< std::sin, std::sin<t_real> >),
 		t_mapFkts::value_type(T_STR"cos", fkt_math_1arg< std::cos, std::cos<t_real> >),
 		t_mapFkts::value_type(T_STR"tan", fkt_math_1arg< std::tan, std::tan<t_real> >),
+		t_mapFkts::value_type(T_STR"cot", fkt_math_1arg< cot<t_real>, cot<t_complex> >),
 		t_mapFkts::value_type(T_STR"asin", fkt_math_1arg< std::asin, std::asin<t_real> >),
 		t_mapFkts::value_type(T_STR"acos", fkt_math_1arg< std::acos, std::acos<t_real> >),
 		t_mapFkts::value_type(T_STR"atan", fkt_math_1arg< std::atan, std::atan<t_real> >),
