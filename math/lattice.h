@@ -48,9 +48,9 @@ class Lattice
 		void RotateEuler(T dPhi, T dTheta, T dPsi);
 		// Euler vecRecipZ vecRecipX vecRecipZ rotation
 		void RotateEulerRecip(const ublas::vector<T>& vecRecipX,
-						const ublas::vector<T>& vecRecipY,
-						const ublas::vector<T>& vecRecipZ,
-						T dPhi, T dTheta, T dPsi);
+			const ublas::vector<T>& vecRecipY,
+			const ublas::vector<T>& vecRecipZ,
+			T dPhi, T dTheta, T dPsi);
 
 		Lattice GetRecip() const;
 		Lattice GetAligned() const;
@@ -87,8 +87,8 @@ Lattice<T>::Lattice(T a, T b, T c, T alpha, T beta, T gamma)
 
 template<typename T>
 Lattice<T>::Lattice(const ublas::vector<T>& vec0,
-				const ublas::vector<T>& vec1,
-				const ublas::vector<T>& vec2)
+	const ublas::vector<T>& vec1,
+	const ublas::vector<T>& vec2)
 {
 	this->m_vecs[0] = vec0;
 	this->m_vecs[1] = vec1;
@@ -119,9 +119,9 @@ void Lattice<T>::RotateEuler(T dPhi, T dTheta, T dPsi)
 
 template<typename T>
 void Lattice<T>::RotateEulerRecip(const ublas::vector<T>& vecRecipX,
-				const ublas::vector<T>& vecRecipY,
-				const ublas::vector<T>& vecRecipZ,
-				T dPhi, T dTheta, T dPsi)
+	const ublas::vector<T>& vecRecipY,
+	const ublas::vector<T>& vecRecipZ,
+	T dPhi, T dTheta, T dPsi)
 {
 	// get real vectors
 	const unsigned int iDim=3;
@@ -247,20 +247,25 @@ ublas::matrix<T> Lattice<T>::GetMetric() const
 }
 
 
-
+/**
+ * UB matrix converts rlu to 1/A and expresses it in the scattering plane coords:
+ * Q = UB*hkl
+ */
 template<typename T=double>
 ublas::matrix<T> get_UB(const Lattice<T>& lattice_real,
-						const ublas::vector<T>& _vec1,
-						const ublas::vector<T>& _vec2)
+	const ublas::vector<T>& _vec1, const ublas::vector<T>& _vec2)
 {
 	using t_vec = ublas::vector<T>;
 	using t_mat = ublas::matrix<T>;
 
+	// B: rlu to 1/A
 	t_mat matB = lattice_real.GetRecip()/*.GetAligned()*/.GetMetric();
 
+	// convert scattering plane from rlu to 1/A
 	t_vec vec1 = ublas::prod(matB, _vec1);
 	t_vec vec2 = ublas::prod(matB, _vec2);
 
+	// U: scattering plane coordinate system
 	t_mat matU = row_matrix(get_ortho_rhs({vec1, vec2}));
 	t_mat matUB = ublas::prod(matU, matB);
 
@@ -275,12 +280,12 @@ template<typename T> constexpr T get_plane_dist_tolerance() { return T(1e-6); }
 
 template<typename T=double>
 void get_tas_angles(const Lattice<T>& lattice_real,
-						const ublas::vector<T>& _vec1, const ublas::vector<T>& _vec2,
-						T dKi, T dKf,
-						T dh, T dk, T dl,
-						bool bSense,
-						T *pTheta, T *pTwoTheta,
-						ublas::vector<T>* pVecQ = 0)
+	const ublas::vector<T>& _vec1, const ublas::vector<T>& _vec2,
+	T dKi, T dKf,
+	T dh, T dk, T dl,
+	bool bSense,
+	T *pTheta, T *pTwoTheta,
+	ublas::vector<T>* pVecQ = 0)
 {
 	const T dDelta = get_plane_dist_tolerance<T>();
 
@@ -324,12 +329,12 @@ void get_tas_angles(const Lattice<T>& lattice_real,
 
 template<typename T=double>
 void get_hkl_from_tas_angles(const Lattice<T>& lattice_real,
-						const ublas::vector<T>& _vec1, const ublas::vector<T>& _vec2,
-						T dm, T da, T th_m, T th_a, T _th_s, T _tt_s,
-						bool bSense_m, bool bSense_a, bool bSense_s,
-						T* h, T* k, T* l,
-						T* pki=0, T* pkf=0, T* pE=0, T* pQ=0,
-						ublas::vector<T>* pVecQ = 0)
+	const ublas::vector<T>& _vec1, const ublas::vector<T>& _vec2,
+	T dm, T da, T th_m, T th_a, T _th_s, T _tt_s,
+	bool bSense_m, bool bSense_a, bool bSense_s,
+	T* h, T* k, T* l,
+	T* pki=0, T* pkf=0, T* pE=0, T* pQ=0,
+	ublas::vector<T>* pVecQ = 0)
 {
 	using t_vec = ublas::vector<T>;
 	using t_mat = ublas::matrix<T>;

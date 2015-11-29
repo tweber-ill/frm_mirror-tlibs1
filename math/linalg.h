@@ -948,7 +948,7 @@ typename vec_type::value_type vec_angle(const vec_type& vec)
 
 
 // -----------------------------------------------------------------------------
-template<typename T> void set_eps_0(T& d);
+template<typename T> void set_eps_0(T& d, underlying_value_type_t<T> eps=-1.);
 
 template<typename T, bool bScalar=std::is_scalar<T>::value>
 struct set_eps_0_impl
@@ -959,9 +959,11 @@ struct set_eps_0_impl
 template<typename real_type>
 struct set_eps_0_impl<real_type, 1>
 {
+	real_type eps = std::numeric_limits<real_type>::epsilon();
+
 	void operator()(real_type& d) const
 	{
-		if(std::fabs(d) < std::numeric_limits<real_type>::epsilon())
+		if(std::fabs(d) < eps)
 			d = real_type(0);
 	}
 };
@@ -969,19 +971,22 @@ struct set_eps_0_impl<real_type, 1>
 template<typename vec_type>
 struct set_eps_0_impl<vec_type, 0>
 {
+	using real_type = typename vec_type::value_type;
+	real_type eps = std::numeric_limits<real_type>::epsilon();
+
 	void operator()(vec_type& vec) const
 	{
-		typedef typename vec_type::value_type real_type;
-
 		for(real_type& d : vec)
-			set_eps_0<real_type>(d);
+			set_eps_0<real_type>(d, eps);
 	}
 };
 
 template<typename T>
-void set_eps_0(T& d)
+void set_eps_0(T& d, underlying_value_type_t<T> eps)
 {
 	set_eps_0_impl<T, std::is_scalar<T>::value> op;
+	if(eps >= underlying_value_type_t<T>(0))
+		op.eps = eps;
 	op(d);
 }
 // -----------------------------------------------------------------------------
