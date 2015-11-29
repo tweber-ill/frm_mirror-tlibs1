@@ -80,9 +80,9 @@ t_vec rand_norm_nd(const t_initlst& vecMu, const t_initlst& vecSigma)
 
 	for(; iterMu!=vecMu.end(); ++iterMu, ++iterSig)
 	{
-		std::future<REAL> fut = std::async(std::launch::deferred | std::launch::async,
-						std::function<REAL(REAL,REAL)>(rand_norm<REAL>), *iterMu, *iterSig);
-		vecFut.push_back(std::move(fut));
+		vecFut.emplace_back(
+			std::async(std::launch::deferred | std::launch::async,
+			std::function<REAL(REAL,REAL)>(rand_norm<REAL>), *iterMu, *iterSig));
 	}
 
 	for(unsigned int i=0; i<iDim; ++i)

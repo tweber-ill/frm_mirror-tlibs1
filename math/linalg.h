@@ -489,7 +489,7 @@ struct is_nan_or_inf_impl<mat_type, FKT, 2>		// matrix impl.
 template<class T=ublas::matrix<double>>
 bool isnan(const T& mat)
 {
-	typedef typename underlying_value_type<T>::value_type real_type;
+	typedef underlying_value_type_t<T> real_type;
 
 	using fkt = std::function<bool(real_type)>;
 	fkt stdisnan = (bool(*)(real_type))std::isnan;
@@ -500,7 +500,7 @@ bool isnan(const T& mat)
 template<class T=ublas::matrix<double>>
 bool isinf(const T& mat)
 {
-	typedef typename underlying_value_type<T>::value_type real_type;
+	typedef underlying_value_type_t<T> real_type;
 
 	using fkt = std::function<bool(real_type)>;
 	fkt stdisinf = (bool(*)(real_type))std::isinf;
@@ -511,7 +511,7 @@ bool isinf(const T& mat)
 template<class T=ublas::matrix<double>>
 bool is_nan_or_inf(const T& mat)
 {
-	typedef typename underlying_value_type<T>::value_type real_type;
+	typedef underlying_value_type_t<T> real_type;
 
 	using fkt = std::function<bool(real_type)>;
 	fkt stdisnaninf = [](real_type d)->bool { return std::isnan(d) || std::isinf(d); };

@@ -15,6 +15,8 @@
 #include <algorithm>
 #include <iterator>
 #include <tuple>
+#include <string>
+#include <boost/type_index.hpp>
 #include "../math/math.h"
 #include "array.h"
 
@@ -232,6 +234,23 @@ bool has_map_all_keys(const t_map& map, const std::initializer_list<typename t_m
 		if(map.find(key) == map.end())
 			return false;
 	return true;
+}
+
+
+// -----------------------------------------------------------------------------
+
+
+template<typename T>
+std::string get_typename(bool bFull=1)
+{
+	boost::typeindex::type_index idx;
+
+	if(bFull)
+		idx = boost::typeindex::type_id_with_cvr<T>();
+	else
+		idx = boost::typeindex::type_id<T>();
+
+	return idx.pretty_name();
 }
 
 }

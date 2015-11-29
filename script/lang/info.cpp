@@ -49,7 +49,7 @@ void ParseInfo::PushTraceback(std::string&& strTrace)
 		pStck = &stckTraceback[std::this_thread::get_id()];
 	}
 
-	pStck->push_front(std::move(strTrace));
+	pStck->push_front(std::forward<std::string>(strTrace));
 }
 
 void ParseInfo::PopTraceback()

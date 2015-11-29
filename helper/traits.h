@@ -21,14 +21,18 @@ struct underlying_value_type
 template<class T>
 struct underlying_value_type<T, 1>
 {
-	typedef T value_type;
+	using value_type = T;
 };
 
 template<class T>
 struct underlying_value_type<T, 0>
 {
-	typedef typename T::value_type value_type;
+	using value_type = typename T::value_type;
 };
+
+template<class T>
+using underlying_value_type_t =
+	typename underlying_value_type<T, std::is_scalar<T>::value>::value_type;
 
 // -----------------------------------------------------------------------------
 }
@@ -87,6 +91,10 @@ struct remove_constref
 		typename std::remove_reference<T>::type
 			>::type type;
 };
+
+// like C++14 style
+template<class T>
+using remove_constref_t = typename remove_constref<T>::type;
 
 }
 

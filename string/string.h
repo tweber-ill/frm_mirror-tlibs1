@@ -407,8 +407,8 @@ void get_tokens(const t_str& str, const t_str& strDelim, t_cont& vecRet)
 	typename boost::tokenizer<boost::char_separator<t_char> >::iterator iter;
 	for(iter=tok.begin(); iter!=tok.end(); ++iter)
 	{
-		T t = _str_to_var_impl<T, t_str, !std::is_fundamental<T>::value>()(*iter);
-		vecRet.push_back(std::move(t));
+		vecRet.emplace_back(
+			_str_to_var_impl<T, t_str, !std::is_fundamental<T>::value>()(*iter));
 	}
 }
 
@@ -437,8 +437,8 @@ void get_tokens_seq(const t_str& str, const t_str& strDelim, t_cont<T>& vecRet,
 
 	for(const t_str& strTok : vecStr)
 	{
-		T t = _str_to_var_impl<T, t_str, !std::is_fundamental<T>::value>()(strTok);
-		vecRet.push_back(std::move(t));
+		vecRet.emplace_back(
+			_str_to_var_impl<T, t_str, !std::is_fundamental<T>::value>()(strTok));
 	}
 }
 #endif

@@ -11,11 +11,11 @@
 #include "math/math.h"
 #include "helper/log.h"
 
-template<typename T> typename tl::remove_constref<T>::type plus_op(T a, T b) { return a+b; }
-template<typename T> typename tl::remove_constref<T>::type minus_op(T a, T b) { return a-b; }
-template<typename T> typename tl::remove_constref<T>::type mult_op(T a, T b) { return a*b; }
-template<typename T> typename tl::remove_constref<T>::type div_op(T a, T b) { return a/b; }
-template<typename T> typename tl::remove_constref<T>::type mod_op(T a, T b) { return a%b; }
+template<typename T> tl::remove_constref_t<T> plus_op(T a, T b) { return a+b; }
+template<typename T> tl::remove_constref_t<T> minus_op(T a, T b) { return a-b; }
+template<typename T> tl::remove_constref_t<T> mult_op(T a, T b) { return a*b; }
+template<typename T> tl::remove_constref_t<T> div_op(T a, T b) { return a/b; }
+template<typename T> tl::remove_constref_t<T> mod_op(T a, T b) { return a%b; }
 template<> t_real mod_op(t_real a, t_real b) { return ::fmod(a,b); }
 
 template<typename T> bool log_or_op(T a, T b) { return a||b; }
