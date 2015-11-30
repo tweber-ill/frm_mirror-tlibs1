@@ -247,33 +247,77 @@ ublas::matrix<T> Lattice<T>::GetMetric() const
 }
 
 
+// -----------------------------------------------------------------------------
+
+/**
+ * B matrix converts rlu to 1/A
+ */
+template<typename T=double>
+ublas::matrix<T> get_B(const Lattice<T>& lattice, bool bIsRealLattice=1)
+{
+	using t_mat = ublas::matrix<T>;
+
+	t_mat matB;
+	if(bIsRealLattice)
+		matB = lattice.GetRecip()/*.GetAligned()*/.GetMetric();
+	else
+		matB = lattice/*.GetAligned()*/.GetMetric();
+
+	return matB;
+}
+
+
+/**
+ * U matrix expresses the coordinates in the basis of the scattering plane
+ */
+template<typename T=double>
+ublas::matrix<T> get_U(const ublas::vector<T>& _vec1, const ublas::vector<T>& _vec2,
+	const ublas::matrix<T>* pmatB=nullptr)
+{
+	using t_vec = ublas::vector<T>;
+	using t_mat = ublas::matrix<T>;
+
+	t_vec vec1;
+	t_vec vec2;
+
+	if(pmatB)
+	{
+		// in 1/A
+		vec1 = ublas::prod(*pmatB, _vec1);
+		vec2 = ublas::prod(*pmatB, _vec2);
+	}
+	else
+	{
+		// in rlu
+		vec1 = _vec1;
+		vec2 = _vec2;
+	}
+
+	// U: scattering plane coordinate system
+	t_mat matU = row_matrix(get_ortho_rhs({vec1, vec2}));
+	return matU;
+}
+
+
 /**
  * UB matrix converts rlu to 1/A and expresses it in the scattering plane coords:
- * Q = UB*hkl
+ * Q = U*B*hkl
  */
 template<typename T=double>
 ublas::matrix<T> get_UB(const Lattice<T>& lattice_real,
 	const ublas::vector<T>& _vec1, const ublas::vector<T>& _vec2)
 {
-	using t_vec = ublas::vector<T>;
 	using t_mat = ublas::matrix<T>;
 
-	// B: rlu to 1/A
-	t_mat matB = lattice_real.GetRecip()/*.GetAligned()*/.GetMetric();
+	t_mat matB = get_B(lattice_real, 1);		// rlu to 1/A
+	t_mat matU = get_U(_vec1, _vec2, &matB);	// scattering in 1/A
 
-	// convert scattering plane from rlu to 1/A
-	t_vec vec1 = ublas::prod(matB, _vec1);
-	t_vec vec2 = ublas::prod(matB, _vec2);
-
-	// U: scattering plane coordinate system
-	t_mat matU = row_matrix(get_ortho_rhs({vec1, vec2}));
 	t_mat matUB = ublas::prod(matU, matB);
-
-//	std::cout << "U = " << matU << std::endl;
-//	std::cout << "B = " << matB << std::endl;
-//	std::cout << "UB = " << matUB << std::endl;
 	return matUB;
 }
+
+// -----------------------------------------------------------------------------
+
 
 // distance for point to be considered inside scattering plane
 template<typename T> constexpr T get_plane_dist_tolerance() { return T(1e-6); }
