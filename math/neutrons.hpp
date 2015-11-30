@@ -750,6 +750,31 @@ t_length_inverse<Sys, Y> macro_xsect(const t_area<Sys, Y>& xsect,
 	return xsect * Y(iNumAtoms) / volUC;
 }
 
+
+
+// --------------------------------------------------------------------------------
+
+// thin lens equation: 1/f = 1/lenB + 1/lenA
+template<class Sys, class Y=double>
+t_length<Sys, Y> focal_len(const t_length<Sys, Y>& lenBefore, const t_length<Sys, Y>& lenAfter)
+{
+	const t_length_inverse<Sys, Y> f_inv = Y(1)/lenBefore + Y(1)/lenAfter;
+	return Y(1) / f_inv;
+}
+
+// optimal mono/ana curvature, see e.g. Monochromator_curved.comp in McStas
+template<class Sys, class Y=double>
+t_length<Sys, Y> foc_curv(const t_length<Sys, Y>& lenBefore, const t_length<Sys, Y>& lenAfter,
+	const t_angle<Sys, Y>& tt, bool bVert)
+{
+	const t_length<Sys, Y> f = focal_len<Sys, Y>(lenBefore, lenAfter);
+	const auto s = units::abs(units::sin(Y(0.5)*tt));
+
+	const t_length<Sys, Y> curv = bVert ? Y(2)*f*s : Y(2)*f/s;
+	return curv;
+}
+
+
 }
 
 #endif
