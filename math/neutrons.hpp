@@ -85,6 +85,7 @@ typedef units::quantity<units::si::energy> energy;
 typedef units::quantity<units::si::momentum> momentum;
 typedef units::quantity<units::si::velocity> velocity;
 typedef units::quantity<units::si::length> length;
+typedef decltype(1./length()) inv_length;
 typedef units::quantity<units::si::area> area;
 typedef units::quantity<units::si::time> time;
 typedef units::quantity<units::si::magnetic_flux_density> flux;
@@ -118,6 +119,7 @@ static const time second = seconds;
 static const energy meV = one_meV;
 static const flux tesla = teslas;
 static const area barn = barns;
+
 
 /*
 template<class T=double> T KSQ2E = T((co::hbar*co::hbar / (T(2)*co::m_n)) / one_meV / (angstrom*angstrom));
