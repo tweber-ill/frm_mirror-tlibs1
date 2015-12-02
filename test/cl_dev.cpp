@@ -1,4 +1,4 @@
-// gcc -o cl_dev cl_dev.cpp ../cl/cl.cpp -std=c++11 -lstdc++ -lOpenCL
+// gcc -o cl_dev cl_dev.cpp -std=c++11 -lOpenCL -lstdc++
 
 #include "../cl/cl.h"
 #include <iostream>
@@ -7,7 +7,7 @@ int main()
 {
 	cl::Platform plat;
 	cl::Device dev;
-	if(!tl::get_best_cl_dev(plat, dev, 1))
+	if(!tl::get_best_cl_dev<float>(plat, dev))
 	{
 		std::cerr << "Cannot get devices." << std::endl;
 		return -1;
