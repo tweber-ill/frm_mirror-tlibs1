@@ -14,6 +14,8 @@
 #include <complex>
 #include <vector>
 #include <limits>
+#include <boost/math/special_functions/spherical_harmonic.hpp>
+
 
 #ifndef M_PI
 	#define M_PI (3.141592653589793238462643383279502884197169)
@@ -282,6 +284,13 @@ T voigt_model(T x, T x0, T sigma, T gamma, T amp, T offs)
 
 #endif
 
+
+// wrapper for boost's Y function
+template<class T=double>
+std::complex<T> Ynm(int l /*0..i*/, int m /*-l..l*/, T th /*0..pi*/, T ph /*0..2pi*/)
+{
+	return boost::math::spherical_harmonic<T,T>(l,m, th, ph);
+}
 
 }
 
