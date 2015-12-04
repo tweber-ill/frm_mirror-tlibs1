@@ -287,7 +287,7 @@ T voigt_model(T x, T x0, T sigma, T gamma, T amp, T offs)
 
 // wrapper for boost's Y function
 template<class T=double>
-std::complex<T> Ynm(int l /*0..i*/, int m /*-l..l*/, T th /*0..pi*/, T ph /*0..2pi*/)
+std::complex<T> Ylm(int l /*0..i*/, int m /*-l..l*/, T th /*0..pi*/, T ph /*0..2pi*/)
 {
 	return boost::math::spherical_harmonic<T,T>(l,m, th, ph);
 }

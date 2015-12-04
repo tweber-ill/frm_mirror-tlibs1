@@ -12,6 +12,8 @@
 #include <iostream>
 #include <sstream>
 #include <mutex>
+#include <utility>
+
 
 namespace tl {
 
@@ -64,27 +66,27 @@ public:
 	void AddOstr(std::ostream* pOstr);
 
 	template<typename Arg>
-	void operator()(const Arg& arg)
+	void operator()(Arg&& arg)
 	{
 		if(!m_bEnabled) return;
 
 		inc_depth();
 
 		for(std::ostream* pOstr : m_vecOstrs)
-			(*pOstr) << arg;
+			(*pOstr) << std::forward<Arg>(arg);
 
 		dec_depth();
 	}
 
 	template<typename Arg, typename... Args>
-	void operator()(const Arg& arg, Args... args)
+	void operator()(Arg&& arg, Args&&... args)
 	{
 		if(!m_bEnabled) return;
 
 		inc_depth();
 
-		(*this)(arg);
-		(*this)(args...);
+		(*this)(std::forward<Arg>(arg));
+		(*this)(std::forward<Args>(args)...);
 
 		dec_depth();
 	}

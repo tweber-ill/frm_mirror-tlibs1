@@ -21,7 +21,7 @@ int main()
 	for(double th=0; th<M_PI; th+=M_PI/double(N))
 	for(double ph=0; ph<2.*M_PI; ph+=2.*M_PI/double(N))
 	{
-		std::complex<double> c = tl::Ynm<double>(l,m,th,ph);
+		std::complex<double> c = tl::Ylm<double>(l,m,th,ph);
 
 		ofstr << std::setw(16) << th << std::setw(16) << ph;
 		ofstr << std::setw(16) << c.real() << std::setw(16) << c.imag();
