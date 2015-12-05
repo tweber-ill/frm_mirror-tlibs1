@@ -8,6 +8,7 @@
 #ifndef __TLIBS_THREAD_H__
 #define __TLIBS_THREAD_H__
 
+
 #include <future>
 #include <thread>
 #include <mutex>
@@ -15,8 +16,8 @@
 #include <functional>
 #include <algorithm>
 #include <type_traits>
-#include <condition_variable>
-//#include <iostream>
+#include <memory>
+
 
 namespace tl {
 
@@ -29,24 +30,25 @@ class ThreadPool
 		using t_task = std::list<std::packaged_task<t_ret()>>;
 
 	protected:
-		std::list<std::thread*> m_lstThreads;
+		std::list<std::unique_ptr<std::thread>> m_lstThreads;
+
 		t_task m_lstTasks;
 		t_fut m_lstFutures;
 
-		mutable std::mutex m_mtx, m_mtxStart;
-		std::condition_variable m_signalStart;
-		bool m_bStart = 0;
+		mutable std::mutex m_mtx;
+
+		std::promise<void> m_signalStartIn;
+		std::future<void> m_signalStartOut = std::move(m_signalStartIn.get_future());
 
 	public:
 		ThreadPool(unsigned int iNumThreads = std::thread::hardware_concurrency())
 		{
 			for(unsigned int i=0; i<iNumThreads; ++i)
 			{
-				m_lstThreads.push_back(new std::thread([this]()
+				m_lstThreads.emplace_back(
+				std::unique_ptr<std::thread>(new std::thread([this]()
 				{
-					std::unique_lock<std::mutex> lock(m_mtxStart);
-					m_signalStart.wait(lock, [this]()->bool { return m_bStart; });
-					lock.unlock();
+					m_signalStartOut.wait();
 
 					while(1)
 					{
@@ -55,46 +57,36 @@ class ThreadPool
 						{
 							std::packaged_task<t_ret()> task = std::move(m_lstTasks.front());
 							m_lstTasks.pop_front();
-							lock0.unlock();
 
+							lock0.unlock();
 							task();
 						}
 						else
 							break;
 					}
-				}));
+				})));
 			}
 		}
 
 		virtual ~ThreadPool()
 		{
 			JoinAll();
-
-			std::for_each(m_lstThreads.begin(), m_lstThreads.end(),
-				[](std::thread* pThread)
-				{
-					if(pThread)
-						delete pThread;
-				});
-
 			m_lstThreads.clear();
 		}
 
-		void AddTask(const std::function<t_func>& fkt)
+		void AddTask(const std::function<t_ret()>& fkt)
 		{
 			std::packaged_task<t_ret()> task(fkt);
 			std::future<t_ret> fut = task.get_future();
 
 			std::lock_guard<std::mutex> lock(m_mtx);
-			m_lstTasks.push_back(std::move(task));
-			m_lstFutures.push_back(std::move(fut));
+			m_lstTasks.emplace_back(std::move(task));
+			m_lstFutures.emplace_back(std::move(fut));
 		}
 
 		void StartTasks()
 		{
-			std::lock_guard<std::mutex> lock(m_mtxStart);
-			m_bStart = 1;
-			m_signalStart.notify_all();
+			m_signalStartIn.set_value();
 		}
 
 		t_fut& GetFutures() { return m_lstFutures; }
@@ -103,7 +95,7 @@ class ThreadPool
 		void JoinAll()
 		{
 			std::for_each(m_lstThreads.begin(), m_lstThreads.end(),
-				[](std::thread* pThread)
+				[](std::unique_ptr<std::thread>& pThread)
 				{
 					if(pThread)
 						pThread->join();
