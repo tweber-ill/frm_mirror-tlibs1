@@ -25,6 +25,7 @@
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/numeric/ublas/exception.hpp>
 
+
 namespace tl {
 
 namespace ublas = boost::numeric::ublas;
@@ -251,9 +252,22 @@ matrix_type rotation_matrix_2d(typename matrix_type::value_type angle)
 	}
 
 	return make_mat<matrix_type>
-				({	{c, -s},
-					{s,  c}});
+	({	{c, -s},
+		{s,  c}});
 }
+
+
+/**
+ * generates points in an arc defined by vec1 and vec2 at an angle phi around vec1
+ */
+template<class t_mat=ublas::matrix<double>, class t_vec=ublas::vector<double>>
+t_vec arc(const t_vec& vec1, const t_vec& vec2, tl::underlying_value_type_t<t_vec> phi)
+{
+	using t_real = tl::underlying_value_type_t<t_vec>;
+
+	return std::cos(phi)*vec1 + std::sin(phi)*vec2;
+}
+
 
 template<class matrix_type=ublas::matrix<double>>
 matrix_type rotation_matrix_3d_x(typename matrix_type::value_type angle)
