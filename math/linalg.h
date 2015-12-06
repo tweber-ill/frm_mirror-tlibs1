@@ -1340,6 +1340,161 @@ t_mat norm_col_vecs(const t_mat& M)
 	return N;
 }
 
+template<class t_mat=ublas::matrix<double>, class t_real=underlying_value_type_t<t_mat>>
+bool is_symmetric(const t_mat& mat, t_real eps=std::numeric_limits<t_real>::epsilon())
+{
+	if(mat.size1() != mat.size2())
+		return false;
+
+	for(std::size_t i=0; i<mat.size1(); ++i)
+		for(std::size_t j=i+1; i<mat.size2(); ++i)
+			if(!float_equal(mat(i,j), mat(j,i), eps))
+				return false;
+
+	return true;
+}
+
+
+// -----------------------------------------------------------------------------
+template<class T, LinalgType ty=get_linalg_type<T>::value>
+struct apply_fkt_impl
+{
+	using value_type = underlying_value_type_t<T>;
+
+	T operator()(T, const std::function<value_type(value_type)>& fkt) const
+	{
+		throw Err("No implementation of apply_fkt!");
+	}
+};
+
+template<class T>
+struct apply_fkt_impl<T, LinalgType::REAL>
+{
+	T operator()(T t, const std::function<T(T)>& fkt) const
+	{
+		return fkt(t);
+	}
+};
+
+template<class t_vec>
+struct apply_fkt_impl<t_vec, LinalgType::VECTOR>
+{
+	using value_type = underlying_value_type_t<t_vec>;
+
+	t_vec operator()(const t_vec& vec, const std::function<value_type(value_type)>& fkt) const
+	{
+		t_vec v;
+		v.resize(vec.size());
+
+		for(std::size_t i=0; i<vec.size(); ++i)
+			v[i] = fkt(vec[i]);
+
+		return v;
+	}
+};
+
+template<class t_mat>
+struct apply_fkt_impl<t_mat, LinalgType::MATRIX>
+{
+	using value_type = underlying_value_type_t<t_mat>;
+
+	t_mat operator()(const t_mat& mat, const std::function<value_type(value_type)>& fkt) const
+	{
+		t_mat m;
+		m.resize(mat.size1(), mat.size2());
+
+		for(std::size_t i=0; i<mat.size1(); ++i)
+			for(std::size_t j=0; j<mat.size2(); ++j)
+				m(i,j) = fkt(mat(i,j));
+
+		return m;
+	}
+};
+
+template<class T, class t_val=underlying_value_type_t<T>>
+T apply_fkt(const T& t, const std::function<t_val(t_val)>& fkt)
+{
+	apply_fkt_impl<T> impl;
+	return impl(t, fkt);
+}
+// -----------------------------------------------------------------------------
+
+
+template<class T, LinalgType ty=get_linalg_type<T>::value>
+struct get_minmax_impl
+{
+	using value_type = underlying_value_type_t<T>;
+
+	std::pair<value_type, value_type>
+	operator()(T) const
+	{
+		throw Err("No implementation of get_minmax!");
+	}
+};
+
+template<class T>
+struct get_minmax_impl<T, LinalgType::REAL>
+{
+	std::pair<T, T>
+	operator()(T t) const
+	{
+		return std::pair<T,T>(t,t);
+	}
+};
+
+template<class t_vec>
+struct get_minmax_impl<t_vec, LinalgType::VECTOR>
+{
+	using t_val = underlying_value_type_t<t_vec>;
+
+	std::pair<t_val, t_val>
+	operator()(const t_vec& vec) const
+	{
+		t_val tmin = std::numeric_limits<t_val>::max();
+		t_val tmax = -tmin;
+
+		for(std::size_t i=0; i<vec.size(); ++i)
+		{
+			if(vec[i] < tmin) tmin = vec[i];
+			if(vec[i] > tmax) tmax = vec[i];
+		}
+
+		return std::pair<t_val, t_val>(tmin, tmax);
+	}
+};
+
+template<class t_mat>
+struct get_minmax_impl<t_mat, LinalgType::MATRIX>
+{
+	using t_val = underlying_value_type_t<t_mat>;
+
+	std::pair<t_val, t_val>
+	operator()(const t_mat& mat) const
+	{
+		t_val tmin = std::numeric_limits<t_val>::max();
+		t_val tmax = -tmin;
+
+		for(std::size_t i=0; i<mat.size1(); ++i)
+			for(std::size_t j=0; j<mat.size2(); ++j)
+			{
+				if(mat(i,j) < tmin) tmin = mat(i,j);
+				if(mat(i,j) > tmax) tmax = mat(i,j);
+			}
+
+		return std::pair<t_val, t_val>(tmin, tmax);
+	}
+};
+
+template<class T>
+std::pair<underlying_value_type_t<T>, underlying_value_type_t<T>>
+get_minmax(const T& t)
+{
+	get_minmax_impl<T> impl;
+	return impl(t);
+}
+// -----------------------------------------------------------------------------
+
+
 // ! for large matrices use eigenvec_sym from linalg2.h !
 template<class t_mat = ublas::matrix<double>,
 	class t_vec = ublas::vector<typename t_mat::value_type>,
@@ -1351,6 +1506,12 @@ bool eigenvec_sym_simple(const t_mat& mat, std::vector<t_vec>& evecs, std::vecto
 		log_err("Matrix ", mat, " is not square.");
 		return false;
 	}
+
+//#ifndef NDEBUG
+	t_mat matAbs = apply_fkt(mat, std::function<T(T)>((T(*)(T))std::abs));
+	T dEps = get_minmax(matAbs).second / 100.;	// 1% accuracy
+	if(!tl::is_symmetric(mat, dEps)) log_warn("Matrix ", mat, " is not symmetric.");
+//#endif
 
 	const std::size_t n = mat.size1();
 	t_mat I = ublas::identity_matrix<T>(n);
@@ -1430,17 +1591,17 @@ void sort_eigenvecs(std::vector<ublas::vector<T> >& evecs,
 
 
 	std::sort(myevecs.begin(), myevecs.end(),
-			[&](const Evec& evec1, const Evec& evec2) -> bool
-			{
-				bool b;
-				if(pEvalFkt)
-					b = pEvalFkt(evec1.val) < pEvalFkt(evec2.val);
-				else
-					b = evec1.val < evec2.val;
+		[&](const Evec& evec1, const Evec& evec2) -> bool
+		{
+			bool b;
+			if(pEvalFkt)
+				b = pEvalFkt(evec1.val) < pEvalFkt(evec2.val);
+			else
+				b = evec1.val < evec2.val;
 
-				if(bOrder) b = !b;
-				return b;
-			});
+			if(bOrder) b = !b;
+			return b;
+		});
 
 
 	for(unsigned int i=0; i<evecs.size(); ++i)

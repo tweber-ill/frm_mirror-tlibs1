@@ -539,7 +539,7 @@ public:
 	virtual ~QuadEllipsoid() {}
 
 	// only valid in principal axis system
-	T GetRadius(unsigned int i) const { return 1./std::sqrt(this->m_Q(i,i)); }
+	T GetRadius(unsigned int i) const { return 1./std::sqrt(std::abs(this->m_Q(i,i))); }
 	T GetVolume() const { return get_ellipsoid_volume(this->m_Q); }
 };
 

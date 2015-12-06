@@ -71,7 +71,8 @@ enum class LinalgType : short
 	UNKNOWN,
 	VECTOR,
 	MATRIX,
-	QUATERNION
+	QUATERNION,
+	REAL
 };
 
 template<LinalgType val>  struct linalg_type { static constexpr LinalgType value = val; };
@@ -80,6 +81,8 @@ template<class> struct get_linalg_type : linalg_type<LinalgType::UNKNOWN> {};
 template<class... PARAMS> struct get_linalg_type<boost::numeric::ublas::vector<PARAMS...>> : linalg_type<LinalgType::VECTOR> {};
 template<class... PARAMS> struct get_linalg_type<boost::numeric::ublas::matrix<PARAMS...>> : linalg_type<LinalgType::MATRIX> {};
 template<class... PARAMS> struct get_linalg_type<boost::math::quaternion<PARAMS...>> : linalg_type<LinalgType::QUATERNION> {};
+template<> struct get_linalg_type<double> : linalg_type<LinalgType::REAL> {};
+template<> struct get_linalg_type<float> : linalg_type<LinalgType::REAL> {};
 // -----------------------------------------------------------------------------
 
 
