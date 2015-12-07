@@ -135,12 +135,12 @@ T lerp(const T& a, const T& b, REAL val)
 
 
 template<typename T=double, typename REAL=double>
-std::vector<T> linspace(const T& tmin, const T& tmax, unsigned int iNum)
+std::vector<T> linspace(const T& tmin, const T& tmax, std::size_t iNum)
 {
 	std::vector<T> vec;
 	vec.reserve(iNum);
 
-	for(unsigned int i=0; i<iNum; ++i)
+	for(std::size_t i=0; i<iNum; ++i)
 		vec.push_back(REAL(i)*(tmax-tmin)/REAL(iNum-1) + tmin);
 
 	return vec;

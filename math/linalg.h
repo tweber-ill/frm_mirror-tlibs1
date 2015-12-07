@@ -1417,6 +1417,13 @@ T apply_fkt(const T& t, const std::function<t_val(t_val)>& fkt)
 	apply_fkt_impl<T> impl;
 	return impl(t, fkt);
 }
+
+template<class T, class t_val=underlying_value_type_t<T>>
+inline T apply_fkt(const T& t, t_val(*pfkt)(t_val))
+{
+	std::function<t_val(t_val)> fkt(pfkt);
+	return apply_fkt<T, t_val>(t, fkt);
+}
 // -----------------------------------------------------------------------------
 
 

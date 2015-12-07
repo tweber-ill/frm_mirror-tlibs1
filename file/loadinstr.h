@@ -21,15 +21,16 @@ namespace tl{
 class FileInstr
 {
 	public:
+		typedef double t_real;
+
 		typedef std::unordered_map<std::string, std::string> t_mapParams;
 		typedef std::vector<std::string> t_vecColNames;
-		typedef std::vector<double> t_vecVals;
+		typedef std::vector<t_real> t_vecVals;
 		typedef std::vector<t_vecVals> t_vecDat;
 
 	protected:
-		std::array<double, 5> GetScanHKLKiKf(const char* pcH, const char* pcK,
-											const char* pcL, const char* pcE,
-											std::size_t i) const;
+		std::array<t_real, 5> GetScanHKLKiKf(const char* pcH, const char* pcK,
+			const char* pcL, const char* pcE, std::size_t i) const;
 
 	public:
 		FileInstr() = default;
@@ -37,22 +38,22 @@ class FileInstr
 
 		virtual bool Load(const char* pcFile) = 0;
 
-		virtual std::array<double, 3> GetSampleLattice() const = 0;
-		virtual std::array<double, 3> GetSampleAngles() const = 0;
-		virtual std::array<double, 2> GetMonoAnaD() const = 0;
+		virtual std::array<t_real, 3> GetSampleLattice() const = 0;
+		virtual std::array<t_real, 3> GetSampleAngles() const = 0;
+		virtual std::array<t_real, 2> GetMonoAnaD() const = 0;
 
 		virtual std::array<bool, 3> GetScatterSenses() const = 0;
-		virtual std::array<double, 3> GetScatterPlane0() const = 0;
-		virtual std::array<double, 3> GetScatterPlane1() const = 0;
+		virtual std::array<t_real, 3> GetScatterPlane0() const = 0;
+		virtual std::array<t_real, 3> GetScatterPlane1() const = 0;
 
-		virtual double GetKFix() const = 0;
+		virtual t_real GetKFix() const = 0;
 		virtual bool IsKiFixed() const = 0;
 
 		virtual const t_vecVals& GetCol(const std::string& strName) const = 0;
 		virtual t_vecVals& GetCol(const std::string& strName) = 0;
 
 		virtual std::size_t GetScanCount() const = 0;
-		virtual std::array<double, 5> GetScanHKLKiKf(std::size_t i) const = 0;
+		virtual std::array<t_real, 5> GetScanHKLKiKf(std::size_t i) const = 0;
 		virtual bool MergeWith(const FileInstr* pDat) = 0;
 
 		virtual std::string GetTitle() const = 0;
@@ -83,7 +84,7 @@ class FilePsi : public FileInstr
 {
 	public:
 		// internal parameters in m_mapParams
-		typedef std::map<std::string, double> t_mapIParams;
+		typedef std::map<std::string, t_real> t_mapIParams;
 
 	protected:
 		t_mapParams m_mapParams;
@@ -112,22 +113,22 @@ class FilePsi : public FileInstr
 		virtual t_vecVals& GetCol(const std::string& strName) override;
 
 	public:
-		virtual std::array<double, 3> GetSampleLattice() const override;
-		virtual std::array<double, 3> GetSampleAngles() const override;
-		virtual std::array<double, 2> GetMonoAnaD() const override;
+		virtual std::array<t_real, 3> GetSampleLattice() const override;
+		virtual std::array<t_real, 3> GetSampleAngles() const override;
+		virtual std::array<t_real, 2> GetMonoAnaD() const override;
 
 		virtual std::array<bool, 3> GetScatterSenses() const override;
-		virtual std::array<double, 3> GetScatterPlane0() const override;
-		virtual std::array<double, 3> GetScatterPlane1() const override;
+		virtual std::array<t_real, 3> GetScatterPlane0() const override;
+		virtual std::array<t_real, 3> GetScatterPlane1() const override;
 
-		virtual double GetKFix() const override;
+		virtual t_real GetKFix() const override;
 		virtual bool IsKiFixed() const override;
 
-		std::array<double, 4> GetPosHKLE() const;	// zero pos.
-		std::array<double, 4> GetDeltaHKLE() const;	// scan steps
+		std::array<t_real, 4> GetPosHKLE() const;	// zero pos.
+		std::array<t_real, 4> GetDeltaHKLE() const;	// scan steps
 
 		virtual std::size_t GetScanCount() const override;
-		virtual std::array<double, 5> GetScanHKLKiKf(std::size_t i) const override;
+		virtual std::array<t_real, 5> GetScanHKLKiKf(std::size_t i) const override;
 		virtual bool MergeWith(const FileInstr* pDat) override;
 
 		virtual std::string GetTitle() const override;
@@ -169,19 +170,19 @@ class FileFrm : public FileInstr
 	public:
 		virtual bool Load(const char* pcFile) override;
 
-		virtual std::array<double, 3> GetSampleLattice() const override;
-		virtual std::array<double, 3> GetSampleAngles() const override;
-		virtual std::array<double, 2> GetMonoAnaD() const override;
+		virtual std::array<t_real, 3> GetSampleLattice() const override;
+		virtual std::array<t_real, 3> GetSampleAngles() const override;
+		virtual std::array<t_real, 2> GetMonoAnaD() const override;
 
 		virtual std::array<bool, 3> GetScatterSenses() const override;
-		virtual std::array<double, 3> GetScatterPlane0() const override;
-		virtual std::array<double, 3> GetScatterPlane1() const override;
+		virtual std::array<t_real, 3> GetScatterPlane0() const override;
+		virtual std::array<t_real, 3> GetScatterPlane1() const override;
 
-		virtual double GetKFix() const override;
+		virtual t_real GetKFix() const override;
 		virtual bool IsKiFixed() const override;
 
 		virtual std::size_t GetScanCount() const override;
-		virtual std::array<double, 5> GetScanHKLKiKf(std::size_t i) const override;
+		virtual std::array<t_real, 5> GetScanHKLKiKf(std::size_t i) const override;
 		virtual bool MergeWith(const FileInstr* pDat) override;
 
 		virtual const t_vecVals& GetCol(const std::string& strName) const override;
@@ -226,19 +227,19 @@ class FileMacs : public FileInstr
 	public:
 		virtual bool Load(const char* pcFile) override;
 
-		virtual std::array<double, 3> GetSampleLattice() const override;
-		virtual std::array<double, 3> GetSampleAngles() const override;
-		virtual std::array<double, 2> GetMonoAnaD() const override;
+		virtual std::array<t_real, 3> GetSampleLattice() const override;
+		virtual std::array<t_real, 3> GetSampleAngles() const override;
+		virtual std::array<t_real, 2> GetMonoAnaD() const override;
 
 		virtual std::array<bool, 3> GetScatterSenses() const override;
-		virtual std::array<double, 3> GetScatterPlane0() const override;
-		virtual std::array<double, 3> GetScatterPlane1() const override;
+		virtual std::array<t_real, 3> GetScatterPlane0() const override;
+		virtual std::array<t_real, 3> GetScatterPlane1() const override;
 
-		virtual double GetKFix() const override;
+		virtual t_real GetKFix() const override;
 		virtual bool IsKiFixed() const override;
 
 		virtual std::size_t GetScanCount() const override;
-		virtual std::array<double, 5> GetScanHKLKiKf(std::size_t i) const override;
+		virtual std::array<t_real, 5> GetScanHKLKiKf(std::size_t i) const override;
 		virtual bool MergeWith(const FileInstr* pDat) override;
 
 		virtual const t_vecVals& GetCol(const std::string& strName) const override;
@@ -283,19 +284,19 @@ class FileTrisp : public FileInstr
 	public:
 		virtual bool Load(const char* pcFile) override;
 
-		virtual std::array<double, 3> GetSampleLattice() const override;
-		virtual std::array<double, 3> GetSampleAngles() const override;
-		virtual std::array<double, 2> GetMonoAnaD() const override;
+		virtual std::array<t_real, 3> GetSampleLattice() const override;
+		virtual std::array<t_real, 3> GetSampleAngles() const override;
+		virtual std::array<t_real, 2> GetMonoAnaD() const override;
 
 		virtual std::array<bool, 3> GetScatterSenses() const override;
-		virtual std::array<double, 3> GetScatterPlane0() const override;
-		virtual std::array<double, 3> GetScatterPlane1() const override;
+		virtual std::array<t_real, 3> GetScatterPlane0() const override;
+		virtual std::array<t_real, 3> GetScatterPlane1() const override;
 
-		virtual double GetKFix() const override;
+		virtual t_real GetKFix() const override;
 		virtual bool IsKiFixed() const override;
 
 		virtual std::size_t GetScanCount() const override;
-		virtual std::array<double, 5> GetScanHKLKiKf(std::size_t i) const override;
+		virtual std::array<t_real, 5> GetScanHKLKiKf(std::size_t i) const override;
 		virtual bool MergeWith(const FileInstr* pDat) override;
 
 		virtual const t_vecVals& GetCol(const std::string& strName) const override;

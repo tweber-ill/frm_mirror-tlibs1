@@ -91,10 +91,8 @@ t_freq<Sys,Y> E2omega(const t_energy<Sys,Y>& en)
 template<class Sys, class Y>
 t_energy<Sys,Y> k2E(const t_wavenumber<Sys,Y>& k)
 {
-	t_momentum<Sys,Y>
-		p = co::hbar*k;
-	t_energy<Sys,Y>
-		E = p*p / (2.*co::m_n);
+	t_momentum<Sys,Y> p = co::hbar*k;
+	t_energy<Sys,Y> E = p*p / (Y(2.)*co::m_n);
 	return E;
 }
 
@@ -173,8 +171,8 @@ t_wavenumber<Sys,Y> kinematic_plane(bool bFixedKi,
 		dE = -dE;
 
 	t_wavenumber<Sys,Y> Q =
-			units::sqrt(2.*co::m_n / co::hbar) *
-			(2*EiEf + dE - 2.*units::cos(twotheta)*units::sqrt(EiEf*(EiEf + dE)));
+		units::sqrt(2.*co::m_n / co::hbar) *
+		(2*EiEf + dE - 2.*units::cos(twotheta)*units::sqrt(EiEf*(EiEf + dE)));
 
 	return Q;
 }
@@ -197,14 +195,14 @@ t_energy<Sys,Y> kinematic_plane(bool bFixedKi, bool bBranch,
 		dSignFixedKf = -1.;
 
 	auto rt = c*c*c*c * (-EiEf*EiEf)*ctt*ctt
-			+ c*c*c*c*EiEf*EiEf*ctt*ctt*c2tt
-			+ 2.*c*c*c*EiEf*Q*Q*ctt*ctt;
+		+ c*c*c*c*EiEf*EiEf*ctt*ctt*c2tt
+		+ 2.*c*c*c*EiEf*Q*Q*ctt*ctt;
 
 	t_energy<Sys,Y> E =
-			1./(c*c)*(dSignFixedKf*2.*c*c*EiEf*ctt*ctt
-			- dSignFixedKf*2.*c*c*EiEf
-			+ dSign*std::sqrt(2.) * units::sqrt(rt)
-			+ dSignFixedKf*c*Q*Q);
+		1./(c*c)*(dSignFixedKf*2.*c*c*EiEf*ctt*ctt
+		- dSignFixedKf*2.*c*c*EiEf
+		+ dSign*std::sqrt(2.) * units::sqrt(rt)
+		+ dSignFixedKf*c*Q*Q);
 
 	return E;
 }
@@ -379,8 +377,7 @@ template<class Sys, class Y>
 t_energy<Sys,Y> get_energy_transfer(const t_wavenumber<Sys,Y>& ki,
 	const t_wavenumber<Sys,Y>& kf)
 {
-	return co::hbar*co::hbar*ki*ki/(2.*co::m_n)
-			- co::hbar*co::hbar*kf*kf/(2.*co::m_n);
+	return k2E<Sys,Y>(ki) - k2E<Sys,Y>(kf);
 }
 
 

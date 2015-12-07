@@ -83,8 +83,7 @@ FileInstr* FileInstr::LoadInstr(const char* pcFile)
 
 
 std::array<double, 5> FileInstr::GetScanHKLKiKf(const char* pcH, const char* pcK,
-						const char* pcL, const char* pcE,
-						std::size_t i) const
+	const char* pcL, const char* pcE, std::size_t i) const
 {
 	const t_vecVals& vecH = GetCol(pcH);
 	const t_vecVals& vecK = GetCol(pcK);
@@ -1662,7 +1661,7 @@ std::array<double, 3> FileTrisp::GetScatterPlane1() const
 double FileTrisp::GetKFix() const
 {
 	const std::string strKey = IsKiFixed() ? "KI" : "KF";
-	
+
 	t_mapParams::const_iterator iter = m_mapParams.find(strKey);
 	if(iter==m_mapParams.end())
 	{
@@ -1690,9 +1689,9 @@ std::array<double, 5> FileTrisp::GetScanHKLKiKf(std::size_t i) const
 	return FileInstr::GetScanHKLKiKf("QH", "QK", "QL", "E", i);
 }
 
-bool FileTrisp::MergeWith(const FileInstr* pDat) 
-{ 
-	return FileInstr::MergeWith(pDat); 
+bool FileTrisp::MergeWith(const FileInstr* pDat)
+{
+	return FileInstr::MergeWith(pDat);
 }
 
 std::string FileTrisp::GetTitle() const { return ""; }
