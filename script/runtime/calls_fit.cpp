@@ -8,7 +8,7 @@
 #include "lang/types.h"
 #include "string/string.h"
 #include "helper/log.h"
-#include "math/interpolation.h"
+#include "fit/interpolation.h"
 #include "calls_fit.h"
 #include "lang/calls.h"
 #include "lang/node.h"
@@ -19,7 +19,7 @@ template<typename T> using t_stdvec = std::vector<T>;
 // --------------------------------------------------------------------------------
 // fitting
 
-#include "../../math/minuit.h"
+#include "fit/minuit.h"
 #include <algorithm>
 #include <exception>
 

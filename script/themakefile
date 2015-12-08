@@ -149,7 +149,7 @@ obj/flags.o: ../helper/flags.cpp ../helper/flags.h
 	${CC} ${FLAGS} -c -o $@ $<
 obj/log.o: ../helper/log.cpp ../helper/log.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/minuit.o: ../math/minuit.cpp ../math/minuit.h
+obj/minuit.o: ../fit/minuit.cpp ../fit/minuit.h
 	${CC} ${FLAGS} -c -o $@ $<
 obj/linalg2.o: ../math/linalg2.cpp ../math/linalg2.h
 	${CC} ${FLAGS} -c -o $@ $<

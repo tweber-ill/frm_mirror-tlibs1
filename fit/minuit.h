@@ -18,6 +18,7 @@
 
 #include "funcmod.h"
 
+
 namespace tl {
 
 class MinuitFuncModel : public FunctionModel
@@ -74,17 +75,17 @@ class Chi2Function : public ROOT::Minuit2::FCNBase
 
 	public:
 		Chi2Function(const MinuitFuncModel* fkt=0,
-					   unsigned int uiLen=0, const double* px=0,
-					   const double *py=0, const double *pdy=0)
-					: m_pfkt(fkt), m_uiLen(uiLen), m_px(px), m_py(py), m_pdy(pdy)
+			unsigned int uiLen=0, const double* px=0,
+			const double *py=0, const double *pdy=0)
+			: m_pfkt(fkt), m_uiLen(uiLen), m_px(px), m_py(py), m_pdy(pdy)
 		{}
 
 		virtual ~Chi2Function() {}
 
 		double chi2(const std::vector<double>& vecParams) const;
-		virtual double Up() const { return m_dSigma*m_dSigma; }
+		virtual double Up() const override { return m_dSigma*m_dSigma; }
 
-		virtual double operator()(const std::vector<double>& vecParams) const
+		virtual double operator()(const std::vector<double>& vecParams) const override
 		{
 			return chi2(vecParams);
 		}
@@ -92,6 +93,7 @@ class Chi2Function : public ROOT::Minuit2::FCNBase
 		void SetSigma(double dSig) { m_dSigma = dSig; }
 		double GetSigma() const { return m_dSigma; }
 };
+
 
 // in n dimensions
 class Chi2Function_nd : public ROOT::Minuit2::FCNBase
@@ -108,10 +110,9 @@ class Chi2Function_nd : public ROOT::Minuit2::FCNBase
 
 	public:
 		Chi2Function_nd(const MinuitFuncModel_nd* fkt=0,
-					   unsigned int uiLen=0, const double** ppx=0,
-					   const double *py=0, const double *pdy=0)
-					: m_pfkt(fkt), m_uiDim(fkt->GetDim()), m_uiLen(uiLen), 
-					  m_py(py), m_pdy(pdy)
+			unsigned int uiLen=0, const double** ppx=0,
+			const double *py=0, const double *pdy=0)
+			: m_pfkt(fkt), m_uiDim(fkt->GetDim()), m_uiLen(uiLen), m_py(py), m_pdy(pdy)
 		{
 			m_vecpx.resize(m_uiDim);
 
@@ -122,13 +123,13 @@ class Chi2Function_nd : public ROOT::Minuit2::FCNBase
 		virtual ~Chi2Function_nd() {}
 		double chi2(const std::vector<double>& vecParams) const;
 
-		virtual double Up() const
+		virtual double Up() const override
 		{
 			// 1. for chi^2
 			return 1.;
 		}
 
-		virtual double operator()(const std::vector<double>& vecParams) const
+		virtual double operator()(const std::vector<double>& vecParams) const override
 		{
 			return chi2(vecParams);
 		}
@@ -136,4 +137,3 @@ class Chi2Function_nd : public ROOT::Minuit2::FCNBase
 }
 
 #endif
-
