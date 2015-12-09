@@ -40,8 +40,6 @@ class MinuitFuncModel : public FunctionModel
 
 class MinuitFuncModel_nd
 {
-	protected:
-
 	public:
 		virtual ~MinuitFuncModel_nd() {}
 

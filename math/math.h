@@ -198,9 +198,9 @@ std::vector<T> quadratic_solve(T a, T b, T c)
 // -----------------------------------------------------------------------------
 
 
-template<class T, class t_func>
+template<class T, class t_func, class t_iter=T*>
 T chi2(const t_func& func, std::size_t N,
-			const T* x, const T* y, const T* dy)
+	const t_iter x, const t_iter y, const t_iter dy)
 {
 	T tchi2 = T(0);
 
@@ -221,10 +221,11 @@ T chi2(const t_func& func, std::size_t N,
 
 template<class t_vec, class t_func>
 typename t_vec::value_type chi2(const t_func& func,
-			const t_vec& x, const t_vec& y, const t_vec& dy)
+	const t_vec& x, const t_vec& y, const t_vec& dy)
 {
 	using T = typename t_vec::value_type;
-	return chi2<T, t_func>(func, x.size(), x.data(), y.data(), dy.size()?dy.data():nullptr);
+	return chi2<T, t_func, T*>(func, x.size(), x.data(), y.data(),
+		dy.size() ? dy.data() : nullptr);
 }
 
 

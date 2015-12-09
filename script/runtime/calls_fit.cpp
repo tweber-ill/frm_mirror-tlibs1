@@ -259,14 +259,14 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	if(vecSyms.size()<4 || !is_vec(vecSyms[1]) || !is_vec(vecSyms[2]) || !is_vec(vecSyms[3]))
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(runinfo) << "Invalid arguments for fit." << std::endl;
+		ostrErr << linenr(runinfo) << "Invalid arguments for fit.";
 		throw tl::Err(ostrErr.str(),0);
 	}
 
 	if(vecSyms[0]->GetType() != SYMBOL_STRING)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(runinfo) << "Need a fit function name." << std::endl;
+		ostrErr << linenr(runinfo) << "Need a fit function name.";
 		throw tl::Err(ostrErr.str(),0);
 	}
 
@@ -275,15 +275,14 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	if(!pFkt)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(runinfo) << "Invalid function \"" << strFkt << "\"." << std::endl;
+		ostrErr << linenr(runinfo) << "Invalid function \"" << strFkt << "\".";
 		throw tl::Err(ostrErr.str(),0);
 	}
 
 
 	std::vector<t_string> vecParamNames;
 
-	bool bUseParamVec = 0;
-	bool bHasParamMap = 0;
+	bool bUseParamVec = 0, bHasParamMap = 0;
 	if(vecSyms.size()==5 && vecSyms[4]->GetType()==SYMBOL_MAP)
 		bHasParamMap = 1;
 
