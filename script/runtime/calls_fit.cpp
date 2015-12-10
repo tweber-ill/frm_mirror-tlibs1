@@ -453,7 +453,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 
 			ROOT::Minuit2::MnMigrad migrad(chi2fkt, params, 2);
 			ROOT::Minuit2::FunctionMinimum mini = migrad();
-			bValidFit = mini.IsValid() && mini.HasValidParameters();
+			bValidFit = mini.IsValid() && mini.HasValidParameters() && mini.UserState().IsValid();
 
 			for(const t_string& strSym : vecParamNames)
 			{
@@ -475,7 +475,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 
 			ROOT::Minuit2::MnMigrad migrad(chi2fkt, params, 2);
 			ROOT::Minuit2::FunctionMinimum mini = migrad();
-			bValidFit = mini.IsValid() && mini.HasValidParameters();
+			bValidFit = mini.IsValid() && mini.HasValidParameters() && mini.UserState().IsValid();
 
 			minis.push_back(mini);
 		}
@@ -528,7 +528,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 
 			ROOT::Minuit2::MnMigrad migrad(chi2fkt, params, 2);
 			ROOT::Minuit2::FunctionMinimum mini = migrad();
-			bValidFit = mini.IsValid() && mini.HasValidParameters();
+			bValidFit = mini.IsValid() && mini.HasValidParameters() && mini.UserState().IsValid();
 
 			for(unsigned int iStepParam = 0; iStepParam<strStep.length(); ++iStepParam)
 			{
