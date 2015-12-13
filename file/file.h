@@ -11,6 +11,8 @@
 #include <iostream>
 #include <list>
 #include <string>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
 
 
 namespace tl {
@@ -39,7 +41,27 @@ std::streampos get_file_pos(std::basic_istream<t_char>& istr)
 }
 
 
-extern bool dir_exists(const char* pcDir);
+template<typename t_char=char>
+bool dir_exists(const t_char* pcDir)
+{
+	boost::filesystem::path path(pcDir);
+	bool bExists = boost::filesystem::exists(path);
+	bool bIsDir = boost::filesystem::is_directory(path);
+
+	return bExists && bIsDir;
+}
+
+template<typename t_char=char>
+bool file_exists(const t_char* pcDir)
+{
+	boost::filesystem::path path(pcDir);
+	bool bExists = boost::filesystem::exists(path);
+	bool bIsDir = boost::filesystem::is_directory(path);
+	bool bIsFile = boost::filesystem::is_regular_file(path);
+	bool bIsLink = boost::filesystem::is_symlink(path);
+
+	return bExists && (bIsFile || bIsLink) && !bIsDir;
+}
 
 
 // -----------------------------------------------------------------------------

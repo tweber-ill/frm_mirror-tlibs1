@@ -13,32 +13,8 @@
 #include <fcntl.h>
 #include <cstdio>
 
-#ifndef NO_QT
-	#include <QDir>
-#else
-	#include <sys/types.h>
-	#include <dirent.h>
-#endif
-
 
 namespace tl {
-
-bool dir_exists(const char* pcDir)
-{
-#ifndef NO_QT
-	return QDir(pcDir).exists();
-#else
-	DIR* dir = opendir(pcDir);
-	bool bExists = (errno!=ENOENT);
-
-	if(dir) closedir(dir);
-	return bExists;
-#endif
-}
-
-
-// -----------------------------------------------------------------------------
-
 
 TmpFile::TmpFile() : m_strPrefix("tlibs_tmp"), m_iHandle(-1)
 {}

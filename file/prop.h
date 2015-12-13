@@ -75,7 +75,7 @@ public:
 	{
 		std::basic_ifstream<t_ch> ifstr(pcFile);
 		if(!ifstr) return false;
-		
+
 		return Load(ifstr, ty);
 	}
 
@@ -127,16 +127,16 @@ public:
 
 		return bOk;
 	}
-	
+
 	bool Save(const t_ch* pcFile, PropType ty) const
 	{
 		std::basic_ofstream<t_ch> ofstr(pcFile);
 		if(!ofstr) return false;
-		
+
 		Save(ofstr, ty);
 		return true;
 	}
-	
+
 	bool Save(std::basic_ofstream<t_ch>& ofstr, PropType ty) const
 	{
 		#if BOOST_VERSION >= 105700
@@ -179,7 +179,7 @@ public:
 	{
 		t_str strAddr = _strAddr;
 		trim(strAddr);
-		
+
 		if(strAddr.length() == 0)
 		{
 			if(pbOk) *pbOk = 0;
@@ -220,6 +220,14 @@ public:
 		return bOk;
 	}
 
+
+	template<class T = t_str>
+	void Add(T&& tKey, T&& tVal)
+	{
+		prop::string_path<t_str, prop::id_translator<t_str>>
+			path(std::forward<t_str>(tKey), m_chSep);
+		m_prop.add(path, std::forward<t_str>(tVal));
+	}
 };
 
 }
