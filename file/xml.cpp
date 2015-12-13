@@ -38,7 +38,7 @@ bool Xml::Load(const char* pcFile)
 	return true;
 }
 
-std::string Xml::QueryString(const char* pcAdr, const char* pcDef, bool *pbOk)
+std::string Xml::QueryString(const char* pcAdr, const char* pcDef, bool *pbOk) const
 {
 	if(!m_bOK) return pcDef;
 
@@ -72,7 +72,7 @@ std::string Xml::QueryString(const char* pcAdr, const char* pcDef, bool *pbOk)
 	return strOut;
 }
 
-bool Xml::Exists(const char* pcAdr)
+bool Xml::Exists(const char* pcAdr) const
 {
 	bool bOk = 0;
 	std::string strQuery = QueryString(pcAdr, "", &bOk);

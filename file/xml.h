@@ -29,11 +29,11 @@ public:
 
 	bool Load(const char* pcFile);
 
-	std::string QueryString(const char* pcAdr, const char* pcDef, bool *pbOk=0);
-	bool Exists(const char* pcAdr);
+	std::string QueryString(const char* pcAdr, const char* pcDef, bool *pbOk=0) const;
+	bool Exists(const char* pcAdr) const;
 
 	template<typename T>
-	T Query(const char* pcAdr, T tDef, bool *pbOk=0)
+	T Query(const char* pcAdr, T tDef, bool *pbOk=0) const
 	{
 		if(!m_bOK) return tDef;
 
