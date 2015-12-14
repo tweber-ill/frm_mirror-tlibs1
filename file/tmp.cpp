@@ -14,6 +14,10 @@
 #include <fcntl.h>
 #include <cstdio>
 
+#ifndef NO_QT
+	#include <QDir>
+#endif
+
 
 namespace tl {
 
