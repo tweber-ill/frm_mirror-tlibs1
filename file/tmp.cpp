@@ -5,7 +5,8 @@
  * @license GPLv2 or GPLv3
  */
 
-#include "../file/file.h"
+#include "tmp.h"
+#include "file.h"
 #include "../math/rand.h"
 #include "../string/string.h"
 
@@ -91,7 +92,5 @@ void TmpFile::SetPrefix(const char* pcStr)
 	m_strPrefix = pcStr;
 }
 
-
-// -----------------------------------------------------------------------------
 
 }

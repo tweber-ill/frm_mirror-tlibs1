@@ -9,15 +9,12 @@
 #define __TLIB_FILE_HELPER__
 
 #include <iostream>
-#include <list>
 #include <string>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
 
 
 namespace tl {
-
-// -----------------------------------------------------------------------------
 
 template<typename t_char=char>
 std::streampos get_file_size(std::basic_istream<t_char>& istr)
@@ -63,32 +60,6 @@ bool file_exists(const t_char* pcDir)
 	return bExists && (bIsFile || bIsLink) && !bIsDir;
 }
 
-
-// -----------------------------------------------------------------------------
-
-
-class TmpFile
-{
-protected:
-	std::string m_strFile;
-	std::string m_strPrefix;
-	int m_iHandle;
-
-public:
-	TmpFile();
-	virtual ~TmpFile();
-
-	bool open();
-	void close();
-	const std::string& GetFileName() const;
-
-	void SetPrefix(const char* pcStr);
-
-	static int mkstemp(std::string& strFile);
-};
-
-
-// -----------------------------------------------------------------------------
 
 }
 
