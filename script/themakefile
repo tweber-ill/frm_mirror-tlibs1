@@ -25,7 +25,7 @@ LIBS = -L/usr/local/lib
 
 
 # Boost
-LIBS = -lboost_iostreams
+LIBS = -lboost_iostreams -lboost_system -lboost_filesystem
 
 ifeq (${USE_BOOST_REX}, 1)
 	LIBS += -lboost_regex

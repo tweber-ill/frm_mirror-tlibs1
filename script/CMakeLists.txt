@@ -12,7 +12,7 @@ add_custom_command(OUTPUT script.cc tokens.h
 )
 
 
-find_package(Boost REQUIRED COMPONENTS iostreams REQUIRED)
+find_package(Boost REQUIRED COMPONENTS iostreams system filesystem REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Minuit2 REQUIRED)
 
