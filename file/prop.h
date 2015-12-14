@@ -13,6 +13,7 @@
 #include <sstream>
 #include <fstream>
 #include <type_traits>
+#include <map>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
@@ -21,6 +22,8 @@
 #include <boost/property_tree/ini_parser.hpp>
 
 #include "../string/string.h"
+#include "../helper/traits.h"
+#include "../helper/misc.h"
 
 
 namespace tl {
@@ -183,7 +186,7 @@ public:
 		if(strAddr.length() == 0)
 		{
 			if(pbOk) *pbOk = 0;
-			return "";
+			return T();
 		}
 
 		if(strAddr[0] == m_chSep)
@@ -193,7 +196,8 @@ public:
 		try
 		{
 			prop::string_path<t_str, prop::id_translator<t_str>> path(strAddr, m_chSep);
-			tOut = m_prop.template get<T>(path);
+			//tOut = m_prop.template get<T>(path);
+			tOut = tl::str_to_var<T, t_str>(m_prop.template get<t_str>(path));
 		}
 		catch(const prop::ptree_bad_path& ex)
 		{
@@ -203,10 +207,16 @@ public:
 		}
 
 		if(std::is_same<t_str, T>::value)
-			trim(tOut);
+			trim(*(t_str*)&tOut);
 
 		if(pbOk) *pbOk = 1;
 		return tOut;
+	}
+
+	template<typename T>
+	T Query(const t_str& _strAddr, const T def, bool *pbOk=nullptr) const
+	{
+		return Query<T>(_strAddr, &def, pbOk);
 	}
 
 
@@ -221,12 +231,47 @@ public:
 	}
 
 
-	template<class T = t_str>
+	/*template<class T = t_str>
 	void Add(T&& tKey, T&& tVal)
 	{
 		prop::string_path<t_str, prop::id_translator<t_str>>
 			path(std::forward<t_str>(tKey), m_chSep);
-		m_prop.add(path, std::forward<t_str>(tVal));
+		m_prop.add(std::move(path), std::forward<t_str>(tVal));
+	}*/
+
+	template<class T>
+	void Add(const t_str& strKey, T&& tVal)
+	{
+		prop::string_path<t_str, prop::id_translator<t_str>>
+			path(strKey, m_chSep);
+
+		//std::cout << "type: " << get_typename<remove_constref_t<T>>() << std::endl;
+		if(std::is_convertible<T, t_str>::value)
+		{
+			//std::cout << "string: " << tVal << std::endl;
+			m_prop.add(std::move(path), std::forward<T>(tVal));
+		}
+		else
+		{
+			t_str strVal = var_to_str<T, t_str>(tVal);
+			m_prop.add(std::move(path), std::move(strVal));
+		}
+	}
+
+	template<class t_map = std::map<t_str, t_str>>
+	void Add(const t_map& map)
+	{
+		using t_key = typename t_map::key_type;
+		using t_val = typename t_map::mapped_type;
+		using t_pair = typename t_map::value_type;
+
+		for(const t_pair& pair : map)
+		{
+			t_str strKey = var_to_str<t_key, t_str>(pair.first);
+			t_str strVal = var_to_str<t_val, t_str>(pair.second);
+
+			Add<t_str>(std::move(strKey), std::move(strVal));
+		}
 	}
 };
 

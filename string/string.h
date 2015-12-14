@@ -408,7 +408,7 @@ void get_tokens(const t_str& str, const t_str& strDelim, t_cont& vecRet)
 	for(iter=tok.begin(); iter!=tok.end(); ++iter)
 	{
 		vecRet.emplace_back(
-			_str_to_var_impl<T, t_str, !std::is_fundamental<T>::value>()(*iter));
+			_str_to_var_impl<T, t_str, std::is_convertible<T, t_str>::value>()(*iter));
 	}
 }
 
@@ -438,7 +438,7 @@ void get_tokens_seq(const t_str& str, const t_str& strDelim, t_cont<T>& vecRet,
 	for(const t_str& strTok : vecStr)
 	{
 		vecRet.emplace_back(
-			_str_to_var_impl<T, t_str, !std::is_fundamental<T>::value>()(strTok));
+			_str_to_var_impl<T, t_str, std::is_convertible<T, t_str>::value>()(strTok));
 	}
 }
 #endif
@@ -447,12 +447,15 @@ void get_tokens_seq(const t_str& str, const t_str& strDelim, t_cont<T>& vecRet,
 template<typename T, class t_str=std::string>
 T str_to_var(const t_str& str)
 {
-	return _str_to_var_impl<T, t_str, !std::is_fundamental<T>::value>()(str);
+	return _str_to_var_impl<T, t_str, std::is_convertible<T, t_str>::value>()(str);
 }
 
 template<typename T, class t_str=std::string>
 t_str var_to_str(const T& t, std::streamsize iPrec=10, int iGroup=-1)
 {
+	if(std::is_convertible<T, t_str>::value)
+		return *(t_str*)&t;
+
 	typedef typename t_str::value_type t_char;
 
 	std::basic_ostringstream<t_char> ostr;
@@ -477,10 +480,10 @@ t_str var_to_str(const T& t, std::streamsize iPrec=10, int iGroup=-1)
 
 
 	// prevents printing "-0"
-	T t0 = t;
-	if(t0==T(-0)) t0 = T(0);
+	//T t0 = t;
+	//if(t0==T(-0)) t0 = T(0);
 
-	ostr << t0;
+	ostr << t;
 	t_str str = ostr.str();
 
 	if(pSep)

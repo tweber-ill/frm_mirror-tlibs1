@@ -1,5 +1,5 @@
 /*
- * xml helper
+ * xml helper (deprecated, use file/prop.h instead!)
  * @author tweber
  * @date 23-apr-2013
  * @license GPLv2 or GPLv3
