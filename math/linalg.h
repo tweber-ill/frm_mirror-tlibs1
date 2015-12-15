@@ -263,8 +263,7 @@ matrix_type rotation_matrix_2d(typename matrix_type::value_type angle)
 template<class t_mat=ublas::matrix<double>, class t_vec=ublas::vector<double>>
 t_vec arc(const t_vec& vec1, const t_vec& vec2, tl::underlying_value_type_t<t_vec> phi)
 {
-	using t_real = tl::underlying_value_type_t<t_vec>;
-
+	//using t_real = tl::underlying_value_type_t<t_vec>;
 	return std::cos(phi)*vec1 + std::sin(phi)*vec2;
 }
 

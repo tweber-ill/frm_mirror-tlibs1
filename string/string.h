@@ -399,7 +399,7 @@ struct _str_to_var_impl<T, t_str, 0>
 template<class T, class t_str=std::string, class t_cont=std::vector<T>>
 void get_tokens(const t_str& str, const t_str& strDelim, t_cont& vecRet)
 {
-	typedef typename t_str::value_type t_char;
+	using t_char = typename t_str::value_type;
 
 	boost::char_separator<t_char> delim(strDelim.c_str());
 	boost::tokenizer<boost::char_separator<t_char> > tok(str, delim);
@@ -454,7 +454,7 @@ template<typename T, class t_str=std::string>
 t_str var_to_str(const T& t, std::streamsize iPrec=10, int iGroup=-1)
 {
 	if(std::is_convertible<T, t_str>::value)
-		return *(t_str*)&t;
+		return *reinterpret_cast<const t_str*>(&t);
 
 	typedef typename t_str::value_type t_char;
 
