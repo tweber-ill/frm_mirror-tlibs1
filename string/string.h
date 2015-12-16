@@ -450,6 +450,27 @@ T str_to_var(const t_str& str)
 	return _str_to_var_impl<T, t_str, std::is_convertible<T, t_str>::value>()(str);
 }
 
+
+template<class T, bool is_number_type=std::is_fundamental<T>::value>
+struct _var_to_str_print_impl {};
+
+template<class T> struct _var_to_str_print_impl<T, false>
+{
+	void operator()(std::ostream& ostr, const T& t) { ostr << t; }
+};
+
+template<class T> struct _var_to_str_print_impl<T, true>
+{
+	void operator()(std::ostream& ostr, const T& t)
+	{
+		// prevents printing "-0"
+		T t0 = t;
+		if(t0==T(-0)) t0 = T(0);
+
+		ostr << t0;
+	}
+};
+
 template<typename T, class t_str=std::string>
 t_str var_to_str(const T& t, std::streamsize iPrec=10, int iGroup=-1)
 {
@@ -460,6 +481,7 @@ t_str var_to_str(const T& t, std::streamsize iPrec=10, int iGroup=-1)
 
 	std::basic_ostringstream<t_char> ostr;
 	ostr.precision(iPrec);
+
 
 	class Sep : public std::numpunct<t_char>
 	{
@@ -472,18 +494,15 @@ t_str var_to_str(const T& t, std::streamsize iPrec=10, int iGroup=-1)
 	};
 	Sep *pSep = nullptr;
 
+
 	if(iGroup > 0)
 	{
 		pSep = new Sep();
 		ostr.imbue(std::locale(ostr.getloc(), pSep));
 	}
 
-
-	// prevents printing "-0"
-	//T t0 = t;
-	//if(t0==T(-0)) t0 = T(0);
-
-	ostr << t;
+	_var_to_str_print_impl<T> pr;
+	pr(ostr, t);
 	t_str str = ostr.str();
 
 	if(pSep)

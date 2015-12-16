@@ -207,7 +207,7 @@ public:
 		}
 
 		if(std::is_same<t_str, T>::value)
-			trim(*(t_str*)&tOut);
+			trim(*reinterpret_cast<t_str*>(&tOut));
 
 		if(pbOk) *pbOk = 1;
 		return tOut;
