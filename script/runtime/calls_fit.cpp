@@ -7,7 +7,7 @@
 
 #include "lang/types.h"
 #include "string/string.h"
-#include "helper/log.h"
+#include "log/log.h"
 #include "fit/interpolation.h"
 #include "calls_fit.h"
 #include "lang/calls.h"

@@ -13,7 +13,7 @@
 #include "math/linalg.h"
 #include "math/linalg2.h"
 #include "math/rand.h"
-#include "helper/log.h"
+#include "log/log.h"
 #include <boost/math/special_functions/erf.hpp>
 
 namespace ublas = boost::numeric::ublas;

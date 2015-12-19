@@ -9,7 +9,7 @@
 #include "node.h"
 #include "info.h"
 #include "calls.h"
-#include "helper/log.h"
+#include "log/log.h"
 
 Symbol* NodeReturn::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym) const
 {

@@ -8,7 +8,7 @@
  */
 
 #include "tcp.h"
-#include "../helper/log.h"
+#include "../log/log.h"
 #include <boost/tokenizer.hpp>
 #include <iostream>
 

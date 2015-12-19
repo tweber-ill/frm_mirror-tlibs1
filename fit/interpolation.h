@@ -18,7 +18,7 @@
 #include "../math/math.h"
 #include "../math/geo.h"
 #include "../helper/misc.h"
-#include "../helper/log.h"
+#include "../log/log.h"
 #include "funcmod.h"
 
 namespace tl {

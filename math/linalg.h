@@ -12,7 +12,7 @@
 #include "../helper/flags.h"
 #include "../helper/exception.h"
 #include "math.h"
-#include "../helper/log.h"
+#include "../log/log.h"
 #include "../helper/traits.h"
 
 #include <initializer_list>

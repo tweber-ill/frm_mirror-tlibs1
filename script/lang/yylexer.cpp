@@ -6,7 +6,7 @@
  */
 
 #include "types.h"
-#include "helper/log.h"
+#include "log/log.h"
 
 #include <iostream>
 #include <string.h>

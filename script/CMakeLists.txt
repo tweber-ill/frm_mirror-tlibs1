@@ -41,7 +41,7 @@ file(GLOB tlibs
 	"../string/spec_char.cpp"
 	"../gfx/gnuplot.cpp"
 	"../file/loadtxt.cpp" "../file/loadinstr.cpp" "../file/file.cpp"
-	"../helper/log.cpp" "../helper/flags.cpp"
+	"../log/log.cpp" "../helper/flags.cpp"
 )
 
 

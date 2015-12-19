@@ -11,7 +11,7 @@
 #include "../helper/exception.h"
 #include "math.h"
 #include "geo.h"
-#include "../helper/log.h"
+#include "../log/log.h"
 #include <vector>
 
 namespace tl {

@@ -6,7 +6,7 @@
  */
 
 #include "rand.h"
-#include "../helper/log.h"
+#include "../log/log.h"
 
 #include <cstdlib>
 #include <exception>

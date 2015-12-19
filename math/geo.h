@@ -13,7 +13,7 @@
 #include "../helper/exception.h"
 #include "linalg.h"
 #include "linalg2.h"
-#include "../helper/log.h"
+#include "../log/log.h"
 
 #include <iostream>
 #include <cmath>

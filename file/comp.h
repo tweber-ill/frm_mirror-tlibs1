@@ -24,7 +24,7 @@
 #include <boost/iostreams/copy.hpp>
 
 #include "../string/string.h"
-#include "../helper/log.h"
+#include "../log/log.h"
 
 
 namespace tl {

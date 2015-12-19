@@ -6,7 +6,7 @@
  */
 
 #include "loadinstr.h"
-#include "../helper/log.h"
+#include "../log/log.h"
 #include "../helper/py.h"
 #include "../file/file.h"
 #if !defined NO_IOSTR

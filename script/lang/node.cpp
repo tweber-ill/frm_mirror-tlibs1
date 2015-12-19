@@ -9,7 +9,7 @@
 #include "calls.h"
 #include "info.h"
 #include "math/math.h"
-#include "helper/log.h"
+#include "log/log.h"
 
 template<typename T> tl::remove_constref_t<T> plus_op(T a, T b) { return a+b; }
 template<typename T> tl::remove_constref_t<T> minus_op(T a, T b) { return a-b; }

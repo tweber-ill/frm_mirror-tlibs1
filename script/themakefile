@@ -85,7 +85,7 @@ hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/nod
 		obj/calls_fit.o obj/globals.o obj/flags.o obj/minuit.o \
 		obj/spec_char.o obj/linalg2.o \
 		obj/loadtxt.o obj/loadinstr.o \
-		obj/log.o obj/node_opt.o ${FFTW_OBJ}
+		obj/log.o obj/debug.o obj/node_opt.o ${FFTW_OBJ}
 	${CC} ${FLAGS} -o $@ $+ ${LIBS}
 	${STRIP} $@
 
@@ -145,7 +145,9 @@ obj/globals.o: lang/globals.cpp lang/globals.h
 	${CC} ${FLAGS} -c -o $@ $<
 obj/flags.o: ../helper/flags.cpp ../helper/flags.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/log.o: ../helper/log.cpp ../helper/log.h
+obj/log.o: ../log/log.cpp ../log/log.h
+	${CC} ${FLAGS} -c -o $@ $<
+obj/debug.o: ../log/debug.cpp ../log/debug.h
 	${CC} ${FLAGS} -c -o $@ $<
 obj/minuit.o: ../fit/minuit.cpp ../fit/minuit.h
 	${CC} ${FLAGS} -c -o $@ $<

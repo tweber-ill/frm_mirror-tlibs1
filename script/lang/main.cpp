@@ -10,7 +10,7 @@
 #include "helper/flags.h"
 #include "string/string.h"
 #include "string/spec_char.h"
-#include "helper/log.h"
+#include "log/log.h"
 
 #include <iostream>
 #include <fstream>

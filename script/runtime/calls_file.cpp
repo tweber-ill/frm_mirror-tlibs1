@@ -8,7 +8,7 @@
 #include "lang/types.h"
 #include "string/string.h"
 #include "file/file.h"
-#include "helper/log.h"
+#include "log/log.h"
 #include "calls_file.h"
 #include "lang/calls.h"
 #include "file/loadtxt.h"

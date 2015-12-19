@@ -15,7 +15,7 @@
 
 #include "string/string.h"
 #include "string/spec_char.h"
-#include "helper/log.h"
+#include "log/log.h"
 
 Lexer::Lexer() : m_bOk(1),
 		m_strWhitespace(T_STR" \t\r"), m_strSep(T_STR"=+-*/%^{}[]();,\":\n!<>&|"),

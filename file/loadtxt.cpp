@@ -11,7 +11,7 @@
 #include "../string/string.h"
 #include "../helper/misc.h"
 #include "../math/math.h"
-#include "../helper/log.h"
+#include "../log/log.h"
 
 #include <string>
 #include <iostream>

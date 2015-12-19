@@ -44,7 +44,8 @@ add_definitions(-std=c++11)
 add_library(tlibs SHARED
 	file/tmp.cpp  file/loadinstr.cpp  file/loadtxt.cpp  file/recent.cpp  file/x3d.cpp
 	old/xml.cpp
-	helper/log.cpp helper/flags.cpp
+	log/log.cpp log/debug.cpp
+	helper/flags.cpp
 	math/fourier.cpp  math/linalg2.cpp  math/rand.cpp  # math/minuit.cpp  math/fftw.cpp
 	net/tcp.cpp
 	string/spec_char.cpp

@@ -6,7 +6,7 @@
  */
 
 #include "gl.h"
-#include "../helper/log.h"
+#include "../log/log.h"
 #include "../helper/misc.h"
 #include "../string/string.h"
 

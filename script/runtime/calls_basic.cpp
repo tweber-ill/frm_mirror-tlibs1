@@ -6,7 +6,7 @@
  */
 
 #include "helper/flags.h"
-#include "helper/log.h"
+#include "log/log.h"
 #include "calls_basic.h"
 #include "lang/types.h"
 #include "lang/calls.h"
