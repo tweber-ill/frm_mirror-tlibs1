@@ -655,9 +655,13 @@ t_length<Sys, Y> foc_curv(const t_length<Sys, Y>& lenBefore, const t_length<Sys,
 	const t_angle<Sys, Y>& tt, bool bVert)
 {
 	const t_length<Sys, Y> f = focal_len<Sys, Y>(lenBefore, lenAfter);
-	const auto s = units::abs(units::sin(Y(0.5)*tt));
+	const Y s = Y(units::abs(units::sin(Y(0.5)*tt)));
 
 	const t_length<Sys, Y> curv = bVert ? Y(2)*f*s : Y(2)*f/s;
+
+	//std::cout << "f = " << f << std::endl;
+	//std::cout << "s = " << s << std::endl;
+	//std::cout << "curv = " <<  curv << std::endl;
 	return curv;
 }
 
