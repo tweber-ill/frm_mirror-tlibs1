@@ -340,17 +340,21 @@ bool begins_with(const t_str& str, const t_str& strBeg)
 
 template<class t_str=std::string>
 std::pair<t_str, t_str>
-split_first(const t_str& str, const t_str& strSep, bool bTrim=0)
+split_first(const t_str& str, const t_str& strSep, bool bTrim=0, bool bSeq=0)
 {
 	t_str str1, str2;
 
-	std::size_t pos = str.find_first_of(strSep);
-	if(pos != t_str::npos)
+	std::size_t iLenTok = bSeq ? strSep.length() : 1;
+	std::size_t ipos = bSeq ? str.find(strSep) : str.find_first_of(strSep);
+
+	if(ipos != t_str::npos)
 	{
-		str1 = str.substr(0, pos);
-		if(pos+1 < str.length())
-			str2 = str.substr(pos+1, t_str::npos);
+		str1 = str.substr(0, ipos);
+		if(ipos+iLenTok < str.length())
+			str2 = str.substr(ipos+iLenTok, t_str::npos);
 	}
+	//else
+	//	str1 = str;
 
 	if(bTrim)
 	{
