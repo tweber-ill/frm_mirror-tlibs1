@@ -9,6 +9,7 @@
 //#include <boost/gil/extension/io/png_io.hpp>
 #include <boost/gil/extension/io/jpeg_dynamic_io.hpp>
 #include "../math/kd.h"
+#include "../log/debug.h"
 
 namespace gil = boost::gil;
 
@@ -19,7 +20,7 @@ int main()
 	try
 	{
 		std::cout << "Loading image." << std::endl;
-		gil::jpeg_read_image("/home/tweber/Bilder/rac_rg.jpg", img);
+		gil::jpeg_read_image("/home/tweber/Pictures/rac.jpg", img);
 	}
 	catch(const std::ios_base::failure& ex)
 	{
@@ -48,7 +49,7 @@ int main()
 
 
 	std::cout << "Generating k-d." << std::endl;
-	Kd<int> kd;
+	tl::Kd<int> kd;
 	kd.Load(lst, 2);
 
 
@@ -66,6 +67,9 @@ int main()
 
 
 	std::cout << "Writing image." << std::endl;
-	gil::jpeg_write_view("/tmp/tst.jpg", gil::color_converted_view<gil::gray8_pixel_t>(view), 85);
+	auto viewGray = gil::color_converted_view<gil::gray8_pixel_t>(view);
+	std::cout << tl::get_typename<decltype(viewGray)>() << std::endl;
+
+	gil::jpeg_write_view("/tmp/tst.jpg", viewGray, 85);
 	delete[] pcPix;
 }

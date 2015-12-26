@@ -1,20 +1,24 @@
 /**
  * Debug helpers
  * @author tweber
- * @date 12-sep-2014
+ * @date dec-2015
  * @license GPLv2 or GPLv3
  */
 
 #ifndef __TL_DEBUG_H__
 #define __TL_DEBUG_H__
 
+#include <boost/version.hpp>
+
+
+// ----------------------------------------------------------------------------
+
 #if BOOST_VERSION >= 105700
-	#include <boost/type_index.hpp>
-#endif
+
+#include <boost/type_index.hpp>
 
 namespace tl{
 
-#if BOOST_VERSION >= 105700
 template<typename T>
 std::string get_typename(bool bFull=1)
 {
@@ -27,17 +31,31 @@ std::string get_typename(bool bFull=1)
 
 	return idx.pretty_name();
 }
+}
+
 #else
+
+#include <typeinfo>
+
+namespace tl{
+
 template<typename T>
 std::string get_typename(bool bFull=1)
 {
-	return std::string("n/a");
+	return std::string(typeid(T).name());
 }
+}
+
 #endif
 
+// ----------------------------------------------------------------------------
+
+
+namespace tl{
 
 
 extern void log_backtrace();
+
 
 }
 #endif

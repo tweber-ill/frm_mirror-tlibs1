@@ -155,6 +155,14 @@ std::vector<T> logspace(const T& tmin, const T& tmax, unsigned int iNum, T tBase
 	return vec;
 }
 
+template<typename T>
+T clamp(T t, T min, T max)
+{
+	if(t < min) t = min;
+	if(t > max) t = max;
+
+	return t;
+}
 
 // -----------------------------------------------------------------------------
 

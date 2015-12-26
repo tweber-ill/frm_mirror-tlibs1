@@ -12,6 +12,7 @@
 #include <string>
 
 namespace tl {
+
 class Err : public std::exception
 {
 	protected:
@@ -19,7 +20,7 @@ class Err : public std::exception
 
 	public:
 		Err(const std::string& strErr, bool bErrStr=0) noexcept
-				: m_strErr((bErrStr? "Exception: " : "") + strErr)
+			: m_strErr((bErrStr? "Exception: " : "") + strErr)
 		{}
 
 		Err(const char* pcErr) noexcept : Err(std::string(pcErr))
@@ -28,11 +29,11 @@ class Err : public std::exception
 		virtual ~Err() noexcept
 		{}
 
-		virtual const char* what() const noexcept
+		virtual const char* what() const noexcept override
 		{
 			return m_strErr.c_str();
 		}
 };
-}
 
+}
 #endif
