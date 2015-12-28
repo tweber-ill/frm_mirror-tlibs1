@@ -180,6 +180,31 @@ const std::string& get_cl_typedefs()
 	}
 }
 
+
+
+template<class T, template<class...> class t_cont = std::vector>
+bool create_cl_writebuf(cl::Context& ctx, const t_cont<T>& cont, cl::Buffer& buf)
+{
+	cl_int iErr;
+	buf = cl::Buffer(ctx, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+		cont.size() * sizeof(typename t_cont<T>::value_type),
+		(void*)cont.data(), &iErr);
+
+	return iErr == CL_SUCCESS;
+}
+
+template<class T>
+bool create_cl_readbuf(cl::Context& ctx, std::size_t iNum, cl::Buffer& buf)
+{
+	cl_int iErr;
+	buf = cl::Buffer(ctx, CL_MEM_WRITE_ONLY,
+		iNum * sizeof(T),
+		nullptr, &iErr);
+
+	return iErr == CL_SUCCESS;
+}
+
+
 }
 
 #endif

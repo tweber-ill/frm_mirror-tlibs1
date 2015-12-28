@@ -68,12 +68,11 @@ int main()
 	std::vector<unsigned char> vecOut;
 	vecOut.resize(iW*iH*iC);
 
-	cl_int iErrIn, iErrOut;
-	cl::Buffer imgIn(ctx, CL_MEM_READ_ONLY|CL_MEM_COPY_HOST_PTR,
-		vecImg.size()*sizeof(decltype(vecImg)::value_type), vecImg.data(), &iErrIn);
-	cl::Buffer imgOut(ctx, CL_MEM_WRITE_ONLY,
-		vecOut.size()*sizeof(decltype(vecOut)::value_type), nullptr, &iErrOut);
-	if(iErrIn!=CL_SUCCESS || iErrOut!=CL_SUCCESS)
+	cl::Buffer imgIn, imgOut;
+	bool bInOk = tl::create_cl_writebuf(ctx, vecImg, imgIn);
+	bool bOutOk = tl::create_cl_readbuf<decltype(vecOut)::value_type>(ctx, vecOut.size(), imgOut);
+
+	if(!bInOk || !bOutOk)
 	{
 		std::cerr << "Could not create input or output buffer." << std::endl;
 		return -1;
