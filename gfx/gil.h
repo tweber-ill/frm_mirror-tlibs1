@@ -117,7 +117,26 @@ namespace tl
 				fkt(pix);
 				*iterX = pix;
 			}
+	}
 
+
+	template<class t_view = gil::rgb8_view_t,
+		template<class...> class t_cont = std::vector>
+	t_cont<typename t_view::value_type> view_to_container(const t_view& view)
+	{
+		using t_pix = typename t_view::value_type;
+
+		const std::size_t iW = view.width();
+		const std::size_t iH = view.height();
+
+		t_cont<t_pix> vecRet;
+		vecRet.reserve(iW*iH);
+
+		for(std::size_t iY=0; iY<iH; ++iY)
+			for(auto iterX=view.row_begin(iY); iterX!=view.row_end(iY); ++iterX)
+				vecRet.push_back(*iterX);
+
+		return vecRet;
 	}
 }
 

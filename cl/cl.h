@@ -106,7 +106,7 @@ bool build_cl_src(cl::Context& ctx, const std::string& strSrc,
 	cl::Program& prog, std::unordered_map<std::string, cl::Kernel>& mapKerns)
 {
 	using t_map = std::remove_reference<decltype(mapKerns)>::type;
-	
+
 	cl::Program::Sources vecSrc;
 	vecSrc.emplace_back(cl::Program::Sources::value_type(strSrc.c_str(), strSrc.length()+1));
 
@@ -119,7 +119,7 @@ bool build_cl_src(cl::Context& ctx, const std::string& strSrc,
 	{
 		std::vector<cl::Device> vecDev;
 		ctx.getInfo(CL_CONTEXT_DEVICES, &vecDev);
-		
+
 		for(cl::Device& dev : vecDev)
 		{
 			//int iStatus = prog.getBuildInfo<CL_PROGRAM_BUILD_STATUS>(dev);
@@ -158,6 +158,7 @@ const std::string& get_cl_typedefs()
 
 		#pragma OPENCL EXTENSION cl_khr_fp64: enable
 		typedef double t_real;
+		typedef double2 t_real2;
 		typedef double4 t_real4;
 
 		)RAWSTR";
@@ -170,6 +171,7 @@ const std::string& get_cl_typedefs()
 		R"RAWSTR(
 
 		typedef float t_real;
+		typedef float2 t_real2;
 		typedef float4 t_real4;
 
 		)RAWSTR";

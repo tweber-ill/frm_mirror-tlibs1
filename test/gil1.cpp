@@ -13,7 +13,9 @@ int main()
 		return -1;
 
 	std::size_t iChan = gil::view(*pimg).num_channels();
-	std::cout << iChan << " channels." << std::endl;
+	std::size_t iW = gil::view(*pimg).width();
+	std::size_t iH = gil::view(*pimg).height();
+	std::cout << iW << " x " << iH << ", " << iChan << " channels." << std::endl;
 
 	tl::for_each_in_view(gil::view(*pimg),
 		[](gil::rgb8_pixel_t& pix)

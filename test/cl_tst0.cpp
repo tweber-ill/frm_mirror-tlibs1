@@ -1,4 +1,4 @@
-// gcc -o cl_tst0 cl_tst0.cpp -std=c++11 -lOpenCL -lstdc++
+// gcc -o cl_tst0 test/cl_tst0.cpp -std=c++11 -lOpenCL -lstdc++
 
 #include "../cl/cl.h"
 #include <iostream>
