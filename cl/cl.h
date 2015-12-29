@@ -41,6 +41,8 @@ bool get_best_cl_dev(cl::Platform& platRet, cl::Device& devRet,
 
 	for(cl::Platform& plat : vecPlat)
 	{
+		//std::cout << "\nPlatform: " << plat.getInfo<CL_PLATFORM_NAME>() << std::endl;
+
 		std::vector<cl::Device> vecDevs;
 		plat.getDevices(CL_DEVICE_TYPE_ALL, &vecDevs);
 
@@ -52,6 +54,9 @@ bool get_best_cl_dev(cl::Platform& platRet, cl::Device& devRet,
 			_dev.devtype = dev.getInfo<CL_DEVICE_TYPE>();
 
 			std::string strExtensions = dev.getInfo<CL_DEVICE_EXTENSIONS>();
+
+			//std::cout << "Device: " << dev.getInfo<CL_DEVICE_NAME>() << std::endl;
+			//std::cout << "Extensions: " << strExtensions << std::endl;
 
 			// needs double type support?
 			if(std::is_same<t_real, double>::value)
@@ -87,7 +92,7 @@ bool get_best_cl_dev(cl::Platform& platRet, cl::Device& devRet,
 			int iScore1 = get_device_score(dev1.devtype);
 			int iScore2 = get_device_score(dev2.devtype);
 
-			return iScore1 >= iScore2;
+			return iScore1 > iScore2;
 		});
 
 	platRet = *vecAllDevs[0].pPlat;
@@ -182,8 +187,11 @@ const std::string& get_cl_typedefs()
 
 
 
+// ----------------------------------------------------------------------------
+// buffers
+
 template<class T, template<class...> class t_cont = std::vector>
-bool create_cl_writebuf(cl::Context& ctx, const t_cont<T>& cont, cl::Buffer& buf)
+inline bool create_cl_readbuf(cl::Context& ctx, const t_cont<T>& cont, cl::Buffer& buf)
 {
 	cl_int iErr;
 	buf = cl::Buffer(ctx, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
@@ -194,12 +202,36 @@ bool create_cl_writebuf(cl::Context& ctx, const t_cont<T>& cont, cl::Buffer& buf
 }
 
 template<class T>
-bool create_cl_readbuf(cl::Context& ctx, std::size_t iNum, cl::Buffer& buf)
+inline bool create_cl_writebuf(cl::Context& ctx, std::size_t iNum, cl::Buffer& buf)
 {
 	cl_int iErr;
 	buf = cl::Buffer(ctx, CL_MEM_WRITE_ONLY,
 		iNum * sizeof(T),
 		nullptr, &iErr);
+
+	return iErr == CL_SUCCESS;
+}
+
+
+template<class T, template<class...> class t_cont = std::vector>
+inline bool create_cl_readimg(cl::Context& ctx, const t_cont<T>& cont, cl::Image2D& img,
+	std::size_t iW, std::size_t iH,
+	cl::ImageFormat fmt = cl::ImageFormat(CL_RGBA/*CL_RGBx*/, CL_UNSIGNED_INT8))
+{
+	cl_int iErr;
+	img = cl::Image2D(ctx, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+		fmt, iW, iH, 0, (void*)cont.data(), &iErr);
+
+	return iErr == CL_SUCCESS;
+}
+
+static inline bool create_cl_writeimg(cl::Context& ctx, cl::Image2D& img,
+	std::size_t iW, std::size_t iH,
+	cl::ImageFormat fmt = cl::ImageFormat(CL_RGBA, CL_UNSIGNED_INT8))
+{
+	cl_int iErr;
+	img = cl::Image2D(ctx, CL_MEM_WRITE_ONLY,
+		fmt, iW, iH, 0, nullptr, &iErr);
 
 	return iErr == CL_SUCCESS;
 }

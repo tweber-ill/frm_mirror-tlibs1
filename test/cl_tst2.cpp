@@ -69,8 +69,8 @@ int main()
 	vecOut.resize(iW*iH*iC);
 
 	cl::Buffer imgIn, imgOut;
-	bool bInOk = tl::create_cl_writebuf(ctx, vecImg, imgIn);
-	bool bOutOk = tl::create_cl_readbuf<decltype(vecOut)::value_type>(ctx, vecOut.size(), imgOut);
+	bool bInOk = tl::create_cl_readbuf(ctx, vecImg, imgIn);
+	bool bOutOk = tl::create_cl_writebuf<decltype(vecOut)::value_type>(ctx, vecOut.size(), imgOut);
 
 	if(!bInOk || !bOutOk)
 	{
