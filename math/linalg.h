@@ -35,7 +35,7 @@ template<class matrix_type=ublas::matrix<double> >
 typename matrix_type::value_type determinant(const matrix_type& mat);
 
 
-// create a vector
+// creates a vector
 template<class V=ublas::vector<double> >
 V make_vec(const std::initializer_list<typename V::value_type>& lst)
 {
@@ -51,8 +51,7 @@ V make_vec(const std::initializer_list<typename V::value_type>& lst)
 	return vec;
 }
 
-
-// create a matrix
+// creates a matrix
 template<class M=ublas::matrix<double> >
 M make_mat(const std::initializer_list<std::initializer_list<typename M::value_type> >& lst)
 {
@@ -74,6 +73,22 @@ M make_mat(const std::initializer_list<std::initializer_list<typename M::value_t
 	}
 
 	return mat;
+}
+
+
+// converts vector
+template<class t_from, class t_to, template<class...> class t_vec = ublas::vector>
+t_vec<t_to> convert_vec(const t_vec<t_from>& vec)
+{
+	using t_vec_from = t_vec<t_from>;
+	using t_vec_to = t_vec<t_to>;
+
+	t_vec_to vecRet(vec.size());
+
+	for(std::size_t i=0; i<vec.size(); ++i)
+		vecRet[i] = t_to(vec[i]);
+
+	return vecRet;
 }
 
 
