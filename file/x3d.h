@@ -10,6 +10,7 @@
 
 #include <ostream>
 #include <vector>
+#include <string>
 
 #include "../math/linalg.h"
 #include "../math/quat.h"
@@ -132,10 +133,13 @@ class X3d
 {
 	protected:
 		X3dScene m_scene;
+		std::string m_strComment;
 
 	public:
 		X3d() = default;
 		virtual ~X3d();
+
+		void SetComment(const std::string& str) { m_strComment = str; }
 
 		void Write(std::ostream& ostr) const;
 		bool Save(const char* pcFile) const;

@@ -139,6 +139,9 @@ X3d::~X3d()
 
 void X3d::Write(std::ostream& ostr) const
 {
+	if(m_strComment.size())
+		ostr << "<!--\n" << m_strComment << "\n-->\n";
+
 	ostr << "<X3D>\n";
 	m_scene.Write(ostr);
 	ostr << "</X3D>\n";
