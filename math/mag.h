@@ -2,6 +2,7 @@
  * magnetic dispersion relations
  * @author tweber
  * @date 7-jul-15
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __TLIBS_MAGDISP_H__
