@@ -123,7 +123,7 @@ std::complex<T> structfact(const t_cont<t_vec>& lstAtoms, const t_vec& vecG,
 		if(iterFFact != lstf.end())
 			tFF = *iterFFact;
 
-		F += tFF * std::exp(-i * ublas::inner_prod(vecG, *iterAtom));
+		F += tFF * std::exp(i * ublas::inner_prod(vecG, *iterAtom));
 
 		if(iterFFact != lstf.end())
 			++iterFFact;

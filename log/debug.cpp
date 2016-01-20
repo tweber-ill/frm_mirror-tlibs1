@@ -5,7 +5,7 @@
  * @license GPLv2 or GPLv3
  */
 #include "debug.h"
-
+#include "log.h"
 
 #ifdef DEBUG
 #include <execinfo.h>
