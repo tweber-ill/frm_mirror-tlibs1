@@ -19,14 +19,15 @@ namespace tl{
  * Maps atom position back to units cell
  */
 template<class t_vec>
-void restrict_to_uc(t_vec& vec)
+void restrict_to_uc(t_vec& vec,
+	typename t_vec::value_type tMin=0, typename t_vec::value_type tMax=1)
 {
 	using T = typename t_vec::value_type;
 
 	for(std::size_t i=0; i<vec.size(); ++i)
 	{
-		while(vec[i] < T(0)) vec[i] += T(1);
-		while(vec[i] >= T(1)) vec[i] -= T(1);
+		while(vec[i] < tMin) vec[i] += T(1);
+		while(vec[i] >= tMax) vec[i] -= T(1);
 	}
 }
 
@@ -34,15 +35,16 @@ void restrict_to_uc(t_vec& vec)
  * Generates atom positions using trafo matrices
  */
 template<class t_mat, class t_vec, template<class ...Args> class t_cont>
-t_cont<t_vec> generate_atoms(const t_cont<t_mat>& trafos, const t_vec& vecAtom)
+t_cont<t_vec> generate_atoms(const t_cont<t_mat>& trafos, const t_vec& vecAtom,
+	typename t_vec::value_type tUCMin=0, typename t_vec::value_type tUCMax=1)
 {
-	//typedef typename t_mat::value_type t_real;
+	//typedef typename t_vec::value_type t_real;
 	t_cont<t_vec> vecvecRes;
 
 	for(const t_mat& mat : trafos)
 	{
 		t_vec vecRes = mat * vecAtom;
-		restrict_to_uc<t_vec>(vecRes);
+		restrict_to_uc<t_vec>(vecRes, tUCMin, tUCMax);
 
 		bool bPushBack = 1;
 		// already have pos?
