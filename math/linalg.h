@@ -563,7 +563,7 @@ bool inverse(const mat_type& mat, mat_type& inv)
 	try
 	{
 		mat_type lu = mat;
-		ublas::permutation_matrix<> perm(N);
+		ublas::permutation_matrix<typename mat_type::size_type> perm(N);
 
 		if(ublas::lu_factorize(lu, perm) != 0)
 			return false;
@@ -614,7 +614,7 @@ bool solve_linear(const ublas::matrix<T>& M, const ublas::vector<T>& v,
 			const unsigned int N = M.size1();
 
 			ublas::matrix<T> lu = M;
-			ublas::permutation_matrix<> perm(N);
+			ublas::permutation_matrix<typename ublas::matrix<T>::size_type> perm(N);
 
 			typename ublas::matrix<T>::size_type sing = ublas::lu_factorize(lu, perm);
 			if(sing != 0)
@@ -875,7 +875,7 @@ typename t_mat::value_type determinant(const t_mat& mat)
 	{
 		t_mat lu = mat;
 		t_size N = mat.size1();
-		ublas::permutation_matrix<> perm(N);
+		ublas::permutation_matrix<typename t_mat::size_type> perm(N);
 
 		ublas::lu_factorize(lu, perm);
 
