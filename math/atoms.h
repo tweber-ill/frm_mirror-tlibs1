@@ -26,6 +26,8 @@ void restrict_to_uc(t_vec& vec,
 
 	for(std::size_t i=0; i<vec.size(); ++i)
 	{
+		vec[i] = std::fmod(vec[i], T(1));
+
 		while(vec[i] < tMin) vec[i] += T(1);
 		while(vec[i] >= tMax) vec[i] -= T(1);
 	}
