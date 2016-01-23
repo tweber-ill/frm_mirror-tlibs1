@@ -36,13 +36,13 @@ typename matrix_type::value_type determinant(const matrix_type& mat);
 
 
 // creates a vector
-template<class V=ublas::vector<double> >
-V make_vec(const std::initializer_list<typename V::value_type>& lst)
+template<class t_vec=ublas::vector<double>, template<class...> class t_lst=std::initializer_list>
+t_vec make_vec(t_lst<typename t_vec::value_type>&& lst)
 {
-	typedef typename V::value_type T;
-	typedef typename std::initializer_list<T>::const_iterator t_iter;
+	using T = typename t_vec::value_type;
+	using t_iter = typename t_lst<T>::const_iterator;
 
-	V vec(lst.size());
+	t_vec vec(lst.size());
 
 	std::size_t i=0;
 	for(t_iter iter = lst.begin(); iter!=lst.end(); ++i, ++iter)
@@ -52,20 +52,20 @@ V make_vec(const std::initializer_list<typename V::value_type>& lst)
 }
 
 // creates a matrix
-template<class M=ublas::matrix<double> >
-M make_mat(const std::initializer_list<std::initializer_list<typename M::value_type> >& lst)
+template<class t_mat=ublas::matrix<double>, template<class...> class t_lst=std::initializer_list>
+t_mat make_mat(t_lst<t_lst<typename t_mat::value_type>>&& lst)
 {
-	typedef typename M::value_type T;
+	using T = typename t_mat::value_type;
 
 	std::size_t I = lst.size();
 	std::size_t J = lst.begin()->size();
 
-	M mat(I, J);
-	typename std::initializer_list<std::initializer_list<T> >::const_iterator iter = lst.begin();
+	t_mat mat(I, J);
+	typename t_lst<t_lst<T>>::const_iterator iter = lst.begin();
 
 	for(std::size_t i=0; i<I; ++i, ++iter)
 	{
-		typename std::initializer_list<T>::const_iterator iterinner = iter->begin();
+		typename t_lst<T>::const_iterator iterinner = iter->begin();
 		for(std::size_t j=0; j<J; ++j, ++iterinner)
 		{
 			mat(i,j) = *iterinner;
