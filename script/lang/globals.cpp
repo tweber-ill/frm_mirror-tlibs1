@@ -57,6 +57,8 @@ static inline void init_constants(SymbolTable *pSymTab)
 	pSymTab->InsertSymbol(T_STR"c_0", new SymbolReal(co::c / units::si::meters*units::si::seconds));
 	// electron charge
 	pSymTab->InsertSymbol(T_STR"q_e", new SymbolReal(co::e / units::si::coulomb));
+	// vaccuum permeability
+	pSymTab->InsertSymbol(T_STR"mu_0", new SymbolReal(co::mu_0 * units::si::ampere/units::si::tesla/units::si::meter));
 }
 
 extern void init_global_syms(SymbolTable *pSymTab)

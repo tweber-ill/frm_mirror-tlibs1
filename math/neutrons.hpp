@@ -421,7 +421,7 @@ Y ana_effic_factor(const t_wavenumber<Sys, Y>& kf, const t_length<Sys, Y>& d)
 
 // Bragg tail -> see Shirane p. 152
 template<class Sys, class Y>
-t_energy<Sys,Y> get_bragg_tail(t_wavenumber<Sys,Y> k, 
+t_energy<Sys,Y> get_bragg_tail(t_wavenumber<Sys,Y> k,
 	t_wavenumber<Sys,Y> q, bool bConstEi=0)
 {
 	Y t = q / (2.*k);
@@ -433,7 +433,7 @@ t_energy<Sys,Y> get_bragg_tail(t_wavenumber<Sys,Y> k,
 }
 
 
-// inelastic spurions -> Shirane pp. 146-148
+// higher-order inelastic spurions -> Shirane pp. 146-148
 template<class Sys, class Y>
 t_energy<Sys,Y> get_inelastic_spurion(bool bConstEi, t_energy<Sys,Y> E, 
 	unsigned int iOrderMono, unsigned int iOrderAna)
@@ -486,7 +486,7 @@ std::vector<InelasticSpurion<Y>> check_inelastic_spurions(bool bConstEi,
 		}
 
 		spuri.dE_meV = get_inelastic_spurion(bConstEi, EiEf,
-							spuri.iOrderMono, spuri.iOrderAna) / one_meV;
+			spuri.iOrderMono, spuri.iOrderAna) / one_meV;
 
 		//std::cout << spuri.dE_meV << " *** " << Y(E/one_meV) << std::endl;
 		if(spuri.dE_meV!=0. && float_equal(spuri.dE_meV, Y(E/one_meV), dESensitivity))
@@ -505,7 +505,7 @@ struct ElasticSpurion
 	bool bMKfSmallerKi = 0;
 };
 
-// accidental elastic spurions -> Shirane pp. 150-155 (esp. fig. 6.2)
+// accidental elastic (currat-axe) spurions -> Shirane pp. 150-155 (esp. fig. 6.2)
 template<typename T=double>
 ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 	const ublas::vector<T>& kf, const ublas::vector<T>& q)
@@ -649,7 +649,7 @@ t_length<Sys, Y> focal_len(const t_length<Sys, Y>& lenBefore, const t_length<Sys
 	return Y(1) / f_inv;
 }
 
-// optimal mono/ana curvature, see e.g. Monochromator_curved.comp in McStas
+// optimal mono/ana curvature, see e.g. Monochromator_curved.comp in McStas or Shirane p. 66
 template<class Sys, class Y=double>
 t_length<Sys, Y> foc_curv(const t_length<Sys, Y>& lenBefore, const t_length<Sys, Y>& lenAfter,
 	const t_angle<Sys, Y>& tt, bool bVert)
