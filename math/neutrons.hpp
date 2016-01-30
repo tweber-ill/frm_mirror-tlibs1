@@ -161,6 +161,8 @@ t_length<Sys,Y> bragg_recip_lam(const t_wavenumber<Sys,Y>& Q,
 
 
 // --------------------------------------------------------------------------------
+
+// see e.g. ILL blue book sec. 2.6-2
 template<class Sys, class Y>
 t_wavenumber<Sys,Y> kinematic_plane(bool bFixedKi,
 	const t_energy<Sys,Y>& EiEf, const t_energy<Sys,Y>& DeltaE,
