@@ -582,6 +582,7 @@ bool inverse(const mat_type& mat, mat_type& inv)
 }
 
 
+// R = T^(-1) M T
 template<class mat_type=ublas::matrix<double>>
 mat_type transform(const mat_type& mat, const mat_type& matTrafo, bool bOrtho=0)
 {
@@ -593,6 +594,22 @@ mat_type transform(const mat_type& mat, const mat_type& matTrafo, bool bOrtho=0)
 
 	mat_type MT = ublas::prod(mat, matTrafo);
 	mat_type TinvMT = ublas::prod(matTrafoInv, MT);
+
+	return TinvMT;
+}
+
+// R = T M T^(-1)
+template<class mat_type=ublas::matrix<double>>
+mat_type transform_inv(const mat_type& mat, const mat_type& matTrafo, bool bOrtho=0)
+{
+	mat_type matTrafoInv;
+	if(bOrtho)
+		matTrafoInv = ublas::trans(matTrafo);
+	else
+		inverse(matTrafo, matTrafoInv);
+
+	mat_type MT = ublas::prod(mat, matTrafoInv);
+	mat_type TinvMT = ublas::prod(matTrafo, MT);
 
 	return TinvMT;
 }

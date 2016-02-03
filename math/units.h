@@ -112,15 +112,5 @@ static const energy meV = one_meV;
 static const flux tesla = teslas;
 static const area barn = barns;
 
-
-/*
-template<class T=double> T KSQ2E = T((co::hbar*co::hbar / (T(2)*co::m_n)) / one_meV / (angstrom*angstrom));
-template<class T=double> T E2KSQ = T(1)/KSQ2E<T>;
-*/
-
-static const double KSQ2E = (co::hbar*co::hbar / (2.*co::m_n)) / one_meV / (angstrom*angstrom);
-static const double E2KSQ = 1./KSQ2E;
-
-
 }
 #endif
