@@ -8,6 +8,7 @@
 #ifndef __TL_DEBUG_H__
 #define __TL_DEBUG_H__
 
+#include <string>
 #include <boost/version.hpp>
 
 
