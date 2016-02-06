@@ -94,17 +94,32 @@ t_vec<t_to> convert_vec(const t_vec<t_from>& vec)
 
 template<class vec_type>
 bool vec_equal(const vec_type& vec0, const vec_type& vec1,
-		typename vec_type::value_type eps = std::numeric_limits<typename vec_type::value_type>::epsilon())
+	typename vec_type::value_type eps = std::numeric_limits<typename vec_type::value_type>::epsilon())
 {
 	typedef typename vec_type::value_type T;
 
 	if(vec0.size() != vec1.size())
 		return false;
 
-	for(unsigned int i=0; i<vec0.size(); ++i)
+	for(std::size_t i=0; i<vec0.size(); ++i)
 		if(!float_equal<T>(vec0[i], vec1[i], eps))
 			return false;
+	return true;
+}
 
+template<class mat_type>
+bool mat_equal(const mat_type& mat0, const mat_type& mat1,
+	typename mat_type::value_type eps = std::numeric_limits<typename mat_type::value_type>::epsilon())
+{
+	typedef typename mat_type::value_type T;
+
+	if(mat0.size1() != mat1.size1() || mat0.size2() != mat1.size2())
+		return false;
+
+	for(std::size_t i=0; i<mat0.size1(); ++i)
+		for(std::size_t j=0; j<mat0.size2(); ++j)
+			if(!float_equal<T>(mat0(i,j), mat1(i,j), eps))
+				return false;
 	return true;
 }
 
