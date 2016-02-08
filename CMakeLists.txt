@@ -46,7 +46,7 @@ add_library(tlibs SHARED
 	old/xml.cpp
 	log/log.cpp log/debug.cpp
 	helper/flags.cpp
-	math/fourier.cpp  math/linalg2.cpp  math/rand.cpp  # math/minuit.cpp  math/fftw.cpp
+	math/fourier.cpp  math/linalg2.cpp  math/rand.cpp
 	net/tcp.cpp
 	string/spec_char.cpp
 	gfx/gl.cpp  gfx/gnuplot.cpp
@@ -55,7 +55,7 @@ add_library(tlibs SHARED
 
 
 target_link_libraries(tlibs ${Boost_LIBRARIES} Threads::Threads
-	Qt4::QtCore Qt4::QtGui
+	Qt4::QtCore Qt4::QtGui Qt4::QtOpenGL
 	${FREETYPE_LIBRARY}
 )
 
@@ -71,6 +71,8 @@ file(GLOB tlibs_string  ${PROJECT_SOURCE_DIR}/string/*.h)
 file(GLOB tlibs_gfx  ${PROJECT_SOURCE_DIR}/gfx/*.h)
 file(GLOB tlibs_time  ${PROJECT_SOURCE_DIR}/time/*.h)
 file(GLOB tlibs_cl  ${PROJECT_SOURCE_DIR}/cl/*.h)
+file(GLOB tlibs_log  ${PROJECT_SOURCE_DIR}/log/*.h)
+file(GLOB tlibs_fit  ${PROJECT_SOURCE_DIR}/fit/*.h)
 
 install(FILES ${tlibs_rt}  DESTINATION include/tlibs)
 install(FILES ${tlibs_file}  DESTINATION include/tlibs/file)
@@ -81,6 +83,8 @@ install(FILES ${tlibs_string}  DESTINATION include/tlibs/string)
 install(FILES ${tlibs_gfx}  DESTINATION include/tlibs/gfx)
 install(FILES ${tlibs_time}  DESTINATION include/tlibs/time)
 install(FILES ${tlibs_cl}  DESTINATION include/tlibs/cl)
+install(FILES ${tlibs_log}  DESTINATION include/tlibs/log)
+install(FILES ${tlibs_fit}  DESTINATION include/tlibs/fit)
 
 install(FILES ${PROJECT_SOURCE_DIR}/COPYING.GPLv2 ${PROJECT_SOURCE_DIR}/COPYING.GPLv3 
 	${PROJECT_SOURCE_DIR}/AUTHORS ${PROJECT_SOURCE_DIR}/LICENSES
