@@ -23,18 +23,21 @@
 	#define int_p_NULL reinterpret_cast<int*>(0)
 #endif
 #include <boost/gil/gil_all.hpp>
-#include <boost/gil/extension/io/jpeg_dynamic_io.hpp>
-#include <boost/gil/extension/io/png_dynamic_io.hpp>
+#ifndef NO_JPEG
+	#include <boost/gil/extension/io/jpeg_io.hpp>
+#endif
+#include <boost/gil/extension/io/png_io.hpp>
+#include <boost/gil/extension/io/tiff_io.hpp>
 
 
 namespace tl
 {
 	namespace gil = boost::gil;
 
-	template<class t_pixel=gil::rgb8_image_t, class t_char=char>
-	std::shared_ptr<gil::image<t_pixel, true>> load_image(const t_char* pcFile)
+	template<class t_pixel=gil::rgb8_image_t, bool bPlanar=true, class t_char=char>
+	std::shared_ptr<gil::image<t_pixel, bPlanar>> load_image(const t_char* pcFile)
 	{
-		using t_img = gil::image<t_pixel, true>;
+		using t_img = gil::image<t_pixel, bPlanar>;
 		using t_str = std::basic_string<t_char>;
 
 		std::shared_ptr<t_img> pimg = std::make_shared<t_img>();
@@ -44,10 +47,14 @@ namespace tl
 		{
 			//if(!file_exists<t_char>(pcFile))
 			//	throw Err(t_str("File \"") + pcFile + t_str("\" does not exist."));
-			if(strExt == "jpg" || strExt == "jpeg")
-				gil::jpeg_read_image(pcFile, *pimg);
-			else if(strExt == "png")
+			if(strExt == "png")
 				gil::png_read_image(pcFile, *pimg);
+			else if(strExt == "tif" || strExt == "tiff")
+				gil::tiff_read_image(pcFile, *pimg);
+#ifndef NO_JPEG
+			else if(strExt == "jpg" || strExt == "jpeg")
+				gil::jpeg_read_image(pcFile, *pimg);
+#endif
 			else
 				throw Err("Unknown file extension in image loading.");
 		}
@@ -68,10 +75,14 @@ namespace tl
 
 		try
 		{
-			if(strExt == "jpg" || strExt == "jpeg")
-				gil::jpeg_write_view(pcFile, *pview, 90);
-			else if(strExt == "png")
+			if(strExt == "png")
 				gil::png_write_view(pcFile, *pview);
+			else if(strExt == "tif" || strExt == "tiff")
+				gil::tiff_write_view(pcFile, *pview);
+#ifndef NO_JPEG
+			else if(strExt == "jpg" || strExt == "jpeg")
+				gil::jpeg_write_view(pcFile, *pview, 90);
+#endif
 			else
 				throw Err("Unknown file extension in image saving.");
 		}
@@ -117,6 +128,47 @@ namespace tl
 				fkt(pix);
 				*iterX = pix;
 			}
+	}
+
+
+	// gets average background counts in roi
+	template<class t_view = gil::rgb8_view_t,
+		class t_pix = typename t_view::value_type>
+	unsigned long get_roi_avg(t_view& view,
+		std::size_t iXStart, std::size_t iXEnd,
+		std::size_t iYStart, std::size_t iYEnd)
+	{
+		unsigned long iCnts = 0;
+		unsigned long iPix = 0;
+
+		for(std::size_t iY=iYStart; iY<iYEnd; ++iY)
+			for(auto iterX=view.row_begin(iY)+iXStart; iterX!=view.row_begin(iY)+iXEnd; ++iterX)
+			{
+				++iPix;
+				iCnts += *iterX;
+			}
+
+		return (unsigned long)(double(iCnts)/double(iPix));
+	}
+
+	// integrates counts in roi
+	template<class t_view = gil::rgb8_view_t,
+		class t_pix = typename t_view::value_type>
+	unsigned long get_roi_sum(t_view& view,
+		std::size_t iXStart, std::size_t iXEnd,
+		std::size_t iYStart, std::size_t iYEnd,
+		unsigned long iBkg=0)
+	{
+		unsigned long iCnts = 0;
+
+		for(std::size_t iY=iYStart; iY<iYEnd; ++iY)
+			for(auto iterX=view.row_begin(iY)+iXStart; iterX!=view.row_begin(iY)+iXEnd; ++iterX)
+			{
+				if(*iterX > iBkg)
+					iCnts += (*iterX - iBkg);
+			}
+
+		return iCnts;
 	}
 
 
