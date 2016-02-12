@@ -23,11 +23,13 @@
 	#define int_p_NULL reinterpret_cast<int*>(0)
 #endif
 #include <boost/gil/gil_all.hpp>
+#include <boost/gil/extension/io/png_io.hpp>
 #ifndef NO_JPEG
 	#include <boost/gil/extension/io/jpeg_io.hpp>
 #endif
-#include <boost/gil/extension/io/png_io.hpp>
-#include <boost/gil/extension/io/tiff_io.hpp>
+#ifndef NO_TIFF
+	#include <boost/gil/extension/io/tiff_io.hpp>
+#endif
 
 
 namespace tl
@@ -49,8 +51,10 @@ namespace tl
 			//	throw Err(t_str("File \"") + pcFile + t_str("\" does not exist."));
 			if(strExt == "png")
 				gil::png_read_image(pcFile, *pimg);
+#ifndef NO_TIFF
 			else if(strExt == "tif" || strExt == "tiff")
 				gil::tiff_read_image(pcFile, *pimg);
+#endif
 #ifndef NO_JPEG
 			else if(strExt == "jpg" || strExt == "jpeg")
 				gil::jpeg_read_image(pcFile, *pimg);
@@ -77,8 +81,10 @@ namespace tl
 		{
 			if(strExt == "png")
 				gil::png_write_view(pcFile, *pview);
+#ifndef NO_TIFF
 			else if(strExt == "tif" || strExt == "tiff")
 				gil::tiff_write_view(pcFile, *pview);
+#endif
 #ifndef NO_JPEG
 			else if(strExt == "jpg" || strExt == "jpeg")
 				gil::jpeg_write_view(pcFile, *pview, 90);
