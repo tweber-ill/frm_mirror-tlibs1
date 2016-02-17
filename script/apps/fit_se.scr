@@ -8,6 +8,7 @@ module_init()
 {
 	import("apps/instr.scr");
 	import("apps/fit.scr");
+	import("apps/gplchars.scr");
 
 	global hbar_mueVps = hbar_eVs * 1e6 * 1e12;
 	global tempvar = "TT";
@@ -141,9 +142,9 @@ do_seseries(files, taus, P0s=[], freqs=[], outdir="tmp", P0max=1.)
 		xlims = (min(dat_x)-rangex*0.05) + " " + (max(dat_x)+rangex*0.05);
 		ylims = "0 " + str(max(dat_y)+max(dat_yerr)*2.);
 
-		sintitle = "tau = " + tau + " ps" + 
-			", P = " + P + " +- " + dP + 
-			", phi = " + (ph/pi*180.) + " deg +- " + (dph/pi*180.) + " deg";
+		sintitle = "{/Symbol t} = " + tau + " ps" + 
+			", P = " + P + " " + gpl_pm + " " + dP + 
+			", {/Symbol f} = " + (ph/pi*180.) + gpl_deg + " " + gpl_pm + " " + (dph/pi*180.) + gpl_deg;
 		plot([[dat_x, dat_y, dat_yerr, ["style" : "points", "size" : size_pts]],
 			[xfine, yfit, ["style" : "line", "size" : size_lines]]], 
 			["title" : sintitle, "xlabel" : xlab, "ylabel" : ylab, 
@@ -164,10 +165,10 @@ do_seseries(files, taus, P0s=[], freqs=[], outdir="tmp", P0max=1.)
 
 	T = mean(Tm);
 	exptitle = "T = " + T + " K, ";
-	exptitle += "Gamma = " + G + " mueV +- " + abs(dG) + " mueV";
+	exptitle += "{/Symbol G} = " + G + " {/Symbol m}eV " + gpl_pm + " " + abs(dG) + " {/Symbol m}eV";
 	plot([taus, Ps, P_errs, ["style":"points", "size" : size_pts]], 
 		[taus_fine, pol_fit, ["style":"line", "size" : size_lines]],
-		["xlabel" : "tau (ps)", "ylabel" : "Polarisation", "title" : exptitle, 
+		["xlabel" : "{/Symbol t} (ps)", "ylabel" : "Polarisation", "title" : exptitle, 
 		"xlimits" : "0 " + (max(taus)+1.), "ylimits" : "0 0.75",
 		"outfile" : outdir + "/gamma.pdf",
 		"term" : theterm]);
@@ -207,9 +208,9 @@ do_Eshiftseries(files, tau, tempcol, Eoffs=0., freqs=[], outdir="tmp")
 		xlims = (min(dat_x)-rangex*0.05) + " " + (max(dat_x)+rangex*0.05);
 		ylims = "0 " + str(max(dat_y)+max(dat_yerr)*2.);
 
-		sintitle = "tau = " + tau + 
-			", P = " + P + " +- " + dP + 
-			", phi = " + (ph/pi*180.) + " deg +- " + (dph/pi*180.) + " deg";
+		sintitle = "{/Symbol t} = " + tau + 
+			", P = " + P + " " + gpl_pm + " " + dP + 
+			", {/Symbol f} = " + (ph/pi*180.) + gpl_deg + " " + gpl_pm + " " + (dph/pi*180.) + gpl_deg;
 		plot([[dat_x, dat_y, dat_yerr, ["style" : "points", "size" : size_pts]],
 			[xfine, yfit, ["style" : "line", "size" : size_lines]]], 
 			["title" : sintitle, "xlabel" : xlab, "ylabel" : ylab, 
@@ -226,13 +227,13 @@ do_Eshiftseries(files, tau, tempcol, Eoffs=0., freqs=[], outdir="tmp")
 	}
 
 	plot(Ts, Ps, P_errs, 
-		["xlabel" : "T (K)", "ylabel" : "Polarisation", "title" : "tau = " + tau + " ps",
+		["xlabel" : "T (K)", "ylabel" : "Polarisation", "title" : "{/Symbol t} = " + tau + " ps",
 		"xlimits" : "0 " + (max(Ts)+10), "ylimits" : (min(Ps)-0.05) + " " + (max(Ps)+0.05),
 		"size" : size_pts, "outfile" : outdir + "/P.pdf",
 		"term" : theterm]);
 
 	plot(Ts, Es, E_errs, 
-		["xlabel" : "T (K)", "ylabel" : "dE (mueV)", "title" : "tau = " + tau + " ps",
+		["xlabel" : "T (K)", "ylabel" : "dE (mueV)", "title" : "{/Symbol t} = " + tau + " ps",
 		"xlimits" : "0 " + (max(Ts)+10), "ylimits" : (min(Es)-50) + " " + (max(Es)+50),
 		"size" : size_pts, "outfile" : outdir + "/E.pdf",
 		"term" : theterm]);

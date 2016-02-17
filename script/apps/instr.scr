@@ -9,6 +9,7 @@ module_init()
 {
 	import("apps/fit.scr");
 	import("apps/dialog.scr");
+	import("apps/gplchars.scr");
 
 	global size_pts = 0.75;
 	global size_lines = 1.75;
@@ -459,7 +460,7 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 		params["temp_err"] = temp_err;
 
 		if(title_len > 0)
-			title += ", " + temp_mean + " K " + " +- " + temp_err + " K";
+			title += ", " + temp_mean + " K " + gpl_pm + " " + temp_err + " K";
 		print("Temperature: " + temp_mean + " +- " + temp_err);
 	}
 
@@ -495,7 +496,7 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 		if(!fitres["<valid>"])
 			title += "  !! FIT DID NOT CONVERGE !!  ";
 		else
-			title += ", chi2/ndf = " + fitres["<chi2_red>"];
+			title += ", {/Symbol c}^2/n_d_f = " + fitres["<chi2_red>"];
 	}
 
 	plot(plotobjs, 
