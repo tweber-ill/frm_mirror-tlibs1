@@ -13,6 +13,7 @@
 
 #include <cstdio>
 #include <sstream>
+#include <fstream>
 #include <iomanip>
 
 namespace tl {
@@ -70,13 +71,13 @@ void GnuPlot::SetTerminal(int iWnd, const char* pcBackend)
 	(*m_postr) << "set obj 1 rectangle behind fillcolor rgbcolor \"white\" from screen 0,0 to screen 1,1\n";
 
 	(*m_postr) << "set term " << pcBackend <<  " " << iWnd << " "
-			<< "size 640,480 "
-			<< "enhanced "
-			<< "font 'Helvetica,11' "
-//			<< "title \"" << "Plot " << (iWnd+1) << "\" " 
-			<< "persist "
-			<< "dashed "
-			<<  "\n";
+		<< "size 640,480 "
+		<< "enhanced "
+		<< "font 'NimbusSanL-Regu,12' "
+//		<< "title \"" << "Plot " << (iWnd+1) << "\" " 
+		<< "persist "
+		<< "dashed "
+		<<  "\n";
 }
 
 void GnuPlot::SetFileTerminal(const char* pcFile)
@@ -85,23 +86,19 @@ void GnuPlot::SetFileTerminal(const char* pcFile)
 
 	std::string strFile = pcFile;
 	std::string strExt = get_fileext(strFile);
-
 	//std::cout << "File: " << strFile << "\nExtension: " << strExt << std::endl;
 
 	if(str_is_equal(strExt, std::string("pdf"), 0))
 	{
-		//(*m_postr) << "set term pdfcairo enhanced color font \"Helvetica\"\n";
-		(*m_postr) << "set term pdf enhanced color\n";
+		(*m_postr) << "set term pdf enhanced color font \"NimbusSanL-Regu,16\" \n";
 	}
 	else if(str_is_equal(strExt, std::string("ps"), 0))
 	{
-		//(*m_postr) << "set term postscript eps enhanced color \"Helvetica\" 24\n";
-		(*m_postr) << "set term postscript eps enhanced color\n";
+		(*m_postr) << "set term postscript eps enhanced color font \"NimbusSanL-Regu,16\" \n";
 	}
 	else
 	{
-		log_err("Unknown file extension \"", 
-			strExt, "\" for output terminal.");
+		log_err("Unknown file extension \"", strExt, "\" for output terminal.");
 		return;
 	}
 
@@ -127,10 +124,10 @@ void GnuPlot::SimplePlot(const std::vector<double>& vecX, const std::vector<doub
 	switch(style)
 	{
 		case STYLE_LINES_SOLID:
-			(*m_postr) << "with lines lt 1 lw 1";
+			(*m_postr) << "with lines linetype 1 linewidth 1";
 			break;
 		case STYLE_LINES_DASHED:
-			(*m_postr) << "with lines lt 2 lw 1";
+			(*m_postr) << "with lines linetype 2 linewidth 1";
 			break;
 		default:
 		case STYLE_POINTS:
@@ -146,7 +143,7 @@ void GnuPlot::SimplePlot(const std::vector<double>& vecX, const std::vector<doub
 
 
 void GnuPlot::SimplePlot2d(const std::vector<std::vector<double> >& vec,
-		double dMinX, double dMaxX, double dMinY, double dMaxY)
+	double dMinX, double dMaxX, double dMinY, double dMaxY)
 {
 	if(!IsReady()) return;
 
@@ -231,6 +228,11 @@ void GnuPlot::StartPlot()
 	++m_iStartCounter;
 }
 
+void GnuPlot::SetCmdFileOutput(const char* pcFile)
+{
+	m_strCmdFileOutput = pcFile;
+}
+
 void GnuPlot::FinishPlot()
 {
 	if(!IsReady()) return;
@@ -239,6 +241,18 @@ void GnuPlot::FinishPlot()
 	{
 		std::string strCmd = BuildCmd();
 		RefreshVars();
+
+		if(m_strCmdFileOutput != "")
+		{
+			std::ofstream ofCmd(m_strCmdFileOutput);
+			if(!!ofCmd)
+			{
+				ofCmd << "#!/usr/bin/gnuplot -p\n\n";
+				ofCmd << strCmd << "\n";
+				ofCmd.close();
+				m_strCmdFileOutput = "";
+			}
+		}
 
 		//std::cout << "Plot cmd: " << strCmd << std::endl;
 		(*m_postr) << strCmd;
@@ -283,7 +297,7 @@ std::string GnuPlot::BuildCmd()
 		else if(!bHasXErr && !bHasYErr)
 			ostrTmp << "with points";
 
-		ostrTmp << " pt 7 ps " << dSize;
+		ostrTmp << " pointtype 7 pointsize " << dSize;
 		//std::cout << "*** point size: " << dSize << std::endl;
 		strPointStyle = ostrTmp.str();
 
@@ -292,10 +306,10 @@ std::string GnuPlot::BuildCmd()
 		switch(obj.linestyle)
 		{
 			case STYLE_LINES_SOLID:
-				ostr << "with lines lt 1 lw " << dSize;
+				ostr << "with lines linetype 1 linewidth " << dSize;
 				break;
 			case STYLE_LINES_DASHED:
-				ostr << "with lines lt 2 lw " << dSize;
+				ostr << "with lines linetype 2 linewidth " << dSize;
 				break;
 			default:
 				log_warn("Unknown line style.");
@@ -308,7 +322,7 @@ std::string GnuPlot::BuildCmd()
 		{
 			char chFill = ostr.fill();
 			ostr << std::setfill('0');
-			ostr << "lc rgb \"#" << std::hex
+			ostr << "linecolor rgb \"#" << std::hex
 				<< std::setw(2) << ((obj.iColor & 0xff0000) >> 16)
 				<< std::setw(2) << ((obj.iColor & 0x00ff00) >> 8)
 				<< std::setw(2) << ((obj.iColor & 0x0000ff))
@@ -337,7 +351,7 @@ std::string GnuPlot::BuildCmd()
 }
 
 std::string GnuPlot::BuildTable(const std::vector<double>& vecX, const std::vector<double>& vecY,
-								const std::vector<double>& vecYErr, const std::vector<double>& vecXErr)
+	const std::vector<double>& vecYErr, const std::vector<double>& vecXErr)
 {
 	std::ostringstream ostr;
 

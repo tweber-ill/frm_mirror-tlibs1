@@ -107,7 +107,7 @@ static XYLimits get_plot_limits(const SymbolMap* pParamMap)
 
 
 static void set_plot_params(tl::GnuPlot& plot, const SymbolMap* pParamMap, 
-				tl::PlotObj* pCurPlotObj=0, XYLimits* pLimits=0)
+	tl::PlotObj* pCurPlotObj=0, XYLimits* pLimits=0)
 {
 	bool bHasVal = 0;
 	t_string strTitle = pParamMap->GetStringVal(T_STR"title", &bHasVal);
@@ -169,6 +169,9 @@ static void set_plot_params(tl::GnuPlot& plot, const SymbolMap* pParamMap,
 	if(bHasVal) plot.SetGrid(iGrid!=0);
 
 
+	t_string strCmdFile = pParamMap->GetStringVal(T_STR"cmdfile", &bHasVal);
+
+
 	t_string strArr = pParamMap->GetStringVal(T_STR"arrow", &bHasVal);
 	if(bHasVal)
 	{
@@ -199,6 +202,7 @@ static void set_plot_params(tl::GnuPlot& plot, const SymbolMap* pParamMap,
 	if(bHasVal) iPlotWnd = iUserPlotWnd;
 
 	plot.SetTerminal(iPlotWnd, WSTR_TO_STR(strTerm).c_str());
+	plot.SetCmdFileOutput(WSTR_TO_STR(strCmdFile).c_str());
 }
 
 static Symbol* fkt_fileplot(const std::vector<Symbol*>& vecSyms,

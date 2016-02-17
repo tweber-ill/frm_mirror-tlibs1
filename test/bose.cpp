@@ -14,4 +14,6 @@ int main()
 		double dBose = tl::bose<double>(dE, dT);
 		ofstr << dE << "\t" << dBose << "\n";
 	}
+
+	return 0;
 }

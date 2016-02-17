@@ -44,18 +44,14 @@ struct PlotObj
 class GnuPlot
 {
 protected:
-	FILE *m_pipe = 0;
-	boost::iostreams::file_descriptor_sink *m_pfds = 0;
-	boost::iostreams::stream_buffer<boost::iostreams::file_descriptor_sink> *m_psbuf = 0;
-	std::ostream *m_postr = 0;
+	FILE *m_pipe = nullptr;
+	boost::iostreams::file_descriptor_sink *m_pfds = nullptr;
+	boost::iostreams::stream_buffer<boost::iostreams::file_descriptor_sink> *m_psbuf = nullptr;
+	std::ostream *m_postr = nullptr;
 
 	std::vector<PlotObj> m_vecObjs;
 	// has to be 0 to show plot
 	int m_iStartCounter = 0;
-
-	std::string BuildCmd();
-	std::string BuildTable(const std::vector<double>& vecX, const std::vector<double>& vecY,
-			const std::vector<double>& vecYErr, const std::vector<double>& vecXErr);
 
 	bool m_bTermLocked = false;
 	bool m_bHasLegend = false;
@@ -63,6 +59,12 @@ protected:
 	std::string m_strLegendOpts;
 	std::string m_strLegendPlacement = "default";
 
+	std::string m_strCmdFileOutput;
+
+protected:
+	std::string BuildCmd();
+	std::string BuildTable(const std::vector<double>& vecX, const std::vector<double>& vecY,
+		const std::vector<double>& vecYErr, const std::vector<double>& vecXErr);
 	void RefreshVars();
 
 public:
@@ -77,16 +79,17 @@ public:
 
 	void SetTerminal(int iWnd=0, const char* pcBackend="x11");
 	void SetFileTerminal(const char* pcFile);
+	void SetCmdFileOutput(const char* pcFile);
 
 	void StartPlot();
 	void AddLine(const PlotObj& obj);
 	void FinishPlot();
 
 	void SimplePlot(const std::vector<double>& vecX, const std::vector<double>& vecY,
-			const std::vector<double>& vecYErr, const std::vector<double>& vecXErr,
-			LineStyle style=STYLE_POINTS);
+		const std::vector<double>& vecYErr, const std::vector<double>& vecXErr,
+		LineStyle style=STYLE_POINTS);
 	void SimplePlot2d(const std::vector<std::vector<double> >& vec,
-			double dMinX=0., double dMaxX=-1., double dMinY=0., double dMaxY=-1.);
+		double dMinX=0., double dMaxX=-1., double dMinY=0., double dMaxY=-1.);
 
 	void SetXLabel(const char* pcLab);
 	void SetYLabel(const char* pcLab);
