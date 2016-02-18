@@ -9,8 +9,10 @@
 #define __LOGGER_H__
 
 #include <vector>
+#include <unordered_map>
 #include <iostream>
 #include <sstream>
+#include <thread>
 #include <mutex>
 #include <utility>
 
@@ -20,15 +22,9 @@ namespace tl {
 enum class LogColor
 {
 	NONE,
-
-	RED,
-	BLUE,
-	GREEN,
-	YELLOW,
-	PURPLE,
-	CYAN,
-	WHITE,
-	BLACK
+	RED, BLUE, GREEN,
+	YELLOW, PURPLE, CYAN,
+	WHITE, BLACK
 };
 
 class Log
@@ -45,7 +41,12 @@ protected:
 
 	bool m_bEnabled = 1;
 	bool m_bShowDate = 1;
+
 	bool m_bShowThread = 0;
+	unsigned int m_iNumThreads = 0;
+
+	using t_threadmap = std::unordered_map<std::thread::id, std::string>;
+	t_threadmap m_threadmap;
 
 protected:
 	static std::string get_timestamp();

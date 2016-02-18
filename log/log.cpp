@@ -7,7 +7,6 @@
 
 #include "log.h"
 #include <chrono>
-#include <thread>
 
 namespace tl {
 std::recursive_mutex Log::s_mtx;
@@ -58,7 +57,24 @@ void Log::begin_log()
 		if(m_bShowDate)
 			(*pOstr) << get_timestamp() << ", ";
 		if(m_bShowThread)
-			(*pOstr) << get_thread_id() << ", ";
+		{
+			using t_mapKey = typename t_threadmap::value_type::first_type;
+			using t_mapVal = typename t_threadmap::value_type::second_type;
+
+			t_mapKey idThread = std::this_thread::get_id();
+			typename t_threadmap::const_iterator iterMap = m_threadmap.find(idThread);
+			if(iterMap == m_threadmap.end())
+			{
+				++m_iNumThreads;
+				std::ostringstream ostrThread;
+				ostrThread << "Thread " << m_iNumThreads;
+
+				iterMap = m_threadmap.insert({idThread, ostrThread.str()}).first;
+			}
+
+			(*pOstr) << iterMap->second << ", ";
+			//(*pOstr) << get_thread_id() << ", ";
+		}
 		(*pOstr) << m_strInfo;
 		(*pOstr) << ": " << get_color(m_col, 0);
 	}

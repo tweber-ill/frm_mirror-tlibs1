@@ -73,7 +73,7 @@ void GnuPlot::SetTerminal(int iWnd, const char* pcBackend)
 	(*m_postr) << "set term " << pcBackend <<  " " << iWnd << " "
 		<< "size 640,480 "
 		<< "enhanced "
-		<< "font 'NimbusSanL-Regu,12' "
+		<< "font \"NimbusSanL-Regu,12\" "
 //		<< "title \"" << "Plot " << (iWnd+1) << "\" " 
 		<< "persist "
 		<< "dashed "
@@ -119,7 +119,7 @@ void GnuPlot::SimplePlot(const std::vector<double>& vecX, const std::vector<doub
 		LineStyle style)
 {
 	if(!IsReady()) return;
-	(*m_postr) << "plot '-' ";
+	(*m_postr) << "plot \"-\" ";
 
 	switch(style)
 	{
@@ -197,7 +197,7 @@ void GnuPlot::SimplePlot2d(const std::vector<std::vector<double> >& vec,
 	std::string strTics = "using " + ostrTicsX.str() + ":" + ostrTicsY.str() + ":3";
 	// ----------------------------------------
 
-	(*m_postr) << "plot '-' " << strTics << " matrix with image\n";
+	(*m_postr) << "plot \"-\" " << strTics << " matrix with image\n";
 
 
 	for(unsigned int iY=0; iY<vec.size(); ++iY)
@@ -207,7 +207,7 @@ void GnuPlot::SimplePlot2d(const std::vector<std::vector<double> >& vec,
 		(*m_postr) << "\n";
 	}
 
-	(*m_postr) << "e\ne\n";
+	(*m_postr) << "end\nend\n";
 
 
 	m_postr->flush();
@@ -302,7 +302,7 @@ std::string GnuPlot::BuildCmd()
 		strPointStyle = ostrTmp.str();
 
 
-		ostr << "'-' ";
+		ostr << "\"-\" ";
 		switch(obj.linestyle)
 		{
 			case STYLE_LINES_SOLID:
@@ -368,7 +368,7 @@ std::string GnuPlot::BuildTable(const std::vector<double>& vecX, const std::vect
 
 		ostr << "\n";
 	}
-	ostr << "e\n";
+	ostr << "end\n";
 
 	return ostr.str();
 }
