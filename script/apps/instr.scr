@@ -16,6 +16,7 @@ module_init()
 	global num_pts = 512;
 	global theterm = "wxt";
 	global usegrid = 0;
+	global write_plotfiles = 0;
 }
 
 norm_to_mon(dat_y, dat_yerr, dat_mon, dat_monerr)
@@ -382,7 +383,11 @@ dualplot(plotobj, plotmap, filename="")
 	#print(plotmap);
 	plot(plotobj, plotmap);
 	if(filename != "")
+	{
+		if(write_plotfiles)
+			plotmap["cmdfile"] = filename + ".gpl";
 		fileplot(filename, plotobj, plotmap);
+	}
 }
 
 plot_gausses(num_gausses, thefit, thedat, title, xlab, ylab, filename, restplotmap=map())
@@ -499,25 +504,20 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 			title += ", {/Symbol c}^2/n_d_f = " + fitres["<chi2_red>"];
 	}
 
-	plot(plotobjs, 
-		["xlimits" : xlims,
+	plotmap = [ "xlimits" : xlims,
 		"ylimits" : ylims,
 		"xlabel" : xlab,
 		"ylabel" : ylab,
 		"title" : title,
 		"grid" : usegrid,
-		"term" : theterm]);
+		"term" : theterm ];
+	plot(plotobjs, plotmap);
 
 	if(is_valid(outfile) && length(outfile) != 0)
 	{
-		fileplot(outfile, plotobjs,
-			["xlimits" : xlims,
-			"ylimits" : ylims,
-			"xlabel" : xlab,
-			"ylabel" : ylab,
-			"title" : title,
-			"grid" : usegrid,
-			"term" : theterm]);
+		if(write_plotfiles)
+			plotmap["cmdfile"] = outfile + ".gpl";
+		fileplot(outfile, plotobjs, plotmap);
 	}
 
 	#sleep(10000);
