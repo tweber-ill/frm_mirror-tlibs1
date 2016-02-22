@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.0)
 set(CMAKE_VERBOSE_MAKEFILE TRUE)
 set(CMAKE_BUILD_TYPE Release)
 
-list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}" ".")
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}" "." "..")
 
 
 add_custom_command(OUTPUT script.cc tokens.h
@@ -37,7 +37,7 @@ include_directories("${Minuit2_INCLUDE_DIRS}")
 file(GLOB lang "lang/*.cpp" "lang/*.h" "script.cc" "tokens.h")
 file(GLOB runtime "runtime/*.cpp" "runtime/*.h")
 file(GLOB tlibs
-	"../math/linalg2.cpp" "../math/rand.cpp" "../math/fourier.cpp" "../math/minuit.cpp"
+	"../math/linalg2.cpp" "../math/rand.cpp" "../math/fourier.cpp" "../fit/minuit.cpp"
 	"../string/spec_char.cpp"
 	"../gfx/gnuplot.cpp"
 	"../file/loadtxt.cpp" "../file/loadinstr.cpp" "../file/file.cpp"

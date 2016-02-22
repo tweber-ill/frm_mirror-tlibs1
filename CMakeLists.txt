@@ -13,6 +13,8 @@ find_package(Boost REQUIRED COMPONENTS iostreams system filesystem regex REQUIRE
 find_package(Threads REQUIRED)
 find_package(Qt4 REQUIRED)
 find_package(Freetype REQUIRED)
+find_package(Minuit2 REQUIRED)
+
 set(CMAKE_AUTOMOC OFF)
 set(CMAKE_AUTOUIC OFF)
 
@@ -35,15 +37,20 @@ include_directories("${PROJECT_SOURCE_DIR}" ".")
 include_directories("${Boost_INCLUDE_DIRS}/..")
 include_directories("${QT_INCLUDE_DIR}")
 include_directories("${FREETYPE_INCLUDE_DIRS}")
+include_directories("${Minuit2_INCLUDE_DIRS}")
 
 
 add_definitions(-std=c++11)
 #add_definitions(-march=native -s)
 
 
+
+# -----------------------------------------------------------------------------
+# build
+# -----------------------------------------------------------------------------
 add_library(tlibs SHARED
 	file/tmp.cpp  file/loadinstr.cpp  file/loadtxt.cpp  file/recent.cpp  file/x3d.cpp
-	old/xml.cpp
+	fit/minuit.cpp
 	log/log.cpp log/debug.cpp
 	helper/flags.cpp
 	math/fourier.cpp  math/linalg2.cpp  math/rand.cpp
@@ -51,15 +58,22 @@ add_library(tlibs SHARED
 	string/spec_char.cpp
 	gfx/gl.cpp  gfx/gnuplot.cpp
 	version.cpp
+	old/xml.cpp
 )
 
 
 target_link_libraries(tlibs ${Boost_LIBRARIES} Threads::Threads
 	Qt4::QtCore Qt4::QtGui Qt4::QtOpenGL
-	${FREETYPE_LIBRARY}
+	${FREETYPE_LIBRARY} ${Minuit2_LIBRARIES}
 )
+# -----------------------------------------------------------------------------
 
 
+
+
+# -----------------------------------------------------------------------------
+# install
+# -----------------------------------------------------------------------------
 install(TARGETS tlibs  DESTINATION lib)
 
 file(GLOB tlibs_rt  ${PROJECT_SOURCE_DIR}/*.h)
@@ -90,3 +104,4 @@ install(FILES ${PROJECT_SOURCE_DIR}/COPYING.GPLv2 ${PROJECT_SOURCE_DIR}/COPYING.
 	${PROJECT_SOURCE_DIR}/AUTHORS ${PROJECT_SOURCE_DIR}/LICENSES
         DESTINATION share/tlibs
 )
+# -----------------------------------------------------------------------------
