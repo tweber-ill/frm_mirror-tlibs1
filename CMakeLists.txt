@@ -66,6 +66,14 @@ target_link_libraries(tlibs ${Boost_LIBRARIES} Threads::Threads
 	Qt4::QtCore Qt4::QtGui Qt4::QtOpenGL
 	${FREETYPE_LIBRARY} ${Minuit2_LIBRARIES}
 )
+
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+	add_custom_command(TARGET tlibs POST_BUILD
+		COMMAND strip -v $<TARGET_FILE:tlibs>
+		MAIN_DEPENDENCY tlibs
+	)
+endif()
 # -----------------------------------------------------------------------------
 
 
