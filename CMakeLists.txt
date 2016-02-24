@@ -108,6 +108,8 @@ install(FILES ${tlibs_cl}  DESTINATION include/tlibs/cl)
 install(FILES ${tlibs_log}  DESTINATION include/tlibs/log)
 install(FILES ${tlibs_fit}  DESTINATION include/tlibs/fit)
 
+install(FILES ${PROJECT_SOURCE_DIR}/FindMinuit2.cmake DESTINATION share/tlibs)
+
 install(FILES ${PROJECT_SOURCE_DIR}/COPYING.GPLv2 ${PROJECT_SOURCE_DIR}/COPYING.GPLv3 
 	${PROJECT_SOURCE_DIR}/AUTHORS ${PROJECT_SOURCE_DIR}/LICENSES
         DESTINATION share/tlibs
