@@ -1,3 +1,10 @@
+#
+# tlibs
+# @author tweber
+# @date 2012-2016
+# @license GPLv2 or GPLv3
+#
+
 project(tlibs)
 cmake_minimum_required(VERSION 3.0)
 
