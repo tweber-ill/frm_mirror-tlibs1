@@ -10,13 +10,13 @@
 #ifndef __TCP_CLIENT__
 #define __TCP_CLIENT__
 
+#include <boost/asio.hpp>
+#include <boost/signals2.hpp>
+
 #include <string>
 #include <list>
 #include <thread>
 //#include <mutex>
-
-#include <boost/asio.hpp>
-#include <boost/signals2.hpp>
 
 namespace tl {
 

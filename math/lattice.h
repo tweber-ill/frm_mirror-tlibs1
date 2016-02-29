@@ -142,7 +142,7 @@ void Lattice<T>::RotateEulerRecip(const ublas::vector<T>& vecRecipX,
 	T dLenZ = ublas::norm_2(vecZ);
 
 	if(float_equal(dLenX, 0.) || float_equal(dLenY, 0.) || float_equal(dLenZ, 0.)
-		|| ::isnan(dLenX) || ::isnan(dLenY) || ::isnan(dLenZ))
+		|| std::isnan(dLenX) || std::isnan(dLenY) || std::isnan(dLenZ))
 	{
 		throw Err("Invalid reciprocal matrix.");
 	}

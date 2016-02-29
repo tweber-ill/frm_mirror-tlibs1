@@ -68,6 +68,11 @@ static inline std::string wstr_to_str(const std::wstring& str)
 }
 
 
+// overloaded in case the string is already of correct type
+static inline const std::wstring& str_to_wstr(const std::wstring& str) { return str; }
+static inline const std::string& wstr_to_str(const std::string& str) { return str; }
+
+
 // -----------------------------------------------------------------------------
 
 template<class t_str=std::string>
