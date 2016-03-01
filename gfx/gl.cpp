@@ -92,6 +92,8 @@ FontMap::FontMap(const char* pcFont, int iSize) : FontMap()
 
 bool FontMap::LoadFont(FT_Face ftFace)
 {
+	m_ftFace = ftFace;
+
 	m_iTileH = 0;
 	m_iTileW = 0;
 
