@@ -19,12 +19,12 @@
 namespace tl {
 
 void FontMap::draw_tile(unsigned char* pcBuf,
-				unsigned int iW, unsigned int iH,
-				unsigned int iTileW, unsigned int iTileH,
-				unsigned int iPosX, unsigned int iPosY,
-				const unsigned char* pcGlyph,
-				unsigned int iGlyphXOffs, unsigned int iGlyphYOffs,
-				unsigned int iGlyphW, unsigned int iGlyphH)
+	unsigned int iW, unsigned int iH,
+	unsigned int iTileW, unsigned int iTileH,
+	unsigned int iPosX, unsigned int iPosY,
+	const unsigned char* pcGlyph,
+	unsigned int iGlyphXOffs, unsigned int iGlyphYOffs,
+	unsigned int iGlyphW, unsigned int iGlyphH)
 {
 	unsigned int iYOffs = iPosY*iTileH + iGlyphYOffs;
 	unsigned int iXOffs = iPosX*iTileW + iGlyphXOffs;
@@ -62,12 +62,13 @@ void FontMap::draw_tile(unsigned char* pcBuf,
 }
 
 const std::string FontMap::m_strCharset =
-						std::string("ABCDEFGHIJKLMNOPQRSTUVWXYZ") +
-						std::string("abcdefghijklmnopqrstuvwxyz") +
-						std::string("1234567890") +
-						std::string(".,:;/*+-_#'\"!$%&()[]{}=?<>|~^ ");
+	std::string("ABCDEFGHIJKLMNOPQRSTUVWXYZ") +
+	std::string("abcdefghijklmnopqrstuvwxyz") +
+	std::string("1234567890") +
+	std::string(".,:;*/+-_#'\"!$%&()[]{}=?<>|~^ ");
 
-FontMap::FontMap(const char* pcFont, int iSize) : m_bOk(0)
+
+FontMap::FontMap() : m_bOk(0)
 {
 	m_iCharsPerLine = int(std::ceil(std::sqrt(double(m_strCharset.length()))));
 	m_iLines = m_iCharsPerLine;
@@ -77,26 +78,20 @@ FontMap::FontMap(const char* pcFont, int iSize) : m_bOk(0)
 		log_err("Cannot init freetype.");
 		return;
 	}
+}
 
+FontMap::FontMap(const char* pcFont, int iSize) : FontMap()
+{
 	//log_info("Using font \"", pcFont, "\".");
 	if(!LoadFont(pcFont, iSize))
 	{
 		log_err("Cannot load font \"", pcFont, "\".");
 		return;
 	}
-
-	m_bOk = 1;
 }
 
-bool FontMap::LoadFont(const char* pcFont, int iSize)
+bool FontMap::LoadFont(FT_Face ftFace)
 {
-	UnloadFont();
-
-	if(FT_New_Face(m_ftLib, pcFont, 0, &m_ftFace) != 0)
-		return false;
-
-	FT_Set_Pixel_Sizes(m_ftFace, 0, iSize);
-
 	m_iTileH = 0;
 	m_iTileW = 0;
 
@@ -164,8 +159,8 @@ bool FontMap::LoadFont(const char* pcFont, int iSize)
 
 		const unsigned char* pcBmp = m_ftFace->glyph->bitmap.buffer;
 		draw_tile(m_pcLarge, m_iLargeW, m_iLargeH, m_iTileW+m_iPadW, m_iTileH+m_iPadH,
-				iPosX, iPosY, pcBmp, iLeft,
-				iMaxTop-iTop, iGlyphW, iGlyphH);
+			iPosX, iPosY, pcBmp, iLeft,
+			iMaxTop-iTop, iGlyphW, iGlyphH);
 
 		m_mapOffs[ch] = t_offsmap::value_type::second_type(iPosX*(m_iTileW+m_iPadW),
 															iPosY*(m_iTileH+m_iPadH));
@@ -178,7 +173,19 @@ bool FontMap::LoadFont(const char* pcFont, int iSize)
 		}
 	}
 
+	m_bOk = 1;
 	return true;
+}
+
+bool FontMap::LoadFont(const char* pcFont, int iSize)
+{
+	UnloadFont();
+
+	if(FT_New_Face(m_ftLib, pcFont, 0, &m_ftFace) != 0)
+		return false;
+
+	FT_Set_Pixel_Sizes(m_ftFace, 0, iSize);
+	return LoadFont(m_ftFace);
 }
 
 void FontMap::dump(std::ostream& ostr) const
@@ -230,6 +237,8 @@ std::pair<int, int> FontMap::GetOffset(char ch) const
 
 void FontMap::UnloadFont()
 {
+	m_bOk = 0;
+
 	m_mapOffs.clear();
 	if(m_pcLarge) { delete[] m_pcLarge; m_pcLarge = nullptr; }
 	if(m_ftFace) { FT_Done_Face(m_ftFace); m_ftFace=0; }
@@ -245,7 +254,7 @@ FontMap::~FontMap()
 
 
 GlFontMap::GlFontMap(const char* pcFont, int iSize)
-			: FontMap(pcFont, iSize), m_bOk(0)
+	: FontMap(pcFont, iSize), m_bOk(0)
 {
 	if(!FontMap::m_bOk)
 	{
@@ -424,7 +433,7 @@ GlFontMap::~GlFontMap()
 
 // -----------------------------------------------------------------------------
 
-#include <fontconfig/fontconfig.h>
+/*#include <fontconfig/fontconfig.h>
 
 std::string FontMap::get_font_file(const std::string& strFind)
 {
@@ -456,7 +465,7 @@ std::string FontMap::get_font_file(const std::string& strFind)
 	//FcFini();
 
 	return strFile;
-}
+}*/
 
 }
 

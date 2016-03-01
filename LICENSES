@@ -134,6 +134,18 @@ License: GNU LGPL version 2.1 or GNU GPL version 3.0 (see below)
 
 
 -------------------------------------------------------------------------------- 
+FreeType
+URL: http://freetype.org
+
+Copyright (C) 1996-2002, 2006 by
+David Turner, Robert Wilhelm, and Werner Lemberg
+
+License: GNU GPL version 2 (see below) or FreeType License
+--------------------------------------------------------------------------------
+
+
+
+-------------------------------------------------------------------------------- 
 Gnuplot
 URL: http://www.gnuplot.info
 

@@ -57,7 +57,7 @@ t_mat from_gl_array(const typename t_mat::value_type* glmat)
 
 
 template<typename t_mat = t_mat4, typename t_vec = t_vec4,
-		typename T = typename t_mat::value_type>
+	typename T = typename t_mat::value_type>
 void proj_pt(T dX, T dY, T dZ, const t_mat& matProj, const t_mat& matMV,
 			T& dXProj, T& dYProj)
 {
@@ -71,7 +71,7 @@ void proj_pt(T dX, T dY, T dZ, const t_mat& matProj, const t_mat& matMV,
 }
 
 template<typename t_mat = t_mat4, typename t_vec = t_vec4,
-		typename T = typename t_mat::value_type>
+	typename T = typename t_mat::value_type>
 void gl_proj_pt(T dX, T dY, T dZ, T& dXProj, T& dYProj)
 {
 	GLdouble dMatMV[16], dMatProj[16];
@@ -86,7 +86,7 @@ void gl_proj_pt(T dX, T dY, T dZ, T& dXProj, T& dYProj)
 
 
 template<typename t_mat = t_mat4, typename t_vec = t_vec4,
-		typename T = typename t_mat::value_type>
+	typename T = typename t_mat::value_type>
 void gl_mv_pt(const t_vec& vec, t_vec& vecOut)
 {
 	GLdouble dMatMV[16];
@@ -100,7 +100,7 @@ void gl_mv_pt(const t_vec& vec, t_vec& vecOut)
 
 // distance to the object defined by the current modelview matrix
 template<typename t_mat = t_mat4, typename t_vec = t_vec4,
-		typename T = typename t_mat::value_type>
+	typename T = typename t_mat::value_type>
 T gl_dist_mv()
 {
 	t_vec vecPos;
@@ -114,7 +114,7 @@ T gl_dist_mv()
 
 // size of projected sphere using fov angle
 template<typename t_mat = t_mat4, typename t_vec = t_vec4,
-		typename T = typename t_mat::value_type>
+	typename T = typename t_mat::value_type>
 T gl_proj_sphere_size(T dFOV, T dRadius)
 {
 	return 2.*dRadius / (2.*gl_dist_mv<t_mat, t_vec, T>() * std::tan(0.5*dFOV));
@@ -122,7 +122,7 @@ T gl_proj_sphere_size(T dFOV, T dRadius)
 
 // size of projected sphere using projection matrix
 template<typename t_mat = t_mat4, typename t_vec = t_vec4,
-		typename T = typename t_mat::value_type>
+	typename T = typename t_mat::value_type>
 T gl_proj_sphere_size(T dRadius)
 {
 	GLdouble dMatProj[16];
@@ -147,7 +147,7 @@ T gl_proj_sphere_size(T dRadius)
 // ray through screen coordinates (dX, dY)
 // similar to: https://www.opengl.org/sdk/docs/man2/xhtml/gluUnProject.xml
 template<typename t_mat = t_mat4, typename t_vec = t_vec4,
-		typename T = typename t_mat::value_type>
+	typename T = typename t_mat::value_type>
 Line<T> screen_ray(T dX, T dY, const t_mat& matProj, const t_mat& matMV)
 {
 	t_mat mat = ublas::prod(matProj, matMV);
@@ -171,7 +171,7 @@ Line<T> screen_ray(T dX, T dY, const t_mat& matProj, const t_mat& matMV)
 }
 
 template<typename t_mat = t_mat4, typename t_vec = t_vec4,
-		typename T = typename t_mat::value_type>
+	typename T = typename t_mat::value_type>
 Line<T> gl_screen_ray(T dX, T dY)
 {
 	GLdouble dMatMV[16], dMatProj[16];
@@ -188,7 +188,7 @@ Line<T> gl_screen_ray(T dX, T dY)
 
 
 template<typename t_mat = ublas::matrix<double>, typename t_vec = ublas::vector<double>,
-		typename T = typename t_mat::value_type>
+	typename T = typename t_mat::value_type>
 class Cam
 {
 protected:
@@ -268,7 +268,6 @@ public:
 
 
 #define DEF_FONT "/usr/share/fonts/dejavu/DejaVuSansMono.ttf"
-//#define DEF_FONT "/usr/share/fonts/gnu-free/FreeMono.ttf"
 #define DEF_FONT_SIZE 12
 
 #include <ft2build.h>
@@ -290,25 +289,28 @@ class FontMap
 
 		static const std::string m_strCharset;
 		using t_offsmap = std::unordered_map<
-						typename std::string::value_type,
-						std::pair<int, int>>;
+			typename std::string::value_type,
+			std::pair<int, int>>;
 		t_offsmap m_mapOffs;
 
 	protected:
-		bool LoadFont(const char* pcFont, int iSize);
 		void UnloadFont();
 
 	static void draw_tile(unsigned char* pcBuf,
-				unsigned int iW, unsigned int iH,
-				unsigned int iTileW, unsigned int iTileH,
-				unsigned int iPosX, unsigned int iPosY,
-				const unsigned char* pcGlyph,
-				unsigned int iGlyphXOffs, unsigned int iGlyphYOffs,
-				unsigned int iGlyphW, unsigned int iGlyphH);
+		unsigned int iW, unsigned int iH,
+		unsigned int iTileW, unsigned int iTileH,
+		unsigned int iPosX, unsigned int iPosY,
+		const unsigned char* pcGlyph,
+		unsigned int iGlyphXOffs, unsigned int iGlyphYOffs,
+		unsigned int iGlyphW, unsigned int iGlyphH);
 
 	public:
-		FontMap(const char* pcFont=DEF_FONT, int iSize=DEF_FONT_SIZE);
+		FontMap(const char* pcFont/*=DEF_FONT*/, int iSize/*=DEF_FONT_SIZE*/);
+		FontMap();
 		virtual ~FontMap();
+
+		bool LoadFont(const char* pcFont, int iSize);
+		bool LoadFont(FT_Face ftFace);
 
 		void dump(std::ostream& ostr) const;
 		void dump(std::ostream& ostr, const std::pair<int,int>& pair) const;
@@ -317,8 +319,7 @@ class FontMap
 		const unsigned char* GetBuffer() const { return m_pcLarge; }
 		std::pair<int, int> GetOffset(char ch) const;
 
-
-		static std::string get_font_file(const std::string& strFind);
+		//static std::string get_font_file(const std::string& strFind);
 };
 
 
