@@ -333,7 +333,9 @@ class GlFontMap : public FontMap
 		bool CreateFontTexture();
 
 	public:
+		GlFontMap() = delete;
 		GlFontMap(const char* pcFont=DEF_FONT, int iSize=DEF_FONT_SIZE);
+		GlFontMap(FT_Face ftFace);
 		virtual ~GlFontMap();
 
 		virtual bool IsOk() const override { return m_bOk && FontMap::IsOk(); }

@@ -273,6 +273,23 @@ GlFontMap::GlFontMap(const char* pcFont, int iSize)
 	m_bOk = 1;
 }
 
+GlFontMap::GlFontMap(FT_Face ftFace) : FontMap(), m_bOk(0)
+{
+	if(!LoadFont(ftFace))
+	{
+		log_err("Font map failed to create.");
+		return;
+	}
+
+	if(!CreateFontTexture())
+	{
+		log_err("Cannot create font texture.");
+		return;
+	}
+
+	m_bOk = 1;
+}
+
 bool GlFontMap::CreateFontTexture()
 {
 	glGetError(); // clear previous errors
