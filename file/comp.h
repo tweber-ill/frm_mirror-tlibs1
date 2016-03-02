@@ -78,6 +78,16 @@ Compressor comp_from_magic(const t_char* pcMagic, std::size_t iLen)
 }
 
 
+template<class t_str=std::string>
+Compressor comp_from_ext(const t_str& strExt)
+{
+	if(strExt == "gz") return Compressor::GZ;
+	else if(strExt == "bz2") return Compressor::BZ2;
+	else if(strExt == "xz") return Compressor::XZ;
+	else if(strExt == "z") return Compressor::Z;
+	return Compressor::INVALID;
+}
+
 
 // -----------------------------------------------------------------------------
 
@@ -85,8 +95,7 @@ Compressor comp_from_magic(const t_char* pcMagic, std::size_t iLen)
 
 template<class t_char=char>
 bool decomp_stream_to_stream(std::basic_istream<t_char>& istr,
-							std::basic_ostream<t_char>& ostr,
-							Compressor comp=Compressor::AUTO)
+	std::basic_ostream<t_char>& ostr, Compressor comp=Compressor::AUTO)
 {
 	typedef typename std::make_unsigned<t_char>::type t_uchar;
 
@@ -127,8 +136,7 @@ bool decomp_stream_to_stream(std::basic_istream<t_char>& istr,
 
 template<class t_char=char>
 bool comp_stream_to_stream(std::basic_istream<t_char>& istr,
-						std::basic_ostream<t_char>& ostr,
-						Compressor comp=Compressor::GZ)
+	std::basic_ostream<t_char>& ostr, Compressor comp=Compressor::GZ)
 {
 	if(comp == Compressor::AUTO)
 		comp = Compressor::GZ;
@@ -224,8 +232,7 @@ bool decomp_file_to_file(const char* pcFileIn, const char* pcFileOut, Compressor
 // TODO: find better way: this is too slow
 template<class t_char=char>
 inline bool __comp_mem_to_mem(const void* pvIn, std::size_t iLenIn,
-					void*& pvOut, std::size_t& iLenOut,
-					Compressor comp, bool bDecomp=0)
+	void*& pvOut, std::size_t& iLenOut, Compressor comp, bool bDecomp=0)
 {
 	t_char *pcIn = (char*)pvIn;
 	ios::stream<ios::basic_array_source<t_char>> istr(pcIn, iLenIn);
@@ -265,13 +272,15 @@ inline bool __comp_mem_to_mem(const void* pvIn, std::size_t iLenIn,
  *	delete[] pvTst;
  */
 template<class t_char=char>
-bool comp_mem_to_mem(const void* pvIn, std::size_t iLenIn, void*& pvOut, std::size_t& iLenOut, Compressor comp=Compressor::GZ)
+bool comp_mem_to_mem(const void* pvIn, std::size_t iLenIn, 
+	void*& pvOut, std::size_t& iLenOut, Compressor comp=Compressor::GZ)
 {
 	return __comp_mem_to_mem<t_char>(pvIn, iLenIn, pvOut, iLenOut, comp, 0);
 }
 
 template<class t_char=char>
-bool decomp_mem_to_mem(const void* pvIn, std::size_t iLenIn, void*& pvOut, std::size_t& iLenOut, Compressor comp=Compressor::AUTO)
+bool decomp_mem_to_mem(const void* pvIn, std::size_t iLenIn, 
+	void*& pvOut, std::size_t& iLenOut, Compressor comp=Compressor::AUTO)
 {
 	return __comp_mem_to_mem<t_char>(pvIn, iLenIn, pvOut, iLenOut, comp, 1);
 }
@@ -283,8 +292,7 @@ bool decomp_mem_to_mem(const void* pvIn, std::size_t iLenIn, void*& pvOut, std::
 
 template<class t_char=char>
 inline bool __comp_mem_to_stream(const void* pvIn, std::size_t iLenIn,
-					std::basic_ostream<t_char>& ostr, Compressor comp,
-					bool bDecomp=0)
+	std::basic_ostream<t_char>& ostr, Compressor comp, bool bDecomp=0)
 {
 	ios::stream<ios::basic_array_source<t_char>> istr((t_char*)pvIn, iLenIn);
 
@@ -298,13 +306,15 @@ inline bool __comp_mem_to_stream(const void* pvIn, std::size_t iLenIn,
 }
 
 template<class t_char=char>
-bool comp_mem_to_stream(const void* pvIn, std::size_t iLenIn, std::basic_ostream<t_char>& ostr, Compressor comp=Compressor::GZ)
+bool comp_mem_to_stream(const void* pvIn, std::size_t iLenIn, 
+	std::basic_ostream<t_char>& ostr, Compressor comp=Compressor::GZ)
 {
 	return __comp_mem_to_stream<t_char>(pvIn, iLenIn, ostr, comp, 0);
 }
 
 template<class t_char=char>
-bool decomp_mem_to_stream(const void* pvIn, std::size_t iLenIn, std::ostream& ostr, Compressor comp=Compressor::AUTO)
+bool decomp_mem_to_stream(const void* pvIn, std::size_t iLenIn, 
+	std::ostream& ostr, Compressor comp=Compressor::AUTO)
 {
 	return __comp_mem_to_stream<t_char>(pvIn, iLenIn, ostr, comp, 1);
 }
@@ -316,8 +326,7 @@ bool decomp_mem_to_stream(const void* pvIn, std::size_t iLenIn, std::ostream& os
 
 template<class t_char=char>
 inline bool __comp_mem_to_mem_fix(const void* pvIn, std::size_t iLenIn,
-								void* pvOut, std::size_t iLenOut,
-								Compressor comp, bool bDecomp=0)
+	void* pvOut, std::size_t iLenOut, Compressor comp, bool bDecomp=0)
 {
 	t_char *pcIn = (t_char*)pvIn;
 	t_char *pcOut = (t_char*)pvOut;
@@ -334,13 +343,15 @@ inline bool __comp_mem_to_mem_fix(const void* pvIn, std::size_t iLenIn,
 }
 
 template<class t_char=char>
-bool comp_mem_to_mem_fix(const void* pvIn, std::size_t iLenIn, void* pvOut, std::size_t iLenOut, Compressor comp=Compressor::GZ)
+bool comp_mem_to_mem_fix(const void* pvIn, std::size_t iLenIn, 
+	void* pvOut, std::size_t iLenOut, Compressor comp=Compressor::GZ)
 {
 	return __comp_mem_to_mem_fix<t_char>(pvIn, iLenIn, pvOut, iLenOut, comp, 0);
 }
 
 template<class t_char=char>
-bool decomp_mem_to_mem_fix(const void* pvIn, std::size_t iLenIn, void* pvOut, std::size_t iLenOut, Compressor comp=Compressor::AUTO)
+bool decomp_mem_to_mem_fix(const void* pvIn, std::size_t iLenIn, 
+	void* pvOut, std::size_t iLenOut, Compressor comp=Compressor::AUTO)
 {
 	return __comp_mem_to_mem_fix<t_char>(pvIn, iLenIn, pvOut, iLenOut, comp, 1);
 }
@@ -381,7 +392,7 @@ std::basic_istream<t_char>* create_autodecomp_istream(std::basic_istream<t_char>
 
 template<class t_char=char>
 std::basic_ostream<t_char>* create_comp_ostream(std::basic_ostream<t_char>& ostr,
-		Compressor comp = Compressor::INVALID)
+	Compressor comp = Compressor::INVALID)
 {
 	ios::filtering_ostream *pOstr = new ios::filtering_ostream();
 

@@ -26,6 +26,12 @@
 #include "../helper/traits.h"
 #include "../helper/misc.h"
 
+#if !defined NO_IOSTR
+	#include "../file/comp.h"
+#else
+	enum class Compressor { INVALID };
+#endif
+
 
 namespace tl {
 
@@ -60,7 +66,7 @@ public:
 	bool Load(const t_ch* pcFile)
 	{
 		t_str strFile = pcFile;
-		t_str strExt = str_to_lower<t_str>(get_fileext<t_str>(strFile));
+		t_str strExt = str_to_lower<t_str>(get_fileext_nocomp<t_str>(strFile));
 
 		bool bOk = 0;
 		if(strExt == "xml")
@@ -78,9 +84,18 @@ public:
 	bool Load(const t_ch* pcFile, PropType ty)
 	{
 		std::basic_ifstream<t_ch> ifstr(pcFile);
-		if(!ifstr) return false;
 
-		return Load(ifstr, ty);
+	#if !defined NO_IOSTR
+		std::unique_ptr<std::basic_istream<t_ch>> ptrIstr(create_autodecomp_istream(ifstr));
+		if(!ptrIstr)
+			return false;
+		std::basic_istream<t_ch>* pIfstr = ptrIstr.get();
+	#else
+		std::basic_istream<t_ch>* pIfstr = &ifstr;
+	#endif
+
+		if(!*pIfstr) return false;
+		return Load(*pIfstr, ty);
 	}
 
 	bool Load(std::basic_istream<t_ch>& istr, PropType ty)
@@ -117,31 +132,44 @@ public:
 	bool Save(const t_ch* pcFile) const
 	{
 		t_str strFile = pcFile;
-		t_str strExt = str_to_lower<t_str>(get_fileext<t_str>(strFile));
+		t_str strExt = str_to_lower<t_str>(get_fileext_nocomp<t_str>(strFile));
+		t_str strComp = str_to_lower<t_str>(get_fileext<t_str>(strFile));
+		Compressor comp = Compressor::INVALID;
+	#if !defined NO_IOSTR
+		comp = comp_from_ext(strComp);
+	#endif
 
 		bool bOk = 0;
 		if(strExt == "xml")
-			bOk = Save(pcFile, PropType::XML);
+			bOk = Save(pcFile, PropType::XML, comp);
 		else if(strExt == "json")
-			bOk = Save(pcFile, PropType::JSON);
+			bOk = Save(pcFile, PropType::JSON, comp);
 		else if(strExt == "info")
-			bOk = Save(pcFile, PropType::INFO);
+			bOk = Save(pcFile, PropType::INFO, comp);
 		else if(strExt == "ini")
-			bOk = Save(pcFile, PropType::INI);
+			bOk = Save(pcFile, PropType::INI, comp);
 
 		return bOk;
 	}
 
-	bool Save(const t_ch* pcFile, PropType ty) const
+	bool Save(const t_ch* pcFile, PropType ty, Compressor comp=Compressor::INVALID) const
 	{
 		std::basic_ofstream<t_ch> ofstr(pcFile);
-		if(!ofstr) return false;
 
-		Save(ofstr, ty);
-		return true;
+	#if !defined NO_IOSTR
+		std::unique_ptr<std::basic_ostream<t_ch>> ptrOstr(create_comp_ostream(ofstr, comp));
+		if(!ptrOstr)
+			return false;
+		std::basic_ostream<t_ch>* pOfstr = ptrOstr.get();
+	#else
+		std::basic_ostream* pOfstr = &ofstr;
+	#endif
+
+		if(!*pOfstr) return false;
+		return Save(*pOfstr, ty);
 	}
 
-	bool Save(std::basic_ofstream<t_ch>& ofstr, PropType ty) const
+	bool Save(std::basic_ostream<t_ch>& ofstr, PropType ty) const
 	{
 		#if BOOST_VERSION >= 105700
 			using t_writer = t_str;

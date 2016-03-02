@@ -107,6 +107,19 @@ t_str get_fileext2(const t_str& str)
 	return get_fileext(strFile);
 }
 
+// e.g. returns "tof" for "123.tof.bz2" and for "123.tof"
+template<class t_str=std::string>
+t_str get_fileext_nocomp(const t_str& str)
+{
+	std::size_t iCnt = std::count(str.begin(), str.end(), '.');
+	if(iCnt==0)
+		return t_str();
+	else if(iCnt==1)
+		return get_fileext(str);
+	else
+		return get_fileext2(str);
+}
+
 template<class t_str=std::string>
 t_str get_dir(const t_str& str)
 {
