@@ -37,13 +37,7 @@ namespace tl {
 
 namespace prop = ::boost::property_tree;
 
-enum class PropType
-{
-	XML,
-	JSON,
-	INFO,
-	INI,
-};
+enum class PropType { XML, JSON, INFO, INI, };
 
 template<class _t_str = std::string>
 class Prop
@@ -68,22 +62,22 @@ public:
 		t_str strFile = pcFile;
 		t_str strExt = str_to_lower<t_str>(get_fileext_nocomp<t_str>(strFile));
 
-		bool bOk = 0;
 		if(strExt == "xml")
-			bOk = Load(pcFile, PropType::XML);
+			return Load(pcFile, PropType::XML);
 		else if(strExt == "json")
-			bOk = Load(pcFile, PropType::JSON);
+			return Load(pcFile, PropType::JSON);
 		else if(strExt == "info")
-			bOk = Load(pcFile, PropType::INFO);
+			return Load(pcFile, PropType::INFO);
 		else if(strExt == "ini")
-			bOk = Load(pcFile, PropType::INI);
+			return Load(pcFile, PropType::INI);
 
-		return bOk;
+		return false;
 	}
 
 	bool Load(const t_ch* pcFile, PropType ty)
 	{
 		std::basic_ifstream<t_ch> ifstr(pcFile);
+		if(!ifstr) return false;
 
 	#if !defined NO_IOSTR
 		std::unique_ptr<std::basic_istream<t_ch>> ptrIstr(create_autodecomp_istream(ifstr));
@@ -124,7 +118,6 @@ public:
 		{
 			return false;
 		}
-
 		return true;
 	}
 
@@ -139,22 +132,22 @@ public:
 		comp = comp_from_ext(strComp);
 	#endif
 
-		bool bOk = 0;
 		if(strExt == "xml")
-			bOk = Save(pcFile, PropType::XML, comp);
+			return Save(pcFile, PropType::XML, comp);
 		else if(strExt == "json")
-			bOk = Save(pcFile, PropType::JSON, comp);
+			return Save(pcFile, PropType::JSON, comp);
 		else if(strExt == "info")
-			bOk = Save(pcFile, PropType::INFO, comp);
+			return Save(pcFile, PropType::INFO, comp);
 		else if(strExt == "ini")
-			bOk = Save(pcFile, PropType::INI, comp);
+			return Save(pcFile, PropType::INI, comp);
 
-		return bOk;
+		return false;
 	}
 
 	bool Save(const t_ch* pcFile, PropType ty, Compressor comp=Compressor::INVALID) const
 	{
 		std::basic_ofstream<t_ch> ofstr(pcFile);
+		if(!ofstr) return false;
 
 	#if !defined NO_IOSTR
 		std::unique_ptr<std::basic_ostream<t_ch>> ptrOstr(create_comp_ostream(ofstr, comp));
