@@ -8,10 +8,11 @@
 #ifndef __TLIBS_COMP_H__
 #define __TLIBS_COMP_H__
 
-#include <iostream>
+#include <memory>
 #include <type_traits>
-#include <fstream>
 #include <list>
+#include <fstream>
+#include <iostream>
 
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
@@ -361,7 +362,7 @@ bool decomp_mem_to_mem_fix(const void* pvIn, std::size_t iLenIn,
 
 
 template<class t_char=char>
-std::basic_istream<t_char>* create_autodecomp_istream(std::basic_istream<t_char>& istr)
+std::shared_ptr<std::basic_istream<t_char>> create_autodecomp_istream(std::basic_istream<t_char>& istr)
 {
 	typedef typename std::make_unsigned<t_char>::type t_uchar;
 
@@ -371,42 +372,43 @@ std::basic_istream<t_char>* create_autodecomp_istream(std::basic_istream<t_char>
 	istr.seekg(pos, std::ios::beg);
 	Compressor comp = comp_from_magic(pcMagic, 6);
 
-	ios::filtering_istream *pIstr = new ios::filtering_istream();
+	std::shared_ptr<ios::filtering_istream> ptrIstr
+		= std::make_shared<ios::filtering_istream>();
 
 	if(comp == Compressor::GZ)
-		pIstr->push(ios::gzip_decompressor());
+		ptrIstr->push(ios::gzip_decompressor());
 	else if(comp == Compressor::BZ2)
-		pIstr->push(ios::bzip2_decompressor());
+		ptrIstr->push(ios::bzip2_decompressor());
 	else if(comp == Compressor::Z)
-		pIstr->push(ios::zlib_decompressor());
+		ptrIstr->push(ios::zlib_decompressor());
 	else if(comp == Compressor::XZ)
 	{
 		log_err("XZ decompression not yet supported.");
-		delete pIstr;
 		return nullptr;
 	}
 
-	pIstr->push(istr);
-	return pIstr;
+	ptrIstr->push(istr);
+	return ptrIstr;
 }
 
 template<class t_char=char>
-std::basic_ostream<t_char>* create_comp_ostream(std::basic_ostream<t_char>& ostr,
+std::shared_ptr<std::basic_ostream<t_char>> create_comp_ostream(std::basic_ostream<t_char>& ostr,
 	Compressor comp = Compressor::INVALID)
 {
-	ios::filtering_ostream *pOstr = new ios::filtering_ostream();
+	std::shared_ptr<ios::filtering_ostream> ptrOstr
+		= std::make_shared<ios::filtering_ostream>();
 
 	if(comp == Compressor::GZ)
-		pOstr->push(ios::gzip_compressor());
+		ptrOstr->push(ios::gzip_compressor());
 	else if(comp == Compressor::BZ2)
-		pOstr->push(ios::bzip2_compressor());
+		ptrOstr->push(ios::bzip2_compressor());
 	else if(comp == Compressor::Z)
-		pOstr->push(ios::zlib_compressor());
+		ptrOstr->push(ios::zlib_compressor());
 	else if(comp == Compressor::XZ)
 		log_err("XZ compression not yet supported.");
 
-	pOstr->push(ostr);
-	return pOstr;
+	ptrOstr->push(ostr);
+	return ptrOstr;
 }
 
 

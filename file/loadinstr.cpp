@@ -38,10 +38,9 @@ FileInstr* FileInstr::LoadInstr(const char* pcFile)
 		return nullptr;
 
 #if !defined NO_IOSTR
-	std::istream* pIstr = create_autodecomp_istream(ifstr);
-	std::unique_ptr<std::istream> ptrIstr(pIstr);
-	if(!pIstr)
-		return nullptr;
+	std::shared_ptr<std::istream> ptrIstr = create_autodecomp_istream(ifstr);
+	if(!ptrIstr) return nullptr;
+	std::istream* pIstr = ptrIstr.get();
 #else
 	std::istream* pIstr = &ifstr;
 #endif
@@ -205,9 +204,9 @@ bool FilePsi::Load(const char* pcFile)
 		return false;
 
 #if !defined NO_IOSTR
-	std::istream* pIstr = create_autodecomp_istream(ifstr);
-	if(!pIstr) return false;
-	std::unique_ptr<std::istream> ptrIstr(pIstr);
+	std::shared_ptr<std::istream> ptrIstr = create_autodecomp_istream(ifstr);
+	if(!ptrIstr) return false;
+	std::istream* pIstr = ptrIstr.get();
 #else
 	std::istream* pIstr = &ifstr;
 #endif
@@ -695,11 +694,11 @@ bool FileFrm::Load(const char* pcFile)
 			return false;
 
 #if !defined NO_IOSTR
-		std::istream* pIstr = create_autodecomp_istream(ifstr);
-		if(!pIstr) return false;
-		std::unique_ptr<std::istream> ptrIstr(pIstr);
+		std::shared_ptr<std::istream> ptrIstr = create_autodecomp_istream(ifstr);
+		if(!ptrIstr) return false;
+		std::istream *pIstr = ptrIstr.get();
 #else
-		std::ifstream *pIstr = &ifstr;
+		std::istream *pIstr = &ifstr;
 #endif
 
 		//std::streampos posIstr = pIstr->tellg();
@@ -1111,11 +1110,11 @@ bool FileMacs::Load(const char* pcFile)
 			return false;
 
 #if !defined NO_IOSTR
-		std::istream* pIstr = create_autodecomp_istream(ifstr);
-		if(!pIstr) return false;
-		std::unique_ptr<std::istream> ptrIstr(pIstr);
+		std::shared_ptr<std::istream> ptrIstr = create_autodecomp_istream(ifstr);
+		if(!ptrIstr) return false;
+		std::istream *pIstr = ptrIstr.get();
 #else
-		std::ifstream *pIstr = &ifstr;
+		std::istream *pIstr = &ifstr;
 #endif
 
 		if(iStep==0)
@@ -1551,11 +1550,11 @@ bool FileTrisp::Load(const char* pcFile)
 		return false;
 
 #if !defined NO_IOSTR
-	std::istream* pIstr = create_autodecomp_istream(ifstr);
-	if(!pIstr) return false;
-	std::unique_ptr<std::istream> ptrIstr(pIstr);
+	std::shared_ptr<std::istream> ptrIstr = create_autodecomp_istream(ifstr);
+	if(!ptrIstr) return false;
+	std::istream *pIstr = ptrIstr.get();
 #else
-	std::ifstream *pIstr = &ifstr;
+	std::istream *pIstr = &ifstr;
 #endif
 
 	ReadHeader(*pIstr);

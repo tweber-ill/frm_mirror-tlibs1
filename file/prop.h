@@ -80,7 +80,8 @@ public:
 		if(!ifstr) return false;
 
 	#if !defined NO_IOSTR
-		std::unique_ptr<std::basic_istream<t_ch>> ptrIstr(create_autodecomp_istream(ifstr));
+		std::shared_ptr<std::basic_istream<t_ch>> ptrIstr
+			= create_autodecomp_istream(ifstr);
 		if(!ptrIstr)
 			return false;
 		std::basic_istream<t_ch>* pIfstr = ptrIstr.get();
@@ -150,7 +151,8 @@ public:
 		if(!ofstr) return false;
 
 	#if !defined NO_IOSTR
-		std::unique_ptr<std::basic_ostream<t_ch>> ptrOstr(create_comp_ostream(ofstr, comp));
+		std::shared_ptr<std::basic_ostream<t_ch>> ptrOstr
+			= create_comp_ostream(ofstr, comp);
 		if(!ptrOstr)
 			return false;
 		std::basic_ostream<t_ch>* pOfstr = ptrOstr.get();
