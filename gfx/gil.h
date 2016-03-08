@@ -43,7 +43,7 @@ namespace tl
 		using t_str = std::basic_string<t_char>;
 
 		std::shared_ptr<t_img> pimg = std::make_shared<t_img>();
-		t_str strExt = tl::str_tolower<t_str>(get_fileext<t_str>(pcFile));
+		t_str strExt = tl::str_to_lower<t_str>(get_fileext<t_str>(pcFile));
 
 		try
 		{
@@ -75,7 +75,7 @@ namespace tl
 	bool save_view(const t_char* pcFile, const t_viewptr pview)
 	{
 		using t_str = std::basic_string<t_char>;
-		t_str strExt = tl::str_tolower<t_str>(get_fileext<t_str>(pcFile));
+		t_str strExt = tl::str_to_lower<t_str>(get_fileext<t_str>(pcFile));
 
 		try
 		{

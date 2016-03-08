@@ -158,20 +158,6 @@ t_str insert_before(const t_str& str, const t_str& strChar, const t_str& strInse
 }
 
 template<class t_str=std::string>
-t_str str_to_lower(const t_str& str)
-{
-	typedef typename std::string::value_type t_char;
-
-	t_str strOut;
-	strOut.reserve(str.length());
-
-	for(t_char ch : str)
-		strOut.push_back(std::tolower(ch));
-
-	return strOut;
-}
-
-template<class t_str=std::string>
 t_str str_to_upper(const t_str& str)
 {
 	typedef typename std::string::value_type t_char;
@@ -212,7 +198,7 @@ bool str_is_equal_to_either(const t_str& str0,
 }
 
 template<class t_str=std::string>
-t_str str_tolower(const t_str& str)
+t_str str_to_lower(const t_str& str)
 {
 	t_str strLower;
 	strLower.reserve(str.length());
@@ -229,8 +215,8 @@ bool str_contains(const t_str& str, const t_str& strSub, bool bCase=0)
 	if(bCase)
 		return str.find(strSub) != t_str::npos;
 
-	t_str strLower = str_tolower(str);
-	t_str strSubLower = str_tolower(strSub);
+	t_str strLower = str_to_lower(str);
+	t_str strSubLower = str_to_lower(strSub);
 
 	return strLower.find(strSubLower) != t_str::npos;
 }
