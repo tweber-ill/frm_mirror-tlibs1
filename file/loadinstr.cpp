@@ -27,7 +27,6 @@
 
 namespace tl{
 
-
 // automatically choose correct instrument
 FileInstr* FileInstr::LoadInstr(const char* pcFile)
 {
@@ -106,6 +105,52 @@ std::array<double, 5> FileInstr::GetScanHKLKiKf(const char* pcH, const char* pcK
 	double kother = get_other_k(E*meV, kfix/angstrom, bKiFix) * angstrom;
 
 	return std::array<double,5>{{h,k,l, bKiFix?kfix:kother, bKiFix?kother:kfix}};
+}
+
+
+bool FileInstr::MatchNonEmptyColumn(const std::string& strRegex,
+	std::string& strColName, bool bSortByCounts) const
+{
+	const FileInstr::t_vecColNames& vecColNames = GetColNames();
+	rex::regex rx(strRegex, rex::regex::ECMAScript | rex::regex_constants::icase);
+	
+	using t_pairCol = std::pair<std::string, t_real>;
+	std::vector<t_pairCol> vecMatchedCols;
+
+	for(const std::string& strCurColName : vecColNames)
+	{
+		rex::smatch m;
+		if(rex::regex_match(strCurColName, m, rx))
+		{
+			const FileInstr::t_vecVals& vecVals = GetCol(strCurColName);
+			/*if(std::find_if(vecVals.begin(), vecVals.end(),
+				[](const typename FileInstr::t_vecVals::value_type& val) ->bool
+				{ return !float_equal(val, 0.); }) != vecVals.end())
+			{
+				strColName = strCurColName;
+				return true;
+			}*/
+
+			t_real dSum = std::accumulate(vecVals.begin(), vecVals.end(), 0., 
+				[](t_real t1, t_real t2) -> t_real { return t1+t2; });
+			if(!float_equal(dSum, 0.))
+				vecMatchedCols.push_back(t_pairCol{strCurColName, dSum});
+		}
+	}
+
+	if(bSortByCounts)
+	{
+		std::sort(vecMatchedCols.begin(), vecMatchedCols.end(),
+		[](const t_pairCol& pair1, const t_pairCol& pair2) -> bool
+			{ return pair1.second > pair2.second; });
+	}
+	
+	if(vecMatchedCols.size())
+	{
+		strColName = vecMatchedCols[0].first;
+		return true;
+	}
+	return false;
 }
 
 
@@ -558,30 +603,6 @@ std::vector<std::string> FilePsi::GetScannedVars() const
 	return vecVars;
 }
 
-bool FileInstr::MatchNonEmptyColumn(const std::string& strRegex, std::string& strColName) const
-{
-	const FileInstr::t_vecColNames& vecColNames = GetColNames();
-	rex::regex rx(strRegex, rex::regex::ECMAScript|rex::regex_constants::icase);
-
-	for(const std::string& strCurColName : vecColNames)
-	{
-		rex::smatch m;
-		if(rex::regex_match(strCurColName, m, rx))
-		{
-			const FileInstr::t_vecVals& vecVals = GetCol(strCurColName);
-			if(std::find_if(vecVals.begin(), vecVals.end(),
-				[](const typename FileInstr::t_vecVals::value_type& val) ->bool
-				{ return !float_equal(val, 0.); }) != vecVals.end())
-			{
-				strColName = strCurColName;
-				return true;
-			}
-		}
-	}
-
-	return false;
-}
-
 std::string FilePsi::GetCountVar() const
 {
 	std::string strRet;
@@ -1028,7 +1049,7 @@ std::vector<std::string> FileFrm::GetScannedVars() const
 std::string FileFrm::GetCountVar() const
 {
 	std::string strRet;
-	if(MatchNonEmptyColumn(R"REX((det[a-z]*[0-9])|(ctr[0-9])|(counter[0-9])|(psd[a-z0-9\.]*))REX", strRet))
+	if(MatchNonEmptyColumn(R"REX((det[a-z]*[0-9])|(ctr[0-9])|(counter[0-9])|([a-z0-9\.]*roi))REX", strRet, true))
 		return strRet;
 	return "";
 }
@@ -1036,7 +1057,7 @@ std::string FileFrm::GetCountVar() const
 std::string FileFrm::GetMonVar() const
 {
 	std::string strRet;
-	if(MatchNonEmptyColumn(R"REX((mon[a-z]*[0-9]))REX", strRet))
+	if(MatchNonEmptyColumn(R"REX((mon[a-z]*[0-9]))REX", strRet, true))
 		return strRet;
 	return "";
 }

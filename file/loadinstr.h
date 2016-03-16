@@ -75,7 +75,8 @@ class FileInstr
 		virtual std::string GetScanCommand() const = 0;
 
 	public:
-		virtual bool MatchNonEmptyColumn(const std::string& strRegex, std::string& strColName) const;
+		virtual bool MatchNonEmptyColumn(const std::string& strRegex,
+			std::string& strColName, bool bSortByCounts=0) const;
 
 		static FileInstr* LoadInstr(const char* pcFile);
 };
