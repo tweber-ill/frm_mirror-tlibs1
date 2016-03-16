@@ -131,16 +131,16 @@ bool FontMap::LoadFont(FT_Face ftFace)
 	//log_info("glob w: ", m_iTileW, ", glob h: ", m_iTileH);
 	//log_info("glob top: ", iMaxTop);
 
-	m_iPadH = nextpow2(m_iTileH)-m_iTileH;
-	m_iPadW = nextpow2(m_iTileW)-m_iTileW;
+	m_iPadH = nextpow(2, m_iTileH)-m_iTileH;
+	m_iPadW = nextpow(2, m_iTileW)-m_iTileW;
 	//log_info("Padding: ", m_iPadW, ", ", m_iPadH);
 
 	m_iLargeW = (m_iTileW+m_iPadW) * m_iCharsPerLine;
 	m_iLargeH = (m_iTileH+m_iPadH) * m_iLines;
 
 	// find next larger power of 2 (later used for glTexImage2D)
-	m_iLargeW = nextpow2(m_iLargeW);
-	m_iLargeH = nextpow2(m_iLargeH);
+	m_iLargeW = nextpow(2, m_iLargeW);
+	m_iLargeH = nextpow(2, m_iLargeH);
 	//log_info("full size: w=", m_iLargeW, ", h=", m_iLargeH);
 
 	m_pcLarge = new unsigned char[m_iLargeW*m_iLargeH];

@@ -239,6 +239,22 @@ typename t_vec::value_type chi2(const t_func& func,
 
 // -----------------------------------------------------------------------------
 
+
+template<typename T=double>
+T log(T tbase, T tval)
+{
+	return T(std::log(tval)/std::log(tbase));
+}
+
+template<typename T=double>
+T nextpow(T tbase, T tval)
+{
+	return T(std::pow(tbase, std::ceil(log(tbase, tval))));
+}
+
+
+// -----------------------------------------------------------------------------
+
 /*
 template<class T=double> static const T SIGMA2FWHM = T(2)*std::sqrt(T(2)*std::log(T(2)));
 template<class T=double> static const T SIGMA2HWHM = std::sqrt(T(2)*std::log(T(2)));
