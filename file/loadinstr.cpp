@@ -26,6 +26,7 @@
 
 
 namespace tl{
+using t_real = FileInstr::t_real;
 
 // automatically choose correct instrument
 FileInstr* FileInstr::LoadInstr(const char* pcFile)
@@ -80,7 +81,7 @@ FileInstr* FileInstr::LoadInstr(const char* pcFile)
 }
 
 
-std::array<double, 5> FileInstr::GetScanHKLKiKf(const char* pcH, const char* pcK,
+std::array<t_real, 5> FileInstr::GetScanHKLKiKf(const char* pcH, const char* pcK,
 	const char* pcL, const char* pcE, std::size_t i) const
 {
 	const t_vecVals& vecH = GetCol(pcH);
@@ -92,19 +93,19 @@ std::array<double, 5> FileInstr::GetScanHKLKiKf(const char* pcH, const char* pcK
 	if(i>=minSize)
 	{
 		log_err("Scan position ", i, " out of bounds. Size: ", minSize, ".");
-		return std::array<double,5>{{0.,0.,0.,0.}};
+		return std::array<t_real,5>{{0.,0.,0.,0.}};
 	}
 
-	double h = vecH[i];
-	double k = vecK[i];
-	double l = vecL[i];
-	double E = vecE[i];
+	t_real h = vecH[i];
+	t_real k = vecK[i];
+	t_real l = vecL[i];
+	t_real E = vecE[i];
 
 	bool bKiFix = IsKiFixed();
-	double kfix = GetKFix();
-	double kother = get_other_k(E*meV, kfix/angstrom, bKiFix) * angstrom;
+	t_real kfix = GetKFix();
+	t_real kother = get_other_k(E*meV, kfix/angstrom, bKiFix) * angstrom;
 
-	return std::array<double,5>{{h,k,l, bKiFix?kfix:kother, bKiFix?kother:kfix}};
+	return std::array<t_real,5>{{h,k,l, bKiFix?kfix:kother, bKiFix?kother:kfix}};
 }
 
 
@@ -204,8 +205,8 @@ void FilePsi::ReadData(std::istream& istr)
 		if(strLine[0] == '#')
 			continue;
 
-		std::vector<double> vecToks;
-		get_tokens<double, std::string>(strLine, " \t", vecToks);
+		std::vector<t_real> vecToks;
+		get_tokens<t_real, std::string>(strLine, " \t", vecToks);
 
 		if(vecToks.size() != m_vecColNames.size())
 		{
@@ -235,7 +236,7 @@ void FilePsi::GetInternalParams(const std::string& strAll, FilePsi::t_mapIParams
 		if(pair.first == "")
 			continue;
 
-		double dVal = str_to_var<double>(pair.second);
+		t_real dVal = str_to_var<t_real>(pair.second);
 		mapPara.insert(t_mapIParams::value_type(pair.first, dVal));
 
 		//std::cout << "Key: " << pair.first << ", Val: " << dVal << std::endl;
@@ -303,7 +304,7 @@ const FileInstr::t_vecVals& FilePsi::GetCol(const std::string& strName) const
 
 FileInstr::t_vecVals& FilePsi::GetCol(const std::string& strName)
 {
-	static std::vector<double> vecNull;
+	static std::vector<t_real> vecNull;
 
 	for(std::size_t i=0; i<m_vecColNames.size(); ++i)
 	{
@@ -324,41 +325,41 @@ void FilePsi::PrintParams(std::ostream& ostr) const
 }
 
 
-std::array<double,3> FilePsi::GetSampleLattice() const
+std::array<t_real,3> FilePsi::GetSampleLattice() const
 {
 	t_mapIParams::const_iterator iterA = m_mapParameters.find("AS");
 	t_mapIParams::const_iterator iterB = m_mapParameters.find("BS");
 	t_mapIParams::const_iterator iterC = m_mapParameters.find("CS");
 
-	double a = (iterA!=m_mapParameters.end() ? iterA->second : 0.);
-	double b = (iterB!=m_mapParameters.end() ? iterB->second : 0.);
-	double c = (iterC!=m_mapParameters.end() ? iterC->second : 0.);
+	t_real a = (iterA!=m_mapParameters.end() ? iterA->second : 0.);
+	t_real b = (iterB!=m_mapParameters.end() ? iterB->second : 0.);
+	t_real c = (iterC!=m_mapParameters.end() ? iterC->second : 0.);
 
-	return std::array<double,3>{{a,b,c}};
+	return std::array<t_real,3>{{a,b,c}};
 }
 
-std::array<double,3> FilePsi::GetSampleAngles() const
+std::array<t_real,3> FilePsi::GetSampleAngles() const
 {
 	t_mapIParams::const_iterator iterA = m_mapParameters.find("AA");
 	t_mapIParams::const_iterator iterB = m_mapParameters.find("BB");
 	t_mapIParams::const_iterator iterC = m_mapParameters.find("CC");
 
-	double alpha = (iterA!=m_mapParameters.end() ? tl::d2r(iterA->second) : M_PI/2.);
-	double beta = (iterB!=m_mapParameters.end() ? tl::d2r(iterB->second) : M_PI/2.);
-	double gamma = (iterC!=m_mapParameters.end() ? tl::d2r(iterC->second) : M_PI/2.);
+	t_real alpha = (iterA!=m_mapParameters.end() ? tl::d2r(iterA->second) : M_PI/2.);
+	t_real beta = (iterB!=m_mapParameters.end() ? tl::d2r(iterB->second) : M_PI/2.);
+	t_real gamma = (iterC!=m_mapParameters.end() ? tl::d2r(iterC->second) : M_PI/2.);
 
-	return std::array<double,3>{{alpha, beta, gamma}};
+	return std::array<t_real,3>{{alpha, beta, gamma}};
 }
 
-std::array<double,2> FilePsi::GetMonoAnaD() const
+std::array<t_real,2> FilePsi::GetMonoAnaD() const
 {
 	t_mapIParams::const_iterator iterM = m_mapParameters.find("DM");
 	t_mapIParams::const_iterator iterA = m_mapParameters.find("DA");
 
-	double m = (iterM!=m_mapParameters.end() ? iterM->second : 3.355);
-	double a = (iterA!=m_mapParameters.end() ? iterA->second : 3.355);
+	t_real m = (iterM!=m_mapParameters.end() ? iterM->second : 3.355);
+	t_real a = (iterA!=m_mapParameters.end() ? iterA->second : 3.355);
 
-	return std::array<double,2>{{m, a}};
+	return std::array<t_real,2>{{m, a}};
 }
 
 std::array<bool, 3> FilePsi::GetScatterSenses() const
@@ -374,56 +375,56 @@ std::array<bool, 3> FilePsi::GetScatterSenses() const
 	return std::array<bool,3>{{m, s, a}};
 }
 
-std::array<double, 3> FilePsi::GetScatterPlane0() const
+std::array<t_real, 3> FilePsi::GetScatterPlane0() const
 {
 	t_mapIParams::const_iterator iterX = m_mapParameters.find("AX");
 	t_mapIParams::const_iterator iterY = m_mapParameters.find("AY");
 	t_mapIParams::const_iterator iterZ = m_mapParameters.find("AZ");
 
-	double x = (iterX!=m_mapParameters.end() ? iterX->second : 1.);
-	double y = (iterY!=m_mapParameters.end() ? iterY->second : 0.);
-	double z = (iterZ!=m_mapParameters.end() ? iterZ->second : 0.);
+	t_real x = (iterX!=m_mapParameters.end() ? iterX->second : 1.);
+	t_real y = (iterY!=m_mapParameters.end() ? iterY->second : 0.);
+	t_real z = (iterZ!=m_mapParameters.end() ? iterZ->second : 0.);
 
-	return std::array<double,3>{{x,y,z}};
+	return std::array<t_real,3>{{x,y,z}};
 }
 
-std::array<double, 3> FilePsi::GetScatterPlane1() const
+std::array<t_real, 3> FilePsi::GetScatterPlane1() const
 {
 	t_mapIParams::const_iterator iterX = m_mapParameters.find("BX");
 	t_mapIParams::const_iterator iterY = m_mapParameters.find("BY");
 	t_mapIParams::const_iterator iterZ = m_mapParameters.find("BZ");
 
-	double x = (iterX!=m_mapParameters.end() ? iterX->second : 0.);
-	double y = (iterY!=m_mapParameters.end() ? iterY->second : 1.);
-	double z = (iterZ!=m_mapParameters.end() ? iterZ->second : 0.);
+	t_real x = (iterX!=m_mapParameters.end() ? iterX->second : 0.);
+	t_real y = (iterY!=m_mapParameters.end() ? iterY->second : 1.);
+	t_real z = (iterZ!=m_mapParameters.end() ? iterZ->second : 0.);
 
-	return std::array<double,3>{{x,y,z}};
+	return std::array<t_real,3>{{x,y,z}};
 }
 
-double FilePsi::GetKFix() const
+t_real FilePsi::GetKFix() const
 {
 	t_mapIParams::const_iterator iterK = m_mapParameters.find("KFIX");
-	double k = (iterK!=m_mapParameters.end() ? iterK->second : 0.);
+	t_real k = (iterK!=m_mapParameters.end() ? iterK->second : 0.);
 
 	return k;
 }
 
-std::array<double, 4> FilePsi::GetPosHKLE() const
+std::array<t_real, 4> FilePsi::GetPosHKLE() const
 {
 	t_mapIParams::const_iterator iterH = m_mapPosHkl.find("QH");
 	t_mapIParams::const_iterator iterK = m_mapPosHkl.find("QK");
 	t_mapIParams::const_iterator iterL = m_mapPosHkl.find("QL");
 	t_mapIParams::const_iterator iterE = m_mapPosHkl.find("EN");
 
-	double h = (iterH!=m_mapPosHkl.end() ? iterH->second : 0.);
-	double k = (iterK!=m_mapPosHkl.end() ? iterK->second : 0.);
-	double l = (iterL!=m_mapPosHkl.end() ? iterL->second : 0.);
-	double E = (iterE!=m_mapPosHkl.end() ? iterE->second : 0.);
+	t_real h = (iterH!=m_mapPosHkl.end() ? iterH->second : 0.);
+	t_real k = (iterK!=m_mapPosHkl.end() ? iterK->second : 0.);
+	t_real l = (iterL!=m_mapPosHkl.end() ? iterL->second : 0.);
+	t_real E = (iterE!=m_mapPosHkl.end() ? iterE->second : 0.);
 
-	return std::array<double,4>{{h,k,l,E}};
+	return std::array<t_real,4>{{h,k,l,E}};
 }
 
-std::array<double, 4> FilePsi::GetDeltaHKLE() const
+std::array<t_real, 4> FilePsi::GetDeltaHKLE() const
 {
         t_mapIParams::const_iterator iterH = m_mapScanSteps.find("DQH");
 	if(iterH==m_mapScanSteps.end()) iterH = m_mapScanSteps.find("QH");
@@ -438,12 +439,12 @@ std::array<double, 4> FilePsi::GetDeltaHKLE() const
 	if(iterE==m_mapScanSteps.end()) iterE = m_mapScanSteps.find("EN");
 
 
-        double h = (iterH!=m_mapScanSteps.end() ? iterH->second : 0.);
-        double k = (iterK!=m_mapScanSteps.end() ? iterK->second : 0.);
-        double l = (iterL!=m_mapScanSteps.end() ? iterL->second : 0.);
-        double E = (iterE!=m_mapScanSteps.end() ? iterE->second : 0.);
+        t_real h = (iterH!=m_mapScanSteps.end() ? iterH->second : 0.);
+        t_real k = (iterK!=m_mapScanSteps.end() ? iterK->second : 0.);
+        t_real l = (iterL!=m_mapScanSteps.end() ? iterL->second : 0.);
+        t_real E = (iterE!=m_mapScanSteps.end() ? iterE->second : 0.);
 
-        return std::array<double,4>{{h,k,l,E}};
+        return std::array<t_real,4>{{h,k,l,E}};
 }
 
 bool FilePsi::MergeWith(const FileInstr* pDat)
@@ -476,7 +477,7 @@ std::size_t FilePsi::GetScanCount() const
 	return m_vecData[0].size();
 }
 
-std::array<double, 5> FilePsi::GetScanHKLKiKf(std::size_t i) const
+std::array<t_real, 5> FilePsi::GetScanHKLKiKf(std::size_t i) const
 {
 	return FileInstr::GetScanHKLKiKf("QH", "QK", "QL", "EN", i);
 }
@@ -563,10 +564,10 @@ std::vector<std::string> FilePsi::GetScannedVars() const
 
 			if(iterTok != vecToks.end())
 			{
-				double dh = str_to_var<double>(*(++iterTok));
-				double dk = str_to_var<double>(*(++iterTok));
-				double dl = str_to_var<double>(*(++iterTok));
-				double dE = str_to_var<double>(*(++iterTok));
+				t_real dh = str_to_var<t_real>(*(++iterTok));
+				t_real dk = str_to_var<t_real>(*(++iterTok));
+				t_real dl = str_to_var<t_real>(*(++iterTok));
+				t_real dE = str_to_var<t_real>(*(++iterTok));
 
 				if(!float_equal(dh, 0.)) vecVars.push_back("QH");
 				if(!float_equal(dk, 0.)) vecVars.push_back("QK");
@@ -716,8 +717,8 @@ void FileFrm::ReadData(std::istream& istr)
 		if(strLine.length()==0 || strLine[0]=='#')
 			continue;
 
-		std::vector<double> vecToks;
-		get_tokens<double, std::string>(strLine, " \t", vecToks);
+		std::vector<t_real> vecToks;
+		get_tokens<t_real, std::string>(strLine, " \t", vecToks);
 
 		if(vecToks.size() != m_vecQuantities.size())
 		{
@@ -772,7 +773,7 @@ const FileInstr::t_vecVals& FileFrm::GetCol(const std::string& strName) const
 
 FileInstr::t_vecVals& FileFrm::GetCol(const std::string& strName)
 {
-	static std::vector<double> vecNull;
+	static std::vector<t_real> vecNull;
 
 	for(std::size_t i=0; i<m_vecQuantities.size(); ++i)
 	{
@@ -784,47 +785,47 @@ FileInstr::t_vecVals& FileFrm::GetCol(const std::string& strName)
 }
 
 
-std::array<double, 3> FileFrm::GetSampleLattice() const
+std::array<t_real, 3> FileFrm::GetSampleLattice() const
 {
 	t_mapParams::const_iterator iter = m_mapParams.find("Sample_lattice");
 	if(iter == m_mapParams.end())
-		return std::array<double,3>{{0.,0.,0.}};
+		return std::array<t_real,3>{{0.,0.,0.}};
 
-	std::vector<double> vec = get_py_array(iter->second);
+	std::vector<t_real> vec = get_py_array(iter->second);
 	if(vec.size() != 3)
 	{
 		log_err("Invalid lattice array size.");
-		return std::array<double,3>{{0.,0.,0.}};
+		return std::array<t_real,3>{{0.,0.,0.}};
 	}
 
-	return std::array<double,3>{{vec[0],vec[1],vec[2]}};
+	return std::array<t_real,3>{{vec[0],vec[1],vec[2]}};
 }
 
-std::array<double, 3> FileFrm::GetSampleAngles() const
+std::array<t_real, 3> FileFrm::GetSampleAngles() const
 {
 	t_mapParams::const_iterator iter = m_mapParams.find("Sample_angles");
 	if(iter == m_mapParams.end())
-		return std::array<double,3>{{0.,0.,0.}};
+		return std::array<t_real,3>{{0.,0.,0.}};
 
-	std::vector<double> vec = get_py_array(iter->second);
+	std::vector<t_real> vec = get_py_array(iter->second);
 	if(vec.size() != 3)
 	{
 		log_err("Invalid angle array size.");
-		return std::array<double,3>{{0.,0.,0.}};
+		return std::array<t_real,3>{{0.,0.,0.}};
 	}
 
-	return std::array<double,3>{{tl::d2r(vec[0]), tl::d2r(vec[1]), tl::d2r(vec[2])}};
+	return std::array<t_real,3>{{tl::d2r(vec[0]), tl::d2r(vec[1]), tl::d2r(vec[2])}};
 }
 
-std::array<double, 2> FileFrm::GetMonoAnaD() const
+std::array<t_real, 2> FileFrm::GetMonoAnaD() const
 {
 	t_mapParams::const_iterator iterM = m_mapParams.find("mono_dvalue");
 	t_mapParams::const_iterator iterA = m_mapParams.find("ana_dvalue");
 
-	double m = (iterM!=m_mapParams.end() ? str_to_var<double>(iterM->second) : 3.355);
-	double a = (iterA!=m_mapParams.end() ? str_to_var<double>(iterA->second) : 3.355);
+	t_real m = (iterM!=m_mapParams.end() ? str_to_var<t_real>(iterM->second) : 3.355);
+	t_real a = (iterA!=m_mapParams.end() ? str_to_var<t_real>(iterA->second) : 3.355);
 
-	return std::array<double,2>{{m, a}};
+	return std::array<t_real,2>{{m, a}};
 }
 
 std::array<bool, 3> FileFrm::GetScatterSenses() const
@@ -850,42 +851,42 @@ std::array<bool, 3> FileFrm::GetScatterSenses() const
 	return std::array<bool,3>{{vec[0]>0, vec[1]>0, vec[2]>0}};
 }
 
-std::array<double, 3> FileFrm::GetScatterPlane0() const
+std::array<t_real, 3> FileFrm::GetScatterPlane0() const
 {
 	t_mapParams::const_iterator iter = m_mapParams.find("Sample_orient1");
 	if(iter == m_mapParams.end())
-		return std::array<double,3>{{0.,0.,0.}};
+		return std::array<t_real,3>{{0.,0.,0.}};
 
-	std::vector<double> vec = get_py_array(iter->second);
+	std::vector<t_real> vec = get_py_array(iter->second);
 	if(vec.size() != 3)
 	{
 		log_err("Invalid sample peak 1 array size.");
-		return std::array<double,3>{{0.,0.,0.}};
+		return std::array<t_real,3>{{0.,0.,0.}};
 	}
-	return std::array<double,3>{{vec[0],vec[1],vec[2]}};
+	return std::array<t_real,3>{{vec[0],vec[1],vec[2]}};
 }
 
-std::array<double, 3> FileFrm::GetScatterPlane1() const
+std::array<t_real, 3> FileFrm::GetScatterPlane1() const
 {
 	t_mapParams::const_iterator iter = m_mapParams.find("Sample_orient2");
 	if(iter == m_mapParams.end())
-		return std::array<double,3>{{0.,0.,0.}};
+		return std::array<t_real,3>{{0.,0.,0.}};
 
-	std::vector<double> vec = get_py_array(iter->second);
+	std::vector<t_real> vec = get_py_array(iter->second);
 	if(vec.size() != 3)
 	{
 		log_err("Invalid sample peak 2 array size.");
-		return std::array<double,3>{{0.,0.,0.}};
+		return std::array<t_real,3>{{0.,0.,0.}};
 	}
-	return std::array<double,3>{{-vec[0],-vec[1],-vec[2]}};	// LH -> RH
+	return std::array<t_real,3>{{-vec[0],-vec[1],-vec[2]}};	// LH -> RH
 }
 
-double FileFrm::GetKFix() const
+t_real FileFrm::GetKFix() const
 {
 	std::string strKey = (IsKiFixed() ? "ki_value" : "kf_value");
 
 	t_mapParams::const_iterator iter = m_mapParams.find(strKey);
-	return (iter!=m_mapParams.end() ? str_to_var<double>(iter->second) : 0.);
+	return (iter!=m_mapParams.end() ? str_to_var<t_real>(iter->second) : 0.);
 }
 
 bool FileFrm::IsKiFixed() const
@@ -915,7 +916,7 @@ std::size_t FileFrm::GetScanCount() const
 	return m_vecData[0].size();
 }
 
-std::array<double, 5> FileFrm::GetScanHKLKiKf(std::size_t i) const
+std::array<t_real, 5> FileFrm::GetScanHKLKiKf(std::size_t i) const
 {
 	return FileInstr::GetScanHKLKiKf("h", "k", "l", "E", i);
 }
@@ -1010,7 +1011,7 @@ std::vector<std::string> FileFrm::GetScannedVars() const
 		if(rex::regex_search(strInfo, m, rx) && m.size()>3)
 		{
 			const std::string& strSteps = m[3];
-			std::vector<double> vecSteps = get_py_array(strSteps);
+			std::vector<t_real> vecSteps = get_py_array(strSteps);
 
 			if(vecSteps.size()>0 && !float_equal(vecSteps[0], 0.))
 				vecVars.push_back("h");
@@ -1136,8 +1137,8 @@ void FileMacs::ReadData(std::istream& istr)
 		if(strLine.length()==0 || strLine[0]=='#')
 			continue;
 
-		std::vector<double> vecToks;
-		get_tokens<double, std::string>(strLine, " \t", vecToks);
+		std::vector<t_real> vecToks;
+		get_tokens<t_real, std::string>(strLine, " \t", vecToks);
 
 		if(vecToks.size() != m_vecQuantities.size())
 		{
@@ -1186,7 +1187,7 @@ const FileInstr::t_vecVals& FileMacs::GetCol(const std::string& strName) const
 
 FileInstr::t_vecVals& FileMacs::GetCol(const std::string& strName)
 {
-	static std::vector<double> vecNull;
+	static std::vector<t_real> vecNull;
 
 	for(std::size_t i=0; i<m_vecQuantities.size(); ++i)
 	{
@@ -1198,49 +1199,49 @@ FileInstr::t_vecVals& FileMacs::GetCol(const std::string& strName)
 }
 
 
-std::array<double, 3> FileMacs::GetSampleLattice() const
+std::array<t_real, 3> FileMacs::GetSampleLattice() const
 {
 	t_mapParams::const_iterator iter = m_mapParams.find("Lattice");
 	if(iter == m_mapParams.end())
-		return std::array<double,3>{{0.,0.,0.}};
+		return std::array<t_real,3>{{0.,0.,0.}};
 
-	std::vector<double> vecToks;
-	tl::get_tokens<double, std::string>(iter->second, " \t", vecToks);
+	std::vector<t_real> vecToks;
+	tl::get_tokens<t_real, std::string>(iter->second, " \t", vecToks);
 	if(vecToks.size() != 6)
 	{
 		log_err("Invalid sample lattice array size.");
-		return std::array<double,3>{{0.,0.,0.}};
+		return std::array<t_real,3>{{0.,0.,0.}};
 	}
 
-	return std::array<double,3>{{vecToks[0], vecToks[1], vecToks[2]}};
+	return std::array<t_real,3>{{vecToks[0], vecToks[1], vecToks[2]}};
 }
 
-std::array<double, 3> FileMacs::GetSampleAngles() const
+std::array<t_real, 3> FileMacs::GetSampleAngles() const
 {
 	t_mapParams::const_iterator iter = m_mapParams.find("Lattice");
 	if(iter == m_mapParams.end())
-		return std::array<double,3>{{0.,0.,0.}};
+		return std::array<t_real,3>{{0.,0.,0.}};
 
-	std::vector<double> vecToks;
-	tl::get_tokens<double, std::string>(iter->second, " \t", vecToks);
+	std::vector<t_real> vecToks;
+	tl::get_tokens<t_real, std::string>(iter->second, " \t", vecToks);
 	if(vecToks.size() != 6)
 	{
 		log_err("Invalid sample lattice array size.");
-		return std::array<double,3>{{0.,0.,0.}};
+		return std::array<t_real,3>{{0.,0.,0.}};
 	}
 
-	return std::array<double,3>{{tl::d2r(vecToks[3]), tl::d2r(vecToks[4]), tl::d2r(vecToks[5])}};
+	return std::array<t_real,3>{{tl::d2r(vecToks[3]), tl::d2r(vecToks[4]), tl::d2r(vecToks[5])}};
 }
 
-std::array<double, 2> FileMacs::GetMonoAnaD() const
+std::array<t_real, 2> FileMacs::GetMonoAnaD() const
 {
 	t_mapParams::const_iterator iterM = m_mapParams.find("MonoSpacing");
 	t_mapParams::const_iterator iterA = m_mapParams.find("AnaSpacing");
 
-	double m = (iterM!=m_mapParams.end() ? str_to_var<double>(iterM->second) : 3.355);
-	double a = (iterA!=m_mapParams.end() ? str_to_var<double>(iterA->second) : 3.355);
+	t_real m = (iterM!=m_mapParams.end() ? str_to_var<t_real>(iterM->second) : 3.355);
+	t_real a = (iterA!=m_mapParams.end() ? str_to_var<t_real>(iterA->second) : 3.355);
 
-	return std::array<double,2>{{m, a}};
+	return std::array<t_real,2>{{m, a}};
 }
 
 std::array<bool, 3> FileMacs::GetScatterSenses() const
@@ -1248,41 +1249,41 @@ std::array<bool, 3> FileMacs::GetScatterSenses() const
 	return std::array<bool,3>{{0, 1, 0}};
 }
 
-std::array<double, 3> FileMacs::GetScatterPlane0() const
+std::array<t_real, 3> FileMacs::GetScatterPlane0() const
 {
 	t_mapParams::const_iterator iter = m_mapParams.find("Orient");
 	if(iter == m_mapParams.end())
-		return std::array<double,3>{{0.,0.,0.}};
+		return std::array<t_real,3>{{0.,0.,0.}};
 
-	std::vector<double> vecToks;
-	tl::get_tokens<double, std::string>(iter->second, " \t", vecToks);
+	std::vector<t_real> vecToks;
+	tl::get_tokens<t_real, std::string>(iter->second, " \t", vecToks);
 	if(vecToks.size() != 6)
 	{
 		log_err("Invalid sample orientation array size.");
-		return std::array<double,3>{{0.,0.,0.}};
+		return std::array<t_real,3>{{0.,0.,0.}};
 	}
 
-	return std::array<double,3>{{vecToks[0],vecToks[1],vecToks[2]}};
+	return std::array<t_real,3>{{vecToks[0],vecToks[1],vecToks[2]}};
 }
 
-std::array<double, 3> FileMacs::GetScatterPlane1() const
+std::array<t_real, 3> FileMacs::GetScatterPlane1() const
 {
 	t_mapParams::const_iterator iter = m_mapParams.find("Orient");
 	if(iter == m_mapParams.end())
-		return std::array<double,3>{{0.,0.,0.}};
+		return std::array<t_real,3>{{0.,0.,0.}};
 
-	std::vector<double> vecToks;
-	tl::get_tokens<double, std::string>(iter->second, " \t", vecToks);
+	std::vector<t_real> vecToks;
+	tl::get_tokens<t_real, std::string>(iter->second, " \t", vecToks);
 	if(vecToks.size() != 6)
 	{
 		log_err("Invalid sample orientation array size.");
-		return std::array<double,3>{{0.,0.,0.}};
+		return std::array<t_real,3>{{0.,0.,0.}};
 	}
 
-	return std::array<double,3>{{vecToks[3],vecToks[4],vecToks[5]}};
+	return std::array<t_real,3>{{vecToks[3],vecToks[4],vecToks[5]}};
 }
 
-double FileMacs::GetKFix() const
+t_real FileMacs::GetKFix() const
 {
 	// 1) look in data columns
 	const std::string strKey = (IsKiFixed() ? "Ei" : "Ef");
@@ -1290,7 +1291,7 @@ double FileMacs::GetKFix() const
 	if(vecVals.size() != 0)
 	{
 		bool bImag;
-		double k = tl::E2k(vecVals[0] * tl::meV, bImag) * tl::angstrom;
+		t_real k = tl::E2k(vecVals[0] * tl::meV, bImag) * tl::angstrom;
 		return k;
 	}
 
@@ -1312,9 +1313,9 @@ double FileMacs::GetKFix() const
 		return 0.;
 	}
 
-	double dEfix = tl::str_to_var<double>(vecToks[1]);
+	t_real dEfix = tl::str_to_var<t_real>(vecToks[1]);
 	bool bImag;
-	double k = tl::E2k(dEfix * tl::meV, bImag) * tl::angstrom;
+	t_real k = tl::E2k(dEfix * tl::meV, bImag) * tl::angstrom;
 	return k;
 }
 
@@ -1348,7 +1349,7 @@ std::size_t FileMacs::GetScanCount() const
 	return m_vecData[0].size();
 }
 
-std::array<double, 5> FileMacs::GetScanHKLKiKf(std::size_t i) const
+std::array<t_real, 5> FileMacs::GetScanHKLKiKf(std::size_t i) const
 {
 	return FileInstr::GetScanHKLKiKf("QX", "QY", "QZ", "E", i);
 }
@@ -1581,8 +1582,8 @@ void FileTrisp::ReadData(std::istream& istr)
 
 		if(!bInFooter)
 		{
-			std::vector<double> vecToks;
-			get_tokens<double, std::string>(strLine, " \t", vecToks);
+			std::vector<t_real> vecToks;
+			get_tokens<t_real, std::string>(strLine, " \t", vecToks);
 
 			if(vecToks.size() != m_vecQuantities.size())
 			{
@@ -1627,7 +1628,7 @@ const FileInstr::t_vecVals& FileTrisp::GetCol(const std::string& strName) const
 
 FileInstr::t_vecVals& FileTrisp::GetCol(const std::string& strName)
 {
-	static std::vector<double> vecNull;
+	static std::vector<t_real> vecNull;
 
 	for(std::size_t i=0; i<m_vecQuantities.size(); ++i)
 	{
@@ -1638,41 +1639,41 @@ FileInstr::t_vecVals& FileTrisp::GetCol(const std::string& strName)
 	return vecNull;
 }
 
-std::array<double,3> FileTrisp::GetSampleLattice() const
+std::array<t_real,3> FileTrisp::GetSampleLattice() const
 {
 	t_mapParams::const_iterator iterA = m_mapParams.find("AS");
 	t_mapParams::const_iterator iterB = m_mapParams.find("BS");
 	t_mapParams::const_iterator iterC = m_mapParams.find("CS");
 
-	double a = (iterA!=m_mapParams.end() ? str_to_var<double>(iterA->second) : 0.);
-	double b = (iterB!=m_mapParams.end() ? str_to_var<double>(iterB->second) : 0.);
-	double c = (iterC!=m_mapParams.end() ? str_to_var<double>(iterC->second) : 0.);
+	t_real a = (iterA!=m_mapParams.end() ? str_to_var<t_real>(iterA->second) : 0.);
+	t_real b = (iterB!=m_mapParams.end() ? str_to_var<t_real>(iterB->second) : 0.);
+	t_real c = (iterC!=m_mapParams.end() ? str_to_var<t_real>(iterC->second) : 0.);
 
-	return std::array<double,3>{{a,b,c}};
+	return std::array<t_real,3>{{a,b,c}};
 }
 
-std::array<double,3> FileTrisp::GetSampleAngles() const
+std::array<t_real,3> FileTrisp::GetSampleAngles() const
 {
 	t_mapParams::const_iterator iterA = m_mapParams.find("AA");
 	t_mapParams::const_iterator iterB = m_mapParams.find("BB");
 	t_mapParams::const_iterator iterC = m_mapParams.find("CC");
 
-	double alpha = (iterA!=m_mapParams.end() ? tl::d2r(str_to_var<double>(iterA->second)) : M_PI/2.);
-	double beta = (iterB!=m_mapParams.end() ? tl::d2r(str_to_var<double>(iterB->second)) : M_PI/2.);
-	double gamma = (iterC!=m_mapParams.end() ? tl::d2r(str_to_var<double>(iterC->second)) : M_PI/2.);
+	t_real alpha = (iterA!=m_mapParams.end() ? tl::d2r(str_to_var<t_real>(iterA->second)) : M_PI/2.);
+	t_real beta = (iterB!=m_mapParams.end() ? tl::d2r(str_to_var<t_real>(iterB->second)) : M_PI/2.);
+	t_real gamma = (iterC!=m_mapParams.end() ? tl::d2r(str_to_var<t_real>(iterC->second)) : M_PI/2.);
 
-	return std::array<double,3>{{alpha, beta, gamma}};
+	return std::array<t_real,3>{{alpha, beta, gamma}};
 }
 
-std::array<double,2> FileTrisp::GetMonoAnaD() const
+std::array<t_real,2> FileTrisp::GetMonoAnaD() const
 {
 	t_mapParams::const_iterator iterM = m_mapParams.find("DM");
 	t_mapParams::const_iterator iterA = m_mapParams.find("DA");
 
-	double m = (iterM!=m_mapParams.end() ? str_to_var<double>(iterM->second) : 3.355);
-	double a = (iterA!=m_mapParams.end() ? str_to_var<double>(iterA->second) : 3.355);
+	t_real m = (iterM!=m_mapParams.end() ? str_to_var<t_real>(iterM->second) : 3.355);
+	t_real a = (iterA!=m_mapParams.end() ? str_to_var<t_real>(iterA->second) : 3.355);
 
-	return std::array<double,2>{{m, a}};
+	return std::array<t_real,2>{{m, a}};
 }
 
 std::array<bool, 3> FileTrisp::GetScatterSenses() const
@@ -1688,33 +1689,33 @@ std::array<bool, 3> FileTrisp::GetScatterSenses() const
 	return std::array<bool,3>{{m, s, a}};
 }
 
-std::array<double, 3> FileTrisp::GetScatterPlane0() const
+std::array<t_real, 3> FileTrisp::GetScatterPlane0() const
 {
 	t_mapParams::const_iterator iterX = m_mapParams.find("AX");
 	t_mapParams::const_iterator iterY = m_mapParams.find("AY");
 	t_mapParams::const_iterator iterZ = m_mapParams.find("AZ");
 
-	double x = (iterX!=m_mapParams.end() ? str_to_var<double>(iterX->second) : 1.);
-	double y = (iterY!=m_mapParams.end() ? str_to_var<double>(iterY->second) : 0.);
-	double z = (iterZ!=m_mapParams.end() ? str_to_var<double>(iterZ->second) : 0.);
+	t_real x = (iterX!=m_mapParams.end() ? str_to_var<t_real>(iterX->second) : 1.);
+	t_real y = (iterY!=m_mapParams.end() ? str_to_var<t_real>(iterY->second) : 0.);
+	t_real z = (iterZ!=m_mapParams.end() ? str_to_var<t_real>(iterZ->second) : 0.);
 
-	return std::array<double,3>{{x,y,z}};
+	return std::array<t_real,3>{{x,y,z}};
 }
 
-std::array<double, 3> FileTrisp::GetScatterPlane1() const
+std::array<t_real, 3> FileTrisp::GetScatterPlane1() const
 {
 	t_mapParams::const_iterator iterX = m_mapParams.find("BX");
 	t_mapParams::const_iterator iterY = m_mapParams.find("BY");
 	t_mapParams::const_iterator iterZ = m_mapParams.find("BZ");
 
-	double x = (iterX!=m_mapParams.end() ? str_to_var<double>(iterX->second) : 0.);
-	double y = (iterY!=m_mapParams.end() ? str_to_var<double>(iterY->second) : 1.);
-	double z = (iterZ!=m_mapParams.end() ? str_to_var<double>(iterZ->second) : 0.);
+	t_real x = (iterX!=m_mapParams.end() ? str_to_var<t_real>(iterX->second) : 0.);
+	t_real y = (iterY!=m_mapParams.end() ? str_to_var<t_real>(iterY->second) : 1.);
+	t_real z = (iterZ!=m_mapParams.end() ? str_to_var<t_real>(iterZ->second) : 0.);
 
-	return std::array<double,3>{{x,y,z}};
+	return std::array<t_real,3>{{x,y,z}};
 }
 
-double FileTrisp::GetKFix() const
+t_real FileTrisp::GetKFix() const
 {
 	const std::string strKey = IsKiFixed() ? "KI" : "KF";
 
@@ -1725,7 +1726,7 @@ double FileTrisp::GetKFix() const
 		return 0.;
 	}
 
-	return tl::str_to_var<double>(iter->second);
+	return tl::str_to_var<t_real>(iter->second);
 }
 
 bool FileTrisp::IsKiFixed() const
@@ -1740,7 +1741,7 @@ std::size_t FileTrisp::GetScanCount() const
 	return m_vecData[0].size();
 }
 
-std::array<double, 5> FileTrisp::GetScanHKLKiKf(std::size_t i) const
+std::array<t_real, 5> FileTrisp::GetScanHKLKiKf(std::size_t i) const
 {
 	return FileInstr::GetScanHKLKiKf("QH", "QK", "QL", "E", i);
 }
