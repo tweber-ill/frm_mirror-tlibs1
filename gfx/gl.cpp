@@ -18,6 +18,11 @@
 
 namespace tl {
 
+/*
+ * Freetype rendering under OpenGL, inspired by:
+ * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_01
+ * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_02
+ */
 void FontMap::draw_tile(unsigned char* pcBuf,
 	unsigned int iW, unsigned int iH,
 	unsigned int iTileW, unsigned int iTileH,

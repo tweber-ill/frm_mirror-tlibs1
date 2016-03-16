@@ -533,8 +533,8 @@ std::vector<std::string> FilePsi::GetScannedVars() const
 			// still nothing found, try regex
 			if(!vecVars.size())
 			{
-				const std::string strRegex = R"REX((SC|SCAN|sc|scan)[ \t]+([A-Za-z0-9]+)[ \t]+[0-9\.-]+[ \t]+[d|D]([A-Za-z0-9]+).*)REX";
-				rex::regex rx(strRegex, rex::regex::ECMAScript);
+				const std::string strRegex = R"REX((sc|scan)[ \t]+([a-z0-9]+)[ \t]+[0-9\.-]+[ \t]+[d|D]([a-z0-9]+).*)REX";
+				rex::regex rx(strRegex, rex::regex::ECMAScript|rex::regex_constants::icase);
 				rex::smatch m;
 				if(rex::regex_search(iter->second, m, rx) && m.size()>3)
 				{
@@ -558,16 +558,44 @@ std::vector<std::string> FilePsi::GetScannedVars() const
 	return vecVars;
 }
 
+bool FileInstr::MatchNonEmptyColumn(const std::string& strRegex, std::string& strColName) const
+{
+	const FileInstr::t_vecColNames& vecColNames = GetColNames();
+	rex::regex rx(strRegex, rex::regex::ECMAScript|rex::regex_constants::icase);
+
+	for(const std::string& strCurColName : vecColNames)
+	{
+		rex::smatch m;
+		if(rex::regex_match(strCurColName, m, rx))
+		{
+			const FileInstr::t_vecVals& vecVals = GetCol(strCurColName);
+			if(std::find_if(vecVals.begin(), vecVals.end(),
+				[](const typename FileInstr::t_vecVals::value_type& val) ->bool
+				{ return !float_equal(val, 0.); }) != vecVals.end())
+			{
+				strColName = strCurColName;
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 std::string FilePsi::GetCountVar() const
 {
-	// TODO
-	return "CNTS";
+	std::string strRet;
+	if(MatchNonEmptyColumn(R"REX(cnts)REX", strRet))
+		return strRet;
+	return "";
 }
 
 std::string FilePsi::GetMonVar() const
 {
-	// TODO
-	return "M1";
+	std::string strRet;
+	if(MatchNonEmptyColumn(R"REX(m[0-9])REX", strRet))
+		return strRet;
+	return "";
 }
 
 std::string FilePsi::GetScanCommand() const
@@ -956,7 +984,7 @@ std::vector<std::string> FileFrm::GetScannedVars() const
 
 		// try qscan/qcscan
 		const std::string strRegex = R"REX((qscan|qcscan)\((\[.*\])[, ]+(\[.*\]).*\))REX";
-		rex::regex rx(strRegex, rex::regex::ECMAScript);
+		rex::regex rx(strRegex, rex::regex::ECMAScript|rex::regex_constants::icase);
 		rex::smatch m;
 		if(rex::regex_search(strInfo, m, rx) && m.size()>3)
 		{
@@ -977,8 +1005,8 @@ std::vector<std::string> FileFrm::GetScannedVars() const
 		if(vecVars.size() == 0)
 		{
 			// try scan/cscan
-			const std::string strRegexDevScan = R"REX((scan|cscan)\(([A-Za-z0-9_\.]+)[, ]+.*\))REX";
-			rex::regex rxDev(strRegexDevScan, rex::regex::ECMAScript);
+			const std::string strRegexDevScan = R"REX((scan|cscan)\(([a-z0-9_\.]+)[, ]+.*\))REX";
+			rex::regex rxDev(strRegexDevScan, rex::regex::ECMAScript|rex::regex_constants::icase);
 			rex::smatch mDev;
 			if(rex::regex_search(strInfo, mDev, rxDev) && mDev.size()>2)
 			{
@@ -999,14 +1027,18 @@ std::vector<std::string> FileFrm::GetScannedVars() const
 
 std::string FileFrm::GetCountVar() const
 {
-	// TODO
-	return "ctr1";
+	std::string strRet;
+	if(MatchNonEmptyColumn(R"REX((det[a-z]*[0-9])|(ctr[0-9])|(counter[0-9])|(psd[a-z0-9\.]*))REX", strRet))
+		return strRet;
+	return "";
 }
 
 std::string FileFrm::GetMonVar() const
 {
-	// TODO
-	return "mon1";
+	std::string strRet;
+	if(MatchNonEmptyColumn(R"REX((mon[a-z]*[0-9]))REX", strRet))
+		return strRet;
+	return "";
 }
 
 std::string FileFrm::GetScanCommand() const
@@ -1393,14 +1425,18 @@ std::vector<std::string> FileMacs::GetScannedVars() const
 
 std::string FileMacs::GetCountVar() const
 {
-	// TODO
-	return "SPEC";
+	std::string strRet;
+	if(MatchNonEmptyColumn(R"REX(spec[a-z0-9]*)REX", strRet))
+		return strRet;
+	return "";
 }
 
 std::string FileMacs::GetMonVar() const
 {
-	// TODO
-	return "Monitor";
+	std::string strRet;
+	if(MatchNonEmptyColumn(R"REX(mon[a-z0-9]*)REX", strRet))
+		return strRet;
+	return "";
 }
 
 std::string FileMacs::GetScanCommand() const
@@ -1718,8 +1754,20 @@ std::vector<std::string> FileTrisp::GetScannedVars() const
 	return vecScan;
 }
 
-std::string FileTrisp::GetCountVar() const { return "c1"; }
-std::string FileTrisp::GetMonVar() const { return "mon"; }
+std::string FileTrisp::GetCountVar() const
+{
+	std::string strRet;
+	if(MatchNonEmptyColumn(R"REX(c[0-9])REX", strRet))
+		return strRet;
+	return "";
+}
+std::string FileTrisp::GetMonVar() const
+{
+	std::string strRet;
+	if(MatchNonEmptyColumn(R"REX(mon[a-z0-9]*)REX", strRet))
+		return strRet;
+	return "";
+}
 
 std::string FileTrisp::GetScanCommand() const
 {
