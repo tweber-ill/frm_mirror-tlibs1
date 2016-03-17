@@ -109,8 +109,8 @@ std::array<t_real, 5> FileInstr::GetScanHKLKiKf(const char* pcH, const char* pcK
 }
 
 
-bool FileInstr::MatchNonEmptyColumn(const std::string& strRegex,
-	std::string& strColName, bool bSortByCounts) const
+bool FileInstr::MatchColumn(const std::string& strRegex,
+	std::string& strColName, bool bSortByCounts, bool bFilterEmpty) const
 {
 	const FileInstr::t_vecColNames& vecColNames = GetColNames();
 	rex::regex rx(strRegex, rex::regex::ECMAScript | rex::regex_constants::icase);
@@ -134,7 +134,7 @@ bool FileInstr::MatchNonEmptyColumn(const std::string& strRegex,
 
 			t_real dSum = std::accumulate(vecVals.begin(), vecVals.end(), 0., 
 				[](t_real t1, t_real t2) -> t_real { return t1+t2; });
-			if(!float_equal(dSum, 0.))
+			if(!bFilterEmpty || !float_equal(dSum, 0.))
 				vecMatchedCols.push_back(t_pairCol{strCurColName, dSum});
 		}
 	}
@@ -607,7 +607,7 @@ std::vector<std::string> FilePsi::GetScannedVars() const
 std::string FilePsi::GetCountVar() const
 {
 	std::string strRet;
-	if(MatchNonEmptyColumn(R"REX(cnts)REX", strRet))
+	if(MatchColumn(R"REX(cnts)REX", strRet))
 		return strRet;
 	return "";
 }
@@ -615,7 +615,7 @@ std::string FilePsi::GetCountVar() const
 std::string FilePsi::GetMonVar() const
 {
 	std::string strRet;
-	if(MatchNonEmptyColumn(R"REX(m[0-9])REX", strRet))
+	if(MatchColumn(R"REX(m[0-9])REX", strRet))
 		return strRet;
 	return "";
 }
@@ -1050,7 +1050,7 @@ std::vector<std::string> FileFrm::GetScannedVars() const
 std::string FileFrm::GetCountVar() const
 {
 	std::string strRet;
-	if(MatchNonEmptyColumn(R"REX((det[a-z]*[0-9])|(ctr[0-9])|(counter[0-9])|([a-z0-9\.]*roi))REX", strRet, true))
+	if(MatchColumn(R"REX((det[a-z]*[0-9])|(ctr[0-9])|(counter[0-9])|([a-z0-9\.]*roi))REX", strRet, true))
 		return strRet;
 	return "";
 }
@@ -1058,7 +1058,7 @@ std::string FileFrm::GetCountVar() const
 std::string FileFrm::GetMonVar() const
 {
 	std::string strRet;
-	if(MatchNonEmptyColumn(R"REX((mon[a-z]*[0-9]))REX", strRet, true))
+	if(MatchColumn(R"REX((mon[a-z]*[0-9]))REX", strRet, true))
 		return strRet;
 	return "";
 }
@@ -1448,7 +1448,7 @@ std::vector<std::string> FileMacs::GetScannedVars() const
 std::string FileMacs::GetCountVar() const
 {
 	std::string strRet;
-	if(MatchNonEmptyColumn(R"REX(spec[a-z0-9]*)REX", strRet))
+	if(MatchColumn(R"REX(spec[a-z0-9]*)REX", strRet))
 		return strRet;
 	return "";
 }
@@ -1456,7 +1456,7 @@ std::string FileMacs::GetCountVar() const
 std::string FileMacs::GetMonVar() const
 {
 	std::string strRet;
-	if(MatchNonEmptyColumn(R"REX(mon[a-z0-9]*)REX", strRet))
+	if(MatchColumn(R"REX(mon[a-z0-9]*)REX", strRet))
 		return strRet;
 	return "";
 }
@@ -1779,14 +1779,14 @@ std::vector<std::string> FileTrisp::GetScannedVars() const
 std::string FileTrisp::GetCountVar() const
 {
 	std::string strRet;
-	if(MatchNonEmptyColumn(R"REX(c[0-9])REX", strRet))
+	if(MatchColumn(R"REX(c[0-9])REX", strRet))
 		return strRet;
 	return "";
 }
 std::string FileTrisp::GetMonVar() const
 {
 	std::string strRet;
-	if(MatchNonEmptyColumn(R"REX(mon[a-z0-9]*)REX", strRet))
+	if(MatchColumn(R"REX(mon[a-z0-9]*)REX", strRet))
 		return strRet;
 	return "";
 }
