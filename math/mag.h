@@ -20,12 +20,7 @@ namespace tl {
 // ----------------------------------------------------------------------------
 
 // atom positions
-enum class UCType
-{
-	SIMPLE,
-	FCC,
-	BCC,
-};
+enum class UCType { SIMPLE, FCC, BCC, };
 
 /**
  * Next neighbours
@@ -156,6 +151,31 @@ T ferromag(const t_cont& lstAtoms, const ublas::vector<T>& vecq, T tS)
 	return tE;
 }
 
+// ----------------------------------------------------------------------------
+
+// Magnetic form factors
+// see Neutron Data Booklet sec. 2.5-1 (p. 60)
+
+template<class T=double>
+T j0_avg(T q, T A, T a, T B, T b, T C, T c, T D)
+{
+	return A * std::exp(-a * q/(4.*M_PI)*q/(4.*M_PI)) + 
+		B * std::exp(-b * q/(4.*M_PI)*q/(4.*M_PI)) + 
+		C * std::exp(-c * q/(4.*M_PI)*q/(4.*M_PI)) + D;
+}
+
+template<class T=double>
+T j2_avg(T q, T A, T a, T B, T b, T C, T c, T D)
+{
+	return j0_avg(q, A,a, B,b, C,c, D) * q/(4.*M_PI)*q/(4.*M_PI);
+}
+
+template<class T=double>
+T mag_formfact(T q, T L, T S, T A, T a, T B, T b, T C, T c, T D)
+{
+	return (L+2.*S) * j0_avg(q, A,a, B,b, C,c, D) *
+		L * j2_avg(q, A,a, B,b, C,c, D);
+}
 // ----------------------------------------------------------------------------
 
 }

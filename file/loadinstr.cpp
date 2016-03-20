@@ -114,7 +114,7 @@ bool FileInstr::MatchColumn(const std::string& strRegex,
 {
 	const FileInstr::t_vecColNames& vecColNames = GetColNames();
 	rex::regex rx(strRegex, rex::regex::ECMAScript | rex::regex_constants::icase);
-	
+
 	using t_pairCol = std::pair<std::string, t_real>;
 	std::vector<t_pairCol> vecMatchedCols;
 
