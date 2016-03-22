@@ -31,9 +31,9 @@ class TcpClient
 protected:
 	std::string m_strHost, m_strService;
 
-	asio::io_service *m_pservice = 0;
-	ip::tcp::socket *m_psock = 0;
-	std::thread* m_pthread = 0;
+	asio::io_service *m_pservice = nullptr;
+	ip::tcp::socket *m_psock = nullptr;
+	std::thread* m_pthread = nullptr;
 	//std::mutex m_mutexWrite;
 
 	std::string m_strCmdDelim = "\n";
@@ -58,7 +58,7 @@ public:
 	void add_connect(const t_sigConn::slot_type& conn);
 
 	bool connect(const std::string& strHost, const std::string& strService);
-	void disconnect();
+	void disconnect(bool bAlwaysSendSignal=0);
 
 	void write(const std::string& str);
 

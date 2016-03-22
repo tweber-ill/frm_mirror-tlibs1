@@ -15,7 +15,7 @@
 namespace tl {
 
 static inline bool get_cmd_tokens(const std::string& str, const std::string& strDelim,
-				std::vector<std::string>& vecStr, std::string& strRemainder)
+	std::vector<std::string>& vecStr, std::string& strRemainder)
 {
 	boost::char_separator<char> delim(strDelim.c_str(), "", boost::keep_empty_tokens);
 	boost::tokenizer<boost::char_separator<char> > tok(str, delim);
@@ -75,7 +75,7 @@ bool TcpClient::connect(const std::string& strHost, const std::string& strServic
 		ip::tcp::resolver::iterator iter = res.resolve({strHost, strService});
 
 		asio::async_connect(*m_psock, iter,
-		[&](const sys::error_code& err, ip::tcp::resolver::iterator)
+		[this](const sys::error_code& err, ip::tcp::resolver::iterator)
 		{
 			if(!err)
 				read_loop();
@@ -83,7 +83,20 @@ bool TcpClient::connect(const std::string& strHost, const std::string& strServic
 			m_sigConn(m_strHost, m_strService);
 		});
 
-		m_pthread = new std::thread([&]() { m_pservice->run(); });
+		//tl::log_debug("Starting service thread.");
+		m_pthread = new std::thread([this]()
+		{
+			try
+			{
+				m_pservice->run();
+			}
+			catch(const std::exception& ex)
+			{
+				log_err("TCP service thread exited with error: ", ex.what(), ".");
+				m_pthread = nullptr;
+				disconnect(1);
+			}
+		});
 	}
 	catch(const std::exception& ex)
 	{
@@ -94,9 +107,9 @@ bool TcpClient::connect(const std::string& strHost, const std::string& strServic
 	return 1;
 }
 
-void TcpClient::disconnect()
+void TcpClient::disconnect(bool bAlwaysSendSignal)
 {
-	bool bConnected = is_connected();
+	const bool bConnected = is_connected();
 	if(bConnected)
 	{
 		m_pservice->stop();
@@ -123,7 +136,7 @@ void TcpClient::disconnect()
 	}
 
 
-	if(bConnected)
+	if(bConnected || bAlwaysSendSignal)
 	{
 		m_sigDisconn(m_strHost, m_strService);
 
@@ -193,8 +206,9 @@ void TcpClient::read_loop()
 	static const std::size_t iBufLen = 256;
 	static char pcBuf[iBufLen];
 
+	//tl::log_debug("In read loop.");
 	asio::async_read(*m_psock, asio::buffer(pcBuf, iBufLen), asio::transfer_at_least(1),
-	[&](const sys::error_code& err, std::size_t len)
+	[this](const sys::error_code& err, std::size_t len)
 	{
 		if(err)
 		{
