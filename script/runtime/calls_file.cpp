@@ -163,7 +163,7 @@ static Symbol* fkt_loadinstr(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 
-	std::vector<tl::FileInstr*> vecToMerge;
+	std::vector<tl::FileInstrBase<t_real>*> vecToMerge;
 
 	t_string strMainFile;
 	if(vecSyms[0]->GetType() == SYMBOL_STRING)
@@ -190,7 +190,7 @@ static Symbol* fkt_loadinstr(const std::vector<Symbol*>& vecSyms,
 
 			const t_string& strFileAux = ((SymbolString*)pSymAux)->GetVal();
 
-			tl::FileInstr *pToMerge = tl::FileInstr::LoadInstr(strFileAux.c_str());
+			tl::FileInstrBase<t_real> *pToMerge = tl::FileInstrBase<t_real>::LoadInstr(strFileAux.c_str());
 			if(!pToMerge)
 			{
 				tl::log_warn(linenr(runinfo), "loadinstr could not open \"", strFileAux, "\" for merging.");
@@ -207,14 +207,14 @@ static Symbol* fkt_loadinstr(const std::vector<Symbol*>& vecSyms,
 	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("ok"), pOk));
 
 	const t_string& strFile = strMainFile;
-	tl::FileInstr* pInstr = tl::FileInstr::LoadInstr(strFile.c_str());
+	tl::FileInstrBase<t_real>* pInstr = tl::FileInstrBase<t_real>::LoadInstr(strFile.c_str());
 	if(!pInstr)
 	{
 		tl::log_err(linenr(runinfo), "loadinstr could not open \"", strFile, "\".");
 		return pmapRet;
 	}
 
-	for(tl::FileInstr* pToMerge : vecToMerge)
+	for(tl::FileInstrBase<t_real>* pToMerge : vecToMerge)
 	{
 		pInstr->MergeWith(pToMerge);
 		delete pToMerge;
@@ -222,9 +222,9 @@ static Symbol* fkt_loadinstr(const std::vector<Symbol*>& vecSyms,
 	vecToMerge.clear();
 
 
-	const tl::FileInstr::t_vecDat& vecDat = pInstr->GetData();
-	const tl::FileInstr::t_vecColNames& vecColNames = pInstr->GetColNames();
-	const tl::FileInstr::t_mapParams& mapParams = pInstr->GetAllParams();
+	const tl::FileInstrBase<t_real>::t_vecDat& vecDat = pInstr->GetData();
+	const tl::FileInstrBase<t_real>::t_vecColNames& vecColNames = pInstr->GetColNames();
+	const tl::FileInstrBase<t_real>::t_mapParams& mapParams = pInstr->GetAllParams();
 	std::vector<std::string> vecScanVars = pInstr->GetScannedVars();
 
 
@@ -233,13 +233,13 @@ static Symbol* fkt_loadinstr(const std::vector<Symbol*>& vecSyms,
 	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("data"), pArrDat));
 
 	pArrDat->GetArr().reserve(vecDat.size());
-	for(const tl::FileInstr::t_vecDat::value_type& vecRow : vecDat)
+	for(const tl::FileInstrBase<t_real>::t_vecDat::value_type& vecRow : vecDat)
 	{
 		SymbolArray *pArrRow = new SymbolArray();
 		pArrDat->GetArr().push_back(pArrRow);
 		pArrRow->GetArr().reserve(vecRow.size());
 
-		for(const tl::FileInstr::t_vecDat::value_type::value_type& val : vecRow)
+		for(const tl::FileInstrBase<t_real>::t_vecDat::value_type::value_type& val : vecRow)
 			pArrRow->GetArr().push_back(new SymbolReal(val));
 	}
 
@@ -249,14 +249,14 @@ static Symbol* fkt_loadinstr(const std::vector<Symbol*>& vecSyms,
 	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("labels"), pArrLab));
 
 	pArrLab->GetArr().reserve(vecColNames.size());
-	for(const tl::FileInstr::t_vecColNames::value_type& strLab : vecColNames)
+	for(const tl::FileInstrBase<t_real>::t_vecColNames::value_type& strLab : vecColNames)
 		pArrLab->GetArr().push_back(new SymbolString(strLab));
 
 
 	// param map
 	SymbolMap *pmapParams = new SymbolMap();
 	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("params"), pmapParams));
-	for(const tl::FileInstr::t_mapParams::value_type& pair : mapParams)
+	for(const tl::FileInstrBase<t_real>::t_mapParams::value_type& pair : mapParams)
 	{
 		const t_string& strKey = pair.first;
 		SymbolString *pVal = new SymbolString(pair.second);

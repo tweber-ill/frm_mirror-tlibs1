@@ -36,4 +36,5 @@ CMakeCache.txt
 cmake_install.cmake
 Makefile
 build/*
+script/build/*
 externals/**
