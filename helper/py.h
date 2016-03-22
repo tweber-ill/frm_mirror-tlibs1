@@ -20,12 +20,12 @@ t_cont get_py_array(const t_str& str)
 
 	std::size_t iStart = str.find('[');
 	std::size_t iEnd = str.find(']');
-	
+
 	// search for list instead
 	if(iStart==t_str::npos || iEnd==t_str::npos)
 	{
 		iStart = str.find('(');
-		iEnd = str.find(')');		
+		iEnd = str.find(')');
 	}
 
 	// invalid array

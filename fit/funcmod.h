@@ -47,8 +47,9 @@ template<class T = double> class FunctionModel_nd_gen
 };
 
 typedef class FunctionModel_param_gen<boost::numeric::ublas::vector<double>> FunctionModel_param;
-typedef class FunctionModel_gen<double> FunctionModel;
-typedef class FunctionModel_nd_gen<double> FunctionModel_nd;
+
+template<class T=double> using FunctionModel = class FunctionModel_gen<T>;
+template<class T=double> using FunctionModel_nd = class FunctionModel_nd_gen<T>;
 
 }
 

@@ -62,12 +62,25 @@ template<class Sys, class T=double> using t_length_inverse =
 	units::quantity<units::unit<units::derived_dimension<units::length_base_dimension, -1>::type, Sys>, T>;
 template<class Sys, class T=double> using t_length_square =
 	units::quantity<units::unit<units::derived_dimension<units::length_base_dimension, 2>::type, Sys>, T>;
+template<class Sys, class T=double> using t_momentum_square =
+	units::quantity<units::unit<units::derived_dimension<units::momentum_dimension, 2>::type, Sys>, T>;
+template<class Sys, class T=double> using t_action =
+	units::quantity<units::unit<typename units::derived_dimension
+	<units::mass_base_dimension,1, units::length_base_dimension,2, units::time_base_dimension,-1>::type, Sys>, T>;
 template<class Sys, class T=double> using t_dimensionless =
 	units::quantity<units::unit<units::dimensionless_type, Sys>, T>;
 
 // synonyms
 template<class Sys, class T=double> using t_freq = t_frequency<Sys, T>;
 template<class Sys, class T=double> using t_temp = t_temperature<Sys,T>;
+
+
+// constants
+template<class Y=double> t_energy<units::si::system, Y> get_one_meV()
+{ return Y(1e-3) * Y(co::e/units::si::coulombs)*units::si::coulombs*units::si::volts; }
+template<class Y=double> t_length<units::si::system, Y> get_one_angstrom()
+{ return Y(1e-10) * units::si::meters; }
+
 
 
 // si quantities
@@ -85,11 +98,14 @@ typedef units::quantity<units::si::frequency> frequency;
 typedef units::quantity<units::si::temperature> temperature;
 typedef units::quantity<units::si::mass> mass;
 
+
+
 // synonyms
 typedef frequency freq;
 typedef temperature temp;
 
 
+// TODO: make C++14 template variables out of these
 static const length meters = 1.*units::si::meters;
 static const flux teslas = 1.*units::si::teslas;
 static const time seconds = 1.*units::si::seconds;
@@ -111,6 +127,20 @@ static const time second = seconds;
 static const energy meV = one_meV;
 static const flux tesla = teslas;
 static const area barn = barns;
+
+
+
+// helper functions
+template<class t_quant, class t_quant_sq>
+t_quant my_units_sqrt(const t_quant_sq& val)
+{
+	t_quant one_quant;
+	t_quant_sq one_quant_sq;
+
+	using Y = typename t_quant::value_type;
+	Y valsq = Y(val / one_quant_sq);
+	return std::sqrt(valsq) * one_quant;
+}
 
 }
 #endif

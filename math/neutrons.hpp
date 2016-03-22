@@ -105,14 +105,20 @@ t_energy<Sys,Y> k2E(const t_wavenumber<Sys,Y>& k)
 }
 
 template<class Sys, class Y>
-t_wavenumber<Sys,Y> E2k(const t_energy<Sys,Y>& E, bool &bImag)
+t_wavenumber<Sys,Y> E2k(const t_energy<Sys,Y>& _E, bool &bImag)
 {
-	bImag = (E < 0.*one_meV);
+	bImag = (_E < Y(0.)*get_one_meV<Y>());
+	t_energy<Sys,Y> E = bImag ? -_E : _E;
 
-	t_momentum<Sys,Y>
-		p = units::sqrt(2.*co::m_n*units::abs(E));
-	t_wavenumber<Sys,Y>
-		k = p / co::hbar;
+	// hack
+	const t_mass<Sys,Y> m_n = Y(co::m_n/units::si::kilograms)*units::si::kilograms;
+	const t_action<Sys,Y> hbar = Y(co::hbar/units::si::joules/units::si::seconds)*
+		units::si::joules*units::si::seconds;
+
+	auto pp = Y(2.) * m_n * E;
+	//t_momentum<Sys,Y> p = units::sqrt<typename decltype(pp)::unit_type, Y>(pp);
+	t_momentum<Sys,Y> p = my_units_sqrt<t_momentum<Sys,Y>, decltype(pp)>(pp);
+	t_wavenumber<Sys,Y> k = p / hbar;
 	return k;
 }
 // --------------------------------------------------------------------------------
@@ -370,14 +376,14 @@ get_sample_Q(const t_wavenumber<Sys,Y>& ki,
 {
 	t_dimensionless<Sys,Y> ctt = units::cos(tt);
 	decltype(ki*ki) Qsq = ki*ki + kf*kf - 2.*ki*kf*ctt;
-	if(Y(Qsq*angstrom*angstrom) < 0.)
+	if(Y(Qsq*get_one_angstrom()*get_one_angstrom()) < 0.)
 	{
 		// TODO
 
 		Qsq = -Qsq;
 	}
 
-	t_wavenumber<Sys,Y> Q =  units::sqrt(Qsq);
+	t_wavenumber<Sys,Y> Q = units::sqrt(Qsq);
 	return Q;
 }
 
@@ -398,14 +404,19 @@ template<class Sys, class Y>
 t_wavenumber<Sys,Y> get_other_k(const t_energy<Sys,Y>& E,
 	const t_wavenumber<Sys,Y>& kfix, bool bFixedKi)
 {
-	auto kE_sq = E*2.*co::m_n/co::hbar/co::hbar;
+	// hack
+	const t_mass<Sys,Y> m_n = Y(co::m_n/units::si::kilograms)*units::si::kilograms;
+	const t_action<Sys,Y> hbar = Y(co::hbar/units::si::joules/units::si::seconds)*
+		units::si::joules*units::si::seconds;
+
+	auto kE_sq = E*Y(2.)*m_n/hbar/hbar;
 	if(bFixedKi) kE_sq = -kE_sq;
 
 	auto k_sq = kE_sq + kfix*kfix;
-	if(k_sq*angstrom*angstrom < 0.)
+	if(k_sq*get_one_angstrom()*get_one_angstrom() < 0.)
 		throw Err("Scattering triangle not closed.");
 
-	return units::sqrt(k_sq);
+	return my_units_sqrt<t_wavenumber<Sys,Y>, decltype(k_sq)>(k_sq);
 }
 
 // --------------------------------------------------------------------------------
@@ -419,7 +430,8 @@ template<class Sys, class Y>
 Y ana_effic_factor(const t_wavenumber<Sys, Y>& kf, const t_length<Sys, Y>& d)
 {
 	t_angle<Sys, Y> theta = 0.5*units::abs(get_mono_twotheta<Sys, Y>(kf, d, true));
-	return kf*kf*kf / units::tan(theta) * angstrom*angstrom*angstrom;
+	return kf*kf*kf / units::tan(theta) *
+		get_one_angstrom()*get_one_angstrom()*get_one_angstrom();
 }
 
 // --------------------------------------------------------------------------------
@@ -496,10 +508,10 @@ std::vector<InelasticSpurion<Y>> check_inelastic_spurions(bool bConstEi,
 		}
 
 		spuri.dE_meV = get_inelastic_spurion(bConstEi, EiEf,
-			spuri.iOrderMono, spuri.iOrderAna) / one_meV;
+			spuri.iOrderMono, spuri.iOrderAna) / get_one_meV<Y>();
 
-		//std::cout << spuri.dE_meV << " *** " << Y(E/one_meV) << std::endl;
-		if(spuri.dE_meV!=0. && float_equal(spuri.dE_meV, Y(E/one_meV), dESensitivity))
+		//std::cout << spuri.dE_meV << " *** " << Y(E/get_one_meV<Y>()) << std::endl;
+		if(spuri.dE_meV!=0. && float_equal(spuri.dE_meV, Y(E/get_one_meV<Y>()), dESensitivity))
 			vecSpuris.push_back(spuri);
 	}
 
@@ -611,7 +623,7 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 template<class t_real=double>
 t_real bose(t_real E, t_real T)
 {
-	t_real kB = co::k_B * units::si::kelvin/tl::meV;
+	t_real kB = co::k_B * units::si::kelvin/tl::get_one_meV();
 
 	if(E >= 0.)
 		return 1./(std::exp(std::abs(E)/(kB*T)) - 1.) + 1.;
@@ -622,7 +634,7 @@ t_real bose(t_real E, t_real T)
 template<class Sys, class Y>
 Y bose(const t_energy<Sys,Y>& E, const t_temperature<Sys,Y>& T)
 {
-	return bose<Y>(Y(E/tl::meV), Y(T/tl::kelvin));
+	return bose<Y>(Y(E/tl::get_one_meV()), Y(T/tl::kelvin));
 }
 
 // see: B. Fak, B. Dorner, Physica B 234-236 (1997) pp. 1107-1108

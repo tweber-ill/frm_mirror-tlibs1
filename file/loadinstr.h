@@ -18,10 +18,11 @@
 namespace tl{
 
 // interface for instrument-specific data files
-class FileInstr
+template<class _t_real = double>
+class FileInstrBase
 {
 	public:
-		typedef double t_real;
+		using t_real = _t_real;
 
 		typedef std::unordered_map<std::string, std::string> t_mapParams;
 		typedef std::vector<std::string> t_vecColNames;
@@ -33,8 +34,8 @@ class FileInstr
 			const char* pcL, const char* pcE, std::size_t i) const;
 
 	public:
-		FileInstr() = default;
-		virtual ~FileInstr() = default;
+		FileInstrBase() = default;
+		virtual ~FileInstrBase() = default;
 
 		virtual bool Load(const char* pcFile) = 0;
 
@@ -54,7 +55,7 @@ class FileInstr
 
 		virtual std::size_t GetScanCount() const = 0;
 		virtual std::array<t_real, 5> GetScanHKLKiKf(std::size_t i) const = 0;
-		virtual bool MergeWith(const FileInstr* pDat) = 0;
+		virtual bool MergeWith(const FileInstrBase<t_real>* pDat) = 0;
 
 		virtual std::string GetTitle() const = 0;
 		virtual std::string GetUser() const = 0;
@@ -78,14 +79,21 @@ class FileInstr
 		virtual bool MatchColumn(const std::string& strRegex,
 			std::string& strColName, bool bSortByCounts=0, bool bFilterEmpty=1) const;
 
-		static FileInstr* LoadInstr(const char* pcFile);
+		static FileInstrBase<t_real>* LoadInstr(const char* pcFile);
 };
 
 
 // psi & ill files
-class FilePsi : public FileInstr
+template<class _t_real = double>
+class FilePsi : public FileInstrBase<_t_real>
 {
 	public:
+		using t_real = _t_real;
+                using t_mapParams = typename FileInstrBase<t_real>::t_mapParams;
+                using t_vecColNames = typename FileInstrBase<t_real>::t_vecColNames;
+                using t_vecVals = typename FileInstrBase<t_real>::t_vecVals;
+                using t_vecDat = typename FileInstrBase<t_real>::t_vecDat;
+
 		// internal parameters in m_mapParams
 		typedef std::map<std::string, t_real> t_mapIParams;
 
@@ -132,7 +140,7 @@ class FilePsi : public FileInstr
 
 		virtual std::size_t GetScanCount() const override;
 		virtual std::array<t_real, 5> GetScanHKLKiKf(std::size_t i) const override;
-		virtual bool MergeWith(const FileInstr* pDat) override;
+		virtual bool MergeWith(const FileInstrBase<t_real>* pDat) override;
 
 		virtual std::string GetTitle() const override;
 		virtual std::string GetUser() const override;
@@ -155,8 +163,16 @@ class FilePsi : public FileInstr
 
 
 // frm/nicos files
-class FileFrm : public FileInstr
+template<class _t_real = double>
+class FileFrm : public FileInstrBase<_t_real>
 {
+	public:
+		using t_real = _t_real;
+                using t_mapParams = typename FileInstrBase<t_real>::t_mapParams;
+                using t_vecColNames = typename FileInstrBase<t_real>::t_vecColNames;
+                using t_vecVals = typename FileInstrBase<t_real>::t_vecVals;
+                using t_vecDat = typename FileInstrBase<t_real>::t_vecDat;
+
 	protected:
 		t_mapParams m_mapParams;
 		t_vecColNames m_vecQuantities, m_vecUnits;
@@ -186,7 +202,7 @@ class FileFrm : public FileInstr
 
 		virtual std::size_t GetScanCount() const override;
 		virtual std::array<t_real, 5> GetScanHKLKiKf(std::size_t i) const override;
-		virtual bool MergeWith(const FileInstr* pDat) override;
+		virtual bool MergeWith(const FileInstrBase<t_real>* pDat) override;
 
 		virtual const t_vecVals& GetCol(const std::string& strName) const override;
 		virtual t_vecVals& GetCol(const std::string& strName) override;
@@ -212,8 +228,16 @@ class FileFrm : public FileInstr
 
 
 // macs files
-class FileMacs : public FileInstr
+template<class _t_real = double>
+class FileMacs : public FileInstrBase<_t_real>
 {
+	public:
+		using t_real = _t_real;
+                using t_mapParams = typename FileInstrBase<t_real>::t_mapParams;
+                using t_vecColNames = typename FileInstrBase<t_real>::t_vecColNames;
+                using t_vecVals = typename FileInstrBase<t_real>::t_vecVals;
+                using t_vecDat = typename FileInstrBase<t_real>::t_vecDat;
+
 	protected:
 		t_mapParams m_mapParams;
 		t_vecColNames m_vecQuantities;
@@ -243,7 +267,7 @@ class FileMacs : public FileInstr
 
 		virtual std::size_t GetScanCount() const override;
 		virtual std::array<t_real, 5> GetScanHKLKiKf(std::size_t i) const override;
-		virtual bool MergeWith(const FileInstr* pDat) override;
+		virtual bool MergeWith(const FileInstrBase<t_real>* pDat) override;
 
 		virtual const t_vecVals& GetCol(const std::string& strName) const override;
 		virtual t_vecVals& GetCol(const std::string& strName) override;
@@ -269,8 +293,16 @@ class FileMacs : public FileInstr
 
 
 // trisp files
-class FileTrisp : public FileInstr
+template<class _t_real = double>
+class FileTrisp : public FileInstrBase<_t_real>
 {
+	public:
+		using t_real = _t_real;
+                using t_mapParams = typename FileInstrBase<t_real>::t_mapParams;
+                using t_vecColNames = typename FileInstrBase<t_real>::t_vecColNames;
+                using t_vecVals = typename FileInstrBase<t_real>::t_vecVals;
+                using t_vecDat = typename FileInstrBase<t_real>::t_vecDat;
+
 	protected:
 		t_mapParams m_mapParams;
 		t_vecColNames m_vecQuantities;
@@ -300,7 +332,7 @@ class FileTrisp : public FileInstr
 
 		virtual std::size_t GetScanCount() const override;
 		virtual std::array<t_real, 5> GetScanHKLKiKf(std::size_t i) const override;
-		virtual bool MergeWith(const FileInstr* pDat) override;
+		virtual bool MergeWith(const FileInstrBase<t_real>* pDat) override;
 
 		virtual const t_vecVals& GetCol(const std::string& strName) const override;
 		virtual t_vecVals& GetCol(const std::string& strName) override;
@@ -324,6 +356,14 @@ class FileTrisp : public FileInstr
 		virtual std::string GetScanCommand() const override;
 };
 
+
+// for legacy compatibility
+using FileInstr = FileInstrBase<>;
+
 }
+
+#ifdef TLIBS_INC_HDR_IMPLS
+	#include "loadinstr_impl.h"
+#endif
 
 #endif
