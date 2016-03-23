@@ -163,18 +163,18 @@ void Log::RemoveOstr(std::ostream* pOstr)
 
 	auto fktDel = [pOstr](const t_iter::value_type& pairOstr) -> bool
 	{
-		if(pairOstr.first == pOstr)
-			return true;
-		return false;
+		return pairOstr.first == pOstr;
 	};
 
 	t_iter iterNewEnd = std::remove_if(m_vecOstrs.begin(), m_vecOstrs.end(), fktDel);
-	m_vecOstrs.resize(iterNewEnd-m_vecOstrs.begin());
+	if(iterNewEnd != m_vecOstrs.end())
+		m_vecOstrs.resize(iterNewEnd-m_vecOstrs.begin());
 
 	for(t_mapthreadOstrs::value_type& pairTh : m_mapOstrsTh)
 	{
 		t_iter iterNewEndTh = std::remove_if(pairTh.second.begin(), pairTh.second.end(), fktDel);
-		pairTh.second.resize(iterNewEndTh - m_vecOstrs.begin());
+		if(iterNewEndTh != pairTh.second.end())
+			pairTh.second.resize(iterNewEndTh - pairTh.second.begin());
 	}
 }
 
