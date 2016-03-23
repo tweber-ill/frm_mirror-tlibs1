@@ -416,6 +416,7 @@ t_wavenumber<Sys,Y> get_other_k(const t_energy<Sys,Y>& E,
 	if(k_sq*get_one_angstrom()*get_one_angstrom() < 0.)
 		throw Err("Scattering triangle not closed.");
 
+	//return units::sqrt(k_sq);
 	return my_units_sqrt<t_wavenumber<Sys,Y>>(k_sq);
 }
 
