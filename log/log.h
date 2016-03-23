@@ -16,6 +16,8 @@
 #include <mutex>
 #include <utility>
 
+#include "../helper/array.h"
+
 
 namespace tl {
 
@@ -34,7 +36,12 @@ private:
 
 protected:
 	static std::recursive_mutex s_mtx;
-	std::vector<std::ostream*> m_vecOstrs;
+
+	// pair of ostream and colour flag
+	using t_pairOstr = std::pair<std::ostream*, bool>;
+	std::vector<t_pairOstr> m_vecOstrs;
+	using t_threadOstrs = std::unordered_map<std::thread::id, std::vector<t_pairOstr>>;
+	t_threadOstrs m_mapOstrsTh;
 
 	std::string m_strInfo;
 	LogColor m_col = LogColor::NONE;
@@ -53,6 +60,8 @@ protected:
 	static std::string get_thread_id();
 	static std::string get_color(LogColor col, bool bBold=0);
 
+	std::vector<t_pairOstr>& GetThreadOstrs();
+
 	void begin_log();
 	void end_log();
 
@@ -61,10 +70,10 @@ protected:
 
 public:
 	Log();
-	Log(const std::string& strInfo, LogColor col);
+	Log(const std::string& strInfo, LogColor col, std::ostream* = nullptr);
 	virtual ~Log();
 
-	void AddOstr(std::ostream* pOstr);
+	void AddOstr(std::ostream* pOstr, bool bCol=1, bool bThreadLocal=0);
 
 	template<typename Arg>
 	void operator()(Arg&& arg)
@@ -73,8 +82,11 @@ public:
 
 		inc_depth();
 
-		for(std::ostream* pOstr : m_vecOstrs)
-			(*pOstr) << std::forward<Arg>(arg);
+		std::vector<t_pairOstr>& vecOstrsTh = GetThreadOstrs();
+		std::vector<t_pairOstr> vecOstrs = arrayunion({m_vecOstrs, vecOstrsTh});
+
+		for(t_pairOstr& pair : vecOstrs)
+			(*pair.first) << std::forward<Arg>(arg);
 
 		dec_depth();
 	}

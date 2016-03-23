@@ -114,5 +114,17 @@ void sorttuples(t_cont<std::tuple<Ts...> >& vec)
 }
 
 
+// ----------------------------------------------------------------------------
+
+template<class t_cont>
+t_cont arrayunion(const std::initializer_list<t_cont>& lst)
+{
+	t_cont contRet;
+	for(const t_cont& cont : lst)
+		contRet.insert(contRet.end(), cont.begin(), cont.end());
+	return contRet;
+}
+
+
 }
 #endif

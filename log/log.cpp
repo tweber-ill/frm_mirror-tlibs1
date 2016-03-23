@@ -51,9 +51,17 @@ std::string Log::get_color(LogColor col, bool bBold)
 void Log::begin_log()
 {
 	s_mtx.lock();
-	for(std::ostream* pOstr : m_vecOstrs)
+
+	std::vector<t_pairOstr>& vecOstrsTh = GetThreadOstrs();
+	std::vector<t_pairOstr> vecOstrs = arrayunion({m_vecOstrs, vecOstrsTh});
+
+	for(t_pairOstr &pairOstr : vecOstrs)
 	{
-		(*pOstr) << get_color(m_col, 1);
+		std::ostream *pOstr = pairOstr.first;
+		bool bCol = pairOstr.second;
+
+		if(bCol)
+			(*pOstr) << get_color(m_col, 1);
 		if(m_bShowDate)
 			(*pOstr) << get_timestamp() << ", ";
 		if(m_bShowThread)
@@ -75,16 +83,24 @@ void Log::begin_log()
 			(*pOstr) << iterMap->second << ", ";
 			//(*pOstr) << get_thread_id() << ", ";
 		}
-		(*pOstr) << m_strInfo;
-		(*pOstr) << ": " << get_color(m_col, 0);
+		(*pOstr) << m_strInfo << ": ";
+		if(bCol)
+			(*pOstr) << get_color(m_col, 0);
 	}
 }
 
 void Log::end_log()
 {
-	for(std::ostream* pOstr : m_vecOstrs)
+        std::vector<t_pairOstr>& vecOstrsTh = GetThreadOstrs();
+        std::vector<t_pairOstr> vecOstrs = arrayunion({m_vecOstrs, vecOstrsTh});
+
+	for(t_pairOstr& pairOstr : vecOstrs)
 	{
-		(*pOstr) << get_color(LogColor::NONE);
+		std::ostream *pOstr = pairOstr.first;
+		bool bCol = pairOstr.second;
+
+		if(bCol)
+			(*pOstr) << get_color(LogColor::NONE);
 		(*pOstr) << std::endl;
 	}
 	s_mtx.unlock();
@@ -108,30 +124,43 @@ void Log::dec_depth()
 	}
 }
 
-Log::Log() : m_vecOstrs{&std::cerr}
+Log::Log() : m_vecOstrs{{&std::cerr, 1}}
 {}
 
-Log::Log(const std::string& strInfo, LogColor col)
-	: m_vecOstrs{&std::cerr}, 
+Log::Log(const std::string& strInfo, LogColor col, std::ostream* pOstr)
+	: m_vecOstrs{{pOstr ? pOstr : &std::cerr, 1}},
 	  m_strInfo(strInfo), m_col(col)
 {}
 
 Log::~Log()
 {}
 
-void Log::AddOstr(std::ostream* pOstr)
+std::vector<Log::t_pairOstr>& Log::GetThreadOstrs()
 {
-	m_vecOstrs.push_back(pOstr);
+	return m_mapOstrsTh[std::this_thread::get_id()];
+}
+
+void Log::AddOstr(std::ostream* pOstr, bool bCol, bool bThreadLocal)
+{
+	if(bThreadLocal)
+	{
+		std::vector<t_pairOstr>& vecOstrsTh = GetThreadOstrs();
+		vecOstrsTh.push_back({pOstr, bCol});
+	}
+	else
+	{
+		m_vecOstrs.push_back({pOstr, bCol});
+	}
 }
 
 
 
 
-Log log_info("INFO", LogColor::WHITE),
-	log_warn("WARNING", LogColor::YELLOW), 
-	log_err("ERROR", LogColor::RED),
-	log_crit("CRITICAL", LogColor::PURPLE),
-	log_debug("DEBUG", LogColor::CYAN);
+Log log_info("INFO", LogColor::WHITE, &std::cout),
+	log_warn("WARNING", LogColor::YELLOW, &std::cerr), 
+	log_err("ERROR", LogColor::RED, &std::cerr),
+	log_crit("CRITICAL", LogColor::PURPLE, &std::cerr),
+	log_debug("DEBUG", LogColor::CYAN, &std::cerr);
 }
 
 /*
