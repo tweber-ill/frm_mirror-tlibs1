@@ -60,6 +60,8 @@ void Log::begin_log()
 		std::ostream *pOstr = pairOstr.first;
 		bool bCol = pairOstr.second;
 
+		if(!pOstr)
+			continue;
 		if(bCol)
 			(*pOstr) << get_color(m_col, 1);
 		if(m_bShowDate)
@@ -99,6 +101,8 @@ void Log::end_log()
 		std::ostream *pOstr = pairOstr.first;
 		bool bCol = pairOstr.second;
 
+		if(!pOstr)
+			continue;
 		if(bCol)
 			(*pOstr) << get_color(LogColor::NONE);
 		(*pOstr) << std::endl;
@@ -153,7 +157,26 @@ void Log::AddOstr(std::ostream* pOstr, bool bCol, bool bThreadLocal)
 	}
 }
 
+void Log::RemoveOstr(std::ostream* pOstr)
+{
+	using t_iter = std::vector<t_pairOstr>::iterator;
 
+	auto fktDel = [pOstr](const t_iter::value_type& pairOstr) -> bool
+	{
+		if(pairOstr.first == pOstr)
+			return true;
+		return false;
+	};
+
+	t_iter iterNewEnd = std::remove_if(m_vecOstrs.begin(), m_vecOstrs.end(), fktDel);
+	m_vecOstrs.resize(iterNewEnd-m_vecOstrs.begin());
+
+	for(t_mapthreadOstrs::value_type& pairTh : m_mapOstrsTh)
+	{
+		t_iter iterNewEndTh = std::remove_if(pairTh.second.begin(), pairTh.second.end(), fktDel);
+		pairTh.second.resize(iterNewEndTh - m_vecOstrs.begin());
+	}
+}
 
 
 Log log_info("INFO", LogColor::WHITE, &std::cout),

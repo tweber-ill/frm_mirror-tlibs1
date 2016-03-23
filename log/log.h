@@ -40,8 +40,8 @@ protected:
 	// pair of ostream and colour flag
 	using t_pairOstr = std::pair<std::ostream*, bool>;
 	std::vector<t_pairOstr> m_vecOstrs;
-	using t_threadOstrs = std::unordered_map<std::thread::id, std::vector<t_pairOstr>>;
-	t_threadOstrs m_mapOstrsTh;
+	using t_mapthreadOstrs = std::unordered_map<std::thread::id, std::vector<t_pairOstr>>;
+	t_mapthreadOstrs m_mapOstrsTh;
 
 	std::string m_strInfo;
 	LogColor m_col = LogColor::NONE;
@@ -74,6 +74,7 @@ public:
 	virtual ~Log();
 
 	void AddOstr(std::ostream* pOstr, bool bCol=1, bool bThreadLocal=0);
+	void RemoveOstr(std::ostream* pOstr);
 
 	template<typename Arg>
 	void operator()(Arg&& arg)
@@ -86,7 +87,10 @@ public:
 		std::vector<t_pairOstr> vecOstrs = arrayunion({m_vecOstrs, vecOstrsTh});
 
 		for(t_pairOstr& pair : vecOstrs)
-			(*pair.first) << std::forward<Arg>(arg);
+		{
+			if(pair.first)
+				(*pair.first) << std::forward<Arg>(arg);
+		}
 
 		dec_depth();
 	}
