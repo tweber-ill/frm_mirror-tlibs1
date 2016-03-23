@@ -117,7 +117,7 @@ t_wavenumber<Sys,Y> E2k(const t_energy<Sys,Y>& _E, bool &bImag)
 
 	auto pp = Y(2.) * m_n * E;
 	//t_momentum<Sys,Y> p = units::sqrt<typename decltype(pp)::unit_type, Y>(pp);
-	t_momentum<Sys,Y> p = my_units_sqrt<t_momentum<Sys,Y>, decltype(pp)>(pp);
+	t_momentum<Sys,Y> p = my_units_sqrt<t_momentum<Sys,Y>>(pp);
 	t_wavenumber<Sys,Y> k = p / hbar;
 	return k;
 }
@@ -416,7 +416,7 @@ t_wavenumber<Sys,Y> get_other_k(const t_energy<Sys,Y>& E,
 	if(k_sq*get_one_angstrom()*get_one_angstrom() < 0.)
 		throw Err("Scattering triangle not closed.");
 
-	return my_units_sqrt<t_wavenumber<Sys,Y>, decltype(k_sq)>(k_sq);
+	return my_units_sqrt<t_wavenumber<Sys,Y>>(k_sq);
 }
 
 // --------------------------------------------------------------------------------

@@ -131,13 +131,15 @@ static const area barn = barns;
 
 
 // helper functions
-template<class t_quant, class t_quant_sq>
-t_quant my_units_sqrt(const t_quant_sq& val)
+template<class t_quant>
+t_quant my_units_sqrt(const decltype(t_quant() * t_quant())& val)
 {
-	t_quant one_quant;
-	t_quant_sq one_quant_sq;
-
+	using t_quant_sq = decltype(t_quant() * t_quant());
 	using Y = typename t_quant::value_type;
+
+	t_quant one_quant = t_quant::from_value(Y(1));
+	t_quant_sq one_quant_sq = t_quant_sq::from_value(Y(1));
+
 	Y valsq = Y(val / one_quant_sq);
 	return std::sqrt(valsq) * one_quant;
 }

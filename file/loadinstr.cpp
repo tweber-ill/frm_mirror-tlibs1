@@ -18,13 +18,12 @@ namespace tl
 	template class FileTrisp<double>;
 
 
-/*	template FileInstrBase<float>* FileInstrBase<float>::LoadInstr(const char* pcFile);
+	template FileInstrBase<float>* FileInstrBase<float>::LoadInstr(const char* pcFile);
 
-	template class FilePsi<float>;
+/*	template class FilePsi<float>;
 	template class FileFrm<float>;
 	template class FileMacs<float>;
-	template class FileTrisp<float>;
-*/
+	template class FileTrisp<float>;*/
 }
 
 
