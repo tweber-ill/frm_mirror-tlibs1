@@ -146,6 +146,7 @@ std::vector<Log::t_pairOstr>& Log::GetThreadOstrs()
 
 void Log::AddOstr(std::ostream* pOstr, bool bCol, bool bThreadLocal)
 {
+	std::lock_guard<decltype(s_mtx)> _lck(s_mtx);
 	if(bThreadLocal)
 	{
 		std::vector<t_pairOstr>& vecOstrsTh = GetThreadOstrs();
@@ -159,6 +160,7 @@ void Log::AddOstr(std::ostream* pOstr, bool bCol, bool bThreadLocal)
 
 void Log::RemoveOstr(std::ostream* pOstr)
 {
+	std::lock_guard<decltype(s_mtx)> _lck(s_mtx);
 	using t_iter = std::vector<t_pairOstr>::iterator;
 
 	auto fktDel = [pOstr](const t_iter::value_type& pairOstr) -> bool
@@ -186,17 +188,57 @@ Log log_info("INFO", LogColor::WHITE, &std::cout),
 	log_debug("DEBUG", LogColor::CYAN, &std::cerr);
 }
 
-/*
+
+
+// ----------------------------------------------------------------------------
+
+
+/*// Testing
+// gcc -o logtst log/log.cpp -std=c++11 -lstdc++ -pthread
 #include <thread>
+#include <fstream>
 
 int main()
 {
+	using namespace tl;
+
+	log_info.SetShowThread(1);
+
+	std::ofstream ofstrTh("main_th.log");
+	std::ofstream ofstr("main.log");
+	log_info.AddOstr(&ofstr, 0, 0);		// logs from all threads
+	log_info.AddOstr(&ofstrTh, 0, 1);	// logs only from main thread
+
 	log_info.template operator()<std::string>("Start");
 	log_info("Test");
 
-	std::thread th1([&]{ for(int i=0; i<10; ++i) {log_err("In thread 1."); std::this_thread::sleep_for(std::chrono::milliseconds(10));} });
-	std::thread th2([&]{ for(int i=0; i<10; ++i) {log_warn("In thread 2."); std::this_thread::sleep_for(std::chrono::milliseconds(100));} });
-	std::thread th3([&]{ for(int i=0; i<10; ++i) {log_crit("In thread 3."); std::this_thread::sleep_for(std::chrono::milliseconds(250));} });
+	std::thread th1([&]
+	{
+		std::ofstream ofstrTh("th1.log");
+		log_info.AddOstr(&ofstrTh, 0, 1);
+		for(int i=0; i<10; ++i)
+		{
+			log_info("In thread ", 1, "."); 
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		}
+		log_info.RemoveOstr(&ofstrTh);
+	});
+	std::thread th2([&]
+	{
+		for(int i=0; i<10; ++i)
+		{
+			log_info("In thread ", 2, ".");
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		}
+	});
+	std::thread th3([&]
+	{
+		for(int i=0; i<10; ++i)
+		{
+			log_crit("In thread ", 3, ".");
+			std::this_thread::sleep_for(std::chrono::milliseconds(250));
+		}
+	});
 
 	log_info(1,2,3);
 	log_info("a", "b", "x");
@@ -207,6 +249,6 @@ int main()
 	th1.join();
 	th2.join();
 	th3.join();
+
 	return 0;
-}
-*/
+}*/

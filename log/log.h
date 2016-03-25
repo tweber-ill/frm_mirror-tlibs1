@@ -76,12 +76,12 @@ public:
 	void AddOstr(std::ostream* pOstr, bool bCol=1, bool bThreadLocal=0);
 	void RemoveOstr(std::ostream* pOstr);
 
-	template<typename Arg>
-	void operator()(Arg&& arg)
+#if __cplusplus > 201402L	// C++1z
+	template<typename ...t_args>
+	void operator()(t_args&&... args)
 	{
 		if(!m_bEnabled) return;
-
-		inc_depth();
+		begin_log();
 
 		std::vector<t_pairOstr>& vecOstrsTh = GetThreadOstrs();
 		std::vector<t_pairOstr> vecOstrs = arrayunion({m_vecOstrs, vecOstrsTh});
@@ -89,24 +89,39 @@ public:
 		for(t_pairOstr& pair : vecOstrs)
 		{
 			if(pair.first)
-				(*pair.first) << std::forward<Arg>(arg);
+				((*pair.first) << ... << std::forward<t_args>(args));
 		}
-
-		dec_depth();
+		end_log();
 	}
-
-	template<typename Arg, typename... Args>
-	void operator()(Arg&& arg, Args&&... args)
+#else
+	template<typename t_arg>
+	void operator()(t_arg&& arg)
 	{
 		if(!m_bEnabled) return;
 
 		inc_depth();
+		std::vector<t_pairOstr>& vecOstrsTh = GetThreadOstrs();
+		std::vector<t_pairOstr> vecOstrs = arrayunion({m_vecOstrs, vecOstrsTh});
 
-		(*this)(std::forward<Arg>(arg));
-		(*this)(std::forward<Args>(args)...);
-
+		for(t_pairOstr& pair : vecOstrs)
+		{
+			if(pair.first)
+				(*pair.first) << std::forward<t_arg>(arg);
+		}
 		dec_depth();
 	}
+
+	template<typename t_arg, typename... t_args>
+	void operator()(t_arg&& arg, t_args&&... args)
+	{
+		if(!m_bEnabled) return;
+
+		inc_depth();
+		(*this)(std::forward<t_arg>(arg));
+		(*this)(std::forward<t_args>(args)...);
+		dec_depth();
+	}
+#endif
 
 	void SetEnabled(bool bEnab) { m_bEnabled = bEnab; }
 	void SetShowDate(bool bDate) { m_bShowDate = bDate; }
