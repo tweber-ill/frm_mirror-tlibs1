@@ -60,7 +60,7 @@ enum TxtType
 class LoadTxt
 {
 	public:
-		typedef std::map<std::string, std::vector<std::string> > t_mapComm;
+		typedef std::map<std::string, std::vector<std::string>> t_mapComm;
 
 	protected:
 		typedef std::vector<double*> t_vecColumns;

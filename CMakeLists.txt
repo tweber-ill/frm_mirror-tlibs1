@@ -56,7 +56,7 @@ add_definitions(-std=c++11)
 # build
 # -----------------------------------------------------------------------------
 add_library(tlibs SHARED
-	file/tmp.cpp  file/loadinstr.cpp  file/loadtxt.cpp  file/recent.cpp  file/x3d.cpp
+	file/tmp.cpp  file/loadinstr.cpp  file/recent.cpp  file/x3d.cpp
 	#fit/minuit.cpp
 	log/log.cpp log/debug.cpp
 	helper/flags.cpp
@@ -65,7 +65,7 @@ add_library(tlibs SHARED
 	string/spec_char.cpp
 	gfx/gl.cpp  gfx/gnuplot.cpp
 	version.cpp
-	old/xml.cpp
+	old/xml.cpp  old/loadtxt.cpp
 )
 
 

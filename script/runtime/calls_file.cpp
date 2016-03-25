@@ -11,7 +11,7 @@
 #include "log/log.h"
 #include "calls_file.h"
 #include "lang/calls.h"
-#include "file/loadtxt.h"
+#include "file/loaddat.h"
 #include "file/loadinstr.h"
 #include <sstream>
 #include <fstream>
@@ -21,7 +21,7 @@
 // --------------------------------------------------------------------------------
 // file operations
 static Symbol* fkt_file_exists(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING}, {0}, "file_exists"))
 		return 0;
@@ -34,7 +34,7 @@ static Symbol* fkt_file_exists(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_read_file(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING}, {0}, "read_file"))
 		return 0;
@@ -49,14 +49,14 @@ static Symbol* fkt_read_file(const std::vector<Symbol*>& vecSyms,
 	t_ostringstream ostr;
 
 	std::copy(std::istreambuf_iterator<t_char>(ifstr),
-				std::istreambuf_iterator<t_char>(),
-				std::ostreambuf_iterator<t_char>(ostr));
+		std::istreambuf_iterator<t_char>(),
+		std::ostreambuf_iterator<t_char>(ostr));
 
 	return new SymbolString(ostr.str());
 }
 
 static Symbol* fkt_write_file(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING, SYMBOL_ANY}, {0,0}, "write_file"))
 		return 0;
@@ -79,7 +79,7 @@ static Symbol* fkt_write_file(const std::vector<Symbol*>& vecSyms,
 	}
 
 	std::copy(pStr->begin(), pStr->end(),
-				std::ostreambuf_iterator<t_char>(ofstr));
+		std::ostreambuf_iterator<t_char>(ofstr));
 
 	if(bAllocatedStr)
 		delete pStr;
@@ -93,35 +93,35 @@ static Symbol* fkt_write_file(const std::vector<Symbol*>& vecSyms,
 // loading and saving of .dat files
 
 static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
-			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING}, {0}, "loadtxt"))
 		return 0;
 
 	const t_string& strFile = ((SymbolString*)vecSyms[0])->GetVal();
 	SymbolArray *pArr = new SymbolArray();
-	tl::LoadTxt dat;
 
-	bool bLoaded = dat.Load(WSTR_TO_STR(strFile).c_str());
+	tl::DatFile<t_real, typename t_string::value_type> dat;
+	bool bLoaded = dat.Load(strFile);
 	if(!bLoaded)
 	{
 		tl::log_err(linenr(runinfo), "loadtxt could not open \"", strFile, "\".");
 		return pArr;
 	}
 
-	pArr->GetArr().reserve(dat.GetColCnt());
-	for(unsigned int iCol=0; iCol<dat.GetColCnt(); ++iCol)
+	pArr->GetArr().reserve(dat.GetColumnCount());
+	for(std::size_t iCol=0; iCol<dat.GetColumnCount(); ++iCol)
 	{
-		const unsigned int iColLen = dat.GetColLen();
-		const t_real *pCol = dat.GetColumn(iCol);
+		const std::vector<t_real>& vecCol = dat.GetColumn(iCol);
+		const std::size_t iColLen = vecCol.size();
 
-		SymbolArray *pArrCol = new SymbolArray;
+		SymbolArray *pArrCol = new SymbolArray();
 		pArrCol->GetArr().reserve(iColLen);
 
-		for(unsigned int iRow=0; iRow<iColLen; ++iRow)
+		for(std::size_t iRow=0; iRow<iColLen; ++iRow)
 		{
 			SymbolReal* pSymD = new SymbolReal();
-			pSymD->SetVal(pCol[iRow]);
+			pSymD->SetVal(vecCol[iRow]);
 
 			pArrCol->GetArr().push_back(pSymD);
 		}
@@ -131,15 +131,12 @@ static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
 	}
 
 	// load the parameter map
-	typedef std::map<std::string, std::string> tmapcomm;
-	tmapcomm mapComm = dat.GetCommMapSingle();
-
 	SymbolMap *pSymMap = new SymbolMap();
-	for(const tmapcomm::value_type &val : mapComm)
+	for(const typename decltype(dat)::t_map::value_type &val : dat.GetHeader())
 	{
 		t_string strKey = STR_TO_WSTR(val.first);
 
-		SymbolString *pSymStrVal = new SymbolString;
+		SymbolString *pSymStrVal = new SymbolString();
 		pSymStrVal->SetVal(STR_TO_WSTR(val.second));
 
 		//std::cout << "Inserting \"" << strKey << "\" = " << pSymStrVal->GetVal() << std::endl;
@@ -152,7 +149,7 @@ static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_loadinstr(const std::vector<Symbol*>& vecSyms,
-			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	//if(!check_args(runinfo, vecSyms, {SYMBOL_STRING}, {0}, "loadinstr"))
 	//	return 0;
@@ -289,7 +286,7 @@ static Symbol* fkt_loadinstr(const std::vector<Symbol*>& vecSyms,
 }
 
 static void get_2darr_size(const SymbolArray* pArr,
-				unsigned int& iColLen, unsigned int& iRowLen)
+	unsigned int& iColLen, unsigned int& iRowLen)
 {
 	iColLen = pArr->GetArr().size();
 	iRowLen = 0;
@@ -321,7 +318,7 @@ static void get_2darr_size(const SymbolArray* pArr,
 }
 
 static std::string get_2darr_strval(const SymbolArray* pArr,
-				unsigned int iCol, unsigned int iRow)
+	unsigned int iCol, unsigned int iRow)
 {
 	unsigned int iColLen = pArr->GetArr().size();
 	if(iCol >= iColLen)
@@ -362,7 +359,7 @@ static std::string get_2darr_strval(const SymbolArray* pArr,
 }
 
 static Symbol* fkt_savetxt(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING, SYMBOL_ARRAY}, {0,0}, "savetxt"))
 		return 0;
@@ -388,7 +385,7 @@ static Symbol* fkt_savetxt(const std::vector<Symbol*>& vecSyms,
 			for(const SymbolMap::t_map::value_type& val : pSymMap->GetMap())
 			{
 				ofstr << "# " << val.first.strKey << " : "
-						<< (val.second?val.second->print():T_STR"") << "\n";
+					<< (val.second?val.second->print():T_STR"") << "\n";
 			}
 		}
 	}

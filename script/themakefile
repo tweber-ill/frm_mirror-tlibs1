@@ -84,7 +84,6 @@ hermelin: obj/script.o obj/lexer.o obj/main.o obj/yylexer.o obj/symbol.o obj/nod
 		obj/calls_plot.o obj/calls_math.o obj/calls_file.o obj/calls_thread.o \
 		obj/calls_fit.o obj/globals.o obj/flags.o \
 		obj/spec_char.o obj/linalg2.o \
-		obj/loadtxt.o  \
 		obj/log.o obj/debug.o obj/node_opt.o ${FFTW_OBJ}
 	${CC} ${FLAGS} -o $@ $+ ${LIBS}
 	${STRIP} $@
@@ -129,8 +128,8 @@ obj/gnuplot.o: ../gfx/gnuplot.cpp ../gfx/gnuplot.h
 	${CC} ${FLAGS} -c -o $@ $<
 obj/spec_char.o: ../string/spec_char.cpp ../string/spec_char.h
 	${CC} ${FLAGS} -c -o $@ $<
-obj/loadtxt.o: ../file/loadtxt.cpp ../file/loadtxt.h
-	${CC} ${FLAGS} -c -o $@ $<
+#obj/loadtxt.o: ../file/loadtxt.cpp ../file/loadtxt.h
+#	${CC} ${FLAGS} -c -o $@ $<
 #obj/loadinstr.o: ../file/loadinstr.cpp ../file/loadinstr.h
 #	${CC} ${FLAGS} -c -o $@ $<
 obj/rand.o: ../math/rand.cpp ../math/rand.h

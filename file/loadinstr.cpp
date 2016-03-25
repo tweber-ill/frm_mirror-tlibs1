@@ -16,6 +16,7 @@ namespace tl
 	template class FileFrm<double>;
 	template class FileMacs<double>;
 	template class FileTrisp<double>;
+	template class FileRaw<double>;
 
 
 /*	template FileInstrBase<float>* FileInstrBase<float>::LoadInstr(const char* pcFile);
@@ -23,7 +24,9 @@ namespace tl
 	template class FilePsi<float>;
 	template class FileFrm<float>;
 	template class FileMacs<float>;
-	template class FileTrisp<float>;*/
+	template class FileTrisp<float>;
+	template class FileRaw<float>;
+*/
 }
 
 

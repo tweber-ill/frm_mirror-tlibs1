@@ -408,15 +408,18 @@ template<class T, class t_str=std::string, class t_cont=std::vector<T>>
 void get_tokens(const t_str& str, const t_str& strDelim, t_cont& vecRet)
 {
 	using t_char = typename t_str::value_type;
+	using t_tokeniser = boost::tokenizer<boost::char_separator<t_char>,
+		typename t_str::const_iterator, t_str>;
+	using t_tokiter = typename t_tokeniser::iterator;
 
 	boost::char_separator<t_char> delim(strDelim.c_str());
-	boost::tokenizer<boost::char_separator<t_char> > tok(str, delim);
+	t_tokeniser tok(str, delim);
 
-	typename boost::tokenizer<boost::char_separator<t_char> >::iterator iter;
-	for(iter=tok.begin(); iter!=tok.end(); ++iter)
+	for(t_tokiter iter=tok.begin(); iter!=tok.end(); ++iter)
 	{
 		vecRet.push_back(
-			_str_to_var_impl<T, t_str, std::is_convertible<T, t_str>::value>()(*iter));
+			_str_to_var_impl<T, t_str,
+			std::is_convertible<T, t_str>::value>()(*iter));
 	}
 }
 
@@ -446,7 +449,8 @@ void get_tokens_seq(const t_str& str, const t_str& strDelim, t_cont<T>& vecRet,
 	for(const t_str& strTok : vecStr)
 	{
 		vecRet.push_back(
-			_str_to_var_impl<T, t_str, std::is_convertible<T, t_str>::value>()(strTok));
+			_str_to_var_impl<T, t_str,
+			std::is_convertible<T, t_str>::value>()(strTok));
 	}
 }
 #endif

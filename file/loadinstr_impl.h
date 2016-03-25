@@ -65,14 +65,31 @@ FileInstrBase<t_real>* FileInstrBase<t_real>::LoadInstr(const char* pcFile)
 	const std::string strNicos("nicos data file");
 	const std::string strMacs("ice");
 
-	if(strLine.find(strNicos) != std::string::npos)		// frm file
+	if(strLine.find(strNicos) != std::string::npos)
+	{ // frm file
+		//log_info(pcFile, " is an frm file.");
 		pDat = new FileFrm<t_real>();
-	else if(strLine.find(strMacs) != std::string::npos)	// macs file
+	}
+	else if(strLine.find(strMacs) != std::string::npos)
+	{ // macs file
+		//log_info(pcFile, " is a macs file.");
 		pDat = new FileMacs<t_real>();
+	}
 	else if(strLine2.find("scan start") != std::string::npos)
+	{ // trisp file
+		//log_info(pcFile, " is a trisp file.");
 		pDat = new FileTrisp<t_real>();
-	else							// psi or ill file
+	}
+	else if(strLine.find('#')==std::string::npos && strLine2.find('#')==std::string::npos)
+	{ // psi or ill file
+		//log_info(pcFile, " is an ill or psi file.");
 		pDat = new FilePsi<t_real>();
+	}
+	else
+	{ // raw file
+		log_warn("\"", pcFile, "\" is of unknown type, falling back to raw loader.");
+		pDat = new FileRaw<t_real>();
+	}
 
 	if(pDat && !pDat->Load(pcFile))
 	{
@@ -1936,6 +1953,141 @@ std::string FileTrisp<t_real>::GetTimestamp() const
 	return str;
 }
 
+
+
+// -----------------------------------------------------------------------------
+
+
+template<class t_real>
+bool FileRaw<t_real>::Load(const char* pcFile)
+{
+	bool bOk = m_dat.Load(pcFile);
+	m_vecCols.clear();
+	for(std::size_t iCol=0; iCol<m_dat.GetColumnCount(); ++iCol)
+		m_vecCols.emplace_back(var_to_str(iCol+1));
+	return bOk;
+}
+
+template<class t_real>
+const typename FileInstrBase<t_real>::t_vecVals& 
+FileRaw<t_real>::GetCol(const std::string& strName) const
+{
+	return const_cast<FileRaw*>(this)->GetCol(strName);
+}
+
+template<class t_real>
+typename FileInstrBase<t_real>::t_vecVals& 
+FileRaw<t_real>::GetCol(const std::string& strName)
+{
+	std::size_t iCol = str_to_var<std::size_t>(strName)-1;
+	if(iCol < m_dat.GetColumnCount())
+		return m_dat.GetColumn(iCol);
+	
+	static std::vector<t_real> vecNull;
+	return vecNull;
+}
+
+template<class t_real>
+const typename FileInstrBase<t_real>::t_vecDat& 
+FileRaw<t_real>::GetData() const
+{
+	return m_dat.GetData();
+}
+
+template<class t_real>
+const typename FileInstrBase<t_real>::t_vecColNames& 
+FileRaw<t_real>::GetColNames() const
+{	
+	return m_vecCols;
+}
+
+template<class t_real>
+const typename FileInstrBase<t_real>::t_mapParams& 
+FileRaw<t_real>::GetAllParams() const 
+{
+	return m_dat.GetHeader();
+}
+
+template<class t_real>
+std::array<t_real,3> FileRaw<t_real>::GetSampleLattice() const
+{
+	return std::array<t_real,3>{{0.,0.,0.}};
+}
+
+template<class t_real>
+std::array<t_real,3> FileRaw<t_real>::GetSampleAngles() const
+{
+	return std::array<t_real,3>{{0., 0., 0.}};
+}
+
+template<class t_real>
+std::array<t_real,2> FileRaw<t_real>::GetMonoAnaD() const
+{
+	return std::array<t_real,2>{{0., 0.}};
+}
+
+template<class t_real>
+std::array<bool, 3> FileRaw<t_real>::GetScatterSenses() const
+{
+	return std::array<bool,3>{{0, 0, 0}};
+}
+
+template<class t_real>
+std::array<t_real, 3> FileRaw<t_real>::GetScatterPlane0() const
+{
+	return std::array<t_real,3>{{0.,0.,0.}};
+}
+
+template<class t_real>
+std::array<t_real, 3> FileRaw<t_real>::GetScatterPlane1() const
+{
+	return std::array<t_real,3>{{0.,0.,0.}};
+}
+
+template<class t_real>
+t_real FileRaw<t_real>::GetKFix() const
+{
+	return 0.;
+}
+
+template<class t_real>
+bool FileRaw<t_real>::IsKiFixed() const
+{
+	return 0;
+}
+
+template<class t_real>
+std::size_t FileRaw<t_real>::GetScanCount() const
+{
+	if(m_dat.GetColumnCount() != 0)
+		return m_dat.GetRowCount();
+	return 0;
+}
+
+template<class t_real>
+std::array<t_real, 5> FileRaw<t_real>::GetScanHKLKiKf(std::size_t i) const
+{
+	return std::array<t_real,5>{{0.,0.,0.,0.,0.}};
+}
+
+template<class t_real>
+bool FileRaw<t_real>::MergeWith(const FileInstrBase<t_real>* pDat)
+{
+	return 0;
+}
+
+template<class t_real> std::string FileRaw<t_real>::GetTitle() const { return ""; }
+template<class t_real> std::string FileRaw<t_real>::GetUser() const { return ""; }
+template<class t_real> std::string FileRaw<t_real>::GetLocalContact() const { return ""; }
+template<class t_real> std::string FileRaw<t_real>::GetScanNumber() const { return ""; }
+template<class t_real> std::string FileRaw<t_real>::GetSampleName() const { return ""; }
+template<class t_real> std::string FileRaw<t_real>::GetSpacegroup() const { return ""; }
+template<class t_real>
+std::vector<std::string> FileRaw<t_real>::GetScannedVars() const { return {"1"}; }
+template<class t_real> std::string FileRaw<t_real>::GetCountVar() const { return "2"; }
+template<class t_real> std::string FileRaw<t_real>::GetMonVar() const { return ""; }
+template<class t_real> std::string FileRaw<t_real>::GetScanCommand() const { return ""; }
+template<class t_real> std::string FileRaw<t_real>::GetTimestamp() const { return ""; }
 
 }
 

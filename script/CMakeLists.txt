@@ -43,7 +43,7 @@ file(GLOB tlibs
 	"../math/linalg2.cpp" "../math/rand.cpp" "../math/fourier.cpp"
 	"../string/spec_char.cpp"
 	"../gfx/gnuplot.cpp"
-	"../file/loadtxt.cpp" "../file/file.cpp"
+	"../file/file.cpp"
 	"../log/log.cpp" "../helper/flags.cpp"
 )
 

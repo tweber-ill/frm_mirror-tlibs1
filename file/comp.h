@@ -5,6 +5,7 @@
  * @license GPLv2 or GPLv3
  */
 
+// TODO: Fix: The (de)compressors don't work with wchar_t!
 #ifndef __TLIBS_COMP_H__
 #define __TLIBS_COMP_H__
 
@@ -35,13 +36,8 @@ namespace ios = boost::iostreams;
 
 enum class Compressor
 {
-	GZ,
-	BZ2,
-	Z,
-	XZ,
-
-	AUTO,
-	INVALID
+	GZ, BZ2, Z, XZ,
+	AUTO, INVALID
 };
 
 
@@ -109,15 +105,18 @@ bool decomp_stream_to_stream(std::basic_istream<t_char>& istr,
 		comp = comp_from_magic(pcMagic, 6);
 	}
 
+	using filtering_streambuf = typename std::conditional<
+		std::is_same<t_char, char>::value,
+		ios::filtering_streambuf<ios::input>, ios::filtering_wstreambuf<ios::input>>::type;
+	filtering_streambuf bufInput;
 
-	ios::filtering_streambuf<ios::input> input;
-
+	using t_alloc = std::allocator<t_char>;
 	if(comp == Compressor::GZ)
-		input.push(ios::gzip_decompressor());
+		bufInput.push(ios::basic_gzip_decompressor<t_alloc>());
 	else if(comp == Compressor::BZ2)
-		input.push(ios::bzip2_decompressor());
+		bufInput.push(ios::basic_bzip2_decompressor<t_alloc>());
 	else if(comp == Compressor::Z)
-		input.push(ios::zlib_decompressor());
+		bufInput.push(ios::basic_zlib_decompressor<t_alloc>());
 	else if(comp == Compressor::XZ)
 	{
 		log_err("XZ decompression not yet supported.");
@@ -129,8 +128,8 @@ bool decomp_stream_to_stream(std::basic_istream<t_char>& istr,
 		return false;
 	}
 
-	input.push(istr);
-	ios::copy(input, ostr);
+	bufInput.push(istr);
+	ios::copy(bufInput, ostr);
 
 	return true;
 }
@@ -142,15 +141,18 @@ bool comp_stream_to_stream(std::basic_istream<t_char>& istr,
 	if(comp == Compressor::AUTO)
 		comp = Compressor::GZ;
 
+	using filtering_streambuf = typename std::conditional<
+		std::is_same<t_char, char>::value,
+		ios::filtering_streambuf<ios::input>, ios::filtering_wstreambuf<ios::input>>::type;
+	filtering_streambuf bufInput;
 
-	ios::filtering_streambuf<ios::input> input;
-
+	using t_alloc = std::allocator<t_char>;
 	if(comp == Compressor::GZ)
-		input.push(ios::gzip_compressor(/*ios::gzip_params(9)*/));
+		bufInput.push(ios::basic_gzip_compressor<t_alloc>(/*ios::gzip_params(9)*/));
 	else if(comp == Compressor::BZ2)
-		input.push(ios::bzip2_compressor());
+		bufInput.push(ios::basic_bzip2_compressor<t_alloc>());
 	else if(comp == Compressor::Z)
-		input.push(ios::zlib_compressor(/*ios::zlib_params(9)*/));
+		bufInput.push(ios::basic_zlib_compressor<t_alloc>(/*ios::zlib_params(9)*/));
 	else if(comp == Compressor::XZ)
 	{
 		log_err("XZ compression not yet supported.");
@@ -162,8 +164,8 @@ bool comp_stream_to_stream(std::basic_istream<t_char>& istr,
 		return false;
 	}
 
-	input.push(istr);
-	ios::copy(input, ostr);
+	bufInput.push(istr);
+	ios::copy(bufInput, ostr);
 
 	return true;
 }
@@ -239,8 +241,11 @@ inline bool __comp_mem_to_mem(const void* pvIn, std::size_t iLenIn,
 	ios::stream<ios::basic_array_source<t_char>> istr(pcIn, iLenIn);
 
 	std::list<t_char> lstOut;
-	ios::filtering_ostream arrOut(ios::back_inserter(lstOut));
 
+	using filtering_ostream = typename std::conditional<
+		std::is_same<t_char,char>::value,
+		ios::filtering_ostream, ios::filtering_wostream>::type;
+	filtering_ostream arrOut(ios::back_inserter(lstOut));
 
 	bool bOk=0;
 	if(bDecomp)
@@ -362,7 +367,8 @@ bool decomp_mem_to_mem_fix(const void* pvIn, std::size_t iLenIn,
 
 
 template<class t_char=char>
-std::shared_ptr<std::basic_istream<t_char>> create_autodecomp_istream(std::basic_istream<t_char>& istr)
+std::shared_ptr<std::basic_istream<t_char>>
+create_autodecomp_istream(std::basic_istream<t_char>& istr)
 {
 	typedef typename std::make_unsigned<t_char>::type t_uchar;
 
@@ -372,15 +378,19 @@ std::shared_ptr<std::basic_istream<t_char>> create_autodecomp_istream(std::basic
 	istr.seekg(pos, std::ios::beg);
 	Compressor comp = comp_from_magic(pcMagic, 6);
 
-	std::shared_ptr<ios::filtering_istream> ptrIstr
-		= std::make_shared<ios::filtering_istream>();
+	using filtering_istream = typename std::conditional<
+		std::is_same<t_char,char>::value,
+		ios::filtering_istream, ios::filtering_wistream>::type;
+	std::shared_ptr<filtering_istream> ptrIstr
+		= std::make_shared<filtering_istream>();
 
+	using t_alloc = std::allocator<t_char>;
 	if(comp == Compressor::GZ)
-		ptrIstr->push(ios::gzip_decompressor());
+		ptrIstr->push(ios::basic_gzip_decompressor<t_alloc>());
 	else if(comp == Compressor::BZ2)
-		ptrIstr->push(ios::bzip2_decompressor());
+		ptrIstr->push(ios::basic_bzip2_decompressor<t_alloc>());
 	else if(comp == Compressor::Z)
-		ptrIstr->push(ios::zlib_decompressor());
+		ptrIstr->push(ios::basic_zlib_decompressor<t_alloc>());
 	else if(comp == Compressor::XZ)
 	{
 		log_err("XZ decompression not yet supported.");
@@ -392,18 +402,23 @@ std::shared_ptr<std::basic_istream<t_char>> create_autodecomp_istream(std::basic
 }
 
 template<class t_char=char>
-std::shared_ptr<std::basic_ostream<t_char>> create_comp_ostream(std::basic_ostream<t_char>& ostr,
+std::shared_ptr<std::basic_ostream<t_char>>
+create_comp_ostream(std::basic_ostream<t_char>& ostr,
 	Compressor comp = Compressor::INVALID)
 {
-	std::shared_ptr<ios::filtering_ostream> ptrOstr
-		= std::make_shared<ios::filtering_ostream>();
+	using filtering_ostream = typename std::conditional<
+		std::is_same<t_char,char>::value,
+		ios::filtering_ostream, ios::filtering_wostream>::type;
+	std::shared_ptr<filtering_ostream> ptrOstr
+		= std::make_shared<filtering_ostream>();
 
+	using t_alloc = std::allocator<t_char>;
 	if(comp == Compressor::GZ)
-		ptrOstr->push(ios::gzip_compressor());
+		ptrOstr->push(ios::basic_gzip_compressor<t_alloc>());
 	else if(comp == Compressor::BZ2)
-		ptrOstr->push(ios::bzip2_compressor());
+		ptrOstr->push(ios::basic_bzip2_compressor<t_alloc>());
 	else if(comp == Compressor::Z)
-		ptrOstr->push(ios::zlib_compressor());
+		ptrOstr->push(ios::basic_zlib_compressor<t_alloc>());
 	else if(comp == Compressor::XZ)
 		log_err("XZ compression not yet supported.");
 
