@@ -889,7 +889,7 @@ typename t_mat::value_type determinant(const t_mat& mat)
 
 		for(t_size j=0; j<mat.size2(); ++j)
 		{
-			if(float_equal(mat(i,j), 0.))
+			if(float_equal<T>(mat(i,j), 0.))
 				continue;
 
 			//std::cout << "col " << j << std::endl;

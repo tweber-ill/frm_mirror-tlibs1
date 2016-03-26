@@ -407,7 +407,7 @@ public:
 	// Q = O D O^T
 	// O: eigenvecs, D: eigenvals
 	bool GetPrincipalAxes(ublas::matrix<T>& matEvecs, std::vector<T>& vecEvals,
-						Quadric<T>* pquadPrincipal=nullptr) const
+		Quadric<T>* pquadPrincipal=nullptr) const
 	{
 		std::vector<ublas::vector<T> > evecs;
 		if(!eigenvec_sym(m_Q, evecs, vecEvals))
@@ -416,8 +416,8 @@ public:
 			return false;
 		}
 
-		sort_eigenvecs<double>(evecs, vecEvals, 1,
-			[](double d) -> double { return 1./std::sqrt(d); });
+		sort_eigenvecs<T>(evecs, vecEvals, 1,
+			[](T d) -> T { return 1./std::sqrt(d); });
 
 		matEvecs = column_matrix(evecs);
 

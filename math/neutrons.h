@@ -19,13 +19,27 @@
 
 namespace tl {
 
+// --------------------------------------------------------------------------------
+
 #if __cplusplus >= 201402L
 	template<class T=double> T t_KSQ2E = T((get_hbar<T>()*get_hbar<T>() / (T(2)*get_m_n<T>())) / t_meV<T> / (angstrom*t_angstrom<T>));
 	template<class T=double> T t_E2KSQ = T(1)/t_KSQ2E<T>;
 #endif
 
+template<typename T=double> T get_KSQ2E()
+{
+	const auto _A = get_one_angstrom<T>();
+	const auto _meV = get_one_meV<T>();
+	const auto _mn = get_m_n<T>();
+	const auto _hbar = get_hbar<T>();
+
+	return _hbar*_hbar / (T(2)*_mn) / _meV / (_A*_A);
+}
+
 static const double KSQ2E = (co::hbar*co::hbar / (2.*co::m_n)) / one_meV / (angstrom*angstrom);
 static const double E2KSQ = 1./KSQ2E;
+
+// --------------------------------------------------------------------------------
 
 
 // --------------------------------------------------------------------------------

@@ -127,6 +127,13 @@ template<class Y=double> t_length<units::si::system, Y> get_one_angstrom()
 { return Y(1e-10) * units::si::meters; }
 template<class Y=double> t_length<units::si::system, Y> get_one_meter()
 { return Y(1) * units::si::meters; }
+template<class Y=double> t_length<units::si::system, Y> get_one_centimeter()
+{ return Y(1e-2) * units::si::meters; }
+template<class Y=double> t_time<units::si::system, Y> get_one_second()
+{ return Y(1) * units::si::seconds; }
+template<class Y=double> t_angle<units::si::system, Y> get_one_radian()
+{ return Y(1) * units::si::radians; }
+
 template<class Y=double> t_mass<units::si::system, Y> get_m_n()
 { return Y(co::m_n/units::si::kilograms)*units::si::kilograms; }
 template<class Y=double> t_action<units::si::system, Y> get_hbar()
@@ -189,6 +196,12 @@ t_quant my_units_sqrt(const decltype(t_quant() * t_quant())& val)
 
 	Y valsq = Y(val / one_quant_sq);
 	return std::sqrt(valsq) * one_quant;
+}
+
+template<class t_quant>
+decltype(t_quant()*t_quant()) my_units_pow2(const t_quant& val)
+{
+	return val*val;
 }
 
 }
