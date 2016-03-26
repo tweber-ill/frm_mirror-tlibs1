@@ -13,6 +13,7 @@
 #include "units.h"
 #include "../helper/exception.h"
 
+#include <boost/units/pow.hpp>
 #include <cmath>
 
 

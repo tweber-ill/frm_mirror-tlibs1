@@ -14,6 +14,7 @@
 #include <boost/units/dimensionless_quantity.hpp>
 #include <boost/units/cmath.hpp>
 #include <boost/units/physical_dimensions.hpp>
+#include <boost/units/io.hpp>
 
 #include <boost/units/systems/si.hpp>
 #include <boost/units/systems/angle/degrees.hpp>
@@ -70,9 +71,47 @@ template<class Sys, class T=double> using t_action =
 template<class Sys, class T=double> using t_dimensionless =
 	units::quantity<units::unit<units::dimensionless_type, Sys>, T>;
 
+
 // synonyms
 template<class Sys, class T=double> using t_freq = t_frequency<Sys, T>;
-template<class Sys, class T=double> using t_temp = t_temperature<Sys,T>;
+template<class Sys, class T=double> using t_temp = t_temperature<Sys, T>;
+
+
+// si quantities -- partial specialisations
+template<class Y=double> using t_length_si = t_length<units::si::system, Y>;
+template<class Y=double> using t_length_inverse_si = t_length_inverse<units::si::system, Y>;
+template<class Y=double> using t_momentum_si = t_momentum<units::si::system, Y>;
+template<class Y=double> using t_wavenumber_si = t_wavenumber<units::si::system, Y>;
+template<class Y=double> using t_velocity_si = t_velocity<units::si::system, Y>;
+template<class Y=double> using t_frequency_si = t_frequency<units::si::system, Y>;
+template<class Y=double> using t_energy_si = t_energy<units::si::system, Y>;
+template<class Y=double> using t_angle_si = t_angle<units::si::system, Y>;
+template<class Y=double> using t_temperature_si = t_temperature<units::si::system, Y>;
+template<class Y=double> using t_mass_si = t_mass<units::si::system, Y>;
+template<class Y=double> using t_time_si = t_time<units::si::system, Y>;
+template<class Y=double> using t_flux_si = t_flux<units::si::system, Y>;
+template<class Y=double> using t_area_si = t_area<units::si::system, Y>;
+
+
+// si quantities -- full specialisations
+using length = t_length_si<>;
+using inv_length = decltype(1./length());
+using momentum = t_momentum_si<>;
+using wavenumber = t_wavenumber_si<>;
+using velocity = t_velocity_si<>;
+using frequency = t_frequency_si<>;
+using energy = t_energy_si<>;
+using angle = t_angle_si<>;
+using temperature = t_temperature_si<>;
+using mass = t_mass_si<>;
+using time = t_time_si<>;
+using flux = t_flux_si<>;
+using area = t_area_si<>;
+
+
+// synonyms
+typedef frequency freq;
+typedef temperature temp;
 
 
 // constants
@@ -82,30 +121,21 @@ template<class Y=double> t_length<units::si::system, Y> get_one_angstrom()
 { return Y(1e-10) * units::si::meters; }
 
 
+// template constants
+#if __cplusplus >= 201402L
+	template<class Y=double> const t_length_si<Y> t_meters = Y(1)*units::si::meters;
+	template<class Y=double> const t_flux_si<Y> t_teslas = Y(1)*units::si::teslas;
+	template<class Y=double> const t_time_si<Y> t_seconds = Y(1)*units::si::seconds;
+	template<class Y=double> const t_angle_si<Y> t_radians = Y(1)*units::si::radians;
+	template<class Y=double> const t_temperature_si<Y> t_kelvins = Y(1)*units::si::kelvins;
+	template<class Y=double> const t_area_si<Y> t_barns = Y(1e-28)*units::si::meters*units::si::meters;
 
-// si quantities
-typedef units::quantity<units::si::plane_angle> angle;
-typedef units::quantity<units::si::wavenumber> wavenumber;
-typedef units::quantity<units::si::energy> energy;
-typedef units::quantity<units::si::momentum> momentum;
-typedef units::quantity<units::si::velocity> velocity;
-typedef units::quantity<units::si::length> length;
-typedef decltype(1./length()) inv_length;
-typedef units::quantity<units::si::area> area;
-typedef units::quantity<units::si::time> time;
-typedef units::quantity<units::si::magnetic_flux_density> flux;
-typedef units::quantity<units::si::frequency> frequency;
-typedef units::quantity<units::si::temperature> temperature;
-typedef units::quantity<units::si::mass> mass;
+	template<class Y=double> const t_energy_si<Y> t_meV = get_one_meV<Y>();
+	template<class Y=double> const t_length_si<Y> t_angstrom = get_one_angstrom<Y>();
+#endif
 
 
-
-// synonyms
-typedef frequency freq;
-typedef temperature temp;
-
-
-// TODO: make C++14 template variables out of these
+// constants
 static const length meters = 1.*units::si::meters;
 static const flux teslas = 1.*units::si::teslas;
 static const time seconds = 1.*units::si::seconds;
@@ -119,6 +149,7 @@ static const energy one_eV = co::e * units::si::volts;
 static const length angstrom = 1e-10 * meters;
 static const length cm = meters/100.;
 static const time ps = 1e-12 * seconds;
+
 
 // synonyms
 static const temp kelvin = kelvins;
