@@ -68,6 +68,10 @@ template<class Sys, class T=double> using t_momentum_square =
 template<class Sys, class T=double> using t_action =
 	units::quantity<units::unit<typename units::derived_dimension
 	<units::mass_base_dimension,1, units::length_base_dimension,2, units::time_base_dimension,-1>::type, Sys>, T>;
+template<class Sys, class T=double> using t_energy_per_temperature =
+	units::quantity<units::unit<typename units::derived_dimension
+	<units::mass_base_dimension,1, units::length_base_dimension,2,
+	units::time_base_dimension,-2, units::temperature_base_dimension,-1>::type, Sys>, T>;
 template<class Sys, class T=double> using t_dimensionless =
 	units::quantity<units::unit<units::dimensionless_type, Sys>, T>;
 
@@ -91,6 +95,7 @@ template<class Y=double> using t_mass_si = t_mass<units::si::system, Y>;
 template<class Y=double> using t_time_si = t_time<units::si::system, Y>;
 template<class Y=double> using t_flux_si = t_flux<units::si::system, Y>;
 template<class Y=double> using t_area_si = t_area<units::si::system, Y>;
+template<class Y=double> using t_action_si = t_action<units::si::system, Y>;
 
 
 // si quantities -- full specialisations
@@ -107,6 +112,7 @@ using mass = t_mass_si<>;
 using time = t_time_si<>;
 using flux = t_flux_si<>;
 using area = t_area_si<>;
+using action = t_action_si<>;
 
 
 // synonyms
@@ -119,11 +125,21 @@ template<class Y=double> t_energy<units::si::system, Y> get_one_meV()
 { return Y(1e-3) * Y(co::e/units::si::coulombs)*units::si::coulombs*units::si::volts; }
 template<class Y=double> t_length<units::si::system, Y> get_one_angstrom()
 { return Y(1e-10) * units::si::meters; }
+template<class Y=double> t_length<units::si::system, Y> get_one_meter()
+{ return Y(1) * units::si::meters; }
+template<class Y=double> t_mass<units::si::system, Y> get_m_n()
+{ return Y(co::m_n/units::si::kilograms)*units::si::kilograms; }
+template<class Y=double> t_action<units::si::system, Y> get_hbar()
+{ return Y(co::hbar/units::si::joules/units::si::seconds)*units::si::joules*units::si::seconds; }
+template<class Y=double> t_action<units::si::system, Y> get_h()
+{ return get_hbar<Y>() * Y(2.*M_PI); }
+template<class Y=double> t_energy_per_temperature<units::si::system, Y> get_kB()
+{ return Y(co::k_B*units::si::kelvin/units::si::joules)/units::si::kelvin*units::si::joules; }
 
 
 // template constants
 #if __cplusplus >= 201402L
-	template<class Y=double> const t_length_si<Y> t_meters = Y(1)*units::si::meters;
+	template<class Y=double> const t_length_si<Y> t_meters = get_one_meter<Y>();
 	template<class Y=double> const t_flux_si<Y> t_teslas = Y(1)*units::si::teslas;
 	template<class Y=double> const t_time_si<Y> t_seconds = Y(1)*units::si::seconds;
 	template<class Y=double> const t_angle_si<Y> t_radians = Y(1)*units::si::radians;
