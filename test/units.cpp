@@ -17,6 +17,7 @@ int main()
 	std::cout << fE << std::endl;
 
 	std::cout << "d: " << tl::t_KSQ2E<double> << std::endl;
+	std::cout << "f: " << tl::t_KSQ2E<float> << std::endl;
 	std::cout << "ld: " << tl::t_KSQ2E<long double> << std::endl;
 
 	std::cout << tl::get_typename<decltype(tl::co::hbar)>() << std::endl;

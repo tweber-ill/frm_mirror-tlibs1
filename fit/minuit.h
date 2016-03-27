@@ -84,30 +84,30 @@ public:
 
 
 // generic chi^2 calculation
-class Chi2Function : public ROOT::Minuit2::FCNBase
+template<class t_real = t_real_min>
+class Chi2Function_gen : public ROOT::Minuit2::FCNBase
 {
 protected:
 	const MinuitFuncModel *m_pfkt;
 
 	std::size_t m_uiLen;
-	const t_real_min* m_px;
-	const t_real_min* m_py;
-	const t_real_min* m_pdy;
+	const t_real* m_px;
+	const t_real* m_py;
+	const t_real* m_pdy;
 
 	t_real_min m_dSigma = 1.;
-
 	bool m_bDebug = 0;
 
 public:
-	Chi2Function(const MinuitFuncModel* fkt=0,
-		std::size_t uiLen=0, const t_real_min *px=0,
-		const t_real_min *py=0, const t_real_min *pdy=0)
+	Chi2Function_gen(const MinuitFuncModel* fkt=0,
+		std::size_t uiLen=0, const t_real *px=0,
+		const t_real *py=0, const t_real *pdy=0)
 		: m_pfkt(fkt), m_uiLen(uiLen), m_px(px), m_py(py), m_pdy(pdy)
 	{}
 
-	virtual ~Chi2Function() {}
+	virtual ~Chi2Function_gen() {}
 
-	/* 
+	/*
 	 * chi^2 calculation
 	 * based on the example in the Minuit user's guide:
 	 * http://seal.cern.ch/documents/minuit/mnusersguide.pdf
@@ -123,7 +123,7 @@ public:
 		//if(!bParamsOk)
 		//	return std::numeric_limits<t_real_min>::max();
 
-		return tl::chi2<t_real_min, decltype(*pfkt)>(*pfkt, m_uiLen, m_px, m_py, m_pdy);
+		return tl::chi2<t_real_min, decltype(*pfkt), const t_real*>(*pfkt, m_uiLen, m_px, m_py, m_pdy);
 	}
 
 	virtual t_real_min Up() const override { return m_dSigma*m_dSigma; }
@@ -140,6 +140,9 @@ public:
 
 	void SetDebug(bool b) { m_bDebug = b; }
 };
+
+// for most cases data type of measured values and internal data type is the same: t_real_min
+using Chi2Function = Chi2Function_gen<t_real_min>;
 
 
 // in n dimensions

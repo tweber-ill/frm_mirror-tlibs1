@@ -13,6 +13,7 @@
 #include <complex>
 #include <vector>
 #include <limits>
+#include <type_traits>
 #include <boost/math/special_functions/spherical_harmonic.hpp>
 
 
@@ -207,21 +208,22 @@ std::vector<T> quadratic_solve(T a, T b, T c)
 // -----------------------------------------------------------------------------
 
 
-template<class T, class t_func, class t_iter=T*>
+template<class T, class t_func, class t_iter_dat=T*>
 T chi2(const t_func& func, std::size_t N,
-	const t_iter x, const t_iter y, const t_iter dy)
+	const t_iter_dat x, const t_iter_dat y, const t_iter_dat dy)
 {
+	using t_dat = typename std::remove_pointer<t_iter_dat>::type;
 	T tchi2 = T(0);
 
 	for(std::size_t i=0; i<N; ++i)
 	{
-		T td = y[i] - func(x[i]);
-		T tdy = dy ? dy[i] : 0.1*td;	// 10% error if none given
+		T td = T(y[i]) - func(T(x[i]));
+		T tdy = dy ? T(dy[i]) : T(0.1*td);	// 10% error if none given
 
-		if(std::fabs(tdy) < std::numeric_limits<T>::min())
-			tdy = std::numeric_limits<T>::min();
+		if(std::abs(tdy) < std::numeric_limits<t_dat>::min())
+			tdy = std::numeric_limits<t_dat>::min();
 
-		T tchi = td / tdy;
+		T tchi = T(td) / T(tdy);
 		tchi2 += tchi*tchi;
 	}
 
