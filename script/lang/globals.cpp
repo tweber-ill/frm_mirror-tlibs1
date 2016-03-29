@@ -13,7 +13,10 @@
 #include "runtime/calls_file.h"
 #include "runtime/calls_thread.h"
 #include "math/neutrons.hpp"
+
 #include <boost/units/systems/si/codata/electron_constants.hpp>
+#include <boost/units/systems/si/codata/electromagnetic_constants.hpp>
+
 
 int yydebug = 0;
 
@@ -59,6 +62,9 @@ static inline void init_constants(SymbolTable *pSymTab)
 	pSymTab->InsertSymbol(T_STR"q_e", new SymbolReal(co::e / units::si::coulomb));
 	// vaccuum permeability
 	pSymTab->InsertSymbol(T_STR"mu_0", new SymbolReal(co::mu_0 * units::si::ampere/units::si::tesla/units::si::meter));
+	// mu Bohr
+	pSymTab->InsertSymbol(T_STR"mu_B", new SymbolReal(co::mu_B * units::si::tesla/units::si::joules));
+	pSymTab->InsertSymbol(T_STR"mu_B_eVperT", new SymbolReal(co::mu_B * units::si::tesla/tl::one_eV));
 }
 
 extern void init_global_syms(SymbolTable *pSymTab)
