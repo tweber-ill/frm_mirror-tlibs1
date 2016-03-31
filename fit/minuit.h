@@ -35,22 +35,22 @@ namespace tl {
 using t_real_min = typename std::result_of<
 	decltype(&ROOT::Minuit2::MnFcn::Up)(ROOT::Minuit2::MnFcn) >::type;
 
+
 class MinuitFuncModel : public FunctionModel<t_real_min>
 {
 public:
-	virtual ~MinuitFuncModel() {}
+	virtual ~MinuitFuncModel() = default;
 
 	virtual bool SetParams(const std::vector<t_real_min>& vecParams) = 0;
-	virtual t_real_min operator()(t_real_min x) const = 0;
+	virtual t_real_min operator()(t_real_min x) const override = 0;
 
 	virtual MinuitFuncModel* copy() const = 0;
-	virtual std::string print(bool bFillInSyms=true) const = 0;
+	virtual std::string print(bool bFillInSyms=true) const /*= 0;*/ { return ""; }
 
-	virtual const char* GetModelName() const = 0;
+	virtual const char* GetModelName() const override /*= 0;*/ { return "MinuitFuncModel"; }
 	virtual std::vector<std::string> GetParamNames() const = 0;
 	virtual std::vector<t_real_min> GetParamValues() const = 0;
 	virtual std::vector<t_real_min> GetParamErrors() const = 0;
-
 
 	friend std::ostream& operator<<(std::ostream& ostr, const MinuitFuncModel& fkt)
 	{
@@ -59,10 +59,44 @@ public:
 	}
 };
 
+
+template<class t_real = t_real_min>
+class MinuitMultiFuncModel : public FunctionModel_multi<t_real_min>
+{
+public:
+	virtual ~MinuitMultiFuncModel() = default;
+
+	virtual bool SetParams(const std::vector<t_real_min>& vecParams) = 0;
+	virtual t_real_min operator()(t_real_min x) const override = 0;
+
+	virtual MinuitMultiFuncModel* copy() const = 0;
+	virtual std::string print(bool bFillInSyms=true) const /*= 0;*/ { return ""; }
+
+	virtual const char* GetModelName() const override /*= 0;*/ { return "MinuitMultiFuncModel"; }
+	virtual std::vector<std::string> GetParamNames() const = 0;
+	virtual std::vector<t_real_min> GetParamValues() const = 0;
+	virtual std::vector<t_real_min> GetParamErrors() const = 0;
+
+	virtual void SetParamSet(std::size_t iSet) override /*= 0;*/ {}
+	virtual std::size_t GetParamSetCount() const override /*= 0;*/ { return 1; }
+	// optional intrinsic measured values for multi-parameter functions
+	virtual std::size_t GetExpLen() const /*= 0;*/ { return 0; }
+	virtual const t_real* GetExpX() const /*= 0;*/ { return nullptr; }
+	virtual const t_real* GetExpY() const /*= 0*/ { return nullptr; }
+	virtual const t_real* GetExpDY() const /*= 0*/ { return nullptr; }
+
+	friend std::ostream& operator<<(std::ostream& ostr, const MinuitMultiFuncModel<t_real>& fkt)
+	{
+		ostr << fkt.print();
+		return ostr;
+	}
+};
+
+
 class MinuitFuncModel_nd : public FunctionModel_nd<t_real_min>
 {
 public:
-	virtual ~MinuitFuncModel_nd() {}
+	virtual ~MinuitFuncModel_nd() = default;
 
 	virtual std::size_t GetDim() const = 0;
 
@@ -151,12 +185,15 @@ using Chi2Function = Chi2Function_gen<t_real_min>;
 // ----------------------------------------------------------------------------
 
 
-// generic chi^2 calculation using multiple simultaneous functions
+/*
+ * chi^2 calculation using multiple simultaneous functions where each
+ * function can additionally have multiple parameter sets
+ */
 template<class t_real = t_real_min, template<class...> class t_cont=std::vector>
 class Chi2Function_mult_gen : public ROOT::Minuit2::FCNBase
 {
 protected:
-	t_cont<const MinuitFuncModel*> m_vecFkt;
+	t_cont<const MinuitMultiFuncModel<t_real>*> m_vecFkt;
 
 	t_cont<std::size_t> m_vecLen;
 	t_cont<const t_real*> m_vecpX;
@@ -170,7 +207,7 @@ public:
 	Chi2Function_mult_gen() = default;
 	virtual ~Chi2Function_mult_gen() = default;
 
-	void AddFunc(const MinuitFuncModel* pMod, std::size_t iNumDat,
+	void AddFunc(const MinuitMultiFuncModel<t_real>* pMod, std::size_t iNumDat,
 		const t_real *pX, const t_real *pY, const t_real *pdY)
 	{
 		m_vecFkt.push_back(pMod);
@@ -182,12 +219,39 @@ public:
 
 	t_real_min chi2(std::size_t iFkt, const std::vector<t_real_min>& vecParams) const
 	{
-		std::unique_ptr<MinuitFuncModel> uptrFkt(m_vecFkt[iFkt]->copy());
-		MinuitFuncModel* pfkt = uptrFkt.get();
+		std::unique_ptr<MinuitMultiFuncModel<t_real>> uptrFkt(m_vecFkt[iFkt]->copy());
+		MinuitMultiFuncModel<t_real>* pfkt = uptrFkt.get();
 
-		pfkt->SetParams(vecParams);
-		return tl::chi2<t_real_min, decltype(*pfkt), const t_real*>
-			(*pfkt, m_vecLen[iFkt], m_vecpX[iFkt], m_vecpY[iFkt], m_vecpDY[iFkt]);
+		const std::size_t iNumParamSets = pfkt->GetParamSetCount();
+		t_real_min dChi = t_real_min(0);
+		for(std::size_t iParamSet=0; iParamSet<iNumParamSets; ++iParamSet)
+		{
+			pfkt->SetParamSet(iParamSet);
+			std::size_t iLen = pfkt->GetExpLen();
+			const t_real* pX = pfkt->GetExpX();
+			const t_real* pY = pfkt->GetExpY();
+			const t_real* pDY = pfkt->GetExpDY();
+
+			// default experimental values if none are given in the model
+			if(!pX || !pY || !pDY)
+			{
+				iLen = m_vecLen[iFkt];
+				pX = m_vecpX[iFkt];
+				pY = m_vecpY[iFkt];
+				pDY = m_vecpDY[iFkt];
+			}
+
+			pfkt->SetParams(vecParams);
+
+			t_real_min dSingleChi = tl::chi2<t_real_min, decltype(*pfkt), const t_real*>
+				(*pfkt, iLen, pX, pY, pDY);
+			dChi += dSingleChi;
+
+			if(m_bDebug && iNumParamSets>1)
+				tl::log_debug("Function ", iParamSet, " chi2 = ", dSingleChi);
+		}
+		dChi /= t_real_min(iNumParamSets);
+		return dChi;
 	}
 
 	t_real_min chi2(const std::vector<t_real_min>& vecParams) const
@@ -197,7 +261,9 @@ public:
 		{
 			const t_real_min dSingleChi = chi2(iFkt, vecParams);
 			dChi += dSingleChi;
-			if(m_bDebug) tl::log_debug("Function ", (iFkt+1), " chi2 = ", dSingleChi);
+
+			if(m_bDebug && m_vecFkt.size()>1)
+				tl::log_debug("Function ", iFkt, " chi2 = ", dSingleChi);
 		}
 		dChi /= t_real_min(m_vecFkt.size());
 		return dChi;
