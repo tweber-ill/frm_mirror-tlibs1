@@ -83,6 +83,9 @@ public:
 };
 
 
+// ----------------------------------------------------------------------------
+
+
 // generic chi^2 calculation
 template<class t_real = t_real_min>
 class Chi2Function_gen : public ROOT::Minuit2::FCNBase
@@ -143,6 +146,83 @@ public:
 
 // for most cases data type of measured values and internal data type is the same: t_real_min
 using Chi2Function = Chi2Function_gen<t_real_min>;
+
+
+// ----------------------------------------------------------------------------
+
+
+// generic chi^2 calculation using multiple simultaneous functions
+template<class t_real = t_real_min, template<class...> class t_cont=std::vector>
+class Chi2Function_mult_gen : public ROOT::Minuit2::FCNBase
+{
+protected:
+	t_cont<const MinuitFuncModel*> m_vecFkt;
+
+	t_cont<std::size_t> m_vecLen;
+	t_cont<const t_real*> m_vecpX;
+	t_cont<const t_real*> m_vecpY;
+	t_cont<const t_real*> m_vecpDY;
+
+	t_real_min m_dSigma = 1.;
+	bool m_bDebug = 0;
+
+public:
+	Chi2Function_mult_gen() = default;
+	virtual ~Chi2Function_mult_gen() = default;
+
+	void AddFunc(const MinuitFuncModel* pMod, std::size_t iNumDat,
+		const t_real *pX, const t_real *pY, const t_real *pdY)
+	{
+		m_vecFkt.push_back(pMod);
+		m_vecLen.push_back(iNumDat);
+		m_vecpX.push_back(pX);
+		m_vecpY.push_back(pY);
+		m_vecpDY.push_back(pdY);
+	}
+
+	t_real_min chi2(std::size_t iFkt, const std::vector<t_real_min>& vecParams) const
+	{
+		std::unique_ptr<MinuitFuncModel> uptrFkt(m_vecFkt[iFkt]->copy());
+		MinuitFuncModel* pfkt = uptrFkt.get();
+
+		pfkt->SetParams(vecParams);
+		return tl::chi2<t_real_min, decltype(*pfkt), const t_real*>
+			(*pfkt, m_vecLen[iFkt], m_vecpX[iFkt], m_vecpY[iFkt], m_vecpDY[iFkt]);
+	}
+
+	t_real_min chi2(const std::vector<t_real_min>& vecParams) const
+	{
+		t_real_min dChi = t_real_min(0);
+		for(std::size_t iFkt=0; iFkt<m_vecFkt.size(); ++iFkt)
+		{
+			const t_real_min dSingleChi = chi2(iFkt, vecParams);
+			dChi += dSingleChi;
+			if(m_bDebug) tl::log_debug("Function ", (iFkt+1), " chi2 = ", dSingleChi);
+		}
+		dChi /= t_real_min(m_vecFkt.size());
+		return dChi;
+	}
+
+	virtual t_real_min Up() const override { return m_dSigma*m_dSigma; }
+
+	virtual t_real_min operator()(const std::vector<t_real_min>& vecParams) const override
+	{
+		t_real_min dChi2 = chi2(vecParams);
+		if(m_bDebug) tl::log_debug("Total chi2 = ", dChi2);
+		return dChi2;
+	}
+
+	void SetSigma(t_real_min dSig) { m_dSigma = dSig; }
+	t_real_min GetSigma() const { return m_dSigma; }
+
+	void SetDebug(bool b) { m_bDebug = b; }
+};
+
+// for most cases data type of measured values and internal data type is the same: t_real_min
+using Chi2FunctionMult = Chi2Function_mult_gen<t_real_min, std::vector>;
+
+
+// ----------------------------------------------------------------------------
 
 
 // in n dimensions
