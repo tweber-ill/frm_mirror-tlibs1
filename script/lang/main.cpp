@@ -34,7 +34,9 @@ static inline void usage(const char* pcProg)
 	G_COUT << "Written by Tobias Weber, 2013-2014.\n";
 	G_COUT << "Built on " << __DATE__ << ", " << __TIME__;
 	//G_COUT << " with CC version " << __VERSION__ << ".\n\n";
-	G_COUT << " with " << BOOST_COMPILER << ".\n\n";
+	G_COUT << " with " << BOOST_COMPILER << ".\n";
+	G_COUT << "Internal data type sizes: int = " << sizeof(t_int)*8 << " bits, "
+		<< "real = " << sizeof(t_real)*8 << " bits.\n\n";
 	G_COUT << "Usage: " << pcProg << " [arguments to hermelin]"
 		<< " <script file> [arguments to script]"
 		<< "\n";
@@ -330,7 +332,7 @@ int main(int argc, char** argv)
 
 	int iRet = -99;
 
-	tl::Stopwatch<double> watch;
+	tl::Stopwatch<t_real> watch;
 
 	try
 	{

@@ -23,7 +23,6 @@ template<typename T> using t_stdvec = std::vector<T>;
 #include <algorithm>
 #include <exception>
 
-#include <Minuit2/FCNBase.h>
 #include <Minuit2/FunctionMinimum.h>
 #include <Minuit2/MnMigrad.h>
 #include <Minuit2/MnPrint.h>
@@ -142,7 +141,7 @@ public:
 		if(m_pTable) { delete m_pTable; m_pTable=0; }
 	}
 
-	virtual bool SetParams(const std::vector<t_real>& vecParams) override
+	virtual bool SetParams(const std::vector<tl::t_real_min>& vecParams) override
 	{
 		if(vecParams.size() != m_vecParamNames.size())
 		{
@@ -153,7 +152,7 @@ public:
 		for(unsigned int iParam=0; iParam<vecParams.size(); ++iParam)
 		{
 			//const std::string& strName = m_vecParamNames[iParam];
-			t_real dVal = vecParams[iParam];
+			tl::t_real_min dVal = vecParams[iParam];
 
 			if(m_bUseVecParams)
 				((SymbolReal*)((SymbolArray*)m_vecSyms[1])->GetArr()[iParam])->SetVal(dVal);
@@ -164,9 +163,9 @@ public:
 		return 1;
 	}
 
-	virtual t_real operator()(t_real x) const override
+	virtual tl::t_real_min operator()(tl::t_real_min x) const override
 	{
-		((SymbolReal*)m_vecSyms[0])->SetVal(x);
+		((SymbolReal*)m_vecSyms[0])->SetVal(t_real(x));
 
 		SymbolArray arrArgs;
 		arrArgs.SetDontDel(1);
@@ -194,7 +193,7 @@ public:
 		}
 		safe_delete(pSymRet, m_pCallerSymTab, m_pinfo);
 
-		return dRetVal;
+		return tl::t_real_min(dRetVal);
 	}
 
 	virtual GenericModel* copy() const override
@@ -206,9 +205,9 @@ public:
 	virtual std::vector<std::string> GetParamNames() const override
 	{ return m_vecParamNames; }
 
-	virtual std::vector<t_real> GetParamValues() const override
+	virtual std::vector<tl::t_real_min> GetParamValues() const override
 	{ throw tl::Err("Called invalid function in generic fitter model"); }
-	virtual std::vector<t_real> GetParamErrors() const override
+	virtual std::vector<tl::t_real_min> GetParamErrors() const override
 	{ throw tl::Err("Called invalid function in generic fitter model"); }
 };
 
@@ -254,7 +253,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 {
 	int iDebug = 0;
 	bool bDoMinos = 0;
-	double dSigma = 1.;
+	t_real dSigma = 1.;
 
 	if(vecSyms.size()<4 || !is_vec(vecSyms[1]) || !is_vec(vecSyms[2]) || !is_vec(vecSyms[3]))
 	{
@@ -384,7 +383,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	unsigned int iSize = std::min<unsigned int>(vecX.size(), vecY.size());
 	iSize = std::min<unsigned int>(iSize, vecYErr.size());
 
-	tl::Chi2Function chi2fkt(&mod, iSize, vecX.data(), vecY.data(), vecYErr.data());
+	tl::Chi2Function_gen<t_real> chi2fkt(&mod, iSize, vecX.data(), vecY.data(), vecYErr.data());
 	chi2fkt.SetSigma(dSigma);
 
 
@@ -444,7 +443,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	if(vecFittingSteps.size() == 0)
 	{
 		if(bFitterDebug)
-			G_COUT << "Using default fitting steps." << std::endl;
+			tl::log_info("Using default fitting steps.");
 
 		minis.reserve(2);
 
@@ -483,8 +482,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	else	// custom fitting steps
 	{
 		if(bFitterDebug)
-			G_COUT << "Using " << vecFittingSteps.size()
-					<< " custom fitting steps." << std::endl;
+			tl::log_info("Using ", vecFittingSteps.size(), " custom fitting steps.");
 
 		minis.reserve(vecFittingSteps.size());
 
@@ -493,8 +491,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		for(const t_string& strStep : vecFittingSteps)
 		{
 			if(bFitterDebug)
-				G_COUT << "Performing fitting step " << iFitStep+1
-						<< ": " << strStep << std::endl;
+				tl::log_info("Performing fitting step ", iFitStep+1, ": ", strStep);
 
 			// one character for each parameter
 			for(unsigned int iStepParam = 0; iStepParam<strStep.length(); ++iStepParam)
@@ -555,7 +552,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	const ROOT::Minuit2::FunctionMinimum& lastmini = *minis.rbegin();
 
 
-	std::vector<double> vecLastParams;
+	std::vector<tl::t_real_min> vecLastParams;
 	vecLastParams.reserve(vecParamNames.size());
 
 	SymbolMap *pSymMap = new SymbolMap();
@@ -579,7 +576,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	pSymMap->UpdateIndices();
 
 
-	std::vector<std::pair<double,double>> vecMinosErrs;
+	std::vector<std::pair<tl::t_real_min, tl::t_real_min>> vecMinosErrs;
 	vecMinosErrs.reserve(iParamSize);
 
 	if(bDoMinos)
@@ -590,14 +587,14 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 		for(unsigned int iParam=0; iParam<iParamSize; ++iParam)
 		{
 			//const std::string& strCurParam = vecParamNames[iParam];
-			std::pair<double, double> err = minos(iParam);
+			std::pair<tl::t_real_min, tl::t_real_min> err = minos(iParam);
 			vecMinosErrs.push_back(err);
 		}
 	}
 
 
-	double dChi2 = chi2fkt(vecLastParams);
-	double dChi2red = dChi2 / double(iSize-(vecLastParams.size()-vecFixedParams.size()));
+	tl::t_real_min dChi2 = chi2fkt(vecLastParams);
+	tl::t_real_min dChi2red = dChi2 / tl::t_real_min(iSize-(vecLastParams.size()-vecFixedParams.size()));
 
 	if(bFitterDebug)
 	{
@@ -674,11 +671,11 @@ static Symbol* _fkt_param(FktParam whichfkt, const std::vector<Symbol*>& vecSyms
 
 	unsigned int iSize = std::min(vecX.size(), vecY.size());
 
-	tl::FunctionModel_param* pfkt = 0;
+	tl::FunctionModel_param_gen<ublas::vector<t_real>>* pfkt = 0;
 	if(whichfkt == FKT_SPLINE)
-		pfkt = new tl::BSpline<double>(iSize, vecX.data(), vecY.data(), ideg);
+		pfkt = new tl::BSpline<t_real>(iSize, vecX.data(), vecY.data(), ideg);
 	else if(whichfkt == FKT_BEZIER)
-		pfkt = new tl::Bezier<double>(iSize, vecX.data(), vecY.data());
+		pfkt = new tl::Bezier<t_real>(iSize, vecX.data(), vecY.data());
 	else
 	{
 		std::ostringstream ostrErr;

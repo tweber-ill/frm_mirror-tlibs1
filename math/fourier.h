@@ -18,28 +18,33 @@
 
 namespace tl {
 
-class Fourier
+template<class t_real>
+class Fourier_gen
 {
-	protected:
-		unsigned int m_iSize;
+protected:
+	std::size_t m_iSize;
 
 #ifdef USE_FFTW
-		FFTw m_dft;
+	FFTw m_dft;
 #else
-		FFT<double> m_dft;
+	FFT<t_real> m_dft;
 #endif
 
+public:
+	Fourier_gen(std::size_t iSize) : m_iSize(iSize), m_dft(m_iSize)
+	{}
+	virtual ~Fourier_gen() = default;
 
-	public:
-		Fourier(unsigned int iSize);
-		virtual ~Fourier();
+	void fft(const t_real *pRealIn, const t_real *pImagIn,
+		t_real *pRealOut, t_real *pImagOut)
+	{ m_dft.trafo(pRealIn, pImagIn, pRealOut, pImagOut, 0); }
 
-		void fft(const double* pRealIn, const double *pImagIn,
-				double *pRealOut, double *pImagOut);
-		void ifft(const double* pRealIn, const double *pImagIn,
-				double *pRealOut, double *pImagOut);
+	void ifft(const t_real* pRealIn, const t_real *pImagIn,
+		t_real *pRealOut, t_real *pImagOut)
+	{ m_dft.trafo(pRealIn, pImagIn, pRealOut, pImagOut, 1); }
 };
-//------------------------------------------------------------------------------
+
+using Fourier = Fourier_gen<double>;
 
 }
 

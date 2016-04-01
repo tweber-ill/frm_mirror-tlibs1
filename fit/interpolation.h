@@ -94,7 +94,7 @@ ublas::vector<T> bspline(const ublas::vector<T>* P, unsigned int N, T t, const s
 
 
 template<typename T=double>
-class Bezier : public FunctionModel_param
+class Bezier : public FunctionModel_param_gen<ublas::vector<T>>
 {
 	protected:
 		ublas::vector<T> *m_pvecs;
@@ -104,13 +104,13 @@ class Bezier : public FunctionModel_param
 		Bezier(unsigned int N, const T *px, const T *py);
 		virtual ~Bezier();
 
-		virtual ublas::vector<T> operator()(T t) const;
-		virtual const char* GetModelName() const { return "bezier"; };
+		virtual ublas::vector<T> operator()(T t) const override;
+		virtual const char* GetModelName() const override { return "bezier"; };
 };
 
 
 template<typename T=double>
-class BSpline : public FunctionModel_param
+class BSpline : public FunctionModel_param_gen<ublas::vector<T>>
 {
 	protected:
 		ublas::vector<T> *m_pvecs;
@@ -121,8 +121,8 @@ class BSpline : public FunctionModel_param
 		BSpline(unsigned int N, const T *px, const T *py, unsigned int iDegree=3);
 		virtual ~BSpline();
 
-		virtual ublas::vector<double> operator()(T t) const;
-		virtual const char* GetModelName() const { return "bspline"; };
+		virtual ublas::vector<T> operator()(T t) const override;
+		virtual const char* GetModelName() const override { return "bspline"; };
 };
 
 
@@ -268,7 +268,7 @@ template<class T>
 BSpline<T>::BSpline(unsigned int N, const T *px, const T *py, unsigned int iDegree)
 	: m_pvecs(0), m_iN(N), m_iDegree(iDegree)
 {
-	m_pvecs = new ublas::vector<double>[m_iN];
+	m_pvecs = new ublas::vector<T>[m_iN];
 
 	for(unsigned int i=0; i<m_iN; ++i)
 	{
@@ -306,7 +306,7 @@ BSpline<T>::~BSpline()
 }
 
 template<class T>
-ublas::vector<double> BSpline<T>::operator()(T t) const
+ublas::vector<T> BSpline<T>::operator()(T t) const
 {
 	if(m_iN==0)
 	{

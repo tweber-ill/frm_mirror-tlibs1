@@ -183,7 +183,7 @@ public:
 	static const int GetPrec() { return m_prec; }
 	static void SetPrec(int iPrec) { m_prec = iPrec; }
 
-	void SetVal(double dVal) { m_dVal = dVal; }
+	void SetVal(t_real dVal) { m_dVal = dVal; }
 	const t_real& GetVal() const { return m_dVal; }
 	t_real& GetVal() { return m_dVal; }
 
@@ -306,12 +306,12 @@ public:
 	static const int GetPrec() { return m_prec; }
 	static void SetPrec(int iPrec) { m_prec = iPrec; }
 
-	void SetVal(double dReal, double dImag) { m_val=t_complex(dReal, dImag); }
+	void SetVal(t_real dReal, t_real dImag) { m_val=t_complex(dReal, dImag); }
 	void SetVal(const t_complex& val) { m_val = val; }
 	const t_complex& GetVal() const { return m_val; }
 
-	void SetValReal(double dVal) { m_val.real(dVal); }
-	void SetValImag(double dVal) { m_val.imag(dVal); }
+	void SetValReal(t_real dVal) { m_val.real(dVal); }
+	void SetValImag(t_real dVal) { m_val.imag(dVal); }
 	t_real GetValReal() const { return m_val.real(); }
 	t_real GetValImag() const { return m_val.imag(); }
 

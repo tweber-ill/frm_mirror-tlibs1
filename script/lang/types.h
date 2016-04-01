@@ -16,6 +16,7 @@
 #include "helper/traits.h"
 
 
+//typedef float t_real;
 typedef double t_real;
 typedef int t_int;
 typedef std::complex<t_real> t_complex;

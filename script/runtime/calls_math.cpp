@@ -388,8 +388,8 @@ static Symbol* _fkt_fft(const std::vector<Symbol*>& vecSyms,
 	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab,
 	bool bInv)
 {
-	void (tl::Fourier::*pFkt)(const t_real*, const t_real*, t_real*, t_real*)
-						= (bInv ? &tl::Fourier::ifft : &tl::Fourier::fft);
+	void (tl::Fourier_gen<t_real>::*pFkt)(const t_real*, const t_real*, t_real*, t_real*)
+		= (bInv ? &tl::Fourier_gen<t_real>::ifft : &tl::Fourier_gen<t_real>::fft);
 
 	bool bArgsOk=1;
 	std::vector<t_real> vecRealIn, vecImagIn;
@@ -437,7 +437,7 @@ static Symbol* _fkt_fft(const std::vector<Symbol*>& vecSyms,
 	vecRealOut.resize(vecRealIn.size());
 	vecImagOut.resize(vecImagIn.size());
 
-	tl::Fourier fourier(vecRealIn.size());
+	tl::Fourier_gen<t_real> fourier(vecRealIn.size());
 	(fourier.*pFkt)(vecRealIn.data(), vecImagIn.data(),
 			vecRealOut.data(), vecImagOut.data());
 

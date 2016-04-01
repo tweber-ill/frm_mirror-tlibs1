@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 
+
 namespace tl {
 enum LineStyle
 {
@@ -22,26 +23,29 @@ enum LineStyle
 	STYLE_LINES_DASHED
 };
 
-struct PlotObj
+template<class t_real = double>
+struct PlotObj_gen
 {
-	std::vector<double> vecX, vecY;
-	std::vector<double> vecErrX, vecErrY;
+	std::vector<t_real> vecX, vecY;
+	std::vector<t_real> vecErrX, vecErrY;
 
 	std::string strLegend;
 
 	LineStyle linestyle;
 
 	bool bHasSize;
-	double dSize;
+	t_real dSize;
 
 	bool bHasColor;
 	unsigned int iColor;
 
-	PlotObj() : linestyle(STYLE_POINTS), bHasSize(0), bHasColor(0)
+	PlotObj_gen() : linestyle(STYLE_POINTS), bHasSize(0), bHasColor(0)
 	{}
 };
 
-class GnuPlot
+
+template<class t_real = double>
+class GnuPlot_gen
 {
 protected:
 	FILE *m_pipe = nullptr;
@@ -49,7 +53,7 @@ protected:
 	boost::iostreams::stream_buffer<boost::iostreams::file_descriptor_sink> *m_psbuf = nullptr;
 	std::ostream *m_postr = nullptr;
 
-	std::vector<PlotObj> m_vecObjs;
+	std::vector<PlotObj_gen<t_real>> m_vecObjs;
 	// has to be 0 to show plot
 	int m_iStartCounter = 0;
 
@@ -63,13 +67,13 @@ protected:
 
 protected:
 	std::string BuildCmd();
-	std::string BuildTable(const std::vector<double>& vecX, const std::vector<double>& vecY,
-		const std::vector<double>& vecYErr, const std::vector<double>& vecXErr);
+	std::string BuildTable(const std::vector<t_real>& vecX, const std::vector<t_real>& vecY,
+		const std::vector<t_real>& vecYErr, const std::vector<t_real>& vecXErr);
 	void RefreshVars();
 
 public:
-	GnuPlot() = default;
-	virtual ~GnuPlot();
+	GnuPlot_gen() = default;
+	virtual ~GnuPlot_gen();
 
 	void Init();
 	void DeInit();
@@ -82,25 +86,25 @@ public:
 	void SetCmdFileOutput(const char* pcFile);
 
 	void StartPlot();
-	void AddLine(const PlotObj& obj);
+	void AddLine(const PlotObj_gen<t_real>& obj);
 	void FinishPlot();
 
-	void SimplePlot(const std::vector<double>& vecX, const std::vector<double>& vecY,
-		const std::vector<double>& vecYErr, const std::vector<double>& vecXErr,
+	void SimplePlot(const std::vector<t_real>& vecX, const std::vector<t_real>& vecY,
+		const std::vector<t_real>& vecYErr, const std::vector<t_real>& vecXErr,
 		LineStyle style=STYLE_POINTS);
-	void SimplePlot2d(const std::vector<std::vector<double> >& vec,
-		double dMinX=0., double dMaxX=-1., double dMinY=0., double dMaxY=-1.);
+	void SimplePlot2d(const std::vector<std::vector<t_real> >& vec,
+		t_real dMinX=0., t_real dMaxX=-1., t_real dMinY=0., t_real dMaxY=-1.);
 
 	void SetXLabel(const char* pcLab);
 	void SetYLabel(const char* pcLab);
 	void SetTitle(const char* pcTitle);
 	void SetGrid(bool bOn);
-	void AddArrow(double dX0, double dY0, double dX1, double dY1, bool bHead=1);
+	void AddArrow(t_real dX0, t_real dY0, t_real dX1, t_real dY1, bool bHead=1);
 
-	void SetXRange(double dMin, double dMax);
-	void SetYRange(double dMin, double dMax);
+	void SetXRange(t_real dMin, t_real dMax);
+	void SetYRange(t_real dMin, t_real dMax);
 
-	void SetColorBarRange(double dMin, double dMax, bool bCyclic=0);
+	void SetColorBarRange(t_real dMin, t_real dMax, bool bCyclic=0);
 
 	void LockTerminal() { m_bTermLocked = 1; }
 	void UnlockTerminal() { m_bTermLocked = 0; }
@@ -108,6 +112,15 @@ public:
 	void SetLegendOpts(const std::string& strOpts) { m_strLegendOpts = strOpts; }
 	void SetLegendPlace(const std::string& strPlace) { m_strLegendPlacement = strPlace; }
 };
+
+
+	using PlotObj = PlotObj_gen<>;
+	using GnuPlot = GnuPlot_gen<>;
 }
+
+
+#ifdef TLIBS_INC_HDR_IMPLS
+        #include "gnuplot_impl.h"
+#endif
 
 #endif

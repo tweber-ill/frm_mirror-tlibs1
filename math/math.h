@@ -277,23 +277,50 @@ T gauss_model(T x, T x0, T sigma, T amp, T offs)
 }
 
 
+// -----------------------------------------------------------------------------
+template<class t_real_to, class t_real_from,
+	bool bIsEqu = std::is_same<t_real_from, t_real_to>::value>
+struct complex_cast
+{};
+
+template<class t_real_to, class t_real_from>
+struct complex_cast<t_real_to, t_real_from, 1>
+{
+	const std::complex<t_real_to>& operator()(const std::complex<t_real_from>& c) const
+	{ return c; }
+};
+
+template<class t_real_to, class t_real_from>
+struct complex_cast<t_real_to, t_real_from, 0>
+{
+	std::complex<t_real_to> operator()(const std::complex<t_real_from>& c) const
+	{ return std::complex<t_real_to>(t_real_to(c.real()), t_real_to(c.imag())); }
+};
+// -----------------------------------------------------------------------------
+
 
 #ifdef HAS_COMPLEX_ERF
-
 }
+
 #include <Faddeeva.hh>
+using t_real_fadd = double;
+
 namespace tl{
 
 template<class T=double>
 std::complex<T> erf(const std::complex<T>& z)
 {
-	return ::Faddeeva::erf(z);
+	complex_cast<t_real_fadd, T> cst;
+	complex_cast<T, t_real_fadd> inv_cst;
+	return inv_cst(::Faddeeva::erf(cst(z)));
 }
 
 template<class T=double>
 std::complex<T> erfc(const std::complex<T>& z)
 {
-	return ::Faddeeva::erfc(z);
+	complex_cast<t_real_fadd, T> cst;
+	complex_cast<T, t_real_fadd> inv_cst;
+	return inv_cst(::Faddeeva::erfc(cst(z)));
 }
 
 template<class T=double>

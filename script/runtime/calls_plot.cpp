@@ -17,7 +17,7 @@
 
 //#define DEFAULT_TERM T_STR"qt";
 #define DEFAULT_TERM T_STR"x11";
-static tl::GnuPlot g_plot;
+static tl::GnuPlot_gen<t_real> g_plot;
 
 static inline bool is_array_of_arrays(const Symbol* pSym)
 {
@@ -106,8 +106,8 @@ static XYLimits get_plot_limits(const SymbolMap* pParamMap)
 }
 
 
-static void set_plot_params(tl::GnuPlot& plot, const SymbolMap* pParamMap, 
-	tl::PlotObj* pCurPlotObj=0, XYLimits* pLimits=0)
+static void set_plot_params(tl::GnuPlot_gen<t_real>& plot, const SymbolMap* pParamMap, 
+	tl::PlotObj_gen<t_real>* pCurPlotObj=0, XYLimits* pLimits=0)
 {
 	bool bHasVal = 0;
 	t_string strTitle = pParamMap->GetStringVal(T_STR"title", &bHasVal);
@@ -181,7 +181,7 @@ static void set_plot_params(tl::GnuPlot& plot, const SymbolMap* pParamMap,
 		for(const t_string& strArrTok : vecArrToks)
 		{
 			std::istringstream istrArr(strArrTok);
-			double dX0, dY0, dX1, dY1;
+			t_real dX0, dY0, dX1, dY1;
 			bool bHead = 0;
 			istrArr >> dX0 >> dY0 >> dX1 >> dY1 >> bHead;
 
@@ -250,7 +250,7 @@ static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 			vecXErr = ((SymbolArray*)vecSyms[3])->ToDoubleArray();
 
 
-		tl::PlotObj obj;
+		tl::PlotObj_gen<t_real> obj;
 		obj.vecX = vecX;
 		obj.vecY = vecY;
 		obj.vecErrX = vecXErr;
