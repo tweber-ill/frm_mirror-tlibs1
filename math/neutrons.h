@@ -32,6 +32,11 @@ template<typename T=double> T get_KSQ2E()
 	return T(0.5) * _hbar/_A/_mn * _hbar/_A/_meV;
 }
 
+template<typename T=double> T get_E2KSQ()
+{
+	return T(1)/get_KSQ2E<T>();
+}
+
 #if __cplusplus >= 201402L
 	template<class T=double> T t_KSQ2E = get_KSQ2E<T>();
 	template<class T=double> T t_E2KSQ = T(1)/t_KSQ2E<T>;
@@ -112,9 +117,8 @@ t_freq<Sys,Y> E2omega(const t_energy<Sys,Y>& en)
 	return en / get_hbar<Y>();
 }
 
-
 template<class Sys, class Y>
-t_energy<Sys,Y> k2E(const t_wavenumber<Sys,Y>& k)
+t_energy<Sys,Y> k2E_direct(const t_wavenumber<Sys,Y>& k)
 {
 	t_momentum<Sys,Y> p = get_hbar<Y>()*k;
 	t_energy<Sys,Y> E = p*p / (Y(2.)*get_m_n<Y>());
@@ -122,7 +126,7 @@ t_energy<Sys,Y> k2E(const t_wavenumber<Sys,Y>& k)
 }
 
 template<class Sys, class Y>
-t_wavenumber<Sys,Y> E2k(const t_energy<Sys,Y>& _E, bool &bImag)
+t_wavenumber<Sys,Y> E2k_direct(const t_energy<Sys,Y>& _E, bool &bImag)
 {
 	bImag = (_E < Y(0.)*get_one_meV<Y>());
 	t_energy<Sys,Y> E = bImag ? -_E : _E;
@@ -134,6 +138,28 @@ t_wavenumber<Sys,Y> E2k(const t_energy<Sys,Y>& _E, bool &bImag)
 	return k;
 }
 // --------------------------------------------------------------------------------
+
+
+// ----------------------------------------------------------------------------
+// indirect calculations using conversion factors for numerical stability
+template<class Sys, class Y>
+t_energy<Sys,Y> k2E(const t_wavenumber<Sys,Y>& k)
+{
+	Y dk = k*get_one_angstrom<Y>();
+	Y dE = get_KSQ2E<Y>() * dk*dk;
+	return dE * get_one_meV<Y>();
+}
+
+template<class Sys, class Y>
+t_wavenumber<Sys,Y> E2k(const t_energy<Sys,Y>& _E, bool &bImag)
+{
+	bImag = (_E < Y(0.)*get_one_meV<Y>());
+	t_energy<Sys,Y> E = bImag ? -_E : _E;
+	const Y dE = E / get_one_meV<Y>();
+	const Y dk = std::sqrt(get_E2KSQ<Y>() * dE);
+	return dk / get_one_angstrom<Y>();
+}
+// ----------------------------------------------------------------------------
 
 
 
@@ -222,14 +248,16 @@ t_energy<Sys,Y> kinematic_plane(bool bFixedKi, bool bBranch,
 	if(bFixedKi)
 		dSignFixedKf = Y(-1.);
 
-	auto rt = c*c*c*c * (-EiEf*EiEf)*ctt*ctt
+	using t_sqrt_rt = decltype(c*c*EiEf*ctt);
+	using t_rt = decltype(t_sqrt_rt()*t_sqrt_rt());
+	t_rt rt = c*c*c*c * (-EiEf*EiEf)*ctt*ctt
 		+ c*c*c*c*EiEf*EiEf*ctt*ctt*c2tt
 		+ Y(2.)*c*c*c*EiEf*Q*Q*ctt*ctt;
 
 	t_energy<Sys,Y> E =
 		Y(1.)/(c*c)*(dSignFixedKf*Y(2.)*c*c*EiEf*ctt*ctt
 		- dSignFixedKf*Y(2.)*c*c*EiEf
-		+ dSign*std::sqrt(Y(2.)) * units::sqrt(rt)
+		+ dSign*std::sqrt(Y(2.)) * my_units_sqrt<t_sqrt_rt>(rt)
 		+ dSignFixedKf*c*Q*Q);
 
 	return E;
@@ -247,7 +275,7 @@ Y debye_waller_high_T(const t_temperature<Sys,Y>& T_D,
 	const t_wavenumber<Sys,Y>& Q, t_length_square<Sys,Y>* pZeta_sq=0)
 {
 	t_length_square<Sys,Y> zeta_sq;
-	zeta_sq = Y(9.)*get_hbar<Y>()*get_hbar<Y>() / (get_kB<Y>() * T_D * M) * T/T_D;
+	zeta_sq = Y(9.)*get_hbar<Y>()/get_kB<Y>() / (T_D * M) * T/T_D * get_hbar<Y>();
 	Y dwf = units::exp(Y(-1./3.) * Q*Q * zeta_sq);
 
 	if(pZeta_sq) *pZeta_sq = zeta_sq;
@@ -261,7 +289,7 @@ Y debye_waller_low_T(const t_temperature<Sys,Y>& T_D,
 	const t_wavenumber<Sys,Y>& Q, t_length_square<Sys,Y>* pZeta_sq=0)
 {
 	t_length_square<Sys,Y> zeta_sq;
-	zeta_sq = Y(9.)*get_hbar<Y>()*get_hbar<Y>() / (Y(4.)*get_kB<Y>()*T_D*M) *
+	zeta_sq = Y(9.)*get_hbar<Y>()/get_kB<Y>() / (Y(4.)*T_D*M) * get_hbar<Y>() *
 		(Y(1.) + Y(2./3.) * Y(M_PI*M_PI) * (T/T_D)*(T/T_D));
 	Y dwf = units::exp(Y(-1./3.) * Q*Q * zeta_sq);
 
@@ -396,7 +424,8 @@ get_sample_Q(const t_wavenumber<Sys,Y>& ki,
 		Qsq = -Qsq;
 	}
 
-	t_wavenumber<Sys,Y> Q = units::sqrt(Qsq);
+	//t_wavenumber<Sys,Y> Q = units::sqrt(Qsq);
+	t_wavenumber<Sys,Y> Q = my_units_sqrt<t_wavenumber<Sys,Y>>(Qsq);
 	return Q;
 }
 
@@ -417,7 +446,7 @@ template<class Sys, class Y>
 t_wavenumber<Sys,Y> get_other_k(const t_energy<Sys,Y>& E,
 	const t_wavenumber<Sys,Y>& kfix, bool bFixedKi)
 {
-	auto kE_sq = E*Y(2.)*get_m_n<Y>()/get_hbar<Y>()/get_hbar<Y>();
+	auto kE_sq = E*Y(2.)*(get_m_n<Y>()/get_hbar<Y>())/get_hbar<Y>();
 	if(bFixedKi) kE_sq = -kE_sq;
 
 	auto k_sq = kE_sq + kfix*kfix;
@@ -458,8 +487,7 @@ t_energy<Sys,Y> get_bragg_tail(t_wavenumber<Sys,Y> k,
 	Y t = q / (Y(2.)*k);
 	if(!bConstEi)
 		t = -t;
-
-	t_energy<Sys,Y> E = get_hbar<Y>()*get_hbar<Y>() / get_m_n<Y>() * k*q*(Y(1.)+t);
+	t_energy<Sys,Y> E = get_hbar<Y>()/get_m_n<Y>() * k*q*(Y(1.)+t) * get_hbar<Y>();
 	return E;
 }
 
@@ -520,7 +548,7 @@ std::vector<InelasticSpurion<Y>> check_inelastic_spurions(bool bConstEi,
 			spuri.iOrderMono, spuri.iOrderAna) / get_one_meV<Y>();
 
 		//std::cout << spuri.dE_meV << " *** " << Y(E/get_one_meV<Y>()) << std::endl;
-		if(spuri.dE_meV!=Y(0.) && float_equal(spuri.dE_meV, Y(E/get_one_meV<Y>()), dESensitivity))
+		if(spuri.dE_meV!=Y(0.) && float_equal<Y>(spuri.dE_meV, Y(E/get_one_meV<Y>()), dESensitivity))
 			vecSpuris.push_back(spuri);
 	}
 
@@ -568,13 +596,13 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 	bool bKiqParallel = 0, bkiqAntiParallel = 0;
 	bool bKfqParallel = 0, bKfqAntiParallel = 0;
 
-	if(float_equal(dAngleKiq, 0., tl::d2r(dAngleSensitivity)))
+	if(float_equal<T>(dAngleKiq, 0., tl::d2r(dAngleSensitivity)))
 		bKiqParallel = 1;
-	else if(float_equal(dAngleKiq, M_PI, tl::d2r(dAngleSensitivity)))
+	else if(float_equal<T>(dAngleKiq, M_PI, tl::d2r(dAngleSensitivity)))
 		bkiqAntiParallel = 1;
-	if(float_equal(dAngleKfq, 0., tl::d2r(dAngleSensitivity)))
+	if(float_equal<T>(dAngleKfq, 0., tl::d2r(dAngleSensitivity)))
 		bKfqParallel = 1;
-	else if(float_equal(dAngleKfq, M_PI, tl::d2r(dAngleSensitivity)))
+	else if(float_equal<T>(dAngleKfq, M_PI, tl::d2r(dAngleSensitivity)))
 		bKfqAntiParallel = 1;
 
 	// type A: q || kf, kf > ki
@@ -582,7 +610,7 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 	{
 		T dApparentKf = dKf - dq;
 
-		if(float_equal(dApparentKf, dKi, dQSensitivity))
+		if(float_equal<T>(dApparentKf, dKi, dQSensitivity))
 		{
 			result.bAType = 1;
 			result.bAKfSmallerKi = 0;
@@ -593,7 +621,7 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 	{
 		T dApparentKf = dKf + dq;
 
-		if(float_equal(dApparentKf, dKi, dQSensitivity))
+		if(float_equal<T>(dApparentKf, dKi, dQSensitivity))
 		{
 			result.bAType = 1;
 			result.bAKfSmallerKi = 1;
@@ -605,7 +633,7 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 	{
 		T dApparentKi = dKi + dq;
 
-		if(float_equal(dApparentKi, dKf, dQSensitivity))
+		if(float_equal<T>(dApparentKi, dKf, dQSensitivity))
 		{
 			result.bMType = 1;
 			result.bMKfSmallerKi = 0;
@@ -616,7 +644,7 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 	{
 		T dApparentKi = dKi - dq;
 
-		if(float_equal(dApparentKi, dKf, dQSensitivity))
+		if(float_equal<T>(dApparentKi, dKf, dQSensitivity))
 		{
 			result.bMType = 1;
 			result.bMKfSmallerKi = 1;

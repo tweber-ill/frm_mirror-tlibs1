@@ -36,8 +36,8 @@ class Lattice
 	public:
 		Lattice(T a, T b, T c, T alpha, T beta, T gamma);
 		Lattice(const ublas::vector<T>& vec0,
-				const ublas::vector<T>& vec1,
-				const ublas::vector<T>& vec2);
+			const ublas::vector<T>& vec1,
+			const ublas::vector<T>& vec2);
 		Lattice(const Lattice<T>& lattice);
 		Lattice();
 		virtual ~Lattice();
@@ -228,7 +228,7 @@ Lattice<T> Lattice<T>::GetRecip() const
 	// warning: first axis does not (necessarily) coincide with assumed first
 	//			orientation vector [0,0,1] anymore!
 	return Lattice<T>(get_column(matRecip,0), get_column(matRecip,1),
-			get_column(matRecip,2));
+		get_column(matRecip,2));
 }
 
 template<typename T>
@@ -356,8 +356,8 @@ void get_tas_angles(const Lattice<T>& lattice_real,
 			throw Err(strErr);
 		}
 
-		*pTwoTheta = get_sample_twotheta(dKi/angstrom, dKf/angstrom, dQ/angstrom, bSense) / radians;
-		T dKiQ = get_angle_ki_Q(dKi/angstrom, dKf/angstrom, dQ/angstrom, /*bSense*/1) / radians;
+		*pTwoTheta = get_sample_twotheta(dKi/get_one_angstrom<T>(), dKf/get_one_angstrom<T>(), dQ/get_one_angstrom<T>(), bSense) / get_one_radian<T>();
+		T dKiQ = get_angle_ki_Q(dKi/get_one_angstrom<T>(), dKf/get_one_angstrom<T>(), dQ/get_one_angstrom<T>(), /*bSense*/1) / get_one_radian<T>();
 		vecQ.resize(2, true);
 
 		T dAngleKiOrient1 = -dKiQ - vec_angle(vecQ);
@@ -391,11 +391,11 @@ void get_hkl_from_tas_angles(const Lattice<T>& lattice_real,
 		tt_s = -tt_s;
 	}
 
-	T ki = get_mono_k(th_m*radians, dm*angstrom, bSense_m)*angstrom;
-	T kf = get_mono_k(th_a*radians, da*angstrom, bSense_a)*angstrom;
-	T E = get_energy_transfer(ki/angstrom, kf/angstrom) / one_meV;
-	T Q = get_sample_Q(ki/angstrom, kf/angstrom, tt_s*radians)*angstrom;
-	T kiQ = get_angle_ki_Q(ki/angstrom, kf/angstrom, Q/angstrom, /*bSense_s*/1) / radians;
+	T ki = get_mono_k(th_m*get_one_radian<T>(), dm*get_one_angstrom<T>(), bSense_m)*get_one_angstrom<T>();
+	T kf = get_mono_k(th_a*get_one_radian<T>(), da*get_one_angstrom<T>(), bSense_a)*get_one_angstrom<T>();
+	T E = get_energy_transfer(ki/get_one_angstrom<T>(), kf/get_one_angstrom<T>()) / get_one_meV<T>();
+	T Q = get_sample_Q(ki/get_one_angstrom<T>(), kf/get_one_angstrom<T>(), tt_s*get_one_radian<T>())*get_one_angstrom<T>();
+	T kiQ = get_angle_ki_Q(ki/get_one_angstrom<T>(), kf/get_one_angstrom<T>(), Q/get_one_angstrom<T>(), /*bSense_s*/1) / get_one_radian<T>();
 
 	th_s += M_PI/2.;					// theta here
 	T Qvec1 = M_PI - th_s - kiQ;		// a3 convention

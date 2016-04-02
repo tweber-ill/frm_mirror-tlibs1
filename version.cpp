@@ -18,7 +18,7 @@ const char* get_tlibs_version()
 
 const char* get_tlibs_infos()
 {
-	return "This is the tLibs template (mostly anyway...) library.\n"
+	return "This is the tLibs template library.\n"
 		"Written by Tobias Weber, 2012-2015.\n"
 		"License: GPLv2 or GPLv3.";
 }

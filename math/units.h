@@ -72,6 +72,9 @@ template<class Sys, class T=double> using t_energy_per_temperature =
 	units::quantity<units::unit<typename units::derived_dimension
 	<units::mass_base_dimension,1, units::length_base_dimension,2,
 	units::time_base_dimension,-2, units::temperature_base_dimension,-1>::type, Sys>, T>;
+template<class Sys, class T=double> using t_energy_per_field =
+	units::quantity<units::unit<typename units::derived_dimension
+	<units::current_base_dimension,1, units::length_base_dimension,2>::type, Sys>, T>;
 template<class Sys, class T=double> using t_dimensionless =
 	units::quantity<units::unit<units::dimensionless_type, Sys>, T>;
 
@@ -127,21 +130,41 @@ template<class Y=double> t_length<units::si::system, Y> get_one_angstrom()
 { return Y(1e-10) * units::si::meters; }
 template<class Y=double> t_length<units::si::system, Y> get_one_meter()
 { return Y(1) * units::si::meters; }
+template<class Y=double> t_area<units::si::system, Y> get_one_barn()
+{ return Y(1e-28) * units::si::meters*units::si::meters; }
+template<class Y=double> t_temperature<units::si::system, Y> get_one_kelvin()
+{ return Y(1) * units::si::kelvins; }
 template<class Y=double> t_length<units::si::system, Y> get_one_centimeter()
 { return Y(1e-2) * units::si::meters; }
 template<class Y=double> t_time<units::si::system, Y> get_one_second()
 { return Y(1) * units::si::seconds; }
+template<class Y=double> t_time<units::si::system, Y> get_one_picosecond()
+{ return Y(1e-12) * units::si::seconds; }
 template<class Y=double> t_angle<units::si::system, Y> get_one_radian()
 { return Y(1) * units::si::radians; }
+template<class Y=double> t_flux<units::si::system, Y> get_one_tesla()
+{ return Y(1) * units::si::teslas; }
 
 template<class Y=double> t_mass<units::si::system, Y> get_m_n()
 { return Y(co::m_n/units::si::kilograms)*units::si::kilograms; }
+template<class Y=double> t_mass<units::si::system, Y> get_amu()
+{ return Y(co::m_u/units::si::kilograms)*units::si::kilograms; }
 template<class Y=double> t_action<units::si::system, Y> get_hbar()
 { return Y(co::hbar/units::si::joules/units::si::seconds)*units::si::joules*units::si::seconds; }
 template<class Y=double> t_action<units::si::system, Y> get_h()
 { return get_hbar<Y>() * Y(2.*M_PI); }
+template<class Y=double> t_velocity<units::si::system, Y> get_c()
+{ return Y(co::c/units::si::meters*units::si::seconds)*units::si::meters/units::si::seconds; }
 template<class Y=double> t_energy_per_temperature<units::si::system, Y> get_kB()
 { return Y(co::k_B*units::si::kelvin/units::si::joules)/units::si::kelvin*units::si::joules; }
+template<class Y=double> t_energy_per_field<units::si::system, Y> get_muB()
+{ return Y(co::mu_B/units::si::joules*units::si::tesla)*units::si::joules/units::si::tesla; }
+template<class Y=double> t_energy_per_field<units::si::system, Y> get_mu_n()
+{ return Y(co::mu_n/units::si::joules*units::si::tesla)*units::si::joules/units::si::tesla; }
+template<class Y=double> t_energy_per_field<units::si::system, Y> get_mu_N()
+{ return Y(co::mu_N/units::si::joules*units::si::tesla)*units::si::joules/units::si::tesla; }
+template<class Y=double> Y get_g_n() { return Y(co::g_n.value()); }
+template<class Y=double> Y get_g_e() { return Y(co::g_e.value()); }
 
 
 // template constants

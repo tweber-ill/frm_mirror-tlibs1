@@ -1,4 +1,4 @@
-// gcc -o units test/units.cpp -std=c++14 -lstdc++
+// gcc -o units test/units.cpp -std=c++14 -lstdc++ -lm
 
 #include <iostream>
 #include "../math/units.h"
@@ -28,5 +28,21 @@ int main()
 
 	std::cout << tl::get_kB<double>() << std::endl;
 	std::cout << tl::get_kB<float>() << std::endl;
+
+
+	bool bImag;
+	std::cout << "e2k: " << tl::E2k(E, bImag) << std::endl;
+	std::cout << "e2k, direct: " << tl::E2k_direct(E, bImag) << std::endl;
+	std::cout << "float e2k: " << tl::E2k(fE, bImag) << std::endl;
+	std::cout << "float e2k, direct: " << tl::E2k_direct(fE, bImag) << std::endl;
+
+
+	tl::t_wavenumber_si<double> k = 1./tl::t_angstrom<double>;
+	tl::t_wavenumber_si<float> fk = 1.f/tl::t_angstrom<float>;
+
+	std::cout << "k2e: " << tl::k2E(k) << std::endl;
+	std::cout << "k2e, direct: " << tl::k2E_direct(k) << std::endl;
+	std::cout << "float k2e: " << tl::k2E(fk) << std::endl;
+	std::cout << "float k2e, direct: " << tl::k2E_direct(fk) << std::endl;
 	return 0;
 }

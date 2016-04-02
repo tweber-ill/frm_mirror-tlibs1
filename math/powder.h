@@ -90,7 +90,7 @@ class Powder
 			  m_peaks_unique(10, &hash_peak_unique, &equ_peak_unique)
 		{}
 
-		ublas::vector<t_real> GetRecipLatticePos(double dh, double dk, double dl) const
+		ublas::vector<t_real> GetRecipLatticePos(t_real dh, t_real dk, t_real dl) const
 		{
 			if(m_pLatticeRecip)
 				return m_pLatticeRecip->GetPos(dh, dk, dl);
@@ -98,7 +98,7 @@ class Powder
 			return ublas::vector<t_real>();
 		}
 
-		t_real GetG(double dh, double dk, double dl) const
+		t_real GetG(t_real dh, t_real dk, t_real dl) const
 		{
 			ublas::vector<t_real> vecG = GetRecipLatticePos(dh, dk, dl);
 			if(vecG.size())
