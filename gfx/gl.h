@@ -18,10 +18,19 @@
 
 namespace tl {
 
-typedef ublas::matrix<double, ublas::row_major, ublas::bounded_array<double,4*4>> t_mat4;
-typedef ublas::matrix<double, ublas::row_major, ublas::bounded_array<double,3*3>> t_mat3;
-typedef ublas::vector<double, ublas::bounded_array<double,4>> t_vec4;
-typedef ublas::vector<double, ublas::bounded_array<double,3>> t_vec3;
+template<class T=double> 
+using t_mat4_gen = ublas::matrix<T, ublas::row_major, ublas::bounded_array<T,4*4>>;
+template<class T=double> 
+using t_mat3_gen = ublas::matrix<T, ublas::row_major, ublas::bounded_array<T,3*3>>;
+template<class T=double> 
+using t_vec4_gen = ublas::vector<T, ublas::bounded_array<T,4>>;
+template<class T=double> 
+using t_vec3_gen = ublas::vector<T, ublas::bounded_array<T,3>>;
+
+typedef t_mat4_gen<double> t_mat4;
+typedef t_mat3_gen<double> t_mat3;
+typedef t_vec4_gen<double> t_vec4;
+typedef t_vec3_gen<double> t_vec3;
 
 
 template<typename T=double, typename... Args>
@@ -59,7 +68,7 @@ t_mat from_gl_array(const typename t_mat::value_type* glmat)
 template<typename t_mat = t_mat4, typename t_vec = t_vec4,
 	typename T = typename t_mat::value_type>
 void proj_pt(T dX, T dY, T dZ, const t_mat& matProj, const t_mat& matMV,
-			T& dXProj, T& dYProj)
+	T& dXProj, T& dYProj)
 {
 	t_mat mat = ublas::prod(matProj, matMV);
 	t_vec vec = ublas::prod(mat, make_vec<t_vec>({dX, dY, dZ, 1.}));
@@ -353,6 +362,12 @@ class GlFontMap : public FontMap
 
 // --------------------------------------------------------------------------------
 
+
 }
+
+//
+//#ifdef TLIBS_INC_HDR_IMPLS
+//	#include "gl_impl.h"
+//#endif
 
 #endif

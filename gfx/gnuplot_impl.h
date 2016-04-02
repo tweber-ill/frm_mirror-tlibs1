@@ -5,6 +5,9 @@
  * @license GPLv2 or GPLv3
  */
 
+#ifndef __GPL_IMPL_H__
+#define __GPL_IMPL_H__
+
 #include "../helper/flags.h"
 #include "gnuplot.h"
 #include "../helper/misc.h"
@@ -478,3 +481,5 @@ template<class t_real>
 std::ostream& GnuPlot_gen<t_real>::GetStream() { return *m_postr; }
 
 }
+
+#endif
