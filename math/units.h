@@ -144,6 +144,8 @@ template<class Y=double> t_angle<units::si::system, Y> get_one_radian()
 { return Y(1) * units::si::radians; }
 template<class Y=double> t_flux<units::si::system, Y> get_one_tesla()
 { return Y(1) * units::si::teslas; }
+template<class Y=double> t_flux<units::si::system, Y> get_one_kilogauss()
+{ return Y(0.1) * units::si::teslas; }
 
 template<class Y=double> t_mass<units::si::system, Y> get_m_n()
 { return Y(co::m_n/units::si::kilograms)*units::si::kilograms; }
