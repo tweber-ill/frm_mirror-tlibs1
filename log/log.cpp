@@ -6,21 +6,38 @@
  */
 
 #include "log.h"
+#include <iomanip>
+#include <cstring>
 #include <chrono>
+#include <boost/date_time/c_time.hpp>
+
 
 namespace tl {
 std::recursive_mutex Log::s_mtx;
 
 std::string Log::get_timestamp()
 {
-	using std::chrono::system_clock;
+	namespace ch = std::chrono;
+	using ch::system_clock;
+	using boost::date_time::c_time;
 
 	system_clock::time_point now = system_clock::now();
-	std::time_t tm = system_clock::to_time_t(now);
-	std::tm tmNow = *std::localtime(&tm);
 
-	char cTime[64];
-	std::strftime(cTime, sizeof cTime, "%Y-%b-%d %H:%M:%S", &tmNow);
+	// milliseconds
+	ch::milliseconds msecs = ch::duration_cast<ch::milliseconds>(now.time_since_epoch());
+	msecs -= ch::duration_cast<ch::milliseconds>(ch::duration_cast<ch::seconds>(msecs));
+	std::ostringstream ostrmsecs;
+	ostrmsecs << std::setw(3) << std::setfill('0') << msecs.count();
+
+	// time and date
+	std::time_t tm = system_clock::to_time_t(now);
+	std::tm tmNow;
+	c_time::localtime(&tm, &tmNow);
+	// /*std::*/localtime_r(&tm, &tmNow);
+
+	std::string::value_type cTime[64];
+	std::strftime(cTime, sizeof cTime, "%Y-%b-%d %H:%M:%S.", &tmNow);
+	std::strcat(cTime, ostrmsecs.str().c_str());
 	return std::string(cTime);
 }
 
@@ -251,4 +268,5 @@ int main()
 	th3.join();
 
 	return 0;
-}*/
+}
+*/
