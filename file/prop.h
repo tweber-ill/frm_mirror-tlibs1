@@ -14,6 +14,7 @@
 #include <fstream>
 #include <type_traits>
 #include <map>
+#include <algorithm>
 
 #include <boost/version.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -39,7 +40,35 @@ namespace prop = ::boost::property_tree;
 
 enum class PropType { XML, JSON, INFO, INI, };
 
-template<class _t_str = std::string>
+// ----------------------------------------------------------------------------
+// string compare predicate
+template<class t_str, bool bCaseSensitive> struct StringComparer {};
+
+// honour case
+template<class t_str> struct StringComparer<t_str, 1>
+{
+	bool operator()(const t_str& str1, const t_str& str2) const
+	{
+		return std::lexicographical_compare(str1.begin(), str1.end(),
+			str2.begin(), str2.end());
+	}
+};
+
+// ignore case
+template<class t_str> struct StringComparer<t_str, 0>
+{
+	bool operator()(const t_str& _str1, const t_str& _str2) const
+	{
+		t_str str1 = str_to_lower<t_str>(_str1);
+		t_str str2 = str_to_lower<t_str>(_str2);
+
+		return std::lexicographical_compare(str1.begin(), str1.end(),
+			str2.begin(), str2.end());
+	}
+};
+// ----------------------------------------------------------------------------
+
+template<class _t_str = std::string, bool bCaseSensitive=0>
 class Prop
 {
 public:
@@ -47,7 +76,8 @@ public:
 	using t_ch = typename t_str::value_type;
 
 protected:
-	prop::basic_ptree<t_str, t_str> m_prop;
+
+	prop::basic_ptree<t_str, t_str, StringComparer<t_str, bCaseSensitive>> m_prop;
 	t_ch m_chSep = '/';
 
 public:
@@ -99,16 +129,16 @@ public:
 		{
 			switch(ty)
 			{
-				case PropType::XML: 
+				case PropType::XML:
 					prop::read_xml(istr, m_prop);
 					break;
-				case PropType::JSON: 
+				case PropType::JSON:
 					prop::read_json(istr, m_prop);
 					break;
-				case PropType::INFO: 
+				case PropType::INFO:
 					prop::read_info(istr, m_prop);
 					break;
-				case PropType::INI: 
+				case PropType::INI:
 					prop::read_ini(istr, m_prop);
 					break;
 				default:
@@ -176,16 +206,16 @@ public:
 		{
 			switch(ty)
 			{
-				case PropType::XML: 
+				case PropType::XML:
 					prop::write_xml(ofstr, m_prop, prop::xml_writer_settings<t_writer>('\t',1));
 					break;
-				case PropType::JSON: 
+				case PropType::JSON:
 					prop::write_json(ofstr, m_prop);
 					break;
-				case PropType::INFO: 
+				case PropType::INFO:
 					prop::write_info(ofstr, m_prop);
 					break;
-				case PropType::INI: 
+				case PropType::INI:
 					prop::write_ini(ofstr, m_prop);
 					break;
 				default:
