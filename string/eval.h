@@ -15,16 +15,19 @@
 #include <string>
 #include <utility>
 #include <unordered_map>
+#include <type_traits>
 #include "../log/log.h"
+#include "string.h"
 
 namespace tl
 {
-	// functions with one parameter
-	template<class t_str, class t_val>
+	// real functions with one parameter
+	template<class t_str, class t_val,
+		typename std::enable_if<std::is_floating_point<t_val>::value>::type* =nullptr>
 	t_val call_func1(const t_str& strName, t_val t)
 	{
 		//std::cout << "calling " << strName << " with arg " << t << std::endl;
-		static const std::unordered_map<t_str, t_val(*)(t_val)> s_funcs =
+		static const std::unordered_map</*t_str*/std::string, t_val(*)(t_val)> s_funcs =
 		{
 			{ "sin", std::sin }, { "cos", std::cos }, { "tan", std::tan },
 			{ "asin", std::asin }, { "acos", std::acos }, { "atan", std::atan },
@@ -38,35 +41,78 @@ namespace tl
 			{ "erf", std::erf }, { "erfc", std::erfc }, { "erf_inv", boost::math::erf_inv },
 
 			{ "round", std::round }, { "ceil", std::ceil }, { "floor", std::floor },
+			{ "abs", std::abs },
 		};
 
-		return s_funcs.at(strName)(t);
+		return s_funcs.at(tl::wstr_to_str(strName))(t);
 	}
 
-	// functions with two parameters
-	template<class t_str, class t_val>
+	// real functions with two parameters
+	template<class t_str, class t_val,
+		typename std::enable_if<std::is_floating_point<t_val>::value>::type* =nullptr>
 	t_val call_func2(const t_str& strName, t_val t1, t_val t2)
 	{
-		static const std::unordered_map<t_str, t_val(*)(t_val, t_val)> s_funcs =
+		static const std::unordered_map</*t_str*/std::string, t_val(*)(t_val, t_val)> s_funcs =
 		{
 			{ "pow", std::pow }, { "atan2", std::atan2 },
-			{ "fmod", std::fmod },
+			{ "mod", std::fmod },
 		};
 
-		return s_funcs.at(strName)(t1, t2);
+		return s_funcs.at(tl::wstr_to_str(strName))(t1, t2);
 	}
 
-	// constants
-	template<class t_str, class t_val>
+	// real constants
+	template<class t_str, class t_val,
+		typename std::enable_if<std::is_floating_point<t_val>::value>::type* =nullptr>
 	t_val get_const(const t_str& strName)
 	{
 		//std::cout << "requesting constant " << strName << std::endl;
-		static const std::unordered_map<t_str, t_val> s_consts =
+		static const std::unordered_map</*t_str*/std::string, t_val> s_consts =
 		{
 			{ "pi", t_val(M_PI) }
 		};
 
-		return s_consts.at(strName);
+		return s_consts.at(tl::wstr_to_str(strName));
+	}
+
+
+	// alternative: int functions with one parameter
+	template<class t_str, class t_val,
+		typename std::enable_if<std::is_integral<t_val>::value>::type* =nullptr>
+	t_val call_func1(const t_str& strName, t_val t)
+	{
+		static const std::unordered_map</*t_str*/std::string, t_val(*)(t_val)> s_funcs =
+		{
+			{ "abs", std::abs },
+		};
+
+		return s_funcs.at(tl::wstr_to_str(strName))(t);
+	}
+
+	// alternative: int functions with two parameters
+	template<class t_str, class t_val,
+		typename std::enable_if<std::is_integral<t_val>::value>::type* =nullptr>
+	t_val call_func2(const t_str& strName, t_val t1, t_val t2)
+	{
+		static const std::unordered_map</*t_str*/std::string, std::function<t_val(t_val, t_val)>> s_funcs =
+		{
+			{ "pow", [t1, t2](t_val t1, t_val t2) -> t_val { return t_val(std::pow(t1, t2)); } },
+			{ "mod", [t1, t2](t_val t1, t_val t2) -> t_val { return t1%t2; } },
+		};
+
+		return s_funcs.at(tl::wstr_to_str(strName))(t1, t2);
+	}
+
+	// alternative: int constants
+	template<class t_str, class t_val,
+		typename std::enable_if<std::is_integral<t_val>::value>::type* =nullptr>
+	t_val get_const(const t_str& strName)
+	{
+		static const std::unordered_map</*t_str*/std::string, t_val> s_consts =
+		{
+		};
+
+		return s_consts.at(tl::wstr_to_str(strName));
 	}
 
 
@@ -81,6 +127,9 @@ namespace tl
 		protected:
 			using t_ch = typename t_str::value_type;
 			using t_iter = typename t_str::const_iterator;
+			using t_valparser = typename std::conditional<
+				std::is_floating_point<t_val>::value,
+				qi::real_parser<t_val>, qi::int_parser<t_val>>::type;
 
 			qi::rule<t_iter, t_val(), t_skip> m_expr, m_term;
 			qi::rule<t_iter, t_val(), t_skip> m_val, m_baseval, m_const, m_func;
@@ -116,7 +165,7 @@ namespace tl
 					[ qi::_val = ph::bind([](t_val val1, t_val val2)->t_val
 					{ return std::pow(val1, val2); }, qi::_val, qi::_1)]);
 
-				m_baseval = qi::real_parser<t_val>() | m_func | m_const
+				m_baseval = t_valparser() | m_func | m_const
 					| t_ch('(') >> m_expr >> t_ch(')')
 					;
 

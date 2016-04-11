@@ -9,8 +9,12 @@ int main()
 	std::cout << "OK: " << result.first;
 	std::cout << ", value: " << result.second << std::endl;
 
-	/*auto result2 = tl::eval_expr<std::wstring, double>(L"2*pi * 100 / 10");
+	auto result2 = tl::eval_expr<std::wstring, float>(L"2*pi * 100 / 10");
 	std::wcout << L"OK: " << result2.first;
-	std::wcout << L", value: " << result2.second << std::endl;*/
+	std::wcout << L", value: " << result2.second << std::endl;
+
+	auto result3 = tl::eval_expr<std::string, int>("mod(abs(5-4-3-2-1), 3)");
+	std::cout << "OK: " << result3.first;
+	std::cout << ", value: " << result3.second << std::endl;
 	return 0;
 }
