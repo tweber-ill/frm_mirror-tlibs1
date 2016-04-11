@@ -116,6 +116,7 @@ namespace tl
 	}
 
 
+	namespace sp = boost::spirit;
 	namespace qi = boost::spirit::qi;
 	namespace asc = boost::spirit::ascii;
 	namespace ph = boost::phoenix;
@@ -136,18 +137,42 @@ namespace tl
 			qi::rule<t_iter, t_val(), t_skip> m_pm, m_pm_opt;
 			qi::rule<t_iter, t_str(), t_skip> m_ident;
 
+			void SetErrorHandling()
+			{
+				m_expr.name("expr");
+				m_term.name("term");
+				m_val.name("val");
+				m_baseval.name("baseval");
+				m_const.name("const");
+				m_func.name("func");
+				m_pm.name("plusminus");
+				m_pm_opt.name("plusminus_opt");
+				m_ident.name("ident");
+
+				qi::on_error<qi::fail>(m_expr,
+					ph::bind([](t_iter beg, t_iter err, t_iter end, const sp::info& infoErr)
+					{
+						std::string strBeg(beg, err);
+						std::string strPos(err, end);
+
+						tl::log_err("Parsed \"", strBeg, "\", ",
+							"remaining \"", strPos, "\", ",
+							"expected token ", infoErr, ".");
+					}, qi::labels::_1, qi::labels::_3, qi::labels::_2, qi::labels::_4));
+			}
+
 		public:
-			ExprGrammar() : ExprGrammar::base_type(m_expr)
+			ExprGrammar() : ExprGrammar::base_type(m_expr, "expr")
 			{
 				// + or -
-				m_expr = ((m_pm_opt >> m_term) [ qi::_val = qi::_1*qi::_2  ]
-					>> *(m_pm >> m_term) [ qi::_val += qi::_1*qi::_2 ]
+				m_expr = ((m_pm_opt > m_term) [ qi::_val = qi::_1*qi::_2  ]
+					> *(m_pm > m_term) [ qi::_val += qi::_1*qi::_2 ]
 					);
 
 				// * or /
-				m_term = m_val [ qi::_val = qi::_1 ]
-					>> *((t_ch('*') >> m_val) [ qi::_val *= qi::_1 ]
-						| (t_ch('/') >> m_val) [ qi::_val /= qi::_1 ])
+				m_term = (m_val [ qi::_val = qi::_1 ]
+					> *((t_ch('*') > m_val) [ qi::_val *= qi::_1 ]
+						| (t_ch('/') > m_val) [ qi::_val /= qi::_1 ]))
 					| m_val [ qi::_val = qi::_1 ]
 					;
 
@@ -161,12 +186,12 @@ namespace tl
 
 				// pow
 				m_val = m_baseval [ qi::_val = qi::_1 ]
-					>> *((t_ch('^') >> m_baseval)
-					[ qi::_val = ph::bind([](t_val val1, t_val val2)->t_val
+					> *((t_ch('^') > m_baseval)
+					[ qi::_val = ph::bind([](t_val val1, t_val val2) -> t_val
 					{ return std::pow(val1, val2); }, qi::_val, qi::_1)]);
 
 				m_baseval = t_valparser() | m_func | m_const
-					| t_ch('(') >> m_expr >> t_ch(')')
+					| (t_ch('(') > m_expr > t_ch(')'))
 					;
 
 				// lazy evaluation of constants via phoenix bind
@@ -178,12 +203,14 @@ namespace tl
 					[ qi::_val = ph::bind([](const t_str& strName, t_val val1, t_val val2) -> t_val
 					{ return call_func2<t_str, t_val>(strName, val1, val2); },
 					qi::_1, qi::_2, qi::_3) ]
-					| (m_ident >> t_ch('(') >> m_expr >> t_ch(')'))
+					| ((m_ident >> t_ch('(') >> m_expr >> t_ch(')')))
 					[ qi::_val = ph::bind([](const t_str& strName, t_val val) -> t_val
 					{ return call_func1<t_str, t_val>(strName, val); },
 					qi::_1, qi::_2) ];
 
-				m_ident = qi::lexeme[qi::char_("A-Za-z_") >> *qi::char_("0-9A-Za-z_")];
+				m_ident = qi::lexeme[qi::char_("A-Za-z_") > *qi::char_("0-9A-Za-z_")];
+
+				SetErrorHandling();
 			}
 
 			~ExprGrammar() {}
@@ -192,13 +219,23 @@ namespace tl
 	template<class t_str=std::string, class t_val=double>
 	std::pair<bool, t_val> eval_expr(const t_str& str) noexcept
 	{
+		if(tl::trimmed(str).length() == 0)
+			return std::make_pair(false, t_val(0));
+
 		try
 		{
-			t_val valRes;
-			ExprGrammar<t_str, t_val> gram;
-			bool bOk = qi::phrase_parse(str.begin(), str.end(),
-				gram, asc::space, valRes);
+			using t_iter = typename t_str::const_iterator;
+			t_iter beg = str.begin(), end = str.end();
+			t_val valRes(0);
 
+			ExprGrammar<t_str, t_val> gram;
+			bool bOk = qi::phrase_parse(beg, end, gram, asc::space, valRes);
+			if(beg != end)
+			{
+				std::string strErr(beg, end);
+				tl::log_err("Not all tokens were parsed. Remaining: \"", strErr, "\".");
+				bOk = 0;
+			}
 			return std::make_pair(bOk, valRes);
 		}
 		catch(const std::exception& ex)
