@@ -401,6 +401,7 @@ struct _str_to_var_impl<T, t_str, 0>
 
 
 #ifndef NO_BOOST
+
 /**
  * Tokenises string on any of the chars in strDelim
  */
@@ -422,6 +423,42 @@ void get_tokens(const t_str& str, const t_str& strDelim, t_cont& vecRet)
 			std::is_convertible<T, t_str>::value>()(*iter));
 	}
 }
+
+
+#if !defined NO_STR_PARSER
+}
+
+#include "../string/eval.h"
+
+namespace tl {
+template<class T, class t_str=std::string, class t_cont=std::vector<T>>
+bool parse_tokens(const t_str& str, const t_str& strDelim, t_cont& vecRet)
+{
+	std::vector<t_str> vecStrs;
+	get_tokens<t_str, t_str, std::vector<t_str>>(str, strDelim, vecStrs);
+
+	bool bOk = 1;
+	for(const t_str& str : vecStrs)
+	{
+		std::pair<bool, T> pairResult = eval_expr<t_str, T>(str);
+		vecRet.push_back(pairResult.second);
+		if(!pairResult.first) bOk = 0;
+	}
+
+	return bOk;
+}
+
+#else	// simply call non-parsing version
+
+template<class T, class t_str=std::string, class t_cont=std::vector<T>>
+bool parse_tokens(const t_str& str, const t_str& strDelim, t_cont& vecRet)
+{
+	get_tokens<T, t_str, t_cont>(str, strDelim, vecRet);
+	return 1;
+}
+
+#endif
+
 
 /**
  * Tokenises string on strDelim

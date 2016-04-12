@@ -44,7 +44,7 @@ namespace tl
 			{ "abs", std::abs },
 		};
 
-		return s_funcs.at(tl::wstr_to_str(strName))(t);
+		return s_funcs.at(wstr_to_str(strName))(t);
 	}
 
 	// real functions with two parameters
@@ -58,7 +58,7 @@ namespace tl
 			{ "mod", std::fmod },
 		};
 
-		return s_funcs.at(tl::wstr_to_str(strName))(t1, t2);
+		return s_funcs.at(wstr_to_str(strName))(t1, t2);
 	}
 
 	// real constants
@@ -72,7 +72,7 @@ namespace tl
 			{ "pi", t_val(M_PI) }
 		};
 
-		return s_consts.at(tl::wstr_to_str(strName));
+		return s_consts.at(wstr_to_str(strName));
 	}
 
 
@@ -86,7 +86,7 @@ namespace tl
 			{ "abs", std::abs },
 		};
 
-		return s_funcs.at(tl::wstr_to_str(strName))(t);
+		return s_funcs.at(wstr_to_str(strName))(t);
 	}
 
 	// alternative: int functions with two parameters
@@ -100,7 +100,7 @@ namespace tl
 			{ "mod", [t1, t2](t_val t1, t_val t2) -> t_val { return t1%t2; } },
 		};
 
-		return s_funcs.at(tl::wstr_to_str(strName))(t1, t2);
+		return s_funcs.at(wstr_to_str(strName))(t1, t2);
 	}
 
 	// alternative: int constants
@@ -112,7 +112,7 @@ namespace tl
 		{
 		};
 
-		return s_consts.at(tl::wstr_to_str(strName));
+		return s_consts.at(wstr_to_str(strName));
 	}
 
 
@@ -155,7 +155,7 @@ namespace tl
 						std::string strBeg(beg, err);
 						std::string strPos(err, end);
 
-						tl::log_err("Parsed \"", strBeg, "\", ",
+						log_err("Parsed \"", strBeg, "\", ",
 							"remaining \"", strPos, "\", ",
 							"expected token ", infoErr, ".");
 					}, qi::labels::_1, qi::labels::_3, qi::labels::_2, qi::labels::_4));
@@ -216,10 +216,10 @@ namespace tl
 			~ExprGrammar() {}
 	};
 
-	template<class t_str=std::string, class t_val=double>
+	template<class t_str/*=std::string*/, class t_val/*=double*/>
 	std::pair<bool, t_val> eval_expr(const t_str& str) noexcept
 	{
-		if(tl::trimmed(str).length() == 0)
+		if(trimmed(str).length() == 0)
 			return std::make_pair(true, t_val(0));
 
 		try
@@ -233,7 +233,7 @@ namespace tl
 			if(beg != end)
 			{
 				std::string strErr(beg, end);
-				tl::log_err("Not all tokens were parsed. Remaining: \"", strErr, "\".");
+				log_err("Not all tokens were parsed. Remaining: \"", strErr, "\".");
 				bOk = 0;
 			}
 			return std::make_pair(bOk, valRes);

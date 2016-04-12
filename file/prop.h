@@ -27,6 +27,10 @@
 #include "../helper/traits.h"
 #include "../helper/misc.h"
 
+#if !defined NO_STR_PARSER
+	#include "../string/eval.h"
+#endif
+
 #if !defined NO_IOSTR
 	#include "../file/comp.h"
 #else
@@ -273,6 +277,45 @@ public:
 		return Query<T>(_strAddr, &def, pbOk);
 	}
 
+#if !defined NO_STR_PARSER
+	template<typename T>
+	T QueryAndParse(const t_str& _strAddr, const T* pDef=nullptr, bool *pbOk=nullptr) const
+	{
+		bool bOk = 0;
+		T def = pDef ? * pDef : T();
+		t_str strExpr = Query<t_str>(_strAddr, nullptr, &bOk);
+
+		if(pbOk) *pbOk = bOk;
+		if(!bOk) return def;
+
+		std::pair<bool, T> pairRes = eval_expr<t_str, T>(strExpr);
+		if(!pairRes.first)
+		{
+			if(pbOk) *pbOk = 0;
+			return def;
+		}
+
+		return pairRes.second;
+	}
+
+	template<typename T>
+	T QueryAndParse(const t_str& _strAddr, const T def, bool *pbOk=nullptr) const
+	{
+		return QueryAndParse<T>(_strAddr, &def, pbOk);
+	}
+#else 	// simply call normal query function
+	template<typename T>
+	T Query(const t_str& _strAddr, const T* pDef=nullptr, bool *pbOk=nullptr) const
+	{
+		return Query<T>(_strAddr, pDef, pbOk);
+	}
+
+	template<typename T>
+	T QueryAndParse(const t_str& _strAddr, const T def, bool *pbOk=nullptr) const
+	{
+		return Query<T>(_strAddr, def, pbOk);
+	}
+#endif
 
 	bool Exists(const t_str& strAddr) const
 	{
