@@ -62,7 +62,7 @@ add_library(tlibs SHARED
 	helper/flags.cpp
 	math/fourier.cpp  math/linalg2.cpp  math/rand.cpp
 	net/tcp.cpp
-	string/spec_char.cpp
+	string/spec_char.cpp  string/eval.cpp
 	gfx/gl.cpp  gfx/gnuplot.cpp
 	version.cpp
 	old/xml.cpp  old/loadtxt.cpp
