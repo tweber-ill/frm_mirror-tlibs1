@@ -99,6 +99,7 @@ template<class Y=double> using t_time_si = t_time<units::si::system, Y>;
 template<class Y=double> using t_flux_si = t_flux<units::si::system, Y>;
 template<class Y=double> using t_area_si = t_area<units::si::system, Y>;
 template<class Y=double> using t_action_si = t_action<units::si::system, Y>;
+template<class Y=double> using t_energy_per_temperature_si = t_energy_per_temperature<units::si::system, Y>;
 
 
 // si quantities -- full specialisations

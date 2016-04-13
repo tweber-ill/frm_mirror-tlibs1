@@ -16,8 +16,9 @@
 #include <utility>
 #include <unordered_map>
 #include <type_traits>
-#include "../log/log.h"
 #include "string.h"
+#include "../log/log.h"
+#include "../math/units.h"
 
 namespace tl
 {
@@ -66,10 +67,19 @@ namespace tl
 		typename std::enable_if<std::is_floating_point<t_val>::value>::type* =nullptr>
 	t_val get_const(const t_str& strName)
 	{
+		static const tl::t_energy_si<t_val> meV = get_one_meV<t_val>();
+		//static const tl::t_time_si<t_val> picosec = tl::get_one_picosecond<t_val>();
+		static const tl::t_time_si<t_val> sec = tl::get_one_second<t_val>();
+		static const tl::t_temperature_si<t_val> kelvin = tl::get_one_kelvin<t_val>();
+		static const tl::t_action_si<t_val> hbar = tl::get_hbar<t_val>();
+		static const tl::t_energy_per_temperature_si<t_val> kB = tl::get_kB<t_val>();
+
 		//std::cout << "requesting constant " << strName << std::endl;
 		static const std::unordered_map</*t_str*/std::string, t_val> s_consts =
 		{
-			{ "pi", t_val(M_PI) }
+			{ "pi", t_val(M_PI) },
+			{ "hbar",  t_val(hbar/meV/sec) },	// hbar in [meV s]
+			{ "kB",  t_val(kB/meV*kelvin) },	// kB in [meV / K]
 		};
 
 		return s_consts.at(wstr_to_str(strName));
