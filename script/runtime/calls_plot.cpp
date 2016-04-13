@@ -112,12 +112,16 @@ static void set_plot_params(tl::GnuPlot_gen<t_real>& plot, const SymbolMap* pPar
 	bool bHasVal = 0;
 	t_string strTitle = pParamMap->GetStringVal(T_STR"title", &bHasVal);
 	if(bHasVal) plot.SetTitle(WSTR_TO_STR(strTitle).c_str());
-
 	t_string strXLab = pParamMap->GetStringVal(T_STR"xlabel", &bHasVal);
 	if(bHasVal) plot.SetXLabel(WSTR_TO_STR(strXLab).c_str());
-
 	t_string strYLab = pParamMap->GetStringVal(T_STR"ylabel", &bHasVal);
 	if(bHasVal) plot.SetYLabel(WSTR_TO_STR(strYLab).c_str());
+
+	t_real dLogX = pParamMap->GetRealVal(T_STR"xlog", &bHasVal);
+	if(bHasVal) plot.SetLogX(dLogX);
+	t_real dLogY = pParamMap->GetRealVal(T_STR"ylog", &bHasVal);
+	if(bHasVal) plot.SetLogY(dLogY);
+	//tl::log_debug("Log bases: ", dLogX, ", ", dLogY);
 
 	if(pCurPlotObj)
 	{
@@ -206,10 +210,10 @@ static void set_plot_params(tl::GnuPlot_gen<t_real>& plot, const SymbolMap* pPar
 }
 
 static Symbol* fkt_fileplot(const std::vector<Symbol*>& vecSyms,
-                               	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab);
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab);
 
 static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
-			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	g_plot.Init();
 	unsigned int iNumSyms = vecSyms.size();
@@ -299,7 +303,7 @@ static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_plot2d(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	g_plot.Init();
 
@@ -349,8 +353,8 @@ static Symbol* fkt_plot2d(const std::vector<Symbol*>& vecSyms,
 
 
 static Symbol* _fkt_fileplot(const std::vector<Symbol*>& vecSyms, 
-				ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab,
-				Symbol* (*pPltFkt)(const::std::vector<Symbol*>&, ParseInfo&, RuntimeInfo&, SymbolTable*))
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab,
+	Symbol* (*pPltFkt)(const::std::vector<Symbol*>&, ParseInfo&, RuntimeInfo&, SymbolTable*))
 {
 	g_plot.Init();
 	if(vecSyms.size() < 1 || vecSyms[0]->GetType()!=SYMBOL_STRING)
@@ -377,16 +381,16 @@ static Symbol* _fkt_fileplot(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_fileplot(const std::vector<Symbol*>& vecSyms,
-				ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	return _fkt_fileplot(vecSyms, info, runinfo, pSymTab, fkt_plot);
-} 
+}
 
 static Symbol* fkt_fileplot2d(const std::vector<Symbol*>& vecSyms,
-				ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	return _fkt_fileplot(vecSyms, info, runinfo, pSymTab, fkt_plot2d);
-} 
+}
 
 
 // --------------------------------------------------------------------------------

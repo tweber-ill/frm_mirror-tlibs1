@@ -103,6 +103,8 @@ public:
 
 	void SetXRange(t_real dMin, t_real dMax);
 	void SetYRange(t_real dMin, t_real dMax);
+	void SetLogX(t_real tBase);
+	void SetLogY(t_real tBase);
 
 	void SetColorBarRange(t_real dMin, t_real dMax, bool bCyclic=0);
 

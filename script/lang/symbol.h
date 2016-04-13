@@ -412,11 +412,14 @@ public:
 
 	t_string GetStringVal(const SymbolMapKey& key, bool *pbHasVal=0) const;
 	t_int GetIntVal(const SymbolMapKey& key, bool *pbHasVal=0) const;
+	t_real GetRealVal(const SymbolMapKey& key, bool *pbHasVal=0) const;
 
 	t_string GetStringVal(const t_string& strKey, bool *pbHasVal=0) const
 	{ return GetStringVal(SymbolMapKey(strKey), pbHasVal); }
 	t_int GetIntVal(const t_string& strKey, bool *pbHasVal=0) const
 	{ return GetIntVal(SymbolMapKey(strKey), pbHasVal); }
+	t_real GetRealVal(const t_string& strKey, bool *pbHasVal=0) const
+	{ return GetRealVal(SymbolMapKey(strKey), pbHasVal); }
 
 	virtual bool IsScalar() const override { return 0; }
 

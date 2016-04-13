@@ -433,6 +433,28 @@ void GnuPlot_gen<t_real>::SetYRange(t_real dMin, t_real dMax)
 }
 
 template<class t_real>
+void GnuPlot_gen<t_real>::SetLogX(t_real tBase)
+{
+	if(!IsReady()) return;
+	if(tBase >= 0.)
+		(*m_postr) << "set logscale x " << tBase << "\n";
+	else
+		(*m_postr) << "unset logscale x\n";
+	m_postr->flush();
+}
+
+template<class t_real>
+void GnuPlot_gen<t_real>::SetLogY(t_real tBase)
+{
+	if(!IsReady()) return;
+	if(tBase >= 0.)
+		(*m_postr) << "set logscale y " << tBase << "\n";
+	else
+		(*m_postr) << "unset logscale y\n";
+	m_postr->flush();
+}
+
+template<class t_real>
 void GnuPlot_gen<t_real>::SetGrid(bool bOn)
 {
 	if(!IsReady()) return;

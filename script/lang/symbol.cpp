@@ -670,14 +670,12 @@ t_string SymbolMap::GetStringVal(const SymbolMapKey& key, bool *pbHasVal) const
 	if(pbHasVal) *pbHasVal = 0;
 
 	t_map::const_iterator iter = m_map.find(key);
-	if(iter == m_map.end())
-		return T_STR"";
+	if(iter == m_map.end()) return T_STR"";
 
 	if(pbHasVal) *pbHasVal = 1;
 
 	Symbol *pSym = iter->second;
-	if(!pSym)
-		return T_STR"";
+	if(!pSym) return T_STR"";
 
 	if(pbHasVal) *pbHasVal = 1;
 	return pSym->print();
@@ -688,17 +686,31 @@ t_int SymbolMap::GetIntVal(const SymbolMapKey& key, bool *pbHasVal) const
 	if(pbHasVal) *pbHasVal = 0;
 
 	t_map::const_iterator iter = m_map.find(key);
-	if(iter == m_map.end())
-		return 0;
+	if(iter == m_map.end()) return 0;
 
 	if(pbHasVal) *pbHasVal = 1;
 
 	const Symbol *pSym = iter->second;
-	if(!pSym)
-		return 0;
+	if(!pSym) return 0;
 
 	if(pbHasVal) *pbHasVal = 1;
 		return pSym->GetValInt();
+}
+
+t_real SymbolMap::GetRealVal(const SymbolMapKey& key, bool *pbHasVal) const
+{
+	if(pbHasVal) *pbHasVal = 0;
+
+	t_map::const_iterator iter = m_map.find(key);
+	if(iter == m_map.end()) return 0;
+
+	if(pbHasVal) *pbHasVal = 1;
+
+	const Symbol *pSym = iter->second;
+	if(!pSym) return 0;
+
+	if(pbHasVal) *pbHasVal = 1;
+		return pSym->GetValDouble();
 }
 
 std::size_t SymbolMap::hash() const
