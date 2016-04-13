@@ -48,6 +48,8 @@ class DatFile
 		void ReadHeaderLine(const t_str& _strLine)
 		{
 			std::size_t iBeg = _strLine.find_first_not_of(m_chComm);
+			if(iBeg == t_str::npos) return;
+
 			t_str strLine(_strLine, iBeg, t_str::npos);
 			trim(strLine);
 			if(strLine.length() == 0)
@@ -140,7 +142,6 @@ class DatFile
 			std::basic_ifstream<t_char> ifstr(wstr_to_str(strFile));
 			if(!ifstr)
 				return false;
-
 #if !defined NO_IOSTR
 			std::shared_ptr<std::basic_istream<t_char>> ptrIstr =
 				create_autodecomp_istream(ifstr);
