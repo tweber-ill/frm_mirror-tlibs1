@@ -143,8 +143,9 @@ namespace tl
 				qi::real_parser<t_val>, qi::int_parser<t_val>>::type;
 
 			qi::rule<t_iter, t_val(), t_skip> m_expr, m_term;
-			qi::rule<t_iter, t_val(), t_skip> m_val, m_baseval, m_const, m_func;
-			qi::rule<t_iter, t_val(), t_skip> m_pm, m_pm_opt;
+			qi::rule<t_iter, t_val(), t_skip> m_val, m_baseval, m_const;
+			qi::rule<t_iter, t_val(), t_skip> m_func1, m_func2;
+			qi::rule<t_iter, t_val(), t_skip> m_pm, m_pm_opt, m_p, m_m;
 			qi::rule<t_iter, t_str(), t_skip> m_ident;
 
 			void SetErrorHandling()
@@ -154,19 +155,24 @@ namespace tl
 				m_val.name("val");
 				m_baseval.name("baseval");
 				m_const.name("const");
-				m_func.name("func");
+				m_func1.name("func_1arg");
+				m_func2.name("func_2args");
 				m_pm.name("plusminus");
 				m_pm_opt.name("plusminus_opt");
+				m_p.name("plus");
+				m_m.name("minus");
 				m_ident.name("ident");
 
 				qi::on_error<qi::fail>(m_expr,
 					ph::bind([](t_iter beg, t_iter err, t_iter end, const sp::info& infoErr)
 					{
 						std::string strBeg(beg, err);
-						std::string strPos(err, end);
+						std::string strEnd(err, end);
+						std::string strRem;
+						if(strEnd.length())
+							strRem = "remaining \"" + strEnd + "\", ";
 
-						log_err("Parsed \"", strBeg, "\", ",
-							"remaining \"", strPos, "\", ",
+						log_err("Parsed \"", strBeg, "\", ", strRem,
 							"expected token ", infoErr, ".");
 					}, qi::labels::_1, qi::labels::_3, qi::labels::_2, qi::labels::_4));
 			}
@@ -176,23 +182,18 @@ namespace tl
 			{
 				// + or -
 				m_expr = ((m_pm_opt > m_term) [ qi::_val = qi::_1*qi::_2  ]
-					> *(m_pm > m_term) [ qi::_val += qi::_1*qi::_2 ]
-					);
+					> *((m_p|m_m) > m_term) [ qi::_val += qi::_1*qi::_2 ]);
+
+				m_pm_opt = (m_p | m_m) [ qi::_val = qi::_1 ]
+					| qi::eps [ qi::_val = t_val(1) ];
+				m_p = qi::char_(t_ch('+')) [ qi::_val = t_val(1) ];
+				m_m = qi::char_(t_ch('-')) [ qi::_val = t_val(-1) ];
 
 				// * or /
 				m_term = (m_val [ qi::_val = qi::_1 ]
 					> *((t_ch('*') > m_val) [ qi::_val *= qi::_1 ]
 						| (t_ch('/') > m_val) [ qi::_val /= qi::_1 ]))
-					| m_val [ qi::_val = qi::_1 ]
-					;
-
-				// + or -
-				m_pm_opt = m_pm [ qi::_val = qi::_1 ]
-					| qi::eps [ qi::_val = t_val(1) ]
-					;
-				m_pm = qi::char_(t_ch('+')) [ qi::_val = t_val(1) ]
-					| qi::char_(t_ch('-')) [ qi::_val = t_val(-1) ]
-					;
+					| m_val [ qi::_val = qi::_1 ];
 
 				// pow
 				m_val = m_baseval [ qi::_val = qi::_1 ]
@@ -200,20 +201,19 @@ namespace tl
 					[ qi::_val = ph::bind([](t_val val1, t_val val2) -> t_val
 					{ return std::pow(val1, val2); }, qi::_val, qi::_1)]);
 
-				m_baseval = t_valparser() | m_func | m_const
-					| (t_ch('(') > m_expr > t_ch(')'))
-					;
+				m_baseval = t_valparser() | m_func2 | m_func1 | m_const
+					| (t_ch('(') > m_expr > t_ch(')'));
 
 				// lazy evaluation of constants via phoenix bind
 				m_const = m_ident [ qi::_val = ph::bind([](const t_str& strName) -> t_val
 					{ return get_const<t_str, t_val>(strName); }, qi::_1) ];
 
 				// lazy evaluation of functions via phoenix bind
-				m_func = (m_ident >> t_ch('(') >> m_expr >> t_ch(',') >> m_expr >> t_ch(')'))
+				m_func2 = (m_ident >> t_ch('(') >> m_expr >> t_ch(',') >> m_expr >> t_ch(')'))
 					[ qi::_val = ph::bind([](const t_str& strName, t_val val1, t_val val2) -> t_val
 					{ return call_func2<t_str, t_val>(strName, val1, val2); },
-					qi::_1, qi::_2, qi::_3) ]
-					| ((m_ident >> t_ch('(') >> m_expr >> t_ch(')')))
+					qi::_1, qi::_2, qi::_3) ];
+				m_func1 = ((m_ident >> t_ch('(') >> m_expr >> t_ch(')')))
 					[ qi::_val = ph::bind([](const t_str& strName, t_val val) -> t_val
 					{ return call_func1<t_str, t_val>(strName, val); },
 					qi::_1, qi::_2) ];
@@ -242,8 +242,8 @@ namespace tl
 			bool bOk = qi::phrase_parse(beg, end, gram, asc::space, valRes);
 			if(beg != end)
 			{
-				std::string strErr(beg, end);
-				log_err("Not all tokens were parsed. Remaining: \"", strErr, "\".");
+				//std::string strErr(beg, end);
+				//log_err("Not all tokens were parsed. Remaining: \"", strErr, "\".");
 				bOk = 0;
 			}
 			return std::make_pair(bOk, valRes);
