@@ -159,15 +159,15 @@ T ferromag(const t_cont& lstAtoms, const ublas::vector<T>& vecq, T tS)
 template<class T=double>
 T j0_avg(T q, T A, T a, T B, T b, T C, T c, T D)
 {
-	return A * std::exp(-a * q/(4.*M_PI)*q/(4.*M_PI)) + 
-		B * std::exp(-b * q/(4.*M_PI)*q/(4.*M_PI)) + 
-		C * std::exp(-c * q/(4.*M_PI)*q/(4.*M_PI)) + D;
+	return A * std::exp(-a * q/(T(4)*get_pi<T>())*q/(T(4)*get_pi<T>())) +
+		B * std::exp(-b * q/(T(4)*get_pi<T>())*q/(T(4)*get_pi<T>())) +
+		C * std::exp(-c * q/(T(4)*get_pi<T>())*q/(T(4)*get_pi<T>())) + D;
 }
 
 template<class T=double>
 T j2_avg(T q, T A, T a, T B, T b, T C, T c, T D)
 {
-	return j0_avg(q, A,a, B,b, C,c, D) * q/(4.*M_PI)*q/(4.*M_PI);
+	return j0_avg(q, A,a, B,b, C,c, D) * q/(T(4)*get_pi<T>())*q/(T(4)*get_pi<T>());
 }
 
 template<class T=double>

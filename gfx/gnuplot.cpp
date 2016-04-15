@@ -10,8 +10,8 @@
 
 namespace tl
 {
-	template class PlotObj_gen<double>;
-	//template class PlotObj_gen<float>;
+	template struct PlotObj_gen<double>;
+	//template struct PlotObj_gen<float>;
 
 	template class GnuPlot_gen<double>;
 	//template class GnuPlot_gen<float>;

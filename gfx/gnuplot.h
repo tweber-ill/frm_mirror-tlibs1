@@ -31,16 +31,17 @@ struct PlotObj_gen
 
 	std::string strLegend;
 
-	LineStyle linestyle;
+	LineStyle linestyle = STYLE_POINTS;
 
-	bool bHasSize;
+	bool bHasSize = 0;
 	t_real dSize;
 
-	bool bHasColor;
+	bool bHasColor = 0;
 	unsigned int iColor;
 
-	PlotObj_gen() : linestyle(STYLE_POINTS), bHasSize(0), bHasColor(0)
-	{}
+
+	PlotObj_gen() = default;
+	~PlotObj_gen() = default;
 };
 
 

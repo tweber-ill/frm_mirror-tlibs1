@@ -38,7 +38,7 @@ static inline void init_constants(SymbolTable *pSymTab)
 	namespace units = boost::units;
 	namespace co = boost::units::si::constants::codata;
 
-	pSymTab->InsertSymbol(T_STR"pi", new SymbolReal(M_PI));
+	pSymTab->InsertSymbol(T_STR"pi", new SymbolReal(tl::get_pi<t_real>()));
 
 	// hbar in eVs
 	pSymTab->InsertSymbol(T_STR"hbar_eVs", new SymbolReal(co::hbar / tl::one_eV / units::si::second));

@@ -18,6 +18,7 @@
 #include <type_traits>
 #include "string.h"
 #include "../log/log.h"
+#include "../math/math.h"
 #include "../math/units.h"
 
 namespace tl
@@ -77,7 +78,7 @@ namespace tl
 		//std::cout << "requesting constant " << strName << std::endl;
 		static const std::unordered_map</*t_str*/std::string, t_val> s_consts =
 		{
-			{ "pi", t_val(M_PI) },
+			{ "pi", get_pi<t_val>() },
 			{ "hbar",  t_val(hbar/meV/sec) },	// hbar in [meV s]
 			{ "kB",  t_val(kB/meV*kelvin) },	// kB in [meV / K]
 		};

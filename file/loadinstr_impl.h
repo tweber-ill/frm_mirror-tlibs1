@@ -15,9 +15,8 @@
 #if !defined NO_IOSTR
 	#include "../file/comp.h"
 #endif
+#include "../math/math.h"
 #include "../math/neutrons.hpp"
-#include <fstream>
-
 
 #ifndef USE_BOOST_REX
 	#include <regex>
@@ -26,6 +25,8 @@
 	#include <boost/tr1/regex.hpp>
 	namespace rex = ::boost;
 #endif
+
+#include <fstream>
 
 
 namespace tl{
@@ -379,9 +380,9 @@ std::array<t_real,3> FilePsi<t_real>::GetSampleAngles() const
 	typename t_mapIParams::const_iterator iterB = m_mapParameters.find("BB");
 	typename t_mapIParams::const_iterator iterC = m_mapParameters.find("CC");
 
-	t_real alpha = (iterA!=m_mapParameters.end() ? tl::d2r(iterA->second) : M_PI/2.);
-	t_real beta = (iterB!=m_mapParameters.end() ? tl::d2r(iterB->second) : M_PI/2.);
-	t_real gamma = (iterC!=m_mapParameters.end() ? tl::d2r(iterC->second) : M_PI/2.);
+	t_real alpha = (iterA!=m_mapParameters.end() ? tl::d2r(iterA->second) : get_pi<t_real>()/2.);
+	t_real beta = (iterB!=m_mapParameters.end() ? tl::d2r(iterB->second) : get_pi<t_real>()/2.);
+	t_real gamma = (iterC!=m_mapParameters.end() ? tl::d2r(iterC->second) : get_pi<t_real>()/2.);
 
 	return std::array<t_real,3>{{alpha, beta, gamma}};
 }
@@ -1787,9 +1788,9 @@ std::array<t_real,3> FileTrisp<t_real>::GetSampleAngles() const
 	typename t_mapParams::const_iterator iterB = m_mapParams.find("BB");
 	typename t_mapParams::const_iterator iterC = m_mapParams.find("CC");
 
-	t_real alpha = (iterA!=m_mapParams.end() ? tl::d2r(str_to_var<t_real>(iterA->second)) : M_PI/2.);
-	t_real beta = (iterB!=m_mapParams.end() ? tl::d2r(str_to_var<t_real>(iterB->second)) : M_PI/2.);
-	t_real gamma = (iterC!=m_mapParams.end() ? tl::d2r(str_to_var<t_real>(iterC->second)) : M_PI/2.);
+	t_real alpha = (iterA!=m_mapParams.end() ? tl::d2r(str_to_var<t_real>(iterA->second)) : get_pi<t_real>()/2.);
+	t_real beta = (iterB!=m_mapParams.end() ? tl::d2r(str_to_var<t_real>(iterB->second)) : get_pi<t_real>()/2.);
+	t_real gamma = (iterC!=m_mapParams.end() ? tl::d2r(str_to_var<t_real>(iterC->second)) : get_pi<t_real>()/2.);
 
 	return std::array<t_real,3>{{alpha, beta, gamma}};
 }
@@ -1982,7 +1983,7 @@ FileRaw<t_real>::GetCol(const std::string& strName)
 	std::size_t iCol = str_to_var<std::size_t>(strName)-1;
 	if(iCol < m_dat.GetColumnCount())
 		return m_dat.GetColumn(iCol);
-	
+
 	static std::vector<t_real> vecNull;
 	return vecNull;
 }
@@ -1997,7 +1998,7 @@ FileRaw<t_real>::GetData() const
 template<class t_real>
 const typename FileInstrBase<t_real>::t_vecColNames& 
 FileRaw<t_real>::GetColNames() const
-{	
+{
 	return m_vecCols;
 }
 

@@ -35,11 +35,11 @@ using underlying_value_type_t =
 	typename underlying_value_type<T, std::is_scalar<T>::value>::value_type;
 
 // -----------------------------------------------------------------------------
-}
 
 
 
 // -----------------------------------------------------------------------------
+}
 #include <vector>
 #include <array>
 #include <list>
@@ -48,8 +48,8 @@ using underlying_value_type_t =
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/math/quaternion.hpp>
 
-
 namespace tl {
+
 typedef std::integral_constant<int, 0> dim_0d_type;
 typedef std::integral_constant<int, 1> dim_1d_type;
 typedef std::integral_constant<int, 2> dim_2d_type;
@@ -88,6 +88,31 @@ template<> struct get_linalg_type<float> : linalg_type<LinalgType::REAL> {};
 
 
 
+// -----------------------------------------------------------------------------
+}
+
+#include <boost/units/dimensionless_quantity.hpp>
+
+namespace tl {
+enum class ScalarType : short
+{
+	TRIVIAL,
+	DIMENSIONLESS,
+	QUANTITY
+};
+
+template<ScalarType val> struct scalar_type { static constexpr ScalarType value = val; };
+
+template<class T> struct get_scalar_type : scalar_type<ScalarType::TRIVIAL> { using value_type = T; };
+template<class Sys, class T> struct get_scalar_type<boost::units::dimensionless_quantity<Sys, T>> : scalar_type<ScalarType::DIMENSIONLESS> { using value_type = T; };
+template<class Sys, class T> struct get_scalar_type<boost::units::quantity<Sys, T>> : scalar_type<ScalarType::QUANTITY> 
+{ using value_type = typename boost::units::quantity<Sys, T>::value_type; };
+// -----------------------------------------------------------------------------
+
+
+
+
+// -----------------------------------------------------------------------------
 template<class T>
 struct remove_constref
 {
@@ -99,6 +124,8 @@ struct remove_constref
 // like C++14 style
 template<class T>
 using remove_constref_t = typename remove_constref<T>::type;
+// -----------------------------------------------------------------------------
+
 
 }
 

@@ -13,24 +13,31 @@
 #include <complex>
 #include <vector>
 #include <limits>
-#include <type_traits>
+#include "../helper/traits.h"
 #include <boost/math/special_functions/spherical_harmonic.hpp>
-
+#include <boost/math/constants/constants.hpp>
 
 #ifndef M_PI
-	#define M_PI (3.141592653589793238462643383279502884197169)
+	#define M_PI (boost::math::constants::pi<long double>())
 #endif
 
 namespace tl {
+
+//template<typename T=double> constexpr T get_pi() { return boost::math::constants::pi<T>(); }
+template<typename T=double> constexpr typename get_scalar_type<T>::value_type get_pi()
+{ return boost::math::constants::pi<typename get_scalar_type<T>::value_type>(); }
+
 #if __cplusplus >= 201402L
-	template<typename T=double> static constexpr T g_pi = static_cast<T>(M_PI);
+	template<typename T=double> static constexpr T g_pi = get_pi<T>();
 #endif
 
 template<typename INT=int> bool is_even(INT i) { return (i%2 == 0); }
 template<typename INT=int> bool is_odd(INT i) { return !is_even<INT>(i); }
 
-template<class T=double> T r2d(T rad) { return rad/T(M_PI)*T(180); }
-template<class T=double> T d2r(T deg) { return deg/T(180)*T(M_PI); }
+template<class T=double> constexpr T r2d(T rad) { return rad/get_pi<T>()*T(180); }	// rad -> deg
+template<class T=double> constexpr T d2r(T deg) { return deg/T(180)*get_pi<T>(); }	// deg -> rad
+template<class T=double> constexpr T r2m(T rad) { return rad/get_pi<T>()*T(180*60); }	// rad -> min
+template<class T=double> constexpr T m2r(T min) { return min/T(180*60)*get_pi<T>(); }	// min -> rad
 
 template<typename T>
 T sign(T t)
@@ -333,8 +340,10 @@ std::complex<T> faddeeva(const std::complex<T>& z)
 template<class T=double>
 T voigt_model(T x, T x0, T sigma, T gamma, T amp, T offs)
 {
-	std::complex<T> z = std::complex<T>(x-x0, gamma) / (sigma * std::sqrt(2.));
-	return amp * (faddeeva<T>(z)).real() / (sigma * std::sqrt(2.*M_PI)) + offs;
+	std::complex<T> z = std::complex<T>(x-x0, gamma) / (sigma * std::sqrt(T(2)));
+	return amp * (faddeeva<T>(z)).real() /
+		(sigma * std::sqrt(T(2)*boost::math::constants::pi<T>()))
+			+ offs;
 }
 
 #endif

@@ -521,45 +521,69 @@ template<class T> struct _var_to_str_print_impl<T, true>
 };
 
 template<typename T, class t_str=std::string>
+struct _var_to_str_impl
+{
+	t_str operator()(const T& t, std::streamsize iPrec=10, int iGroup=-1)
+	{
+		//if(std::is_convertible<T, t_str>::value)
+		//	return *reinterpret_cast<const t_str*>(&t);
+
+		typedef typename t_str::value_type t_char;
+
+		std::basic_ostringstream<t_char> ostr;
+		ostr.precision(iPrec);
+
+
+		class Sep : public std::numpunct<t_char>
+		{
+		public:
+			Sep() : std::numpunct<t_char>(1) {}
+			~Sep() { /*std::cout << "~Sep();" << std::endl;*/ }
+		protected:
+			virtual t_char do_thousands_sep() const override { return ' ';}
+			virtual std::string do_grouping() const override { return "\3"; }
+		};
+		Sep *pSep = nullptr;
+
+
+		if(iGroup > 0)
+		{
+			pSep = new Sep();
+			ostr.imbue(std::locale(ostr.getloc(), pSep));
+		}
+
+		_var_to_str_print_impl<T> pr;
+		pr(ostr, t);
+		t_str str = ostr.str();
+
+		if(pSep)
+		{
+			ostr.imbue(std::locale());
+			delete pSep;
+		}
+		return str;
+	}
+};
+
+template<class t_str>
+struct _var_to_str_impl<t_str, t_str>
+{
+	const t_str& operator()(const t_str& tstr, std::streamsize iPrec=10, int iGroup=-1)
+	{
+		return tstr;
+	}
+
+	t_str operator()(const typename t_str::value_type* pc, std::streamsize iPrec=10, int iGroup=-1)
+	{
+		return t_str(pc);
+	}
+};
+
+template<typename T, class t_str=std::string>
 t_str var_to_str(const T& t, std::streamsize iPrec=10, int iGroup=-1)
 {
-	if(std::is_convertible<T, t_str>::value)
-		return *reinterpret_cast<const t_str*>(&t);
-
-	typedef typename t_str::value_type t_char;
-
-	std::basic_ostringstream<t_char> ostr;
-	ostr.precision(iPrec);
-
-
-	class Sep : public std::numpunct<t_char>
-	{
-	public:
-		Sep() : std::numpunct<t_char>(1) {}
-		~Sep() { /*std::cout << "~Sep();" << std::endl;*/ }
-	protected:
-		virtual t_char do_thousands_sep() const override { return ' ';}
-		virtual std::string do_grouping() const override { return "\3"; }
-	};
-	Sep *pSep = nullptr;
-
-
-	if(iGroup > 0)
-	{
-		pSep = new Sep();
-		ostr.imbue(std::locale(ostr.getloc(), pSep));
-	}
-
-	_var_to_str_print_impl<T> pr;
-	pr(ostr, t);
-	t_str str = ostr.str();
-
-	if(pSep)
-	{
-		ostr.imbue(std::locale());
-		delete pSep;
-	}
-	return str;
+	_var_to_str_impl<T, t_str> _impl;
+	return _impl(t, iPrec, iGroup);
 }
 
 

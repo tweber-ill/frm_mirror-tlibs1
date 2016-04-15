@@ -5,11 +5,10 @@
  * @license GPLv2 or GPLv3
  */
 
-#ifndef __GPL_IMPL_H__
-#define __GPL_IMPL_H__
+#ifndef __GPL_PLOTTER_IMPL_H__
+#define __GPL_PLOTTER_IMPL_H__
 
 #include "../helper/flags.h"
-#include "gnuplot.h"
 #include "../helper/misc.h"
 #include "../string/string.h"
 #include "../log/log.h"
@@ -18,6 +17,8 @@
 #include <sstream>
 #include <fstream>
 #include <iomanip>
+
+#include "gnuplot.h"
 
 
 namespace tl {

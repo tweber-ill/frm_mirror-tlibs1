@@ -946,7 +946,7 @@ typename matrix_type::value_type get_ellipsoid_volume(const matrix_type& mat)
 	typedef typename matrix_type::value_type T;
 	T tDet = determinant<matrix_type>(mat);
 
-	return T(4./3. * M_PI * std::sqrt(1./tDet));
+	return T(4./3.) * get_pi<T>() * std::sqrt(T(1)/tDet);
 }
 
 

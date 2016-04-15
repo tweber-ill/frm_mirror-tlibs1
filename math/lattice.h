@@ -22,7 +22,7 @@ bool reciprocal(const ublas::matrix<T>& matReal, ublas::matrix<T>& matRecip)
 	if(!inverse<ublas::matrix<T>>(ublas::trans(matReal), matInv))
 		return false;
 
-	matRecip = 2.*M_PI*matInv;
+	matRecip = T(2)*get_pi<T>()*matInv;
 	return true;
 }
 
@@ -361,8 +361,8 @@ void get_tas_angles(const Lattice<T>& lattice_real,
 		vecQ.resize(2, true);
 
 		T dAngleKiOrient1 = -dKiQ - vec_angle(vecQ);
-		*pTheta = dAngleKiOrient1 + M_PI;		// a3 convention
-		*pTheta -= M_PI/2.;						// theta here
+		*pTheta = dAngleKiOrient1 + get_pi<T>();	// a3 convention
+		*pTheta -= get_pi<T>()/T(2);			// theta here
 		if(!bSense) *pTheta = -*pTheta;
 	}
 	/*catch(const std::exception& ex)
@@ -397,8 +397,8 @@ void get_hkl_from_tas_angles(const Lattice<T>& lattice_real,
 	T Q = get_sample_Q(ki/get_one_angstrom<T>(), kf/get_one_angstrom<T>(), tt_s*get_one_radian<T>())*get_one_angstrom<T>();
 	T kiQ = get_angle_ki_Q(ki/get_one_angstrom<T>(), kf/get_one_angstrom<T>(), Q/get_one_angstrom<T>(), /*bSense_s*/1) / get_one_radian<T>();
 
-	th_s += M_PI/2.;					// theta here
-	T Qvec1 = M_PI - th_s - kiQ;		// a3 convention
+	th_s += get_pi<T>()/T(2);		// theta here
+	T Qvec1 = get_pi<T>() - th_s - kiQ;	// a3 convention
 
 
 	t_mat matUB = get_UB(lattice_real, _vec1, _vec2);

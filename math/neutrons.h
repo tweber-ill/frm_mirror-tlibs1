@@ -68,13 +68,13 @@ t_length<Sys,Y> p2lam(const t_momentum<Sys,Y>& p)
 template<class Sys, class Y>
 t_length<Sys,Y> k2lam(const t_wavenumber<Sys,Y>& k)
 {
-	return Y(2.)*Y(M_PI) / k;
+	return Y(2.)*get_pi<Y>() / k;
 }
 
 template<class Sys, class Y>
 t_wavenumber<Sys,Y> lam2k(const t_length<Sys,Y>& lam)
 {
-	return Y(2.)*Y(M_PI) / lam;
+	return Y(2.)*get_pi<Y>() / lam;
 }
 
 template<class Sys, class Y>
@@ -192,21 +192,21 @@ template<class Sys, class Y>
 t_angle<Sys,Y> bragg_recip_twotheta(const t_wavenumber<Sys,Y>& Q,
 	const t_length<Sys,Y>& lam, Y n)
 {
-	return units::asin(Q*n*lam/(Y(4.*M_PI))) * Y(2.);
+	return units::asin(Q*n*lam/(Y(4)*get_pi<Y>())) * Y(2);
 }
 
 template<class Sys, class Y>
 t_wavenumber<Sys,Y> bragg_recip_Q(const t_length<Sys,Y>& lam,
 	const t_angle<Sys,Y>& twotheta, Y n)
 {
-	return Y(4.*M_PI) / (n*lam) * units::sin(twotheta/Y(2.));
+	return Y(4)*get_pi<Y>() / (n*lam) * units::sin(twotheta/Y(2));
 }
 
 template<class Sys, class Y>
 t_length<Sys,Y> bragg_recip_lam(const t_wavenumber<Sys,Y>& Q,
 	const t_angle<Sys,Y>& twotheta, Y n)
 {
-	return Y(4.*M_PI) / Q * units::sin(twotheta/Y(2.)) / n;
+	return Y(4)*get_pi<Y>() / Q * units::sin(twotheta/Y(2)) / n;
 }
 // --------------------------------------------------------------------------------
 
@@ -285,12 +285,12 @@ Y debye_waller_high_T(const t_temperature<Sys,Y>& T_D,
 
 template<class Sys, class Y>
 Y debye_waller_low_T(const t_temperature<Sys,Y>& T_D,
-	const t_temperature<Sys,Y>& T, const t_mass<Sys,Y>& M, 
+	const t_temperature<Sys,Y>& T, const t_mass<Sys,Y>& M,
 	const t_wavenumber<Sys,Y>& Q, t_length_square<Sys,Y>* pZeta_sq=0)
 {
 	t_length_square<Sys,Y> zeta_sq;
 	zeta_sq = Y(9.)*get_hbar<Y>()/get_kB<Y>() / (Y(4.)*T_D*M) * get_hbar<Y>() *
-		(Y(1.) + Y(2./3.) * Y(M_PI*M_PI) * (T/T_D)*(T/T_D));
+		(Y(1.) + Y(2./3.) * get_pi<Y>()*get_pi<Y>() * (T/T_D)*(T/T_D));
 	Y dwf = units::exp(Y(-1./3.) * Q*Q * zeta_sq);
 
 	if(pZeta_sq) *pZeta_sq = zeta_sq;
@@ -316,7 +316,7 @@ t_angle<Sys,Y> get_angle_ki_Q(const t_wavenumber<Sys,Y>& ki,
 	t_angle<Sys,Y> angle;
 
 	if(Q*get_one_angstrom<Y>() == Y(0.))
-		angle = Y(M_PI/2.) * units::si::radians;
+		angle = get_pi<Y>()/Y(2) * units::si::radians;
 	else
 	{
 		auto c = (ki*ki - kf*kf + Q*Q)/(Y(2.)*ki*Q);
@@ -326,7 +326,7 @@ t_angle<Sys,Y> get_angle_ki_Q(const t_wavenumber<Sys,Y>& ki,
 		angle = units::acos(c);
 	}
 
-	if(bAngleOutsideTriag) angle = Y(M_PI)*units::si::radians - angle;
+	if(bAngleOutsideTriag) angle = get_pi<Y>()*units::si::radians - angle;
 	if(!bPosSense) angle = -angle;
 
 	return angle;
@@ -345,7 +345,7 @@ t_angle<Sys,Y> get_angle_kf_Q(const t_wavenumber<Sys,Y>& ki,
 	t_angle<Sys,Y> angle;
 
 	if(Q*get_one_angstrom<Y>() == Y(0.))
-		angle = Y(M_PI/2.) * units::si::radians;
+		angle = get_pi<Y>()/Y(2) * units::si::radians;
 	else
 	{
 		auto c = (-kf*kf + ki*ki - Q*Q)/(Y(2.)*kf*Q);
@@ -355,7 +355,7 @@ t_angle<Sys,Y> get_angle_kf_Q(const t_wavenumber<Sys,Y>& ki,
 		angle = units::acos(c);
 	}
 
-	if(!bAngleOutsideTriag) angle = Y(M_PI)*units::si::radians - angle;
+	if(!bAngleOutsideTriag) angle = get_pi<Y>()*units::si::radians - angle;
 	if(!bPosSense) angle = -angle;
 
 	return angle;
@@ -598,11 +598,11 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 
 	if(float_equal<T>(dAngleKiq, 0., tl::d2r(dAngleSensitivity)))
 		bKiqParallel = 1;
-	else if(float_equal<T>(dAngleKiq, M_PI, tl::d2r(dAngleSensitivity)))
+	else if(float_equal<T>(dAngleKiq, get_pi<T>(), tl::d2r(dAngleSensitivity)))
 		bkiqAntiParallel = 1;
 	if(float_equal<T>(dAngleKfq, 0., tl::d2r(dAngleSensitivity)))
 		bKfqParallel = 1;
-	else if(float_equal<T>(dAngleKfq, M_PI, tl::d2r(dAngleSensitivity)))
+	else if(float_equal<T>(dAngleKfq, get_pi<T>(), tl::d2r(dAngleSensitivity)))
 		bKfqAntiParallel = 1;
 
 	// type A: q || kf, kf > ki
@@ -679,7 +679,7 @@ template<class t_real=double>
 t_real DHO_model(t_real E, t_real T, t_real E0, t_real hwhm, t_real amp, t_real offs)
 {
 	if(E0*E0 - hwhm*hwhm < 0.) return 0.;
-	return std::abs(bose<t_real>(E, T)*amp/(E0*M_PI) *
+	return std::abs(bose<t_real>(E, T)*amp/(E0*get_pi<t_real>()) *
 		(hwhm/((E-E0)*(E-E0) + hwhm*hwhm) - hwhm/((E+E0)*(E+E0) + hwhm*hwhm)))
 		+ offs;
 }

@@ -201,9 +201,9 @@ static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 
 			t_real tVal = vecSyms[0]->GetValDouble();
 
-			if(((FKT==(t_real(*)(t_real))std::sqrt && tVal<0.) ||
-			   (FKT==(t_real(*)(t_real))std::log && tVal<0.) ||
-			   (FKT==(t_real(*)(t_real))std::log10 && tVal<0.))
+			if(((FKT==static_cast<t_real(*)(t_real)>(std::sqrt) && tVal<0.) ||
+			   (FKT==static_cast<t_real(*)(t_real)>(std::log) && tVal<0.) ||
+			   (FKT==static_cast<t_real(*)(t_real)>(std::log10) && tVal<0.))
 				&& FKT_C!=nullptr)
 			{
 				t_complex tCompVal = t_complex(tVal, 0.);

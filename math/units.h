@@ -155,7 +155,7 @@ template<class Y=double> t_mass<units::si::system, Y> get_amu()
 template<class Y=double> t_action<units::si::system, Y> get_hbar()
 { return Y(co::hbar/units::si::joules/units::si::seconds)*units::si::joules*units::si::seconds; }
 template<class Y=double> t_action<units::si::system, Y> get_h()
-{ return get_hbar<Y>() * Y(2.*M_PI); }
+{ return get_hbar<Y>() * Y(2)*get_pi<Y>(); }
 template<class Y=double> t_velocity<units::si::system, Y> get_c()
 { return Y(co::c/units::si::meters*units::si::seconds)*units::si::meters/units::si::seconds; }
 template<class Y=double> t_energy_per_temperature<units::si::system, Y> get_kB()

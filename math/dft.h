@@ -25,8 +25,8 @@ namespace tl
 // http://www.fftw.org/fftw3_doc/The-1d-Discrete-Fourier-Transform-_0028DFT_0029.html#The-1d-Discrete-Fourier-Transform-_0028DFT_0029
 template<typename T=double>
 std::complex<T> dft_coeff(int k,
-			const T *pReal, const T *pImag, std::size_t n,
-			bool bInv=0)
+	const T *pReal, const T *pImag, std::size_t n,
+	bool bInv=0)
 {
 	std::complex<T> imag(0., 1.);
 
@@ -35,7 +35,7 @@ std::complex<T> dft_coeff(int k,
 	{
 		std::complex<T> t(pReal?pReal[j]:T(0), pImag?pImag[j]:T(0));
 
-		T dv = -2.*M_PI*T(j)*T(k)/T(n);
+		T dv = T(-2)*get_pi<T>()*T(j)*T(k)/T(n);
 		if(bInv) dv = -dv;
 		f += t * (cos(dv) + imag*sin(dv));
 	}
@@ -45,8 +45,8 @@ std::complex<T> dft_coeff(int k,
 
 template<typename T=double>
 void dft_direct(const T *pRealIn, const T *pImagIn,
-		T *pRealOut, T *pImagOut, std::size_t n,
-		bool bInv=0, bool bNorm=0)
+	T *pRealOut, T *pImagOut, std::size_t n,
+	bool bInv=0, bool bNorm=0)
 {
 	for(std::size_t k=0; k<n; ++k)
 	{
@@ -64,7 +64,7 @@ void dft_direct(const T *pRealIn, const T *pImagIn,
 
 template<typename T=double>
 std::vector<std::complex<T>> dft_direct(const std::vector<std::complex<T>>& vecIn,
-					bool bInv=0, bool bNorm=0)
+	bool bInv=0, bool bNorm=0)
 {
 	const std::size_t n = vecIn.size();
 	std::vector<std::complex<T>> vecOut;
@@ -134,8 +134,8 @@ std::vector<std::complex<T>> dft_shift(const std::vector<std::complex<T>>& vecIn
 
 	for(std::size_t i=0; i<N; ++i)
 	{
-		const T c = std::cos(2.*M_PI*i*tShift / N);
-		const T s = std::sin(2.*M_PI*i*tShift / N);
+		const T c = std::cos(T(2)*get_pi<T>()*i*tShift / N);
+		const T s = std::sin(T(2)*get_pi<T>()*i*tShift / N);
 		std::complex<T> ph(c, -s);
 
 		vecOut.push_back(vecIn[i]*ph);
@@ -204,8 +204,8 @@ std::complex<T> fft_factor(T N, T k, bool bInv=0)
 	T ph = 1.;
 	if(bInv) ph = -1.;
 
-	T c = std::cos(2.*M_PI*k/N * ph);
-	T s = std::sin(2.*M_PI*k/N * ph);
+	T c = std::cos(T(2)*get_pi<T>()*k/N * ph);
+	T s = std::sin(T(2)*get_pi<T>()*k/N * ph);
 	return std::complex<T>(c, -s);
 }
 
@@ -319,8 +319,8 @@ class DFT : public Fourier_base<T>
 			for(std::size_t i=0; i<n; ++i)
 				for(std::size_t j=0; j<n; ++j)
 				{
-					const T c = std::cos(2.*M_PI*i*j / n);
-					const T s = std::sin(2.*M_PI*i*j / n);
+					const T c = std::cos(T(2)*get_pi<T>()*i*j / n);
+					const T s = std::sin(T(2)*get_pi<T>()*i*j / n);
 					m_matCoeff(i,j) = std::complex<T>(c, -s);
 				}
 

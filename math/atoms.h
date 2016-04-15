@@ -84,7 +84,7 @@ template<class T=double, template<class...> class t_cont>
 T formfact(T G, const t_cont<T>& vecA, const t_cont<T>& vecB, T c)
 {
 	T ff = T(0);
-	T s = G / T(4.*M_PI);
+	T s = G / T(4.*get_pi<T>());
 
 	typename t_cont<T>::const_iterator iterA = vecA.begin();
 	typename t_cont<T>::const_iterator iterB = vecB.begin();
