@@ -13,7 +13,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-
+#include <memory>
 
 namespace tl {
 enum LineStyle
@@ -50,9 +50,9 @@ class GnuPlot_gen
 {
 protected:
 	FILE *m_pipe = nullptr;
-	boost::iostreams::file_descriptor_sink *m_pfds = nullptr;
-	boost::iostreams::stream_buffer<boost::iostreams::file_descriptor_sink> *m_psbuf = nullptr;
-	std::ostream *m_postr = nullptr;
+	std::unique_ptr<boost::iostreams::file_descriptor_sink> m_pfds;
+	std::unique_ptr<boost::iostreams::stream_buffer<boost::iostreams::file_descriptor_sink>> m_psbuf;
+	std::unique_ptr<std::ostream> m_postr;
 
 	std::vector<PlotObj_gen<t_real>> m_vecObjs;
 	// has to be 0 to show plot
@@ -74,7 +74,7 @@ protected:
 
 public:
 	GnuPlot_gen() = default;
-	virtual ~GnuPlot_gen();
+	virtual ~GnuPlot_gen() { DeInit(); }
 
 	void Init();
 	void DeInit();

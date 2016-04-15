@@ -26,19 +26,13 @@ namespace tl {
 namespace ios = boost::iostreams;
 
 template<class t_real>
-GnuPlot_gen<t_real>::~GnuPlot_gen() { DeInit(); }
-
-template<class t_real>
 void GnuPlot_gen<t_real>::DeInit()
 {
-	if(m_postr) delete m_postr;
-	if(m_psbuf) delete m_psbuf;
-	if(m_pfds) delete m_pfds;
-	if(m_pipe) ::pclose(m_pipe);
+	m_postr.reset();
+	m_psbuf.reset();
+	m_pfds.reset();
 
-	m_postr = 0;
-	m_psbuf = 0;
-	m_pfds = 0;
+	if(m_pipe) ::pclose(m_pipe);
 	m_pipe = 0;
 
 	m_iStartCounter = 0;
@@ -51,16 +45,15 @@ void GnuPlot_gen<t_real>::Init()
 	DeInit();
 
 	m_pipe = (FILE*)::/*my_*/popen("gnuplot -p 2>/dev/null 1>/dev/null", "w");
-	//m_pipe = popen("gnuplot -persist 2>gnuplot.err 1>gnuplot.out", "w");
 	if(!m_pipe)
 	{
 		log_err("Could not load gnuplot.");
 		return;
 	}
 
-	m_pfds = new ios::file_descriptor_sink(fileno(m_pipe), ios::close_handle /*ios::never_close_handle*/);
-	m_psbuf = new ios::stream_buffer<ios::file_descriptor_sink>(*m_pfds);
-	m_postr = new std::ostream(m_psbuf);
+	m_pfds.reset(new ios::file_descriptor_sink(fileno(m_pipe), ios::close_handle /*ios::never_close_handle*/));
+	m_psbuf.reset(new ios::stream_buffer<ios::file_descriptor_sink>(*m_pfds));
+	m_postr.reset(new std::ostream(m_psbuf.get()));
 
 	(*m_postr) << "set grid\n";
 	(*m_postr) << "set nokey\n";
@@ -147,10 +140,9 @@ void GnuPlot_gen<t_real>::SimplePlot(const std::vector<t_real>& vecX, const std:
 	}
 	(*m_postr) << "\n";
 
-	std::ostream* postr = m_postr;
 	std::string strTable = BuildTable(vecX, vecY, vecYErr, vecXErr);
-	(*postr) << strTable;
-	postr->flush();
+	(*m_postr) << strTable;
+	m_postr->flush();
 }
 
 
