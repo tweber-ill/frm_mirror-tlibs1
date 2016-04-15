@@ -16,6 +16,9 @@ namespace tl {
 
 class TmpFile
 {
+private:
+	static const std::size_t s_iRndLen = 6;
+
 protected:
 	std::string m_strFile;
 	std::string m_strPrefix;
@@ -33,7 +36,6 @@ public:
 
 	static int mkstemp(std::string& strFile);
 };
-
 
 }
 

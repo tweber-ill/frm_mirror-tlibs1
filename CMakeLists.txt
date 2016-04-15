@@ -34,7 +34,6 @@ message("Install path prefix: ${CMAKE_INSTALL_PREFIX}")
 
 add_definitions(-DUSE_IOSTR -DUSE_BOOST_REX)
 add_definitions(-DNO_LAPACK)
-#add_definitions(-DNO_QT)
 #add_definitions(-DUSE_FFTW)
 add_definitions(-DINSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}")
 add_definitions(${Boost_CXX_FLAGS})
@@ -70,7 +69,7 @@ add_library(tlibs SHARED
 
 
 target_link_libraries(tlibs ${Boost_LIBRARIES} Threads::Threads
-	Qt4::QtCore Qt4::QtGui Qt4::QtOpenGL
+	Qt4::QtCore Qt4::QtGui #Qt4::QtOpenGL
 	${FREETYPE_LIBRARY} ${Minuit2_LIBRARIES}
 )
 
