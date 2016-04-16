@@ -284,16 +284,7 @@ std::string GnuPlot_gen<t_real>::BuildCmd()
 		const bool bConnectLines = (obj.linestyle != STYLE_POINTS);
 		const bool bHasXErr = (obj.vecErrX.size() != 0);
 		const bool bHasYErr = (obj.vecErrY.size() != 0);
-		const bool bHasSize = obj.bHasSize;
-		t_real dSize = obj.dSize;
-
-		if(!bHasSize)
-		{
-			if(bConnectLines)
-				dSize = 1.;
-			else
-				dSize = 1.25;
-		}
+		t_real dSize = boost::get_optional_value_or(obj.odSize, bConnectLines ? 1. : 1.25);
 
 		std::ostringstream ostrTmp;
 		std::string strPointStyle;
@@ -328,14 +319,15 @@ std::string GnuPlot_gen<t_real>::BuildCmd()
 				break;
 		}
 
-		if(obj.bHasColor)
+		if(obj.oiColor)
 		{
+			unsigned int iColor = *obj.oiColor;
 			char chFill = ostr.fill();
 			ostr << std::setfill('0');
 			ostr << "linecolor rgb \"#" << std::hex
-				<< std::setw(2) << ((obj.iColor & 0xff0000) >> 16)
-				<< std::setw(2) << ((obj.iColor & 0x00ff00) >> 8)
-				<< std::setw(2) << ((obj.iColor & 0x0000ff))
+				<< std::setw(2) << ((iColor & 0xff0000) >> 16)
+				<< std::setw(2) << ((iColor & 0x00ff00) >> 8)
+				<< std::setw(2) << ((iColor & 0x0000ff))
 				<< "\" " << std::dec;
 			ostr << std::setfill(chFill);
 		}

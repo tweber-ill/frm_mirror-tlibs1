@@ -10,6 +10,7 @@
 
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/stream.hpp>
+#include <boost/optional.hpp>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -33,12 +34,8 @@ struct PlotObj_gen
 
 	LineStyle linestyle = STYLE_POINTS;
 
-	bool bHasSize = 0;
-	t_real dSize;
-
-	bool bHasColor = 0;
-	unsigned int iColor;
-
+	boost::optional<t_real> odSize;
+	boost::optional<unsigned int> oiColor;
 
 	PlotObj_gen() = default;
 	~PlotObj_gen() = default;

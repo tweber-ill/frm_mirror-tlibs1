@@ -139,14 +139,12 @@ static void set_plot_params(tl::GnuPlot_gen<t_real>& plot, const SymbolMap* pPar
 		t_string strLegend = pParamMap->GetStringVal(T_STR"legend", &bHasVal);
 		if(bHasVal) pCurPlotObj->strLegend = WSTR_TO_STR(strLegend);
 
-		t_string strSize = pParamMap->GetStringVal(T_STR"size", &pCurPlotObj->bHasSize);
-		if(pCurPlotObj->bHasSize)
-		{
-			t_istringstream istrSize(strSize);
-			istrSize >> pCurPlotObj->dSize;
-		}
+		bool bHasSize=0, bHasColor=0;
+		t_real dSize = pParamMap->GetRealVal(T_STR"size", &bHasSize);
+		if(bHasSize) pCurPlotObj->odSize = dSize;
 
-		pCurPlotObj->iColor = pParamMap->GetIntVal(T_STR"color", &pCurPlotObj->bHasColor);
+		unsigned int iColor = pParamMap->GetIntVal(T_STR"color", &bHasColor);
+		if(bHasColor) pCurPlotObj->oiColor = iColor;
 	}
 
 	XYLimits lim = get_plot_limits(pParamMap);
