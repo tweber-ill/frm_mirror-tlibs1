@@ -32,6 +32,7 @@ set(CMAKE_AUTOUIC OFF)
 message("Install path prefix: ${CMAKE_INSTALL_PREFIX}")
 
 
+add_definitions(-DNDEBUG)
 add_definitions(-DUSE_IOSTR -DUSE_BOOST_REX)
 add_definitions(-DNO_LAPACK)
 #add_definitions(-DUSE_FFTW)

@@ -46,7 +46,7 @@ bool TmpFile::open()
 	fs::path pathTmpDir = fs::temp_directory_path();
 	pathTmpDir /= m_strPrefix + "_" + std::string(s_iRndLen, 'X');
 
-	m_strFile = pathTmpDir.generic_string();
+	m_strFile = pathTmpDir.string();
 	m_iHandle = mkstemp(m_strFile);
 	if(m_iHandle == -1)
 		return false;
