@@ -7,7 +7,7 @@
 #include "debug.h"
 #include "log.h"
 
-#ifdef DEBUG
+#ifndef NDEBUG
 #include <execinfo.h>
 
 void tl::log_backtrace()
@@ -16,8 +16,7 @@ void tl::log_backtrace()
 	int iBtr = backtrace(pBtrBuf, 512);
 	char **ppcBtr = backtrace_symbols(pBtrBuf, iBtr);
 	for(int _iBtr=0; _iBtr<iBtr; ++_iBtr)
-		log_debug("Backtrace ", _iBtr, ": ", ppcBtr[_iBtr]);
+		tl::log_debug("Backtrace ", _iBtr, ": ", ppcBtr[_iBtr]);
 }
-#else
-void tl::log_backtrace() {}
+
 #endif

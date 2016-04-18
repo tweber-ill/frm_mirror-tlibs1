@@ -20,12 +20,13 @@ template<typename T=double>
 class Brillouin2D
 {
 	public:
-		template<typename _T> using t_vecpair = std::pair<ublas::vector<_T>, ublas::vector<_T> >;
+		template<typename _T> using t_vec = ublas::vector<_T>;
+		template<typename _T> using t_vecpair = std::pair<t_vec<_T>, t_vec<_T> >;
 		template<typename _T> using t_vertices = std::vector<t_vecpair<_T> >;
 
 	protected:
-		ublas::vector<T> m_vecCentralReflex;
-		std::vector<ublas::vector<T> > m_vecNeighbours;
+		t_vec<T> m_vecCentralReflex;
+		std::vector<t_vec<T>> m_vecNeighbours;
 		std::vector<t_vecpair<T> > m_vecVertices;
 		bool m_bValid = 1;
 		bool m_bHasCentralPeak = 0;
@@ -33,10 +34,10 @@ class Brillouin2D
 		const T eps = 0.001;
 
 	protected:
-		const t_vecpair<T>* GetNextVertexPair(const t_vertices<T>& vecPts, unsigned int *pIdx=0)
+		const t_vecpair<T>* GetNextVertexPair(const t_vertices<T>& vecPts, std::size_t *pIdx=0)
 		{
-			const ublas::vector<T>& vecLast = m_vecVertices.rbegin()->second;
-			for(unsigned int iPt=0; iPt<vecPts.size(); ++iPt)
+			const t_vec<T>& vecLast = m_vecVertices.rbegin()->second;
+			for(std::size_t iPt=0; iPt<vecPts.size(); ++iPt)
 			{
 				const t_vecpair<T>& vecp = vecPts[iPt];
 
@@ -56,15 +57,16 @@ class Brillouin2D
 		}
 
 	public:
-		Brillouin2D()
-		{}
-		virtual ~Brillouin2D()
-		{}
+		Brillouin2D() {}
+		virtual ~Brillouin2D() {}
 
 		const t_vertices<T>& GetVertices() const { return m_vecVertices; }
+		const t_vec<T>& GetCentralReflex() const { return m_vecCentralReflex; }
+		const std::vector<t_vec<T>>& GetNeighbours() const { return m_vecNeighbours; }
 
 		void Clear()
 		{
+			m_vecCentralReflex.clear();
 			m_vecNeighbours.clear();
 			m_vecVertices.clear();
 			m_bValid = 0;
@@ -72,9 +74,7 @@ class Brillouin2D
 
 		bool IsValid() const { return m_bValid; }
 
-		const ublas::vector<T>& GetCentralReflex() const { return m_vecCentralReflex; }
-
-		void SetCentralReflex(const ublas::vector<T>& vec)
+		void SetCentralReflex(const t_vec<T>& vec)
 		{
 			if(vec.size() != 2)
 				throw Err("Brillouin2D needs 2d vectors.");
@@ -82,7 +82,7 @@ class Brillouin2D
 			m_vecCentralReflex = vec;
 			m_bHasCentralPeak = 1;
 		}
-		void AddReflex(const ublas::vector<T>& vec)
+		void AddReflex(const t_vec<T>& vec)
 		{
 			if(vec.size() != 2)
 				throw Err("Brillouin2D needs 2d vectors.");
@@ -101,7 +101,7 @@ class Brillouin2D
 
 			t_vertices<T> vecPts;
 
-			for(const ublas::vector<T>& vecN : m_vecNeighbours)
+			for(const t_vec<T>& vecN : m_vecNeighbours)
 			{
 				Line<T> line(m_vecCentralReflex, vecN-m_vecCentralReflex);
 				Line<T> lineperp;
@@ -113,35 +113,35 @@ class Brillouin2D
 
 
 			// calculate intersections
-			for(unsigned int iThisLine=0; iThisLine<vecMiddlePerps.size(); ++iThisLine)
+			for(std::size_t iThisLine=0; iThisLine<vecMiddlePerps.size(); ++iThisLine)
 			{
 				const Line<T>& lineThis = vecMiddlePerps[iThisLine];
 				T tPos = std::numeric_limits<T>::max();
 				T tNeg = -tPos;
 
-				for(unsigned int iOtherLine=0; iOtherLine<vecMiddlePerps.size(); ++iOtherLine)
+				for(std::size_t iOtherLine=0; iOtherLine<vecMiddlePerps.size(); ++iOtherLine)
 				{
 					if(iThisLine == iOtherLine)
 						continue;
 
 					T t;
+					if(lineThis.IsParallel(vecMiddlePerps[iOtherLine], eps))
+						continue;
 					if(!lineThis.intersect(vecMiddlePerps[iOtherLine], t))
 						continue;
 
 					if(t>0.)
 					{
-						if(t < tPos)
-							tPos = t;
+						if(t < tPos) tPos = t;
 					}
 					else
 					{
-						if(t > tNeg)
-							tNeg = t;
+						if(t > tNeg) tNeg = t;
 					}
 				}
 
-				ublas::vector<T> vecUpper = lineThis(tPos);
-				ublas::vector<T> vecLower = lineThis(tNeg);
+				t_vec<T> vecUpper = lineThis(tPos);
+				t_vec<T> vecLower = lineThis(tNeg);
 				if(vec_equal(vecUpper, vecLower, eps))
 					continue;
 
@@ -154,17 +154,17 @@ class Brillouin2D
 			{
 				bool bSideReflex = line.GetSide(m_vecCentralReflex);
 
-				for(unsigned int iPt=0; iPt<vecPts.size(); ++iPt)
+				for(std::size_t iPt=0; iPt<vecPts.size(); ++iPt)
 				{
-					ublas::vector<T>& vecUpper = vecPts[iPt].first;
-					ublas::vector<T>& vecLower = vecPts[iPt].second;
+					t_vec<T>& vecUpper = vecPts[iPt].first;
+					t_vec<T>& vecLower = vecPts[iPt].second;
 
 					T tDistUpper=T(0), tDistLower=T(0);
 					bool bSideUpper = line.GetSide(vecUpper, &tDistUpper);
 					bool bSideLower = line.GetSide(vecLower, &tDistLower);
 
 					if((bSideUpper!=bSideReflex && tDistUpper>eps) ||
-							(bSideLower!=bSideReflex && tDistLower>eps))
+						(bSideLower!=bSideReflex && tDistLower>eps))
 					{
 						//std::cout << "Erasing " << iPt << std::endl;
 						vecPts.erase(vecPts.begin()+iPt);
@@ -185,13 +185,12 @@ class Brillouin2D
 
 			vecPts.erase(vecPts.begin());
 
-			unsigned int iIdx;
+			std::size_t iIdx;
 			while(const t_vecpair<T>* pPair = GetNextVertexPair(vecPts, &iIdx))
 			{
 				m_vecVertices.push_back(*pPair);
 				vecPts.erase(vecPts.begin()+iIdx);
 			}
-
 
 			//for(const t_vecpair<T>& vecPair : m_vecVertices)
 			//	std::cout << vecPair.first << ", " << vecPair.second << std::endl;

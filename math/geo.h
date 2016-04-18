@@ -36,16 +36,20 @@ template<typename T> class Line;
 
 template<typename T> class Plane
 {
+public:
+	using t_vec = ublas::vector<T>;
+	using t_mat = ublas::matrix<T>;
+
 protected:
 	bool m_bValid = 0;
-	ublas::vector<T> m_vecX0;
-	ublas::vector<T> m_vecDir0, m_vecDir1;
-	ublas::vector<T> m_vecNorm;
+	t_vec m_vecX0;
+	t_vec m_vecDir0, m_vecDir1;
+	t_vec m_vecNorm;
 	T m_d;
 
 public:
-	Plane(const ublas::vector<T>& vec0,
-		const ublas::vector<T>& dir0, const ublas::vector<T>& dir1)
+	Plane(const t_vec& vec0,
+		const t_vec& dir0, const t_vec& dir1)
 		: m_vecX0(vec0), m_vecDir0(dir0), m_vecDir1(dir1)
 	{
 		m_vecNorm = cross_3(dir0, dir1);
@@ -65,13 +69,13 @@ public:
 	virtual ~Plane()
 	{}
 
-	const ublas::vector<T>& GetX0() const { return m_vecX0; }
-	const ublas::vector<T>& GetDir0() const { return m_vecDir0; }
-	const ublas::vector<T>& GetDir1() const { return m_vecDir1; }
-	const ublas::vector<T>& GetNorm() const { return m_vecNorm; }
+	const t_vec& GetX0() const { return m_vecX0; }
+	const t_vec& GetDir0() const { return m_vecDir0; }
+	const t_vec& GetDir1() const { return m_vecDir1; }
+	const t_vec& GetNorm() const { return m_vecNorm; }
 	const T& GetD() const { return m_d; }
 
-	T GetDist(const ublas::vector<T>& vecPt) const
+	T GetDist(const t_vec& vecPt) const
 	{
 		return ublas::inner_prod(vecPt, m_vecNorm) - m_d;
 	}
@@ -82,36 +86,44 @@ public:
 	}
 
 	// "Lotfusspunkt"
-	ublas::vector<T> GetDroppedPerp(const ublas::vector<T>& vecP, T *pdDist=0) const
+	t_vec GetDroppedPerp(const t_vec& vecP, T *pdDist=0) const
 	{
 		T dist = GetDist(vecP);
-		ublas::vector<T> vecdropped = vecP - dist*m_vecNorm;
+		t_vec vecdropped = vecP - dist*m_vecNorm;
 
 		if(pdDist)
 		{
-			ublas::vector<T> vecD = vecP - vecdropped;
+			t_vec vecD = vecP - vecdropped;
 			*pdDist = std::sqrt(ublas::inner_prod(vecD, vecD));
 		}
 
 		return vecdropped;
 	}
 
+	bool IsParallel(const Plane<T>& plane, T eps = std::numeric_limits<T>::epsilon()) const
+	{
+		return vec_is_collinear<t_vec>(GetNorm(), plane.GetNorm(), eps);
+	}
+
 	// http://mathworld.wolfram.com/Plane-PlaneIntersection.html
 	bool intersect(const Plane<T>& plane2, Line<T>& lineRet) const
 	{
+		if(IsParallel(plane2))
+			return false;
+
 		const Plane<T>& plane1 = *this;
 
 		// direction vector
-		ublas::vector<T> vecDir = cross_3(plane1.GetNorm(), plane2.GetNorm());
+		t_vec vecDir = cross_3(plane1.GetNorm(), plane2.GetNorm());
 
 		// find common point in the two planes
-		ublas::matrix<T> M = row_matrix({plane1.GetNorm(), plane2.GetNorm()});
+		t_mat M = row_matrix({plane1.GetNorm(), plane2.GetNorm()});
 
-		ublas::vector<T> vecD(2);
+		t_vec vecD(2);
 		vecD[0] = plane1.GetD();
 		vecD[1] = plane2.GetD();
 
-		ublas::vector<T> vec0(3);
+		t_vec vec0(3);
 		if(!tl::solve_linear(M, vecD, vec0))
 			return 0;
 
@@ -128,32 +140,35 @@ public:
 
 template<typename T> class Line
 {
+public:
+	using t_vec = ublas::vector<T>;
+	using t_mat = ublas::matrix<T>;
+
 protected:
-	ublas::vector<T> m_vecX0;
-	ublas::vector<T> m_vecDir;
+	t_vec m_vecX0;
+	t_vec m_vecDir;
 
 public:
-	Line()
-	{}
-	Line(const ublas::vector<T>& vec0, const ublas::vector<T>& dir)
+	Line() {}
+	Line(const t_vec& vec0, const t_vec& dir)
 		: m_vecX0(vec0), m_vecDir(dir)
 	{}
 
 	virtual ~Line() {}
 
-	ublas::vector<T> operator()(T t) const
+	t_vec operator()(T t) const
 	{
 		return m_vecX0 + t*m_vecDir;
 	}
 
-	const ublas::vector<T>& GetX0() const { return m_vecX0; }
-	const ublas::vector<T>& GetDir() const { return m_vecDir; }
+	const t_vec& GetX0() const { return m_vecX0; }
+	const t_vec& GetDir() const { return m_vecDir; }
 
 	T GetDist(const Line<T>& l1) const
 	{
 		const Line<T>& l0 = *this;
 
-		ublas::vector<T> vecNorm = cross_3(l0.GetDir(), l1.GetDir());
+		t_vec vecNorm = cross_3(l0.GetDir(), l1.GetDir());
 
 		T tnum = std::fabs(ublas::inner_prod(l1.GetX0()-l0.GetX0(), vecNorm));
 		T tdenom = ublas::norm_2(vecNorm);
@@ -161,7 +176,7 @@ public:
 		return tnum/tdenom;
 	}
 
-	T GetDist(const ublas::vector<T>& vecPt) const
+	T GetDist(const t_vec& vecPt) const
 	{
 		T tnum = ublas::norm_2(cross_3(m_vecDir, vecPt-m_vecX0));
 		T tdenom = ublas::norm_2(m_vecDir);
@@ -169,16 +184,21 @@ public:
 		return tnum / tdenom;
 	}
 
+	bool IsParallel(const Line<T>& line, T eps = std::numeric_limits<T>::epsilon()) const
+	{
+		return vec_is_collinear<t_vec>(GetDir(), line.GetDir(), eps);
+	}
+
 
 	// "Lotfusspunkt"
-	ublas::vector<T> GetDroppedPerp(const ublas::vector<T>& vecP, T *pdDist=0) const
+	t_vec GetDroppedPerp(const t_vec& vecP, T *pdDist=0) const
 	{
 		T t = ublas::inner_prod(vecP-GetX0(), GetDir()) / ublas::inner_prod(GetDir(), GetDir());
-		ublas::vector<T> vecdropped = operator()(t);
+		t_vec vecdropped = operator()(t);
 
 		if(pdDist)
 		{
-			ublas::vector<T> vecD = vecP - vecdropped;
+			t_vec vecD = vecP - vecdropped;
 			*pdDist = std::sqrt(ublas::inner_prod(vecD, vecD));
 		}
 
@@ -186,7 +206,7 @@ public:
 	}
 
 
-	bool GetSide(const ublas::vector<T>& vecP, T *pdDist=0) const
+	bool GetSide(const t_vec& vecP, T *pdDist=0) const
 	{
 		const unsigned int N = m_vecDir.size();
 		if(N != 2)
@@ -195,10 +215,10 @@ public:
 			return false;
 		}
 
-		ublas::vector<T> vecDropped = GetDroppedPerp(vecP, pdDist);
+		t_vec vecDropped = GetDroppedPerp(vecP, pdDist);
 
 
-		ublas::vector<T> vecNorm(2);
+		t_vec vecNorm(2);
 		vecNorm[0] = m_vecDir[1];
 		vecNorm[1] = -m_vecDir[0];
 
@@ -219,14 +239,14 @@ public:
 			return false;
 		}
 
-		const ublas::vector<T>& posl = this->GetX0();
-		const ublas::vector<T>& dirl = this->GetDir();
+		const t_vec& posl = this->GetX0();
+		const t_vec& dirl = this->GetDir();
 
-		const ublas::vector<T>& xp0 = plane.GetX0();
-		const ublas::vector<T> xp1 = plane.GetX0() + plane.GetDir0();
-		const ublas::vector<T> xp2 = plane.GetX0() + plane.GetDir1();
+		const t_vec& xp0 = plane.GetX0();
+		const t_vec xp1 = plane.GetX0() + plane.GetDir0();
+		const t_vec xp2 = plane.GetX0() + plane.GetDir1();
 
-		ublas::matrix<T> matDenom(N+1,N+1);
+		t_mat matDenom(N+1,N+1);
 		matDenom(0,0) = 1;		matDenom(0,1) = 1;		matDenom(0,2) = 1;		matDenom(0,3) = 0;
 		matDenom(1,0) = xp0[0];	matDenom(1,1) = xp1[0];	matDenom(1,2) = xp2[0];	matDenom(1,3) = dirl[0];
 		matDenom(2,0) = xp0[1];	matDenom(2,1) = xp1[1];	matDenom(2,2) = xp2[1];	matDenom(2,3) = dirl[1];
@@ -236,7 +256,7 @@ public:
 		if(tl::float_equal(denom, 0.))
 			return false;
 
-		ublas::matrix<T> matNum(N+1,N+1);
+		t_mat matNum(N+1,N+1);
 		matNum(0,0) = 1;		matNum(0,1) = 1;		matNum(0,2) = 1;		matNum(0,3) = 1;
 		matNum(1,0) = xp0[0];	matNum(1,1) = xp1[0];	matNum(1,2) = xp2[0];	matNum(1,3) = posl[0];
 		matNum(2,0) = xp0[1];	matNum(2,1) = xp1[1];	matNum(2,2) = xp2[1];	matNum(2,3) = posl[1];
@@ -250,19 +270,19 @@ public:
 
 	bool intersect(const Line<T>& line, T& t) const
 	{
-		const ublas::vector<T>& pos0 =  this->GetX0();
-		const ublas::vector<T>& pos1 =  line.GetX0();
+		const t_vec& pos0 =  this->GetX0();
+		const t_vec& pos1 =  line.GetX0();
 
-		const ublas::vector<T>& dir0 =  this->GetDir();
-		const ublas::vector<T>& dir1 =  line.GetDir();
+		const t_vec& dir0 =  this->GetDir();
+		const t_vec& dir1 =  line.GetDir();
 
 		const unsigned int N = pos0.size();
 
 		// pos0 + t0*dir0 = pos1 + t1*dir1
 		// pos0 - pos1 = t1*dir1 - t0*dir0
 
-		const ublas::vector<T> pos = pos0-pos1;
-		ublas::matrix<T> mat = ublas::identity_matrix<T>(N);
+		const t_vec pos = pos0-pos1;
+		t_mat mat = ublas::identity_matrix<T>(N);
 
 		for(unsigned int i=0; i<N; ++i)
 		{
@@ -270,14 +290,14 @@ public:
 			mat(i, 1) = dir1[i];
 		}
 
-		ublas::matrix<T> inv;
+		t_mat inv;
 		if(!tl::inverse(mat, inv))
 		{
 			//log_warn("Could not invert matrix ", mat, ".");
 			return false;
 		}
 
-		ublas::vector<T> params = ublas::prod(inv, pos);
+		t_vec params = ublas::prod(inv, pos);
 		t = params[0];
 
 		//std::cout << "t=" << t << ", ";
@@ -293,11 +313,11 @@ public:
 			return false;
 		}
 
-		ublas::vector<T> vecDir(2);
+		t_vec vecDir(2);
 		vecDir[0] = -m_vecDir[1];
 		vecDir[1] = m_vecDir[0];
 
-		ublas::vector<T> vecPos = this->operator()(0.5);
+		t_vec vecPos = this->operator()(0.5);
 
 		linePerp = Line<T>(vecPos, vecDir);
 		return true;
@@ -325,22 +345,26 @@ std::ostream& operator<<(std::ostream& ostr, const Line<T>& line)
 template<class T=double>
 class Quadric
 {
+public:
+	using t_vec = ublas::vector<T>;
+	using t_mat = ublas::matrix<T>;
+
 protected:
 	// general: x^T Q x  +  r x  +  s  =  0
 	// here: x^T Q x + s  =  0
-	ublas::matrix<T> m_Q = ublas::zero_matrix<T>(3,3);
-	//ublas::vector<T> m_r = ublas::zero_vector<T>(3);
+	t_mat m_Q = ublas::zero_matrix<T>(3,3);
+	//t_vec m_r = ublas::zero_vector<T>(3);
 	T m_s = 0;
 
-	ublas::vector<T> m_vecOffs = ublas::zero_vector<T>(3);
+	t_vec m_vecOffs = ublas::zero_vector<T>(3);
 
 public:
 	Quadric() {}
 	Quadric(unsigned int iDim)
 		: m_Q(ublas::zero_matrix<T>(iDim,iDim))/*, m_r(ublas::zero_vector<T>(iDim))*/
 	{}
-	Quadric(const ublas::matrix<T>& Q) : m_Q(Q) {}
-	Quadric(const ublas::matrix<T>& Q, /*const ublas::vector<T>& r,*/ T s)
+	Quadric(const t_mat& Q) : m_Q(Q) {}
+	Quadric(const t_mat& Q, /*const t_vec& r,*/ T s)
 			: m_Q(Q), /*m_r(r),*/ m_s(s) {}
 	virtual ~Quadric() {}
 
@@ -369,22 +393,22 @@ public:
 	Quadric(const Quadric<T>& quad) { *this = quad; }
 	Quadric(Quadric<T>&& quad) { *this = quad; }
 
-	void SetOffset(const ublas::vector<T>& vec) { m_vecOffs = vec; }
-	const ublas::vector<T>& GetOffset() const { return m_vecOffs; }
+	void SetOffset(const t_vec& vec) { m_vecOffs = vec; }
+	const t_vec& GetOffset() const { return m_vecOffs; }
 
-	const ublas::matrix<T>& GetQ() const { return m_Q; }
-	//const ublas::vector<T>& GetR() const { return m_r; }
+	const t_mat& GetQ() const { return m_Q; }
+	//const t_vec& GetR() const { return m_r; }
 	T GetS() const { return m_s; }
 
-	void SetQ(const ublas::matrix<T>& Q) { m_Q = Q; }
-	//void SetR(const ublas::vector<T>& r) { m_r = r; }
+	void SetQ(const t_mat& Q) { m_Q = Q; }
+	//void SetR(const t_vec& r) { m_r = r; }
 	void SetS(T s) { m_s = s; }
 
-	T operator()(const ublas::vector<T>& _x) const
+	T operator()(const t_vec& _x) const
 	{
-		ublas::vector<T> x = _x-m_vecOffs;
+		t_vec x = _x-m_vecOffs;
 
-		ublas::vector<T> vecQ = ublas::prod(m_Q, x);
+		t_vec vecQ = ublas::prod(m_Q, x);
 		T dQ = ublas::inner_prod(x, vecQ);
 		//T dR = ublas::inner_prod(m_r, x);
 
@@ -399,17 +423,17 @@ public:
 		m_vecOffs = remove_elem(m_vecOffs, iIdx);
 	}
 
-	void transform(const ublas::matrix<T>& S)
+	void transform(const t_mat& S)
 	{
-		m_Q = tl::transform<ublas::matrix<T>>(m_Q, S, 1);
+		m_Q = tl::transform<t_mat>(m_Q, S, 1);
 	}
 
 	// Q = O D O^T
 	// O: eigenvecs, D: eigenvals
-	bool GetPrincipalAxes(ublas::matrix<T>& matEvecs, std::vector<T>& vecEvals,
+	bool GetPrincipalAxes(t_mat& matEvecs, std::vector<T>& vecEvals,
 		Quadric<T>* pquadPrincipal=nullptr) const
 	{
-		std::vector<ublas::vector<T> > evecs;
+		std::vector<t_vec > evecs;
 		if(!eigenvec_sym(m_Q, evecs, vecEvals))
 		{
 			log_err("Cannot determine eigenvectors.");
@@ -436,16 +460,16 @@ public:
 	// x0^T Q x0 + s  +  (d^T Q x0 + x0^T Q d) t  +  d^T Q d t^2 = 0
 	std::vector<T> intersect(const Line<T>& line) const
 	{
-		const ublas::matrix<T>& Q = GetQ();
+		const t_mat& Q = GetQ();
 		const T& s = m_s;
-		const ublas::vector<T>& d = line.GetDir();
-		const ublas::vector<T> x0 = line.GetX0() - m_vecOffs;;
+		const t_vec& d = line.GetDir();
+		const t_vec x0 = line.GetX0() - m_vecOffs;;
 
 		// solving at^2 + bt + c = 0 for t
-		ublas::vector<T> vecQd = ublas::prod(Q, d);
+		t_vec vecQd = ublas::prod(Q, d);
 		T a = ublas::inner_prod(d, vecQd);
 
-		ublas::vector<T> vecQx0 = ublas::prod(Q, x0);
+		t_vec vecQx0 = ublas::prod(Q, x0);
 		T c = ublas::inner_prod(x0, vecQx0) + s;
 
 		T b = ublas::inner_prod(x0, vecQd);
@@ -560,19 +584,20 @@ std::vector<unsigned int> find_zeroes(unsigned int N, const T* pIn)
 
 	//const double dThres = std::numeric_limits<double>::epsilon();
 
+	using t_vec = ublas::vector<T>;
 	std::vector<unsigned int> vecIndices;
 
 	for(unsigned int i=0; i<N-1; ++i)
 	{
-		ublas::vector<T> zero(2);
+		t_vec zero(2);
 		zero[0] = zero[1] = 0.;
-		ublas::vector<T> xdir(2);
+		t_vec xdir(2);
 		xdir[0] = 1.; xdir[1] = 0.;
 		Line<T> xaxis(zero, xdir);
 
-		ublas::vector<T> pos0(2);
+		t_vec pos0(2);
 		pos0[0] = 0.; pos0[1] = pIn[i];
-		ublas::vector<T> pos1(2);
+		t_vec pos1(2);
 		pos1[0] = 1.; pos1[1] = pIn[i+1];
 		Line<T> line(pos0, pos1-pos0);
 
@@ -584,7 +609,7 @@ std::vector<unsigned int> find_zeroes(unsigned int N, const T* pIn)
         }
         //std::cout << "Intersection param: " << param << std::endl;
 
-		ublas::vector<T> posInters = line(param);
+		t_vec posInters = line(param);
 		if(posInters[0]>=0. && posInters[0]<=1.)
 			vecIndices.push_back(i);
 	}

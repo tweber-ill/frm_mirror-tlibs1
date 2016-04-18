@@ -55,8 +55,11 @@ std::string get_typename(bool bFull=1)
 namespace tl{
 
 
-extern void log_backtrace();
-
+#ifndef NDEBUG
+	extern void log_backtrace();
+#else
+	static inline void log_backtrace() {}
+#endif
 
 }
 #endif

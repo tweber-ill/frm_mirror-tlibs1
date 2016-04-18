@@ -13,6 +13,7 @@
 #include "../helper/exception.h"
 #include "math.h"
 #include "../log/log.h"
+#include "../log/debug.h"
 #include "../helper/traits.h"
 
 #include <initializer_list>
@@ -590,9 +591,9 @@ bool inverse(const mat_type& mat, mat_type& inv)
 	{
 		log_err("Matrix inversion failed with exception: ", ex.what(), ".", "\n",
 				"Matrix to be inverted was: ", mat, ".");
+		//log_backtrace();
 		return false;
 	}
-
 	return true;
 }
 
@@ -1051,12 +1052,20 @@ void set_eps_0(T& d, underlying_value_type_t<T> eps)
 }
 // -----------------------------------------------------------------------------
 
+template<typename t_vec, typename T = typename t_vec::value_type>
+bool vec_is_collinear(const t_vec& _vec1, const t_vec& _vec2, T eps = std::numeric_limits<T>::epsilon())
+{
+	const t_vec vec1 = _vec1 / ublas::norm_2(_vec1);
+	const t_vec vec2 = _vec2 / ublas::norm_2(_vec2);
+
+	T tdot = std::abs(ublas::inner_prod(vec1, vec2));
+	return float_equal<T>(tdot, 1, eps);
+}
 
 // signed angle between two vectors
 template<typename vec_type>
 typename vec_type::value_type vec_angle(const vec_type& vec0,
-					const vec_type& vec1,
-					const vec_type* pvec_norm=0)
+	const vec_type& vec1, const vec_type* pvec_norm=0)
 {
 	typedef typename vec_type::value_type real_type;
 
@@ -1148,7 +1157,7 @@ T slerp(const T& q1, const T& q2, typename T::value_type t)
 	REAL angle = vec_angle_unsigned<T>(q1, q2);
 
 	T q = std::sin((1.-t)*angle)/std::sin(angle) * q1 +
-			std::sin(t*angle)/std::sin(angle) * q2;
+		std::sin(t*angle)/std::sin(angle) * q2;
 
 	return q;
 }
@@ -1161,7 +1170,7 @@ T slerp(const T& q1, const T& q2, typename T::value_type t)
 // see e.g.: http://www.itl.nist.gov/div898/handbook/pmc/section5/pmc541.htm
 template<typename T=double>
 ublas::matrix<T> covariance(const std::vector<ublas::vector<T>>& vecVals,
-			const std::vector<T>* pProb = 0)
+	const std::vector<T>* pProb = 0)
 {
 	if(vecVals.size() == 0) return ublas::matrix<T>();
 
