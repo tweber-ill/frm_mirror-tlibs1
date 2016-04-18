@@ -22,6 +22,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/info_parser.hpp>
 #include <boost/property_tree/ini_parser.hpp>
+#include <boost/optional.hpp>
 
 #include "../string/string.h"
 #include "../helper/traits.h"
@@ -275,6 +276,14 @@ public:
 	T Query(const t_str& _strAddr, const T def, bool *pbOk=nullptr) const
 	{
 		return Query<T>(_strAddr, &def, pbOk);
+	}
+
+	template<typename T>
+	boost::optional<T> QueryOpt(const t_str& strAddr) const
+	{
+		bool bOk = 0;
+		T tVal = Query<T>(strAddr, nullptr, &bOk);
+		return bOk ? boost::optional<T>(std::move(tVal)) : boost::optional<T>();
 	}
 
 #if !defined NO_STR_PARSER
