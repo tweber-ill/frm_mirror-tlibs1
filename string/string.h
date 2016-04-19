@@ -427,10 +427,10 @@ void get_tokens(const t_str& str, const t_str& strDelim, t_cont& vecRet)
 
 #if !defined NO_STR_PARSER
 }
-
 #include "../string/eval.h"
 
 namespace tl {
+
 template<class T, class t_str=std::string, class t_cont=std::vector<T>>
 bool parse_tokens(const t_str& str, const t_str& strDelim, t_cont& vecRet)
 {
@@ -448,13 +448,30 @@ bool parse_tokens(const t_str& str, const t_str& strDelim, t_cont& vecRet)
 	return bOk;
 }
 
-#else	// simply call non-parsing version
+template<typename T, class t_str=std::string>
+T str_to_var_parse(const t_str& str)
+{
+	std::pair<bool, T> pairResult = eval_expr<t_str, T>(str);
+	if(!pairResult.first)
+		return T(0);
+	return pairResult.second;
+}
+
+
+#else	// simply call non-parsing versions
+
 
 template<class T, class t_str=std::string, class t_cont=std::vector<T>>
 bool parse_tokens(const t_str& str, const t_str& strDelim, t_cont& vecRet)
 {
 	get_tokens<T, t_str, t_cont>(str, strDelim, vecRet);
 	return 1;
+}
+
+template<typename T, class t_str=std::string>
+T str_to_var_parse(const t_str& str)
+{
+	return str_to_var<T, t_str>(str);
 }
 
 #endif
