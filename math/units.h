@@ -127,6 +127,10 @@ typedef temperature temp;
 // constants
 template<class Y=double> t_energy<units::si::system, Y> get_one_meV()
 { return Y(1e-3) * Y(co::e/units::si::coulombs)*units::si::coulombs*units::si::volts; }
+template<class Y=double> t_energy<units::si::system, Y> get_one_eV()
+{ return Y(1) * Y(co::e/units::si::coulombs)*units::si::coulombs*units::si::volts; }
+template<class Y=double> t_energy<units::si::system, Y> get_one_MeV()
+{ return Y(1e6) * Y(co::e/units::si::coulombs)*units::si::coulombs*units::si::volts; }
 template<class Y=double> t_length<units::si::system, Y> get_one_angstrom()
 { return Y(1e-10) * units::si::meters; }
 template<class Y=double> t_length<units::si::system, Y> get_one_meter()
