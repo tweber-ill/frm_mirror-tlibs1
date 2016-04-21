@@ -29,7 +29,7 @@ template<class Sys, class Y=double>
 Y mean_collisions(Y A, const t_energy<Sys,Y>& E_from, const t_energy<Sys,Y>& E_to)
 {
 	Y dLogLoss = mean_log_E_loss<Y>(A);
-	Y dLogE = std::log(Y(E_from/get_one_meV<Y>() / Y(E_to/get_one_meV<Y>())));
+	Y dLogE = std::log(Y(E_from/E_to));
 
 	return dLogE / dLogLoss;
 }
