@@ -24,6 +24,8 @@
 #include <boost/units/systems/si/codata/electromagnetic_constants.hpp>
 #include <boost/units/systems/si/codata/physico-chemical_constants.hpp>
 
+#include <boost/numeric/ublas/vector.hpp>
+
 
 namespace tl {
 
@@ -232,6 +234,18 @@ template<class t_quant>
 decltype(t_quant()*t_quant()) my_units_pow2(const t_quant& val)
 {
 	return val*val;
+}
+
+template<class t_elem, template<class...> class t_vec=boost::numeric::ublas::vector>
+t_elem my_units_norm2(const t_vec<t_elem>& vec)
+{
+	using t_elem_sq = decltype(t_elem()*t_elem());
+	t_elem_sq tRet = t_elem_sq();
+
+	for(std::size_t i=0; i<vec.size(); ++i)
+		tRet += vec[i]*vec[i];
+
+	return tl::my_units_sqrt<t_elem>(tRet);
 }
 
 }
