@@ -11,3 +11,4 @@
 #include "tcp_impl.h"
 
 template class tl::TcpTxtClient_gen<>;
+template class tl::TcpTxtServer_gen<>;

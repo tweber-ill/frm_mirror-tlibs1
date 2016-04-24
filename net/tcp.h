@@ -31,8 +31,8 @@ namespace lf = boost::lockfree;
 template<class t_ch=char, class t_str=std::basic_string<t_ch>>
 class TcpTxtClient_gen
 {
-private:
-	bool get_cmd_tokens(const t_str& str, const t_str& strDelim,
+public:
+	static bool get_cmd_tokens(const t_str& str, const t_str& strDelim,
 		std::vector<t_str>& vecStr, t_str& strRemainder);
 
 protected:
@@ -64,12 +64,10 @@ public:
 	void add_connect(const typename t_sigConn::slot_type& conn);
 
 	bool connect(const t_str& strHost, const t_str& strService);
-	void disconnect(bool bAlwaysSendSignal=0);
-
-	void write(const t_str& str);
-
+	virtual void disconnect(bool bAlwaysSendSignal=0);
 	bool is_connected();
 
+	void write(const t_str& str);
 	void wait();
 
 protected:
@@ -78,8 +76,32 @@ protected:
 };
 
 
+template<class t_ch=char, class t_str=std::basic_string<t_ch>>
+class TcpTxtServer_gen : public TcpTxtClient_gen<t_ch, t_str>
+{
+protected:
+	ip::tcp::endpoint* m_pendpoint = nullptr;
+	ip::tcp::acceptor* m_pacceptor = nullptr;
+
+protected:
+	typedef sig::signal<void(unsigned short iPort)> t_sigServerStart;
+
+	t_sigServerStart m_sigServerStart;
+
+public:
+	TcpTxtServer_gen();
+	virtual ~TcpTxtServer_gen();
+
+	virtual void disconnect(bool bAlwaysSendSignal=0) override;
+	bool start_server(unsigned short iPort);
+
+	void add_server_start(const typename t_sigServerStart::slot_type& start);
+};
+
+
 // for legacy compatibility
 using TcpClient = TcpTxtClient_gen<>;
+using TcpServer = TcpTxtServer_gen<>;
 
 }
 

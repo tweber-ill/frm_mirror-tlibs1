@@ -12,6 +12,7 @@
 
 #include "tcp.h"
 #include "../log/log.h"
+#include "../string/string.h"
 #include <boost/tokenizer.hpp>
 
 namespace tl {
@@ -85,12 +86,19 @@ bool TcpTxtClient_gen<t_ch, t_str>::connect(const t_str& strHost, const t_str& s
 		ip::tcp::resolver::iterator iter = res.resolve({strHost, strService});
 
 		asio::async_connect(*m_psock, iter,
-		[this](const sys::error_code& err, ip::tcp::resolver::iterator)
+		[this](const sys::error_code& err, ip::tcp::resolver::iterator iter)
 		{
 			if(!err)
+			{
 				read_loop();
-
-			m_sigConn(m_strHost, m_strService);
+				m_sigConn(m_strHost, m_strService);
+			}
+			else
+			{
+				log_err("TCP connection error.",
+					" Category: ", err.category().name(), 
+					", message: ", err.message(), ".");
+			}
 		});
 
 		//tl::log_debug("Starting service thread.");
@@ -102,7 +110,7 @@ bool TcpTxtClient_gen<t_ch, t_str>::connect(const t_str& strHost, const t_str& s
 			}
 			catch(const std::exception& ex)
 			{
-				log_err("TCP service thread exited with error: ", ex.what(), ".");
+				log_err("TCP client thread exited with error: ", ex.what(), ".");
 				m_pthread = nullptr;
 				disconnect(1);
 			}
@@ -123,6 +131,7 @@ void TcpTxtClient_gen<t_ch, t_str>::disconnect(bool bAlwaysSendSignal)
 	const bool bConnected = is_connected();
 	if(bConnected)
 	{
+		m_psock->shutdown(ip::tcp::socket::shutdown_send);
 		m_pservice->stop();
 		m_psock->close();
 	}
@@ -203,7 +212,8 @@ void TcpTxtClient_gen<t_ch, t_str>::read_loop()
 	{
 		if(err)
 		{
-			log_err("TCP read error.");
+			log_err("TCP read error. Category: ", err.category().name(),
+				", message: ", err.message(), ".");
 			disconnect();
 			return;
 		}
@@ -249,6 +259,95 @@ void TcpTxtClient_gen<t_ch, t_str>::add_connect(const typename t_sigConn::slot_t
 }
 // --------------------------------------------------------------------------------
 
+
+// ================================================================================
+
+
+template<class t_ch, class t_str>
+TcpTxtServer_gen<t_ch, t_str>::TcpTxtServer_gen()
+	: TcpTxtClient_gen<t_ch, t_str>()
+{}
+
+template<class t_ch, class t_str>
+TcpTxtServer_gen<t_ch, t_str>::~TcpTxtServer_gen()
+{}
+
+template<class t_ch, class t_str>
+void TcpTxtServer_gen<t_ch, t_str>::disconnect(bool bAlwaysSendSignal)
+{
+	if(this->is_connected())
+	{}
+	if(m_pacceptor) { delete m_pacceptor; m_pacceptor = nullptr; }
+	if(m_pendpoint) { delete m_pendpoint; m_pendpoint = nullptr; }
+
+	TcpTxtClient_gen<t_ch, t_str>::disconnect(bAlwaysSendSignal);
 }
 
+template<class t_ch, class t_str>
+bool TcpTxtServer_gen<t_ch, t_str>::start_server(unsigned short iPort)
+{
+	this->m_strHost = "localhost";
+	this->m_strService = tl::var_to_str(iPort);
+
+	try
+	{
+		disconnect();
+
+		this->m_pservice = new asio::io_service;
+		this->m_psock = new ip::tcp::socket(*this->m_pservice);
+		m_pendpoint = new ip::tcp::endpoint(ip::tcp::v4(), iPort);
+		m_pacceptor = new ip::tcp::acceptor(*this->m_pservice, *m_pendpoint);
+
+		m_pacceptor->listen();
+		m_pacceptor->async_accept(*this->m_psock,
+		[this, iPort](const sys::error_code& err)
+		{
+			if(!err)
+			{
+				this->read_loop();
+				m_sigServerStart(iPort);
+			}
+			else
+			{
+				log_err("TCP server error.",
+					" Category: ", err.category().name(), 
+					", message: ", err.message(), ".");
+			}
+		});
+
+		this->m_pthread = new std::thread([this]()
+		{
+			try
+			{
+				this->m_pservice->run();
+			}
+			catch(const std::exception& ex)
+			{
+				log_err("TCP server thread exited with error: ", ex.what(), ".");
+				this->m_pthread = nullptr;
+				disconnect(1);
+			}
+		});
+		//this->m_pthread->join();
+	}
+	catch(const std::exception& ex)
+	{
+		log_err(ex.what());
+		return 0;
+	}
+	return 1;
+}
+
+
+// --------------------------------------------------------------------------------
+// Signals
+template<class t_ch, class t_str>
+void TcpTxtServer_gen<t_ch, t_str>::add_server_start(const typename t_sigServerStart::slot_type& conn)
+{
+	m_sigServerStart.connect(conn);
+}
+// --------------------------------------------------------------------------------
+
+
+}
 #endif
