@@ -170,8 +170,22 @@ template<class t_ch, class t_str>
 void TcpTxtClient_gen<t_ch, t_str>::write(const t_str& str)
 {
 	//tl::log_debug("write: ", str);
-	m_listWriteBuffer.push(new t_str(str));
-	m_pservice->post([&](){ flush_write(); });
+	try
+	{
+		if(!is_connected())
+		{
+			log_err("Not connected, cannot write to socket.");
+			disconnect();
+			return;
+		}
+
+		m_listWriteBuffer.push(new t_str(str));
+		m_pservice->post([&](){ flush_write(); });
+	}
+	catch(const std::exception& ex)
+	{
+		log_err(ex.what());
+	}
 }
 
 template<class t_ch, class t_str>
