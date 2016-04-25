@@ -26,6 +26,7 @@
 	namespace rex = ::boost;
 #endif
 
+#include <numeric>
 #include <fstream>
 
 
