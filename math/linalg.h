@@ -76,12 +76,23 @@ t_mat make_mat(t_lst<t_lst<typename t_mat::value_type>>&& lst)
 	return mat;
 }
 
+template<class matrix_type = ublas::matrix<double>>
+matrix_type unit_matrix(std::size_t N)
+{
+	matrix_type mat(N,N);
+
+	for(std::size_t i=0; i<N; ++i)
+		for(std::size_t j=0; j<N; ++j)
+			mat(i,j) = (i==j ? 1 : 0);
+	return mat;
+}
+
 
 // converts vector
 template<class t_from, class t_to, template<class...> class t_vec = ublas::vector>
 t_vec<t_to> convert_vec(const t_vec<t_from>& vec)
 {
-	using t_vec_from = t_vec<t_from>;
+	//using t_vec_from = t_vec<t_from>;
 	using t_vec_to = t_vec<t_to>;
 
 	t_vec_to vecRet(vec.size());
@@ -264,6 +275,18 @@ vector_type get_row(const matrix_type& mat, unsigned int iRow)
 }
 
 
+template<class t_mat=ublas::matrix<double>>
+t_mat mirror_matrix(std::size_t iSize, std::size_t iComp)
+{
+	using T = typename t_mat::value_type;
+
+	t_mat mat = unit_matrix<t_mat>(iSize);
+	mat(iComp, iComp) = T(-1);
+
+	return mat;
+}
+
+
 template<class matrix_type=ublas::matrix<double>>
 matrix_type rotation_matrix_2d(typename matrix_type::value_type angle)
 {
@@ -317,9 +340,9 @@ matrix_type rotation_matrix_3d_x(typename matrix_type::value_type angle)
 	}
 
 	return make_mat<matrix_type>
-				({	{1, 0,  0},
-					{0, c, -s},
-					{0, s,  c}});
+	({	{1, 0,  0},
+		{0, c, -s},
+		{0, s,  c}});
 }
 
 template<class matrix_type=ublas::matrix<double>>
@@ -340,9 +363,9 @@ matrix_type rotation_matrix_3d_y(typename matrix_type::value_type angle)
 	}
 
 	return make_mat<matrix_type>
-				({	{c,  0, s},
-					{0,  1, 0},
-					{-s, 0, c}});
+	({	{c,  0, s},
+		{0,  1, 0},
+		{-s, 0, c}});
 }
 
 template<class matrix_type=ublas::matrix<double>>
@@ -363,9 +386,9 @@ matrix_type rotation_matrix_3d_z(typename matrix_type::value_type angle)
 	}
 
 	return make_mat<matrix_type>
-				({	{c, -s, 0},
-					{s,  c, 0},
-					{0,  0, 1}});
+	({	{c, -s, 0},
+		{s,  c, 0},
+		{0,  0, 1}});
 }
 
 template<class matrix_type = ublas::matrix<double>,
@@ -375,24 +398,14 @@ matrix_type skew(const vector_type& vec)
 	if(vec.size() == 3)
 	{
 		return make_mat<matrix_type>
-				({	{       0, -vec[2],  vec[1]},
-					{  vec[2],       0, -vec[0]},
-					{ -vec[1],  vec[0],       0}});
+		({	{       0, -vec[2],  vec[1]},
+			{  vec[2],       0, -vec[0]},
+			{ -vec[1],  vec[0],       0}});
 	}
 	else
 		throw Err("Skew only defined for three dimensions.");
 }
 
-template<class matrix_type = ublas::matrix<double>>
-matrix_type unit_matrix(unsigned int N)
-{
-	matrix_type mat(N,N);
-
-	for(std::size_t i=0; i<N; ++i)
-		for(std::size_t j=0; j<N; ++j)
-			mat(i,j) = (i==j ? 1 : 0);
-	return mat;
-}
 
 template<class matrix_type = ublas::matrix<double>,
 		class cont_type = std::initializer_list<typename matrix_type::value_type>>
@@ -433,8 +446,8 @@ mat_type rotation_matrix(const vec_type& _vec, T angle)
 	}
 
 	return (T(1) - c) * ublas::outer_prod(vec,vec) +
-				c * unit_matrix(vec.size()) +
-				s * skew(vec);
+		c * unit_matrix(vec.size()) +
+		s * skew(vec);
 }
 
 template<class matrix_type=ublas::matrix<double>>
@@ -957,12 +970,12 @@ typename matrix_type::value_type get_ellipsoid_volume(const matrix_type& mat)
 // for the reciprocal lattice this is equal to the B matrix from Acta Cryst. (1967), 22, 457
 template<class t_vec>
 bool fractional_basis_from_angles(typename t_vec::value_type a,
-					typename t_vec::value_type b,
-					typename t_vec::value_type c,
-					typename t_vec::value_type alpha,
-					typename t_vec::value_type beta,
-					typename t_vec::value_type gamma,
-				t_vec& veca, t_vec& vecb, t_vec& vecc)
+	typename t_vec::value_type b,
+	typename t_vec::value_type c,
+	typename t_vec::value_type alpha,
+	typename t_vec::value_type beta,
+	typename t_vec::value_type gamma,
+	t_vec& veca, t_vec& vecb, t_vec& vecc)
 {
 	typedef typename t_vec::value_type T;
 
