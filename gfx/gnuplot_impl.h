@@ -60,8 +60,6 @@ void GnuPlot_gen<t_real>::Init()
 	//(*m_postr) << "set noborder\n";
 	(*m_postr) << "set size 1,1\n";
 	(*m_postr) << "set palette rgbformulae 33,13,10\n";
-	//(*m_postr) << "set termopt dashed\n";
-	//(*m_postr) << "set palette defined (0 \"blue\", 0.3333 \"cyan\", 0.6666 \"yellow\", 1 \"red\")\n";
 }
 
 template<class t_real>

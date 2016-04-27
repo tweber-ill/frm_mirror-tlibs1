@@ -11,7 +11,7 @@
 
 #include <memory>
 #include <type_traits>
-#include <list>
+#include <vector>
 #include <fstream>
 #include <iostream>
 
@@ -41,9 +41,7 @@ enum class Compressor
 };
 
 
-
 // -----------------------------------------------------------------------------
-
 
 
 template<class t_char=unsigned char>
@@ -231,21 +229,53 @@ bool decomp_file_to_file(const char* pcFileIn, const char* pcFileOut, Compressor
 //--------------------------------------------------------------------------------
 
 
-
-// TODO: find better way: this is too slow
-template<class t_char=char>
-inline bool __comp_mem_to_mem(const void* pvIn, std::size_t iLenIn,
-	void*& pvOut, std::size_t& iLenOut, Compressor comp, bool bDecomp=0)
+template<class T> struct _comp_alloc
 {
-	t_char *pcIn = (char*)pvIn;
-	ios::stream<ios::basic_array_source<t_char>> istr(pcIn, iLenIn);
+	using value_type = T;
+	std::shared_ptr<bool> m_pbKeepMem;
 
-	std::list<t_char> lstOut;
+	_comp_alloc()
+	{
+		//tl::log_debug("Creating allocator.");
+		m_pbKeepMem = std::make_shared<bool>(0);
+	}
+
+	_comp_alloc(const _comp_alloc<T>& alloc)
+	{
+		//tl::log_debug("Copying allocator.");
+		m_pbKeepMem = alloc.m_pbKeepMem;
+	}
+
+	T* allocate(std::size_t iNum)
+	{
+		T* pT = new T[iNum];
+		//tl::log_debug("Allocating ", iNum, " Ts: ", (void*)pT, ".");
+		return pT;
+	}
+	void deallocate(T* pT, std::size_t)
+	{
+		if(*m_pbKeepMem) return;
+		//tl::log_debug("Releasing ", (void*)pT, ".");
+		if(pT) delete[] pT;
+	}
+};
+
+template<class T> using _t_comp_arr = std::vector<T, _comp_alloc<T>>;
+
+
+template<class t_char=char>
+inline bool __comp_mem_to_mem(const t_char* pcIn, std::size_t iLenIn,
+	t_char*& pcOut, std::size_t& iLenOut, Compressor comp, bool bDecomp=0)
+{
+	ios::stream<ios::basic_array_source<t_char>> istr(pcIn, iLenIn);
+	_comp_alloc<t_char> alloc;
+	_t_comp_arr<t_char> vecOut(alloc);
+	vecOut.reserve(iLenIn);
 
 	using filtering_ostream = typename std::conditional<
 		std::is_same<t_char,char>::value,
 		ios::filtering_ostream, ios::filtering_wostream>::type;
-	filtering_ostream arrOut(ios::back_inserter(lstOut));
+	filtering_ostream arrOut(ios::back_inserter(vecOut));
 
 	bool bOk=0;
 	if(bDecomp)
@@ -253,14 +283,14 @@ inline bool __comp_mem_to_mem(const void* pvIn, std::size_t iLenIn,
 	else
 		bOk = comp_stream_to_stream<t_char>(istr, arrOut, comp);
 
+	*alloc.m_pbKeepMem = 1;
+	iLenOut = vecOut.size();
+	pcOut = vecOut.data();
 
-	iLenOut = lstOut.size();
-	pvOut = new t_char[iLenOut];
-	t_char *pcOut = (t_char*)pvOut;
-
-	unsigned int iIdx = 0;
+	/*pcOut = new t_char[iLenOut];
+	std::size_t iIdx = 0;
 	for(t_char c : lstOut)
-		pcOut[iIdx++] = c;
+		pcOut[iIdx++] = c;*/
 
 	return bOk;
 }
@@ -269,26 +299,26 @@ inline bool __comp_mem_to_mem(const void* pvIn, std::size_t iLenIn,
 /*
  * example:
  *	char pc[] = "123456\nABCDEF\n\n";
- *	void *pvTst;
- *	unsigned int iLenOut=0;
- *	comp_mem_to_mem(pc, strlen(pc), pvTst,iLenOut,COMP_BZ2);
+ *	char *pcTst;
+ *	std::size_t iLenOut=0;
+ *	comp_mem_to_mem<char>(pc, strlen(pc), pcTst, iLenOut, Compressor::BZ2);
  *	std::ofstream ofstr("tst.txt.bz2");
- *	ofstr.write((char*)pvTst, iLenOut);
+ *	ofstr.write((char*)pcTst, iLenOut);
  *	ofstr.close();
- *	delete[] pvTst;
+ *	delete[] pcTst;
  */
 template<class t_char=char>
-bool comp_mem_to_mem(const void* pvIn, std::size_t iLenIn, 
-	void*& pvOut, std::size_t& iLenOut, Compressor comp=Compressor::GZ)
+bool comp_mem_to_mem(const t_char* pcIn, std::size_t iLenIn, 
+	t_char*& pcOut, std::size_t& iLenOut, Compressor comp=Compressor::GZ)
 {
-	return __comp_mem_to_mem<t_char>(pvIn, iLenIn, pvOut, iLenOut, comp, 0);
+	return __comp_mem_to_mem<t_char>(pcIn, iLenIn, pcOut, iLenOut, comp, 0);
 }
 
 template<class t_char=char>
-bool decomp_mem_to_mem(const void* pvIn, std::size_t iLenIn, 
-	void*& pvOut, std::size_t& iLenOut, Compressor comp=Compressor::AUTO)
+bool decomp_mem_to_mem(const t_char* pcIn, std::size_t iLenIn, 
+	t_char*& pcOut, std::size_t& iLenOut, Compressor comp=Compressor::AUTO)
 {
-	return __comp_mem_to_mem<t_char>(pvIn, iLenIn, pvOut, iLenOut, comp, 1);
+	return __comp_mem_to_mem<t_char>(pcIn, iLenIn, pcOut, iLenOut, comp, 1);
 }
 
 
