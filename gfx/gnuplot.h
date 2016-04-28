@@ -59,7 +59,7 @@ protected:
 	bool m_bHasLegend = false;
 
 	std::string m_strLegendOpts;
-	std::string m_strLegendPlacement = "default";
+	std::string m_strLegendPlacement = std::string("default");
 
 	std::string m_strCmdFileOutput;
 
