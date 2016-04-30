@@ -20,10 +20,10 @@ namespace tl {
 
 template<>
 bool eigenvec<double>(const ublas::matrix<double>& mat,
-				std::vector<ublas::vector<double> >& evecs_real,
-				std::vector<ublas::vector<double> >& evecs_imag,
-				std::vector<double>& evals_real,
-				std::vector<double>& evals_imag)
+	std::vector<ublas::vector<double> >& evecs_real,
+	std::vector<ublas::vector<double> >& evecs_imag,
+	std::vector<double>& evals_real,
+	std::vector<double>& evals_imag)
 {
 	typedef double T;
 
@@ -32,12 +32,12 @@ bool eigenvec<double>(const ublas::matrix<double>& mat,
 	if(mat.size1()==0 || mat.size1()==1)
 		return false;
 
-	const unsigned int iOrder = mat.size1();
+	const std::size_t iOrder = mat.size1();
 	evecs_real.resize(iOrder);
 	evecs_imag.resize(iOrder);
 	evals_real.resize(iOrder);
 	evals_imag.resize(iOrder);
-	for(unsigned int i=0; i<iOrder; ++i)
+	for(std::size_t i=0; i<iOrder; ++i)
 	{
 		evecs_real[i].resize(iOrder);
 		evecs_imag[i].resize(iOrder);
@@ -47,7 +47,7 @@ bool eigenvec<double>(const ublas::matrix<double>& mat,
 	// is matrix already diagonal?
 	if(is_diag_matrix(mat))
 	{
-		for(unsigned int i=0; i<iOrder; ++i)
+		for(std::size_t i=0; i<iOrder; ++i)
 		{
 			evals_real[i] = mat(i,i);
 
@@ -70,8 +70,8 @@ bool eigenvec<double>(const ublas::matrix<double>& mat,
 	T *pMem = uptrMem.get();
 
 	T *pMatrix = pMem;
-	for(unsigned int i=0; i<iOrder; ++i)
-		for(unsigned int j=0; j<iOrder; ++j)
+	for(std::size_t i=0; i<iOrder; ++i)
+		for(std::size_t j=0; j<iOrder; ++j)
 			pMatrix[i*iOrder + j] = mat(i,j);
 
 	T *p_eigenvecs = pMatrix + iOrder*iOrder;
@@ -80,8 +80,8 @@ bool eigenvec<double>(const ublas::matrix<double>& mat,
 	T *peigenvals_imag = peigenvals_real + iOrder;
 
 	int iInfo = LAPACKE_dgeev(LAPACK_ROW_MAJOR, 'N', 'V', iOrder, (T*)pMatrix, iOrder,
-					(T*)peigenvals_real, (T*)peigenvals_imag,
-					/*(double*)p_eigenvecs_l*/0, iOrder, (T*)p_eigenvecs, iOrder);
+		(T*)peigenvals_real, (T*)peigenvals_imag,
+		/*(double*)p_eigenvecs_l*/0, iOrder, (T*)p_eigenvecs, iOrder);
 
 	if(iInfo!=0)
 	{
@@ -89,7 +89,7 @@ bool eigenvec<double>(const ublas::matrix<double>& mat,
 		bOk = false;
 	}
 
-	for(unsigned int i=0; i<iOrder; ++i)
+	for(std::size_t i=0; i<iOrder; ++i)
 	{
 		bool bIsReal = 0;
 		if(float_equal<T>(peigenvals_imag[i], 0.))
@@ -97,7 +97,7 @@ bool eigenvec<double>(const ublas::matrix<double>& mat,
 
 		if(bIsReal)
 		{
-			for(unsigned int j=0; j<iOrder; ++j)
+			for(std::size_t j=0; j<iOrder; ++j)
 			{
 				evecs_real[i][j] = p_eigenvecs[j*iOrder + i];
 				evecs_imag[i][j] = 0.;
@@ -108,7 +108,7 @@ bool eigenvec<double>(const ublas::matrix<double>& mat,
 		}
 		else
 		{
-			for(unsigned int j=0; j<iOrder; ++j)
+			for(std::size_t j=0; j<iOrder; ++j)
 			{
 				evecs_real[i][j] = p_eigenvecs[j*iOrder + i];
 				evecs_imag[i][j] = p_eigenvecs[j*iOrder + i+1];
@@ -134,8 +134,8 @@ bool eigenvec<double>(const ublas::matrix<double>& mat,
 
 template<>
 bool eigenvec_sym<double>(const ublas::matrix<double>& mat,
-				std::vector<ublas::vector<double> >& evecs,
-				std::vector<double>& evals)
+	std::vector<ublas::vector<double> >& evecs,
+	std::vector<double>& evals)
 {
 	typedef double T;
 
@@ -144,11 +144,11 @@ bool eigenvec_sym<double>(const ublas::matrix<double>& mat,
 	if(mat.size1()==0 || mat.size1()==1)
 		return false;
 
-	const unsigned int iOrder = mat.size1();
+	const std::size_t iOrder = mat.size1();
 	evecs.resize(iOrder);
 	evals.resize(iOrder);
-	for(unsigned int i=0; i<iOrder; ++i)
-			evecs[i].resize(iOrder);
+	for(std::size_t i=0; i<iOrder; ++i)
+		evecs[i].resize(iOrder);
 
 
 	bool bOk = true;
@@ -158,14 +158,14 @@ bool eigenvec_sym<double>(const ublas::matrix<double>& mat,
 	T *pMem = uptrMem.get();
 	T *pMatrix = pMem;
 
-	for(unsigned int i=0; i<iOrder; ++i)
-			for(unsigned int j=0; j<iOrder; ++j)
-					pMatrix[i*iOrder + j] = mat(i,j);
+	for(std::size_t i=0; i<iOrder; ++i)
+		for(std::size_t j=0; j<iOrder; ++j)
+			pMatrix[i*iOrder + j] = mat(i,j);
 
 	T *peigenvals_real = pMatrix + iOrder*iOrder;
 	int iInfo = LAPACKE_dsyev(LAPACK_ROW_MAJOR, 'V', 'U',
-					iOrder, (T*)pMatrix, iOrder,
-					(T*)peigenvals_real);
+		iOrder, (T*)pMatrix, iOrder,
+		(T*)peigenvals_real);
 
 	if(iInfo!=0)
 	{
@@ -173,10 +173,10 @@ bool eigenvec_sym<double>(const ublas::matrix<double>& mat,
 		bOk = false;
 	}
 
-	for(unsigned int i=0; i<iOrder; ++i)
+	for(std::size_t i=0; i<iOrder; ++i)
 	{
-		for(unsigned int j=0; j<iOrder; ++j)
-				evecs[i][j] = pMatrix[j*iOrder + i];
+		for(std::size_t j=0; j<iOrder; ++j)
+			evecs[i][j] = pMatrix[j*iOrder + i];
 		//evecs[i] /= ublas::norm_2(evecs[i]);
 		evals[i] = peigenvals_real[i];
 	}
@@ -190,13 +190,12 @@ bool eigenvec_sym<double>(const ublas::matrix<double>& mat,
 
 template<>
 bool qr<double>(const ublas::matrix<double>& M,
-				ublas::matrix<double>& Q,
-				ublas::matrix<double>& R)
+	ublas::matrix<double>& Q, ublas::matrix<double>& R)
 {
 	const typename ublas::matrix<double>::size_type m = M.size1();
 	const typename ublas::matrix<double>::size_type n = M.size2();
 
-	const unsigned int iTauSize = m;//std::min<unsigned int>(m,n);
+	const std::size_t iTauSize = m;//std::min<std::size_t>(m,n);
 
 	std::unique_ptr<double, std::default_delete<double[]>> 
 		uptrMem(new double[n*m + iTauSize]);
@@ -205,8 +204,8 @@ bool qr<double>(const ublas::matrix<double>& M,
 	double *pMat = pMem;
 	double *pTau = pMem + n*m;
 
-	for(unsigned int i=0; i<m; ++i)
-		for(unsigned int j=0; j<n; ++j)
+	for(std::size_t i=0; i<m; ++i)
+		for(std::size_t j=0; j<n; ++j)
 			pMat[i*n + j] = M(i,j);
 
 	// see: http://www.math.utah.edu/software/lapack/lapack-d/dgeqrf.html
@@ -214,8 +213,8 @@ bool qr<double>(const ublas::matrix<double>& M,
 	//std::cout << "dgeqrt: " << iInfo << std::endl;
 
 	R = ublas::matrix<double>(m,n);
-	for(unsigned int i=0; i<m; ++i)
-		for(unsigned int j=0; j<n; ++j)
+	for(std::size_t i=0; i<m; ++i)
+		for(std::size_t j=0; j<n; ++j)
 		{
 			if(j>=i)
 				R(i,j) = pMat[i*n + j];
@@ -229,16 +228,16 @@ bool qr<double>(const ublas::matrix<double>& M,
 	const ublas::matrix<double> ident = ublas::identity_matrix<double>(iTauSize);
 	Q = ident;
 
-	for(unsigned int k=1; k<=iTauSize; ++k)
+	for(std::size_t k=1; k<=iTauSize; ++k)
 	{
 		double dTau = pTau[k-1];
 		//std::cout << "tau " << k << " = " << dTau << std::endl;
 
-		for(unsigned int i=1; i<=k-1; ++i)
+		for(std::size_t i=1; i<=k-1; ++i)
 			v[i-1] = 0.;
 		v[k-1] = 1.;
 
-		for(unsigned int i=k+1; i<=iTauSize; ++i)
+		for(std::size_t i=k+1; i<=iTauSize; ++i)
 			v[i-1] = pMat[(i-1)*n + (k-1)];
 
 		ublas::matrix<double> VV = ublas::outer_prod(v, ublas::trans(v));

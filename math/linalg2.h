@@ -44,14 +44,14 @@ bool qr(const ublas::matrix<T>& M, ublas::matrix<T>& Q, ublas::matrix<T>& R)
 
 template<>
 bool qr<double>(const ublas::matrix<double>& M,
-		ublas::matrix<double>& Q,
-		ublas::matrix<double>& R);
+	ublas::matrix<double>& Q,
+	ublas::matrix<double>& R);
 
 
 template<typename T=double>
 bool eigenvec(const ublas::matrix<T>& mat,
-		std::vector<ublas::vector<T> >& evecs_real, std::vector<ublas::vector<T> >& evecs_imag,
-		std::vector<T>& evals_real, std::vector<T>& evals_imag)
+	std::vector<ublas::vector<T> >& evecs_real, std::vector<ublas::vector<T> >& evecs_imag,
+	std::vector<T>& evals_real, std::vector<T>& evals_imag)
 {
 	log_err("No specialisation of \"eigenvec\" available for this type.");
 	return false;
@@ -66,14 +66,14 @@ bool eigenvec_sym(const ublas::matrix<T>& mat, std::vector<ublas::vector<T> >& e
 
 template<>
 bool eigenvec<double>(const ublas::matrix<double>& mat,
-			std::vector<ublas::vector<double> >& evecs_real,
-			std::vector<ublas::vector<double> >& evecs_imag,
-			std::vector<double>& evals_real,
-			std::vector<double>& evals_imag);
+	std::vector<ublas::vector<double> >& evecs_real,
+	std::vector<ublas::vector<double> >& evecs_imag,
+	std::vector<double>& evals_real,
+	std::vector<double>& evals_imag);
 template<>
 bool eigenvec_sym<double>(const ublas::matrix<double>& mat,
-			std::vector<ublas::vector<double> >& evecs,
-			std::vector<double>& evals);
+	std::vector<ublas::vector<double> >& evecs,
+	std::vector<double>& evals);
 #endif
 
 }

@@ -198,7 +198,7 @@ void Log::RemoveOstr(std::ostream* pOstr)
 }
 
 
-Log log_info("INFO", LogColor::WHITE, &std::cout),
+Log log_info("INFO", LogColor::WHITE, &std::cerr),
 	log_warn("WARNING", LogColor::YELLOW, &std::cerr), 
 	log_err("ERROR", LogColor::RED, &std::cerr),
 	log_crit("CRITICAL", LogColor::PURPLE, &std::cerr),

@@ -141,7 +141,7 @@ typename vec_type::value_type vec_len(const vec_type& vec)
 {
 	typename vec_type::value_type t = typename vec_type::value_type();
 
-	for(unsigned int i=0; i<vec.size(); ++i)
+	for(std::size_t i=0; i<vec.size(); ++i)
 		t += vec[i]*vec[i];
 
 	t = std::sqrt(t);
@@ -152,11 +152,11 @@ typename vec_type::value_type vec_len(const vec_type& vec)
 
 // remove an element from a vector
 template<class vector_type>
-vector_type remove_elem(const vector_type& vec, unsigned int iIdx)
+vector_type remove_elem(const vector_type& vec, std::size_t iIdx)
 {
 	vector_type vecret(vec.size()-1);
 
-	for(unsigned int i=0, j=0; i<vec.size() && j<vecret.size();)
+	for(std::size_t i=0, j=0; i<vec.size() && j<vecret.size();)
 	{
 		vecret[j] = vec[i];
 
@@ -168,13 +168,13 @@ vector_type remove_elem(const vector_type& vec, unsigned int iIdx)
 }
 
 template<class matrix_type>
-matrix_type submatrix(const matrix_type& mat, unsigned int iRow, unsigned int iCol)
+matrix_type submatrix(const matrix_type& mat, std::size_t iRow, std::size_t iCol)
 {
 	matrix_type matret(mat.size1()-1, mat.size2()-1);
 
-	for(unsigned int i=0, i0=0; i<mat.size1() && i0<matret.size1();)
+	for(std::size_t i=0, i0=0; i<mat.size1() && i0<matret.size1();)
 	{
-		for(unsigned int j=0, j0=0; j<mat.size2() && j0<matret.size2();)
+		for(std::size_t j=0, j0=0; j<mat.size2() && j0<matret.size2();)
 		{
 			matret(i0,j0) = mat(i,j);
 
@@ -190,12 +190,12 @@ matrix_type submatrix(const matrix_type& mat, unsigned int iRow, unsigned int iC
 }
 
 template<class matrix_type>
-matrix_type remove_column(const matrix_type& mat, unsigned int iCol)
+matrix_type remove_column(const matrix_type& mat, std::size_t iCol)
 {
 	matrix_type matret(mat.size1(), mat.size2()-1);
-	for(unsigned int i=0; i<mat.size1(); ++i)
+	for(std::size_t i=0; i<mat.size1(); ++i)
 	{
-		for(unsigned int j=0, j0=0; j<mat.size2() && j0<matret.size2(); ++j)
+		for(std::size_t j=0, j0=0; j<mat.size2() && j0<matret.size2(); ++j)
 		{
 			matret(i,j0) = mat(i,j);
                         if(j!=iCol) ++j0;
@@ -206,30 +206,30 @@ matrix_type remove_column(const matrix_type& mat, unsigned int iCol)
 
 template<class matrix_type>
 void submatrix_copy(matrix_type& mat, const matrix_type& sub,
-		unsigned int iRowBegin, unsigned int iColBegin)
+	std::size_t iRowBegin, std::size_t iColBegin)
 {
-	for(unsigned int i=0; i<sub.size1(); ++i)
-		for(unsigned int j=0; j<sub.size2(); ++j)
+	for(std::size_t i=0; i<sub.size1(); ++i)
+		for(std::size_t j=0; j<sub.size2(); ++j)
 			mat(iRowBegin+i, iColBegin+j) = sub(i,j);
 }
 
 template<class vec_type>
-void subvector_copy(vec_type& vec, const vec_type& sub, unsigned int iRowBegin)
+void subvector_copy(vec_type& vec, const vec_type& sub, std::size_t iRowBegin)
 {
-	for(unsigned int i=0; i<sub.size(); ++i)
+	for(std::size_t i=0; i<sub.size(); ++i)
 		vec[iRowBegin+i] = sub[i];
 }
 
 
 template<class matrix_type>
-matrix_type remove_elems(const matrix_type& mat, unsigned int iIdx)
+matrix_type remove_elems(const matrix_type& mat, std::size_t iIdx)
 {
 	return submatrix(mat, iIdx, iIdx);
 }
 
 template<class t_vec=ublas::vector<double>,
 	class t_mat=ublas::matrix<typename t_vec::value_type>>
-void set_column(t_mat& M, unsigned int iCol, const t_vec& vec)
+void set_column(t_mat& M, std::size_t iCol, const t_vec& vec)
 {
 	std::size_t s = std::min(vec.size(), M.size1());
 	for(std::size_t i=0; i<s; ++i)
@@ -238,11 +238,11 @@ void set_column(t_mat& M, unsigned int iCol, const t_vec& vec)
 
 template<class vector_type=ublas::vector<double>,
 	class matrix_type=ublas::matrix<typename vector_type::value_type>>
-vector_type get_column(const matrix_type& mat, unsigned int iCol)
+vector_type get_column(const matrix_type& mat, std::size_t iCol)
 {
 	vector_type vecret(mat.size1());
 
-	for(unsigned int i=0; i<mat.size1(); ++i)
+	for(std::size_t i=0; i<mat.size1(); ++i)
 		vecret[i] = mat(i, iCol);
 
 	return vecret;
@@ -256,7 +256,7 @@ cont_type get_columns(const matrix_type& mat)
 	cont_type vec;
 	vec.reserve(mat.size2());
 
-	for(unsigned int i=0; i<mat.size2(); ++i)
+	for(std::size_t i=0; i<mat.size2(); ++i)
 		vec.push_back(get_column(mat, i));
 
 	return vec;
@@ -264,11 +264,11 @@ cont_type get_columns(const matrix_type& mat)
 
 template<class vector_type=ublas::vector<double>,
 	class matrix_type=ublas::matrix<typename vector_type::value_type>>
-vector_type get_row(const matrix_type& mat, unsigned int iRow)
+vector_type get_row(const matrix_type& mat, std::size_t iRow)
 {
 	vector_type vecret(mat.size2());
 
-	for(unsigned int i=0; i<mat.size2(); ++i)
+	for(std::size_t i=0; i<mat.size2(); ++i)
 		vecret[i] = mat(iRow, i);
 
 	return vecret;
@@ -413,11 +413,11 @@ matrix_type diag_matrix(const cont_type& lst)
 {
 	matrix_type mat(lst.size(), lst.size());
 
-	for(unsigned int i=0; i<lst.size(); ++i)
-		for(unsigned int j=0; j<lst.size(); ++j)
+	for(std::size_t i=0; i<lst.size(); ++i)
+		for(std::size_t j=0; j<lst.size(); ++j)
 			mat(i,j) = 0.;
 
-	unsigned int i = 0;
+	std::size_t i = 0;
 	for(typename cont_type::const_iterator iter=lst.begin(); iter!=lst.end(); ++iter, ++i)
 		mat(i,i) = *iter;
 
@@ -459,7 +459,7 @@ typename matrix_type::value_type trace(const matrix_type& mat)
 		return T(0);
 
 	T tr = T(0.);
-	for(unsigned int i=0; i<mat.size1(); ++i)
+	for(std::size_t i=0; i<mat.size1(); ++i)
 		tr += mat(i,i);
 	return tr;
 }
@@ -520,7 +520,7 @@ struct is_nan_or_inf_impl<vec_type, FKT, 1>		// vector impl.
 
 	bool operator()(const vec_type& vec) const
 	{
-		for(unsigned int i=0; i<vec.size(); ++i)
+		for(std::size_t i=0; i<vec.size(); ++i)
 			if(m_fkt(vec[i]))
 				return true;
 		return false;
@@ -535,8 +535,8 @@ struct is_nan_or_inf_impl<mat_type, FKT, 2>		// matrix impl.
 
 	bool operator()(const mat_type& mat) const
 	{
-		for(unsigned int i=0; i<mat.size1(); ++i)
-			for(unsigned int j=0; j<mat.size2(); ++j)
+		for(std::size_t i=0; i<mat.size1(); ++i)
+			for(std::size_t j=0; j<mat.size2(); ++j)
 				if(m_fkt(mat(i,j)))
 					return true;
 		return false;
@@ -657,7 +657,7 @@ bool solve_linear(const ublas::matrix<T>& M, const ublas::vector<T>& v,
 	{
 		try
 		{
-			const unsigned int N = M.size1();
+			const std::size_t N = M.size1();
 
 			ublas::matrix<T> lu = M;
 			ublas::permutation_matrix<typename ublas::matrix<T>::size_type> perm(N);
@@ -712,7 +712,7 @@ bool solve_linear(const ublas::matrix<T>& M, const ublas::vector<T>& v,
 
 		// find non-singular right-upper submatrix
 		std::vector<t_int> vecDelCols;
-		unsigned int iNumToDel = R.size2()-R.size1();
+		std::size_t iNumToDel = R.size2()-R.size1();
 		if(iNumToDel != 1)
 		{
 			log_err(__func__, " not yet implemented.");
@@ -721,9 +721,9 @@ bool solve_linear(const ublas::matrix<T>& M, const ublas::vector<T>& v,
 
 		bool bFoundNonSingular = 0;
 		ublas::matrix<T> Rsub;
-		for(int iCol=int(R.size2()-1); iCol>=0; --iCol)
+		for(std::ptrdiff_t iCol=std::ptrdiff_t(R.size2()-1); iCol>=0; --iCol)
 		{
-			Rsub = remove_column(R, (unsigned int)iCol);
+			Rsub = remove_column(R, (std::size_t)iCol);
 			//std::cout << "Rsub" << Rsub << std::endl;
 			//std::cout << "det: " << determinant(Rsub) << std::endl;
 
@@ -798,8 +798,8 @@ bool is_diag_matrix(const matrix_type& mat)
 {
 	typedef typename matrix_type::value_type T;
 
-	for(unsigned int i=0; i<mat.size1(); ++i)
-		for(unsigned int j=0; j<mat.size2(); ++j)
+	for(std::size_t i=0; i<mat.size1(); ++i)
+		for(std::size_t j=0; j<mat.size2(); ++j)
 		{
 			if(i==j) continue;
 
@@ -819,16 +819,16 @@ inline matrix_type row_col_matrix(const container_type& vecs)
 	if(vecs.size() == 0)
 		return matrix_type(0,0);
 
-	const unsigned int N = vecs.size();
-	const unsigned int M = vecs.begin()->size();
+	const std::size_t N = vecs.size();
+	const std::size_t M = vecs.begin()->size();
 
 	matrix_type mat(bRowMat?N:M, bRowMat?M:N);
-	unsigned int j=0;
+	std::size_t j=0;
 	for(typename container_type::const_iterator iter=vecs.begin(); iter!=vecs.end(); ++iter)
 	{
 		const vec_type& vec = *iter;
 
-		for(unsigned int i=0; i<vec.size(); ++i)
+		for(std::size_t i=0; i<vec.size(); ++i)
 		{
 			if(bRowMat)
 				mat(j,i) = vec[i];
@@ -908,7 +908,7 @@ typename t_mat::value_type determinant(const t_mat& mat)
 
 			//std::cout << "col " << j << std::endl;
 			T dSign = 1.;
-			if(is_odd<unsigned int>(i+j))
+			if(is_odd<std::size_t>(i+j))
 				dSign = -1.;
 
 			t_mat matSub = submatrix(mat, i, j);
@@ -932,12 +932,12 @@ typename t_mat::value_type determinant(const t_mat& mat)
 		for(t_size i=0; i<mat.size1(); ++i)
 			dDet *= L(i,i)*U(i,i);
 
-		unsigned int iNumSwaps=0;
+		std::size_t iNumSwaps=0;
 		for(t_size iSwap=0; iSwap<perm.size(); ++iSwap)
 			if(iSwap != perm(iSwap))
 				++iNumSwaps;
 
-		if(is_odd<unsigned int>(iNumSwaps))
+		if(is_odd<std::size_t>(iNumSwaps))
 			dDet *= T(-1.);
 
 		return dDet;
@@ -1037,7 +1037,7 @@ struct set_eps_0_impl<real_type, 1>
 
 	void operator()(real_type& d) const
 	{
-		if(std::fabs(d) < eps)
+		if(std::abs(d) < eps)
 			d = real_type(0);
 	}
 };
@@ -1134,7 +1134,7 @@ struct vec_angle_unsigned_impl<T, LinalgType::VECTOR>
 		REAL dot = REAL();
 		REAL len1 = REAL();
 		REAL len2 = REAL();
-		for(unsigned int i=0; i<q1.size(); ++i)
+		for(std::size_t i=0; i<q1.size(); ++i)
 		{
 			dot += q1[i]*q2[i];
 
@@ -1161,7 +1161,8 @@ typename T::value_type vec_angle_unsigned(const T& q1, const T& q2)
 // -----------------------------------------------------------------------------
 
 
-// see: K. Shoemake, "Animating rotation with quaternion curves": http://dx.doi.org/10.1145/325334.325242
+// see: K. Shoemake, "Animating rotation with quaternion curves":
+// http://dx.doi.org/10.1145/325334.325242
 template<class T>
 T slerp(const T& q1, const T& q2, typename T::value_type t)
 {
@@ -1592,8 +1593,9 @@ bool eigenvec_sym_simple(const t_mat& mat, std::vector<t_vec>& evecs, std::vecto
 	t_mat I = ublas::identity_matrix<T>(n);
 	t_mat M = mat;
 
-	const unsigned int MAX_ITER = 512;
-	unsigned int iIter = 0;
+	const T tEps = T(1e-6);
+	const std::size_t MAX_ITER = 512;
+	std::size_t iIter = 0;
 	for(iIter=0; iIter<MAX_ITER; ++iIter)
 	{
 		t_mat Q, R;
@@ -1611,9 +1613,9 @@ bool eigenvec_sym_simple(const t_mat& mat, std::vector<t_vec>& evecs, std::vecto
 
 
 		bool bConverged = 1;
-		for(unsigned int iVal=0; iVal<n; ++iVal)
+		for(std::size_t iVal=0; iVal<n; ++iVal)
 		{
-			if(std::fabs(M(iVal,iVal)-Mlast(iVal,iVal)) > 1e-6)
+			if(std::abs(M(iVal,iVal)-Mlast(iVal,iVal)) > tEps)
 			{
 				bConverged = 0;
 				break;
@@ -1626,13 +1628,12 @@ bool eigenvec_sym_simple(const t_mat& mat, std::vector<t_vec>& evecs, std::vecto
 
 	//std::cout << "Iterations: " << iIter << std::endl;
 
-
 	evals.resize(n);
 	evecs.resize(n);
 
-	for(unsigned int iVal=0; iVal<n; ++iVal)
+	for(std::size_t iVal=0; iVal<n; ++iVal)
 	{
-		evals[iVal] = M(iVal,iVal);
+		evals[iVal] = M(iVal, iVal);
 		evecs[iVal] = get_column(I, iVal);
 	}
 
@@ -1641,7 +1642,7 @@ bool eigenvec_sym_simple(const t_mat& mat, std::vector<t_vec>& evecs, std::vecto
 
 template<typename T=double>
 void sort_eigenvecs(std::vector<ublas::vector<T> >& evecs,
-		std::vector<T>& evals, bool bOrder=0, T (*pEvalFkt)(T)=0)
+	std::vector<T>& evals, bool bOrder=0, T (*pEvalFkt)(T)=0)
 {
 	if(evecs.size() != evals.size())
 		return;
@@ -1655,7 +1656,7 @@ void sort_eigenvecs(std::vector<ublas::vector<T> >& evecs,
 	std::vector<Evec> myevecs;
 	myevecs.reserve(evecs.size());
 
-	for(unsigned int i=0; i<evecs.size(); ++i)
+	for(std::size_t i=0; i<evecs.size(); ++i)
 	{
 		Evec ev;
 		ev.vec = evecs[i];
@@ -1679,7 +1680,7 @@ void sort_eigenvecs(std::vector<ublas::vector<T> >& evecs,
 		});
 
 
-	for(unsigned int i=0; i<evecs.size(); ++i)
+	for(std::size_t i=0; i<evecs.size(); ++i)
 	{
 		evecs[i] = myevecs[i].vec;
 		evals[i] = myevecs[i].val;
