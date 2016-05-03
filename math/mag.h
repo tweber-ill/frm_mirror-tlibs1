@@ -12,7 +12,10 @@
 #include <vector>
 #include <cmath>
 #include <complex>
+
 #include "linalg.h"
+#include "atoms.h"
+
 
 namespace tl {
 
@@ -35,84 +38,78 @@ std::vector<ublas::vector<T>> get_neighbour_atoms(UCType crys, int iDist=0, T a=
 	if(crys == UCType::SIMPLE)
 	{
 		if(iDist == 0)
-		{
-			vecAtoms.push_back(make_vec({1., 0., 0.}));
-			vecAtoms.push_back(make_vec({0., 1., 0.}));
-			vecAtoms.push_back(make_vec({0., 0., 1.}));
-			vecAtoms.push_back(make_vec({-1., 0., 0.}));
-			vecAtoms.push_back(make_vec({0., -1., 0.}));
-			vecAtoms.push_back(make_vec({0., 0., -1.}));
-		}
+			vecAtoms = {
+				make_vec({1., 0., 0.}),
+				make_vec({0., 1., 0.}),
+				make_vec({0., 0., 1.}),
+				make_vec({-1., 0., 0.}),
+				make_vec({0., -1., 0.}),
+				make_vec({0., 0., -1.}) };
 		else if(iDist == 1)
-		{
-			vecAtoms.push_back(make_vec({1., 1., 0.}));
-			vecAtoms.push_back(make_vec({1., -1., 0.}));
-			vecAtoms.push_back(make_vec({-1., 1., 0.}));
-			vecAtoms.push_back(make_vec({-1., -1., 0.}));
-			vecAtoms.push_back(make_vec({1., 0., 1.}));
-			vecAtoms.push_back(make_vec({1., 0., -1.}));
-			vecAtoms.push_back(make_vec({-1., 0., 1.}));
-			vecAtoms.push_back(make_vec({-1., 0., -1.}));
-			vecAtoms.push_back(make_vec({0., 1., 1.}));
-			vecAtoms.push_back(make_vec({0., 1., -1.}));
-			vecAtoms.push_back(make_vec({0., -1., 1.}));
-			vecAtoms.push_back(make_vec({0., -1., -1.}));
-		}
+			vecAtoms = {
+				make_vec({1., 1., 0.}),
+				make_vec({1., -1., 0.}),
+				make_vec({-1., 1., 0.}),
+				make_vec({-1., -1., 0.}),
+				make_vec({1., 0., 1.}),
+				make_vec({1., 0., -1.}),
+				make_vec({-1., 0., 1.}),
+				make_vec({-1., 0., -1.}),
+				make_vec({0., 1., 1.}),
+				make_vec({0., 1., -1.}),
+				make_vec({0., -1., 1.}),
+				make_vec({0., -1., -1.}) };
 	}
 	else if(crys == UCType::FCC)
 	{
 		if(iDist == 0)
-		{
-			vecAtoms.push_back(make_vec({0.5, 0.5, 0.}));
-			vecAtoms.push_back(make_vec({0.5, -0.5, 0.}));
-			vecAtoms.push_back(make_vec({-0.5, 0.5, 0.}));
-			vecAtoms.push_back(make_vec({-0.5, -0.5, 0.}));
-			vecAtoms.push_back(make_vec({0.5, 0., 0.5}));
-			vecAtoms.push_back(make_vec({0.5, 0., -0.5}));
-			vecAtoms.push_back(make_vec({-0.5, 0., 0.5}));
-			vecAtoms.push_back(make_vec({-0.5, 0., -0.5}));
-			vecAtoms.push_back(make_vec({0., 0.5, 0.5}));
-			vecAtoms.push_back(make_vec({0., 0.5, -0.5}));
-			vecAtoms.push_back(make_vec({0., -0.5, 0.5}));
-			vecAtoms.push_back(make_vec({0., -0.5, -0.5}));
-		}
+			vecAtoms = {
+				make_vec({0.5, 0.5, 0.}),
+				make_vec({0.5, -0.5, 0.}),
+				make_vec({-0.5, 0.5, 0.}),
+				make_vec({-0.5, -0.5, 0.}),
+				make_vec({0.5, 0., 0.5}),
+				make_vec({0.5, 0., -0.5}),
+				make_vec({-0.5, 0., 0.5}),
+				make_vec({-0.5, 0., -0.5}),
+				make_vec({0., 0.5, 0.5}),
+				make_vec({0., 0.5, -0.5}),
+				make_vec({0., -0.5, 0.5}),
+				make_vec({0., -0.5, -0.5}) };
 		else if(iDist == 1)
-		{
-			vecAtoms.push_back(make_vec({1., 0., 0.}));
-			vecAtoms.push_back(make_vec({0., 1., 0.}));
-			vecAtoms.push_back(make_vec({0., 0., 1.}));
-			vecAtoms.push_back(make_vec({-1., 0., 0.}));
-			vecAtoms.push_back(make_vec({0., -1., 0.}));
-			vecAtoms.push_back(make_vec({0., 0., -1.}));
-		}
+			vecAtoms = {
+				make_vec({1., 0., 0.}),
+				make_vec({0., 1., 0.}),
+				make_vec({0., 0., 1.}),
+				make_vec({-1., 0., 0.}),
+				make_vec({0., -1., 0.}),
+				make_vec({0., 0., -1.}) };
 	}
 	else if(crys == UCType::BCC)
 	{
 		if(iDist == 0)
-		{
-			vecAtoms.push_back(make_vec({0.5, 0.5, 0.5}));
-			vecAtoms.push_back(make_vec({0.5, 0.5, -0.5}));
-			vecAtoms.push_back(make_vec({0.5, -0.5, 0.5}));
-			vecAtoms.push_back(make_vec({0.5, -0.5, -0.5}));
-			vecAtoms.push_back(make_vec({-0.5, 0.5, 0.5}));
-			vecAtoms.push_back(make_vec({-0.5, 0.5, -0.5}));
-			vecAtoms.push_back(make_vec({-0.5, -0.5, 0.5}));
-			vecAtoms.push_back(make_vec({-0.5, -0.5, -0.5}));
-		}
+			vecAtoms = {
+				make_vec({0.5, 0.5, 0.5}),
+				make_vec({0.5, 0.5, -0.5}),
+				make_vec({0.5, -0.5, 0.5}),
+				make_vec({0.5, -0.5, -0.5}),
+				make_vec({-0.5, 0.5, 0.5}),
+				make_vec({-0.5, 0.5, -0.5}),
+				make_vec({-0.5, -0.5, 0.5}),
+				make_vec({-0.5, -0.5, -0.5}) };
 		else if(iDist == 1)
-		{
-			vecAtoms.push_back(make_vec({1., 0., 0.}));
-			vecAtoms.push_back(make_vec({0., 1., 0.}));
-			vecAtoms.push_back(make_vec({0., 0., 1.}));
-			vecAtoms.push_back(make_vec({-1., 0., 0.}));
-			vecAtoms.push_back(make_vec({0., -1., 0.}));
-			vecAtoms.push_back(make_vec({0., 0., -1.}));
-		}
+			vecAtoms = {
+				make_vec({1., 0., 0.}),
+				make_vec({0., 1., 0.}),
+				make_vec({0., 0., 1.}),
+				make_vec({-1., 0., 0.}),
+				make_vec({0., -1., 0.}),
+				make_vec({0., 0., -1.}) };
 	}
 
-	if(a != 1.)
-	for(ublas::vector<T>& vec : vecAtoms)
-		vec *= a;
+	if(!float_equal<T>(a, T(1)))
+		for(ublas::vector<T>& vec : vecAtoms)
+			vec *= a;
 
 	return vecAtoms;
 }
@@ -122,7 +119,7 @@ std::vector<ublas::vector<T>> get_neighbour_atoms(UCType crys, int iDist=0, T a=
 // ----------------------------------------------------------------------------
 
 // coupling J and atom position
-template<typename T=double> using t_magatompos = std::pair<T, ublas::vector<T>>;
+template<typename T=double> using t_magatompos = std::pair<std::complex<T>, ublas::vector<T>>;
 
 
 /**
@@ -138,20 +135,14 @@ T ferromag(const t_cont& lstAtoms, const ublas::vector<T>& vecq, T tS)
 	std::complex<T> J(0., 0.), J0(0., 0.);
 	constexpr std::complex<T> i(0., 1.);
 
-	for(const t_magatompos<T>& atom : lstAtoms)
-	{
-		const T& tJ = atom.first;
-		const ublas::vector<T>& vecPos = atom.second;
+	J = structfact(vec_from_pairvec<1,std::vector,t_cont>()(lstAtoms), vecq,
+		vec_from_pairvec<0,std::vector,t_cont>()(lstAtoms), &J0).real();
 
-		J += tJ * std::exp(i * ublas::inner_prod(vecq, vecPos));
-		J0 += tJ;
-	}
-
-	T tE = 2.*tS*(J0 - J).real();
-	return tE;
+	return T(2)*tS*(J0 - J).real();
 }
 
 // ----------------------------------------------------------------------------
+
 
 // Magnetic form factors
 // see Neutron Data Booklet sec. 2.5-1 (p. 60)

@@ -1,4 +1,4 @@
-/*
+/**
  * array helpers
  *
  * @author: tweber
@@ -131,8 +131,7 @@ t_cont arrayunion(const std::initializer_list<t_cont>& lst)
 
 template<class t_to, class t_from, template<class...> class t_cont,
 	bool bIsEqu = std::is_same<t_from, t_to>::value>
-struct container_cast
-{};
+struct container_cast {};
 
 template<class t_to, class t_from, template<class...> class t_cont>
 struct container_cast<t_to, t_from, t_cont, 1>
@@ -154,6 +153,51 @@ struct container_cast<t_to, t_from, t_cont, 0>
 };
 
 // ----------------------------------------------------------------------------
+
+
+template<std::size_t iWhichElem = 0,
+	template<class...> class t_cont = std::vector,
+	class t_pairvec = std::vector<std::pair<double,double>>>
+struct vec_from_pairvec {};
+
+template<template<class...> class t_cont, class t_pairvec>
+struct vec_from_pairvec<0, t_cont, t_pairvec>
+{
+	using t_pair = typename t_pairvec::value_type;
+	using t_val = typename t_pair::first_type;
+
+	t_cont<t_val> operator()(const t_pairvec& vec) const
+	{
+		t_cont<t_val> vecVal;
+		vecVal.reserve(vec.size());
+
+		for(const t_pair& elem : vec)
+			vecVal.push_back(elem.first);
+
+		return vecVal;
+	}
+};
+
+template<template<class...> class t_cont, class t_pairvec>
+struct vec_from_pairvec<1, t_cont, t_pairvec>
+{
+	using t_pair = typename t_pairvec::value_type;
+	using t_val = typename t_pair::second_type;
+
+	t_cont<t_val> operator()(const t_pairvec& vec) const
+	{
+		t_cont<t_val> vecVal;
+		vecVal.reserve(vec.size());
+
+		for(const t_pair& elem : vec)
+			vecVal.push_back(elem.second);
+
+		return vecVal;
+	}
+};
+
+// ----------------------------------------------------------------------------
+
 
 }
 #endif

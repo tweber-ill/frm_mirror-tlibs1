@@ -1,4 +1,4 @@
-// clang -o ferro test/ferro.cpp gfx/gnuplot.cpp helper/log.cpp  -lstdc++ -lm -lboost_iostreams -std=c++11
+// clang -o ferro test/ferro.cpp gfx/gnuplot.cpp log/log.cpp  -lstdc++ -lm -lboost_iostreams -std=c++11
 
 #include "../math/mag.h"
 #include "../math/neutrons.hpp"
@@ -61,8 +61,7 @@ int main()
 	obj1.linestyle = STYLE_LINES_SOLID;
 	obj1.vecX = vecq;
 	obj1.vecY = vecE1;
-	obj1.bHasColor = 1;
-	obj1.iColor = 0xff0000;
+	obj1.oiColor = 0xff0000;
 	obj1.strLegend = "[100]";
 	plt.AddLine(obj1);
 
@@ -70,8 +69,7 @@ int main()
 	obj11.linestyle = STYLE_LINES_SOLID;
 	obj11.vecX = vecq;
 	obj11.vecY = vecE11;
-	obj11.bHasColor = 1;
-	obj11.iColor = 0x009900;
+	obj11.oiColor = 0x009900;
 	obj11.strLegend = "[110]";
 	plt.AddLine(obj11);
 
@@ -79,8 +77,7 @@ int main()
 	obj111.linestyle = STYLE_LINES_SOLID;
 	obj111.vecX = vecq;
 	obj111.vecY = vecE111;
-	obj111.bHasColor = 1;
-	obj111.iColor = 0x0000ff;
+	obj111.oiColor = 0x0000ff;
 	obj111.strLegend = "[111]";
 	plt.AddLine(obj111);
 

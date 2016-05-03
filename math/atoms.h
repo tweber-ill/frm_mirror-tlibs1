@@ -78,7 +78,7 @@ t_cont<t_vec> generate_atoms(const t_cont<t_mat>& trafos, const t_vec& vecAtom,
  * @param vecB "b" coefficients
  * @param c "c" coefficient
  * @return form factor
- * see: Waasmaier and Kirfel, Acta Cryst. A51, 416-431 (1995)
+ * @desc: see Waasmaier and Kirfel, Acta Cryst. A51, 416-431 (1995)
  */
 template<class T=double, template<class...> class t_cont>
 T formfact(T G, const t_cont<T>& vecA, const t_cont<T>& vecB, T c)
@@ -103,13 +103,15 @@ T formfact(T G, const t_cont<T>& vecA, const t_cont<T>& vecB, T c)
  * @param lstAtoms List of atom positions
  * @param vecG Lattice vector
  * @param lstf G-dependent Atomic form factors (x-rays) or coherent scattering length (neutrons)
+ * @param pF0 optional total form factor.
  * @return structure factor
  */
-template<typename T=double, typename t_ff = std::complex<T>,
-	class t_vec=ublas::vector<T>,
+template<typename T = double, typename t_ff = std::complex<T>,
+	class t_vec = ublas::vector<T>,
 	template<class ...> class t_cont=std::initializer_list>
 std::complex<T> structfact(const t_cont<t_vec>& lstAtoms, const t_vec& vecG, 
-	const t_cont<t_ff>& lstf = t_cont<t_ff>())
+	const t_cont<t_ff>& lstf = t_cont<t_ff>(),
+	t_ff *pF0 = nullptr)
 {
 	constexpr std::complex<T> i(0., 1.);
 	std::complex<T> F(0., 0.);
@@ -120,7 +122,9 @@ std::complex<T> structfact(const t_cont<t_vec>& lstAtoms, const t_vec& vecG,
 	t_iter_atoms iterAtom = lstAtoms.begin();
 	t_iter_ffact iterFFact = lstf.begin();
 
-	for(; iterAtom!=lstAtoms.end(); ++iterAtom)
+	if(pF0) *pF0 = t_ff(0);
+
+	for(; iterAtom != lstAtoms.end(); ++iterAtom)
 	{
 		// only use form factors or scattering lengths when available
 		t_ff tFF = T(1);
@@ -128,11 +132,12 @@ std::complex<T> structfact(const t_cont<t_vec>& lstAtoms, const t_vec& vecG,
 			tFF = *iterFFact;
 
 		F += tFF * std::exp(i * ublas::inner_prod(vecG, *iterAtom));
+		if(pF0) *pF0 += tFF;
 
-		if(iterFFact != lstf.end())
+		// if there is only one form factor in the list, use it for all positions
+		if(iterFFact!=lstf.end() && std::next(iterFFact)!=lstf.end())
 			++iterFFact;
 	}
-
 	return F;
 }
 
