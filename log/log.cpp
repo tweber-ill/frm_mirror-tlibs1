@@ -86,7 +86,7 @@ void Log::begin_log()
 		if(m_bShowThread)
 		{
 			using t_mapKey = typename t_threadmap::value_type::first_type;
-			using t_mapVal = typename t_threadmap::value_type::second_type;
+			//using t_mapVal = typename t_threadmap::value_type::second_type;
 
 			t_mapKey idThread = std::this_thread::get_id();
 			typename t_threadmap::const_iterator iterMap = m_threadmap.find(idThread);

@@ -133,7 +133,6 @@ template<typename T=double, typename t_cont=std::initializer_list<t_magatompos<T
 T ferromag(const t_cont& lstAtoms, const ublas::vector<T>& vecq, T tS)
 {
 	std::complex<T> J(0., 0.), J0(0., 0.);
-	constexpr std::complex<T> i(0., 1.);
 
 	J = structfact(vec_from_pairvec<1,std::vector,t_cont>()(lstAtoms), vecq,
 		vec_from_pairvec<0,std::vector,t_cont>()(lstAtoms), &J0).real();
