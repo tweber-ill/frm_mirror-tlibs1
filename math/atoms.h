@@ -1,7 +1,7 @@
 /**
  * atoms and structural calculations
- * @author tweber
- * @date nov-2015
+ * @author Tobias Weber
+ * @date 2015-2016
  * @license GPLv2 or GPLv3
  */
 
@@ -11,6 +11,7 @@
 
 #include "linalg.h"
 #include "linalg_ops.h"
+#include <tuple>
 
 
 namespace tl{
@@ -63,11 +64,78 @@ t_cont<t_vec> generate_atoms(const t_cont<t_mat>& trafos, const t_vec& vecAtom,
 		if(bPushBack)
 			vecvecRes.push_back(std::move(vecRes));
 	}
-
 	return vecvecRes;
 }
 
 
+/**
+ * Generates atom positions using trafo matrices for all atoms in unit cell
+ */
+template<class t_mat, class t_vec, template<class ...Args> class t_cont,
+class t_str=std::string, class t_real = typename t_mat::value_type>
+std::tuple<t_cont<t_str>, t_cont<t_vec>, t_cont<t_vec>, t_cont<std::size_t>>
+generate_all_atoms(const t_cont<t_mat>& trafos,
+	const t_cont<t_vec>& vecAtoms, const t_cont<t_str>* pvecNames,
+	const t_mat& matA, t_real tUCMin=0, t_real tUCMax=1,
+	t_real eps = std::numeric_limits<t_real>::epsilon())
+{
+	t_cont<t_vec> vecAllAtoms, vecAllAtomsFrac;
+	t_cont<t_str> vecAllNames;
+	t_cont<std::size_t> vecAllAtomTypes;
+
+	for(std::size_t iAtom=0; iAtom<vecAtoms.size(); ++iAtom)
+	{
+		t_vec vecAtom = vecAtoms[iAtom];
+		t_str strNone;
+
+		// homogeneous coordinates
+		vecAtom.resize(4,1); vecAtom[3] = t_real(1);
+		const t_str& strElem = pvecNames ? (*pvecNames)[iAtom] : strNone;
+
+		t_cont<t_vec> vecOtherAtoms = vecAtoms;
+		vecOtherAtoms.erase(vecOtherAtoms.begin() + iAtom);
+
+		std::vector<t_vec> vecSymPos =
+			tl::generate_atoms<t_mat, t_vec, t_cont>
+				(trafos, vecAtom, tUCMin, tUCMax, eps);
+
+
+		std::size_t iGeneratedAtoms = 0;
+		for(t_vec vecThisAtom : vecSymPos)
+		{
+			vecThisAtom.resize(3,1);
+
+			// is the atom position in the unit cell still free?
+			if(std::find_if(vecAllAtomsFrac.begin(), vecAllAtomsFrac.end(),
+				[&vecThisAtom, eps](const t_vec& _v) -> bool
+				{ return tl::vec_equal(_v, vecThisAtom, eps); }) == vecAllAtomsFrac.end()
+				&& // and is it not at a given initial atom position?
+				std::find_if(vecOtherAtoms.begin(), vecOtherAtoms.end(),
+				[&vecThisAtom, eps](const t_vec& _v) -> bool
+				{ return tl::vec_equal(_v, vecThisAtom, eps); }) == vecOtherAtoms.end())
+			{
+				vecAllAtomsFrac.push_back(vecThisAtom);
+
+				// converts from fractional coordinates
+				vecThisAtom = matA * vecThisAtom;
+				vecAllAtoms.push_back(std::move(vecThisAtom));
+				vecAllNames.push_back(strElem);
+				vecAllAtomTypes.push_back(iAtom);
+
+				++iGeneratedAtoms;
+			}
+			else
+			{
+				tl::log_warn("Position ", vecThisAtom, " is already occupied,",
+					" skipping current ", strElem, " atom.");
+			}
+		}
+		//tl::log_info("Unit cell has ", iGeneratedAtoms, " ", strElem, " atom(s).");
+	}
+
+	return std::make_tuple(vecAllNames,
+		vecAllAtoms, vecAllAtomsFrac, vecAllAtomTypes);
+}
 
 // ----------------------------------------------------------------------------
 
@@ -110,7 +178,7 @@ T formfact(T G, const t_cont<T>& vecA, const t_cont<T>& vecB, T c)
 template<typename T = double, typename t_ff = std::complex<T>,
 	class t_vec = ublas::vector<T>,
 	template<class ...> class t_cont=std::initializer_list>
-std::complex<T> structfact(const t_cont<t_vec>& lstAtoms, const t_vec& vecG, 
+std::complex<T> structfact(const t_cont<t_vec>& lstAtoms, const t_vec& vecG,
 	const t_cont<t_ff>& lstf = t_cont<t_ff>(),
 	t_ff *pF0 = nullptr)
 {
