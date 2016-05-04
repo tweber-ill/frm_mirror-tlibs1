@@ -38,7 +38,8 @@ void restrict_to_uc(t_vec& vec,
  */
 template<class t_mat, class t_vec, template<class ...Args> class t_cont>
 t_cont<t_vec> generate_atoms(const t_cont<t_mat>& trafos, const t_vec& vecAtom,
-	typename t_vec::value_type tUCMin=0, typename t_vec::value_type tUCMax=1)
+	typename t_vec::value_type tUCMin=0, typename t_vec::value_type tUCMax=1,
+	typename t_vec::value_type eps = std::numeric_limits<typename t_vec::value_type>::epsilon())
 {
 	//typedef typename t_vec::value_type t_real;
 	t_cont<t_vec> vecvecRes;
@@ -52,7 +53,7 @@ t_cont<t_vec> generate_atoms(const t_cont<t_mat>& trafos, const t_vec& vecAtom,
 		// already have pos?
 		for(const t_vec& vecOld : vecvecRes)
 		{
-			if(vec_equal(vecOld, vecRes))
+			if(vec_equal(vecOld, vecRes, eps))
 			{
 				bPushBack = 0;
 				break;
