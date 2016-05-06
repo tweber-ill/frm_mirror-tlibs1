@@ -1,11 +1,11 @@
-// gcc -o dft2 dft2.cpp ../math/fourier.cpp ../helper/log.cpp -lstdc++ -lm -std=c++11
+// gcc -o dft2 dft2.cpp ../math/fourier.cpp ../log/log.cpp -lstdc++ -lm -std=c++11
 
 #include "../math/fourier.h"
 #include <iostream>
 
 int main()
 {
-	typedef std::complex<double> t_c;
+	typedef std::complex<float> t_c;
 	std::vector<t_c> vecIn = {t_c(1,4), t_c(2,3), t_c(3,2), t_c(4,1),
 				  /*t_c(2,1), t_c(5,1), t_c(7,3), t_c(1,1)*/};
 

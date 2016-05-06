@@ -1,4 +1,4 @@
-/*
+/**
  * advanced linalg helpers
  *
  * @author: tweber
@@ -19,6 +19,7 @@ namespace tl {
 	#define USE_LAPACK
 #endif
 
+
 #ifdef NO_LAPACK
 
 template<typename T=double>
@@ -36,44 +37,25 @@ bool eigenvec_sym(const ublas::matrix<T>& mat, std::vector<ublas::vector<T>>& ev
 #else
 
 template<typename T=double>
-bool qr(const ublas::matrix<T>& M, ublas::matrix<T>& Q, ublas::matrix<T>& R)
-{
-	log_err("No specialisation of \"qr\" available for this type.");
-	return false;
-}
-
-template<>
-bool qr<double>(const ublas::matrix<double>& M,
-	ublas::matrix<double>& Q,
-	ublas::matrix<double>& R);
-
+bool qr(const ublas::matrix<T>& M, ublas::matrix<T>& Q, ublas::matrix<T>& R);
 
 template<typename T=double>
 bool eigenvec(const ublas::matrix<T>& mat,
-	std::vector<ublas::vector<T> >& evecs_real, std::vector<ublas::vector<T> >& evecs_imag,
-	std::vector<T>& evals_real, std::vector<T>& evals_imag)
-{
-	log_err("No specialisation of \"eigenvec\" available for this type.");
-	return false;
-}
+	std::vector<ublas::vector<T> >& evecs_real, std::vector<ublas::vector<T>>& evecs_imag,
+	std::vector<T>& evals_real, std::vector<T>& evals_imag);
 
 template<typename T=double>
-bool eigenvec_sym(const ublas::matrix<T>& mat, std::vector<ublas::vector<T> >& evecs, std::vector<T>& evals)
-{
-	log_err("No specialisation of \"eigenvec_sym\" available for this type.");
-	return false;
-}
+bool eigenvec_sym(const ublas::matrix<T>& mat, 
+	std::vector<ublas::vector<T>>& evecs, std::vector<T>& evals);
 
-template<>
-bool eigenvec<double>(const ublas::matrix<double>& mat,
-	std::vector<ublas::vector<double> >& evecs_real,
-	std::vector<ublas::vector<double> >& evecs_imag,
-	std::vector<double>& evals_real,
-	std::vector<double>& evals_imag);
-template<>
-bool eigenvec_sym<double>(const ublas::matrix<double>& mat,
-	std::vector<ublas::vector<double> >& evecs,
-	std::vector<double>& evals);
+
+#ifdef TLIBS_INC_HDR_IMPLS
+}
+#include "linalg2_impl.h"
+namespace tl {
+#endif
+
+
 #endif
 
 }

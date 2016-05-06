@@ -37,7 +37,7 @@ std::complex<T> dft_coeff(int k,
 
 		T dv = T(-2)*get_pi<T>()*T(j)*T(k)/T(n);
 		if(bInv) dv = -dv;
-		f += t * (cos(dv) + imag*sin(dv));
+		f += t * (std::cos(dv) + imag*std::sin(dv));
 	}
 
 	return f;
@@ -160,7 +160,7 @@ std::vector<std::complex<T>> dft_double(const std::vector<std::complex<T>>& vecI
 
 //------------------------------------------------------------------------------
 
-template<typename T=unsigned int>
+template<typename T=std::size_t>
 T count_bits(T imax)
 {
 	T inum = 0;
@@ -168,7 +168,7 @@ T count_bits(T imax)
 	return inum;
 }
 
-template<typename T=unsigned int>
+template<typename T=std::size_t>
 T bit_reverse(T imax, T inum)
 {
 	if(imax<2) return inum;
@@ -186,7 +186,7 @@ T bit_reverse(T imax, T inum)
 	return irev;
 }
 
-template<typename T=unsigned int>
+template<typename T=std::size_t>
 std::vector<T> bit_reverse_indices(T imax)
 {
 	std::vector<T> vec;
@@ -243,7 +243,7 @@ std::pair<t_vec, t_vec> split_vec(const t_vec& vec)
 
 template<typename T=double>
 std::vector<std::complex<T>> fft_merge(const std::vector<std::complex<T>>& vecIn,
-				bool bInv=0)
+	bool bInv=0)
 {
 	typedef std::vector<std::complex<T>> t_vec;
 
@@ -271,7 +271,7 @@ std::vector<std::complex<T>> fft_merge(const std::vector<std::complex<T>>& vecIn
 
 template<typename T=double>
 std::vector<std::complex<T>> fft_direct(const std::vector<std::complex<T>>& vecIn,
-				bool bInv=0, bool bNorm=0)
+	bool bInv=0, bool bNorm=0)
 {
 	const std::size_t n = vecIn.size();
 	std::vector<std::complex<T>> vecOut;
@@ -299,8 +299,7 @@ class Fourier_base
 		virtual ~Fourier_base() = default;
 
 		virtual void trafo(const T* pInR, const T* pInI,
-					T* pOutR, T* pOutI,
-					bool bInv=0) = 0;
+			T* pOutR, T* pOutI, bool bInv=0) = 0;
 };
 
 // dft with pre-calculated coefficients
@@ -335,7 +334,8 @@ class DFT : public Fourier_base<T>
 
 		virtual ~DFT() = default;
 
-		ublas::vector<std::complex<T>> trafo(const ublas::vector<std::complex<T>>& vec, bool bInv=0)
+		ublas::vector<std::complex<T>> trafo(
+			const ublas::vector<std::complex<T>>& vec, bool bInv=0)
 		{
 			if(!bInv)
 				return ublas::prod(m_matCoeff, vec);
@@ -344,8 +344,8 @@ class DFT : public Fourier_base<T>
 		}
 
 		virtual void trafo(const T* pInR, const T* pInI,
-					T* pOutR, T* pOutI,
-					bool bInv=0) override
+			T* pOutR, T* pOutI,
+			bool bInv=0) override
 		{
 			const std::size_t iSize = m_matCoeff.size1();
 
@@ -405,7 +405,7 @@ class FFT : public Fourier_base<T>
 
 	protected:
 		typedef std::unordered_map<CoeffKey, std::complex<T>,
-					CoeffKeyHash, CoeffKeyEqual> t_mapCoeff;
+			CoeffKeyHash, CoeffKeyEqual> t_mapCoeff;
 		t_mapCoeff m_mapCoeff, m_mapCoeffInv;
 		std::size_t m_n;
 

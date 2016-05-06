@@ -72,7 +72,7 @@ t_cont<t_vec> generate_atoms(const t_cont<t_mat>& trafos, const t_vec& vecAtom,
  * Generates atom positions using trafo matrices for all atoms in unit cell
  */
 template<class t_mat, class t_vec, template<class ...Args> class t_cont,
-class t_str=std::string, class t_real = typename t_mat::value_type>
+	class t_str=std::string, class t_real = typename t_mat::value_type>
 std::tuple<t_cont<t_str>, t_cont<t_vec>, t_cont<t_vec>, t_cont<std::size_t>>
 generate_all_atoms(const t_cont<t_mat>& trafos,
 	const t_cont<t_vec>& vecAtoms, const t_cont<t_str>* pvecNames,
@@ -95,7 +95,7 @@ generate_all_atoms(const t_cont<t_mat>& trafos,
 		t_cont<t_vec> vecOtherAtoms = vecAtoms;
 		vecOtherAtoms.erase(vecOtherAtoms.begin() + iAtom);
 
-		std::vector<t_vec> vecSymPos =
+		t_cont<t_vec> vecSymPos =
 			tl::generate_atoms<t_mat, t_vec, t_cont>
 				(trafos, vecAtom, tUCMin, tUCMax, eps);
 
@@ -200,7 +200,7 @@ std::complex<T> structfact(const t_cont<t_vec>& lstAtoms, const t_vec& vecG,
 		if(iterFFact != lstf.end())
 			tFF = *iterFFact;
 
-		F += tFF * std::exp(i * ublas::inner_prod(vecG, *iterAtom));
+		F += tFF * std::exp(i * (vecG * *iterAtom));
 		if(pF0) *pF0 += tFF;
 
 		// if there is only one form factor in the list, use it for all positions
