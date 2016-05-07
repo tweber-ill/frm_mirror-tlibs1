@@ -15,6 +15,13 @@
 #ifndef NO_LAPACK
 extern "C"
 {
+	#define lapack_complex_float std::complex<float>
+	#define lapack_complex_float_real(c) (c.real())
+	#define lapack_complex_float_imag(c) (c.imag())
+	#define lapack_complex_double std::complex<double>
+	#define lapack_complex_double_real(c) (c.real())
+	#define lapack_complex_double_imag(c) (c.imag())
+
 	#include <lapacke.h>
 }
 
@@ -41,11 +48,12 @@ struct select_func
 
 template<class T>
 bool eigenvec(const ublas::matrix<T>& mat,
-	std::vector<ublas::vector<T> >& evecs_real,
-	std::vector<ublas::vector<T> >& evecs_imag,
+	std::vector<ublas::vector<T>>& evecs_real,
+	std::vector<ublas::vector<T>>& evecs_imag,
 	std::vector<T>& evals_real,
 	std::vector<T>& evals_imag)
 {
+	bool bOk = true;
 	select_func<float, double, decltype(LAPACKE_sgeev), decltype(LAPACKE_dgeev)> 
 		sfunc(LAPACKE_sgeev, LAPACKE_dgeev);
 	auto pfunc = sfunc.get_func<T>();
@@ -77,7 +85,6 @@ bool eigenvec(const ublas::matrix<T>& mat,
 			evecs_real[i] = ublas::zero_vector<T>(iOrder);
 			evecs_real[i][i] = 1.;
 
-
 			evals_imag[i] = 0.;
 			evecs_imag[i] = ublas::zero_vector<T>(iOrder);
 		}
@@ -86,13 +93,10 @@ bool eigenvec(const ublas::matrix<T>& mat,
 	}
 	*/
 
-	bool bOk = true;
-
-	std::unique_ptr<T, std::default_delete<T[]>> 
+	std::unique_ptr<T, std::default_delete<T[]>>
 		uptrMem(new T[iOrder*iOrder + iOrder*iOrder + iOrder*iOrder + iOrder + iOrder]);
-	T *pMem = uptrMem.get();
+	T *pMatrix = uptrMem.get();
 
-	T *pMatrix = pMem;
 	for(std::size_t i=0; i<iOrder; ++i)
 		for(std::size_t j=0; j<iOrder; ++j)
 			pMatrix[i*iOrder + j] = mat(i,j);
@@ -102,9 +106,9 @@ bool eigenvec(const ublas::matrix<T>& mat,
 	T *peigenvals_real = p_eigenvecs/*_l*/ + iOrder*iOrder;
 	T *peigenvals_imag = peigenvals_real + iOrder;
 
-	int iInfo = (*pfunc)(LAPACK_ROW_MAJOR, 'N', 'V', iOrder, (T*)pMatrix, iOrder,
-		(T*)peigenvals_real, (T*)peigenvals_imag,
-		/*(T*)p_eigenvecs_l*/0, iOrder, (T*)p_eigenvecs, iOrder);
+	int iInfo = (*pfunc)(LAPACK_ROW_MAJOR, 'N', 'V', iOrder,
+		pMatrix, iOrder, peigenvals_real, peigenvals_imag,
+		/*(T*)p_eigenvecs_l*/0, iOrder, p_eigenvecs, iOrder);
 
 	if(iInfo!=0)
 	{
@@ -156,10 +160,67 @@ bool eigenvec(const ublas::matrix<T>& mat,
 }
 
 template<class T>
+bool eigenvec_cplx(const ublas::matrix<std::complex<T>>& mat,
+	std::vector<ublas::vector<std::complex<T>>>& evecs,
+	std::vector<std::complex<T>>& evals)
+{
+	using t_cplx = std::complex<T>;
+	bool bOk = true;
+	select_func<float, double, decltype(LAPACKE_cgeev), decltype(LAPACKE_zgeev)>
+		sfunc(LAPACKE_cgeev, LAPACKE_zgeev);
+	auto pfunc = sfunc.get_func<T>();
+
+	if(mat.size1() != mat.size2())
+		return false;
+	if(mat.size1()==0 || mat.size1()==1)
+		return false;
+
+	const std::size_t iOrder = mat.size1();
+	evecs.resize(iOrder);
+	evals.resize(iOrder);
+	for(std::size_t i=0; i<iOrder; ++i)
+		evecs[i].resize(iOrder);
+
+	std::unique_ptr<t_cplx, std::default_delete<t_cplx[]>>
+		uptrMem(new t_cplx[iOrder*iOrder + iOrder*iOrder + iOrder]);
+	t_cplx *pMatrix = uptrMem.get();
+
+	for(std::size_t i=0; i<iOrder; ++i)
+		for(std::size_t j=0; j<iOrder; ++j)
+			pMatrix[i*iOrder + j] = mat(i,j);
+
+	t_cplx *p_eigenvecs = pMatrix + iOrder*iOrder;
+	//t_cplx *p_eigenvecs_l = p_eigenvecs + iOrder*iOrder;
+	t_cplx *peigenvals = p_eigenvecs/*_l*/ + iOrder*iOrder;
+
+	int iInfo = (*pfunc)(LAPACK_ROW_MAJOR, 'N', 'V', iOrder,
+		pMatrix, iOrder, peigenvals,
+		/*p_eigenvecs_l*/0, iOrder, p_eigenvecs, iOrder);
+
+	if(iInfo!=0)
+	{
+		log_err("Could not solve eigenproblem", " (lapack error ", iInfo , ").");
+		bOk = false;
+	}
+
+	// TODO: special return values!
+	for(std::size_t i=0; i<iOrder; ++i)
+	{
+		for(std::size_t j=0; j<iOrder; ++j)
+			evecs[i][j] = p_eigenvecs[j*iOrder + i];
+		evals[i] = peigenvals[i];
+	}
+
+	return bOk;
+}
+
+
+template<class T>
 bool eigenvec_sym(const ublas::matrix<T>& mat,
 	std::vector<ublas::vector<T>>& evecs,
 	std::vector<T>& evals)
 {
+	bool bOk = true;
 	select_func<float, double, decltype(LAPACKE_ssyev), decltype(LAPACKE_dsyev)> 
 		sfunc(LAPACKE_ssyev, LAPACKE_dsyev);
 	auto pfunc = sfunc.get_func<T>();
@@ -175,21 +236,16 @@ bool eigenvec_sym(const ublas::matrix<T>& mat,
 	for(std::size_t i=0; i<iOrder; ++i)
 		evecs[i].resize(iOrder);
 
-
-	bool bOk = true;
-
 	std::unique_ptr<T, std::default_delete<T[]>> 
-		uptrMem(new T[iOrder*iOrder + iOrder]);
-	T *pMem = uptrMem.get();
-	T *pMatrix = pMem;
+		uptrMat(new T[iOrder*iOrder]);
+	T *pMatrix = uptrMat.get();
 
 	for(std::size_t i=0; i<iOrder; ++i)
 		for(std::size_t j=0; j<iOrder; ++j)
 			pMatrix[i*iOrder + j] = mat(i,j);
 
-	T *peigenvals_real = pMatrix + iOrder*iOrder;
 	int iInfo = (*pfunc)(LAPACK_ROW_MAJOR, 'V', 'U',
-		iOrder, (T*)pMatrix, iOrder, (T*)peigenvals_real);
+		iOrder, pMatrix, iOrder, evals.data());
 
 	if(iInfo!=0)
 	{
@@ -202,12 +258,59 @@ bool eigenvec_sym(const ublas::matrix<T>& mat,
 		for(std::size_t j=0; j<iOrder; ++j)
 			evecs[i][j] = pMatrix[j*iOrder + i];
 		//evecs[i] /= ublas::norm_2(evecs[i]);
-		evals[i] = peigenvals_real[i];
 	}
 
 	if(determinant<ublas::matrix<T>>(column_matrix(evecs)) < 0.)
 		evecs[0] = -evecs[0];
 
+	return bOk;
+}
+
+
+template<class T>
+bool eigenvec_herm(const ublas::matrix<std::complex<T>>& mat,
+	std::vector<ublas::vector<std::complex<T>>>& evecs,
+	std::vector<T>& evals)
+{
+	using t_cplx = std::complex<T>;
+	bool bOk = true;
+
+	select_func<float, double, decltype(LAPACKE_cheev), decltype(LAPACKE_zheev)> 
+		sfunc(LAPACKE_cheev, LAPACKE_zheev);
+	auto pfunc = sfunc.get_func<T>();
+
+	if(mat.size1() != mat.size2())
+		return false;
+	if(mat.size1()==0 || mat.size1()==1)
+		return false;
+
+	const std::size_t iOrder = mat.size1();
+	evecs.resize(iOrder);
+	evals.resize(iOrder);
+	for(std::size_t i=0; i<iOrder; ++i)
+		evecs[i].resize(iOrder);
+
+
+	std::unique_ptr<t_cplx, std::default_delete<t_cplx[]>>
+		uptrMat(new t_cplx[iOrder*iOrder]);
+	t_cplx *pMatrix = uptrMat.get();
+
+	for(std::size_t i=0; i<iOrder; ++i)
+		for(std::size_t j=0; j<iOrder; ++j)
+			pMatrix[i*iOrder + j] = mat(i,j);
+
+	int iInfo = (*pfunc)(LAPACK_ROW_MAJOR, 'V', 'U',
+		iOrder, pMatrix, iOrder, evals.data());
+
+	if(iInfo!=0)
+	{
+		log_err("Could not solve eigenproblem", " (lapack error ", iInfo, ").");
+		bOk = false;
+	}
+
+	for(std::size_t i=0; i<iOrder; ++i)
+		for(std::size_t j=0; j<iOrder; ++j)
+			evecs[i][j] = pMatrix[j*iOrder + i];
 	return bOk;
 }
 
@@ -225,7 +328,7 @@ bool qr(const ublas::matrix<T>& M,
 
 	const std::size_t iTauSize = m;//std::min<std::size_t>(m,n);
 
-	std::unique_ptr<T, std::default_delete<T[]>> 
+	std::unique_ptr<T, std::default_delete<T[]>>
 		uptrMem(new T[n*m + iTauSize]);
 	T *pMem = uptrMem.get();
 

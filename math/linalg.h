@@ -1585,15 +1585,15 @@ bool eigenvec_sym_simple(const t_mat& mat, std::vector<t_vec>& evecs, std::vecto
 
 //#ifndef NDEBUG
 	t_mat matAbs = apply_fkt(mat, std::function<T(T)>((T(*)(T))std::abs));
-	T dEps = get_minmax(matAbs).second / 100.;	// 1% accuracy
-	if(!tl::is_symmetric(mat, dEps)) log_warn("Matrix ", mat, " is not symmetric.");
+	T _dEps = get_minmax(matAbs).second / 100.;	// 1% accuracy
+	if(!tl::is_symmetric(mat, _dEps)) log_warn("Matrix ", mat, " is not symmetric.");
 //#endif
 
 	const std::size_t n = mat.size1();
 	t_mat I = ublas::identity_matrix<T>(n);
 	t_mat M = mat;
 
-	const T tEps = T(1e-6);
+	const T tEps = std::cbrt(std::numeric_limits<T>::epsilon());
 	const std::size_t MAX_ITER = 512;
 	std::size_t iIter = 0;
 	for(iIter=0; iIter<MAX_ITER; ++iIter)
