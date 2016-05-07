@@ -34,8 +34,7 @@ struct select_func
 	F1* m_f1 = nullptr;
 	F2* m_f2 = nullptr;
 
-	select_func(F1* f1, F2* f2) : m_f1(f1), m_f2(f2)
-	{}
+	select_func(F1* f1, F2* f2) : m_f1(f1), m_f2(f2) {}
 
 	template<class T>
 	typename std::enable_if<std::is_same<T, T1>::value, F1*>::type 
@@ -54,7 +53,7 @@ bool eigenvec(const ublas::matrix<T>& mat,
 	std::vector<T>& evals_imag)
 {
 	bool bOk = true;
-	select_func<float, double, decltype(LAPACKE_sgeev), decltype(LAPACKE_dgeev)> 
+	select_func<float, double, decltype(LAPACKE_sgeev), decltype(LAPACKE_dgeev)>
 		sfunc(LAPACKE_sgeev, LAPACKE_dgeev);
 	auto pfunc = sfunc.get_func<T>();
 
@@ -64,98 +63,64 @@ bool eigenvec(const ublas::matrix<T>& mat,
 		return false;
 
 	const std::size_t iOrder = mat.size1();
-	evecs_real.resize(iOrder);
-	evecs_imag.resize(iOrder);
-	evals_real.resize(iOrder);
-	evals_imag.resize(iOrder);
+	evecs_real.resize(iOrder); evecs_imag.resize(iOrder);
+	evals_real.resize(iOrder); evals_imag.resize(iOrder);
 	for(std::size_t i=0; i<iOrder; ++i)
 	{
 		evecs_real[i].resize(iOrder);
 		evecs_imag[i].resize(iOrder);
 	}
 
-	/*
-	// is matrix already diagonal?
-	if(is_diag_matrix(mat))
-	{
-		for(std::size_t i=0; i<iOrder; ++i)
-		{
-			evals_real[i] = mat(i,i);
-
-			evecs_real[i] = ublas::zero_vector<T>(iOrder);
-			evecs_real[i][i] = 1.;
-
-			evals_imag[i] = 0.;
-			evecs_imag[i] = ublas::zero_vector<T>(iOrder);
-		}
-
-		return true;
-	}
-	*/
-
 	std::unique_ptr<T, std::default_delete<T[]>>
-		uptrMem(new T[iOrder*iOrder + iOrder*iOrder + iOrder*iOrder + iOrder + iOrder]);
+		uptrMem(new T[iOrder*iOrder + iOrder*iOrder + iOrder*iOrder]);
 	T *pMatrix = uptrMem.get();
+	T *pEVs = pMatrix + iOrder*iOrder;
 
 	for(std::size_t i=0; i<iOrder; ++i)
 		for(std::size_t j=0; j<iOrder; ++j)
 			pMatrix[i*iOrder + j] = mat(i,j);
 
-	T *p_eigenvecs = pMatrix + iOrder*iOrder;
-	//T *p_eigenvecs_l = p_eigenvecs + iOrder*iOrder;
-	T *peigenvals_real = p_eigenvecs/*_l*/ + iOrder*iOrder;
-	T *peigenvals_imag = peigenvals_real + iOrder;
-
 	int iInfo = (*pfunc)(LAPACK_ROW_MAJOR, 'N', 'V', iOrder,
-		pMatrix, iOrder, peigenvals_real, peigenvals_imag,
-		/*(T*)p_eigenvecs_l*/0, iOrder, p_eigenvecs, iOrder);
+		pMatrix, iOrder, evals_real.data(), evals_imag.data(),
+		nullptr, iOrder, pEVs, iOrder);
 
 	if(iInfo!=0)
 	{
-		log_err("Could not solve eigenproblem", " (lapack error ", iInfo , ").");
+		log_err("Could not solve general real eigenproblem", 
+			" (lapack error ", iInfo , ").");
 		bOk = false;
 	}
 
 	for(std::size_t i=0; i<iOrder; ++i)
 	{
 		bool bIsReal = 0;
-		if(float_equal<T>(peigenvals_imag[i], 0.))
+		if(float_equal<T>(evals_imag[i], 0.))
 			bIsReal = 1;
 
 		if(bIsReal)
 		{
 			for(std::size_t j=0; j<iOrder; ++j)
 			{
-				evecs_real[i][j] = p_eigenvecs[j*iOrder + i];
+				evecs_real[i][j] = pEVs[j*iOrder + i];
 				evecs_imag[i][j] = 0.;
-
-				evals_real[i] = peigenvals_real[i];
-				evals_imag[i] = peigenvals_imag[i];
 			}
 		}
 		else
 		{
 			for(std::size_t j=0; j<iOrder; ++j)
 			{
-				evecs_real[i][j] = p_eigenvecs[j*iOrder + i];
-				evecs_imag[i][j] = p_eigenvecs[j*iOrder + i+1];
+				evecs_real[i][j] = pEVs[j*iOrder + i];
+				evecs_imag[i][j] = pEVs[j*iOrder + i+1];
 
-				evecs_real[i+1][j] = p_eigenvecs[j*iOrder + i];
-				evecs_imag[i+1][j] = -p_eigenvecs[j*iOrder + i+1];
+				evecs_real[i+1][j] = pEVs[j*iOrder + i];
+				evecs_imag[i+1][j] = -pEVs[j*iOrder + i+1];
 			}
-
-			evals_real[i] = peigenvals_real[i];
-			evals_imag[i] = peigenvals_imag[i];
-			evals_real[i+1] = peigenvals_real[i+1];
-			evals_imag[i+1] = peigenvals_imag[i+1];
-
 			++i; // check: (next eigenval) == -(currrent eigenval)
 		}
 
 		//evecs_real[i] /= ublas::norm_2(evecs_real[i]);
 		//evecs_imag[i] /= ublas::norm_2(evecs_imag[i]);
 	}
-
 	return bOk;
 }
 
@@ -189,26 +154,25 @@ bool eigenvec_cplx(const ublas::matrix<std::complex<T>>& mat,
 		for(std::size_t j=0; j<iOrder; ++j)
 			pMatrix[i*iOrder + j] = mat(i,j);
 
-	t_cplx *p_eigenvecs = pMatrix + iOrder*iOrder;
-	//t_cplx *p_eigenvecs_l = p_eigenvecs + iOrder*iOrder;
-	t_cplx *peigenvals = p_eigenvecs/*_l*/ + iOrder*iOrder;
+	t_cplx *pEVs = pMatrix + iOrder*iOrder;
+	t_cplx *pEVals = pEVs + iOrder*iOrder;
 
 	int iInfo = (*pfunc)(LAPACK_ROW_MAJOR, 'N', 'V', iOrder,
-		pMatrix, iOrder, peigenvals,
-		/*p_eigenvecs_l*/0, iOrder, p_eigenvecs, iOrder);
+		pMatrix, iOrder, pEVals,
+		nullptr, iOrder, pEVs, iOrder);
 
 	if(iInfo!=0)
 	{
-		log_err("Could not solve eigenproblem", " (lapack error ", iInfo , ").");
+		log_err("Could not solve general complex eigenproblem", 
+			" (lapack error ", iInfo , ").");
 		bOk = false;
 	}
 
-	// TODO: special return values!
 	for(std::size_t i=0; i<iOrder; ++i)
 	{
 		for(std::size_t j=0; j<iOrder; ++j)
-			evecs[i][j] = p_eigenvecs[j*iOrder + i];
-		evals[i] = peigenvals[i];
+			evecs[i][j] = pEVs[j*iOrder + i];
+		evals[i] = pEVals[i];
 	}
 
 	return bOk;
@@ -249,7 +213,8 @@ bool eigenvec_sym(const ublas::matrix<T>& mat,
 
 	if(iInfo!=0)
 	{
-		log_err("Could not solve eigenproblem", " (lapack error ", iInfo, ").");
+		log_err("Could not solve symmetric eigenproblem",
+			" (lapack error ", iInfo, ").");
 		bOk = false;
 	}
 
@@ -290,7 +255,6 @@ bool eigenvec_herm(const ublas::matrix<std::complex<T>>& mat,
 	for(std::size_t i=0; i<iOrder; ++i)
 		evecs[i].resize(iOrder);
 
-
 	std::unique_ptr<t_cplx, std::default_delete<t_cplx[]>>
 		uptrMat(new t_cplx[iOrder*iOrder]);
 	t_cplx *pMatrix = uptrMat.get();
@@ -304,7 +268,8 @@ bool eigenvec_herm(const ublas::matrix<std::complex<T>>& mat,
 
 	if(iInfo!=0)
 	{
-		log_err("Could not solve eigenproblem", " (lapack error ", iInfo, ").");
+		log_err("Could not solve hermitian eigenproblem",
+			" (lapack error ", iInfo, ").");
 		bOk = false;
 	}
 

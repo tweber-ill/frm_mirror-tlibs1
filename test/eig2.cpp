@@ -58,8 +58,8 @@ int main()
 	std::vector<ublas::vector<std::complex<T>>> evecs_c;
 	std::vector<T> evals_c;
 	ublas::matrix<std::complex<T>> Mc = tl::make_mat<ublas::matrix<std::complex<T>>>({
-		{std::complex<T>(1., 0.), std::complex<T>(3., 1.)},
-		{std::complex<T>(3., -1.), std::complex<T>(3., 0.)}
+		{std::complex<T>(1., 0.), std::complex<T>(3., 1.5)},
+		{std::complex<T>(3., -1.5), std::complex<T>(2., 0.)}
 	});
 	std::cout << Mc << std::endl;
 
@@ -75,6 +75,7 @@ int main()
 	std::cout << std::endl;
 
 
+
 	std::vector<ublas::vector<std::complex<T>>> evecs_c2;
 	std::vector<std::complex<T>> evals_c2;
 
@@ -83,6 +84,12 @@ int main()
 		std::cout << "eval: " << evals_c2[i] <<
 		", evec: " << evecs_c2[i] << std::endl;
 	std::cout << std::endl;
+	for(int i=0; i<evals_c.size(); ++i)
+		std::cout <<
+		"val*vec: " << evals_c2[i]*evecs_c2[i] <<
+		"\nmat*vec:" << ublas::prod(Mc, evecs_c2[i]) << std::endl;
+	std::cout << std::endl;
+
 
 	return 0;
 }
