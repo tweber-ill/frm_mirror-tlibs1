@@ -112,6 +112,33 @@ class DatFile
 			m_vecCols.clear();
 		}
 
+		bool Save(std::basic_ostream<t_char>& ostr)
+		{
+			if(!m_bOk) return 0;
+
+			for(const typename t_map::value_type& val : m_mapHdr)
+				ostr << m_chComm << " " <<
+					val.first << " " << m_strSeps[0] << " " << val.second << "\n";
+
+			std::size_t iRows = GetRowCount();
+			std::size_t iCols = GetColumnCount();
+
+			for(std::size_t iRow=0; iRow<iRows; ++iRow)
+			{
+				for(std::size_t iCol=0; iCol<iCols; ++iCol)
+					ostr << std::setw(16) << m_vecCols[iCol][iRow] << m_strDatSep[0];
+				ostr << "\n";
+			}
+			return 1;
+		}
+
+		bool Save(const t_str& strFile)
+		{
+			std::ofstream ofstr(strFile);
+			if(!ofstr) return 0;
+			return Save(ofstr);
+		}
+
 		bool Load(std::basic_istream<t_char>& istr)
 		{
 			Unload();

@@ -16,8 +16,9 @@ int main()
 	tl::DatFile<float, char> dat;
 	//tl::DatFile<float, wchar_t> dat;
 	dat.SetSeparatorChars({':'});
-	dat.Load("/home/tw/Measurements/mira-mnsi-14/data/9925_00009990.dat");
+	//dat.Load("/home/tw/Measurements/mira-mnsi-14/data/9925_00009990.dat");
 	//dat.Load(L"/home/tw/Measurements/mira-mnsi-14/data/9925_00009990.dat");
+	dat.Load("/home/tweber/Messdaten/mira-mnsi-15/data/10365_00015382.dat");
 	if(dat.IsOk())
 	{
 		std::cout << "Number of columns: " << dat.GetColumnCount() << std::endl;
@@ -29,6 +30,8 @@ int main()
 			std::cout << pair.first << " = " << pair.second << std::endl;
 			//std::wcout << pair.first << L" = " << pair.second << std::endl;
 		}
+
+		dat.Save("/tmp/tst.dat");
 	}
 
 	return 0;
