@@ -15,107 +15,10 @@
 
 #include "linalg.h"
 #include "atoms.h"
+#include "nn.h"
 
 
 namespace tl {
-
-
-// ----------------------------------------------------------------------------
-
-// atom positions
-enum class UCType { SIMPLE, FCC, BCC, };
-
-/**
- * Next neighbours
- * iDist == 0: nearest neighbours
- * iDist == 1: next-nearest neighbours
- */
-template<typename T=double>
-std::vector<ublas::vector<T>> get_neighbour_atoms(UCType crys, int iDist=0, T a=1.)
-{
-	std::vector<ublas::vector<T>> vecAtoms;
-
-	if(crys == UCType::SIMPLE)
-	{
-		if(iDist == 0)
-			vecAtoms = {
-				make_vec({1., 0., 0.}),
-				make_vec({0., 1., 0.}),
-				make_vec({0., 0., 1.}),
-				make_vec({-1., 0., 0.}),
-				make_vec({0., -1., 0.}),
-				make_vec({0., 0., -1.}) };
-		else if(iDist == 1)
-			vecAtoms = {
-				make_vec({1., 1., 0.}),
-				make_vec({1., -1., 0.}),
-				make_vec({-1., 1., 0.}),
-				make_vec({-1., -1., 0.}),
-				make_vec({1., 0., 1.}),
-				make_vec({1., 0., -1.}),
-				make_vec({-1., 0., 1.}),
-				make_vec({-1., 0., -1.}),
-				make_vec({0., 1., 1.}),
-				make_vec({0., 1., -1.}),
-				make_vec({0., -1., 1.}),
-				make_vec({0., -1., -1.}) };
-	}
-	else if(crys == UCType::FCC)
-	{
-		if(iDist == 0)
-			vecAtoms = {
-				make_vec({0.5, 0.5, 0.}),
-				make_vec({0.5, -0.5, 0.}),
-				make_vec({-0.5, 0.5, 0.}),
-				make_vec({-0.5, -0.5, 0.}),
-				make_vec({0.5, 0., 0.5}),
-				make_vec({0.5, 0., -0.5}),
-				make_vec({-0.5, 0., 0.5}),
-				make_vec({-0.5, 0., -0.5}),
-				make_vec({0., 0.5, 0.5}),
-				make_vec({0., 0.5, -0.5}),
-				make_vec({0., -0.5, 0.5}),
-				make_vec({0., -0.5, -0.5}) };
-		else if(iDist == 1)
-			vecAtoms = {
-				make_vec({1., 0., 0.}),
-				make_vec({0., 1., 0.}),
-				make_vec({0., 0., 1.}),
-				make_vec({-1., 0., 0.}),
-				make_vec({0., -1., 0.}),
-				make_vec({0., 0., -1.}) };
-	}
-	else if(crys == UCType::BCC)
-	{
-		if(iDist == 0)
-			vecAtoms = {
-				make_vec({0.5, 0.5, 0.5}),
-				make_vec({0.5, 0.5, -0.5}),
-				make_vec({0.5, -0.5, 0.5}),
-				make_vec({0.5, -0.5, -0.5}),
-				make_vec({-0.5, 0.5, 0.5}),
-				make_vec({-0.5, 0.5, -0.5}),
-				make_vec({-0.5, -0.5, 0.5}),
-				make_vec({-0.5, -0.5, -0.5}) };
-		else if(iDist == 1)
-			vecAtoms = {
-				make_vec({1., 0., 0.}),
-				make_vec({0., 1., 0.}),
-				make_vec({0., 0., 1.}),
-				make_vec({-1., 0., 0.}),
-				make_vec({0., -1., 0.}),
-				make_vec({0., 0., -1.}) };
-	}
-
-	if(!float_equal<T>(a, T(1)))
-		for(ublas::vector<T>& vec : vecAtoms)
-			vec *= a;
-
-	return vecAtoms;
-}
-
-
-
 // ----------------------------------------------------------------------------
 
 // coupling J and atom position
@@ -124,18 +27,18 @@ template<typename T=double> using t_magatompos = std::pair<std::complex<T>, ubla
 
 /**
  * Simple ferromagnetic dispersion
- * @param lstAtoms list of atoms and their coupling constants
+ * @param lstNeighbours list of distances to neighbour atoms and their coupling constants
  * @param vecq q position
  * @param tS spin
  * @return E(q)
  */
 template<typename T=double, typename t_cont=std::initializer_list<t_magatompos<T>>>
-T ferromag(const t_cont& lstAtoms, const ublas::vector<T>& vecq, T tS)
+T ferromag(const t_cont& lstNeighbours, const ublas::vector<T>& vecq, T tS)
 {
 	std::complex<T> J(0., 0.), J0(0., 0.);
 
-	J = structfact(vec_from_pairvec<1,std::vector,t_cont>()(lstAtoms), vecq,
-		vec_from_pairvec<0,std::vector,t_cont>()(lstAtoms), &J0).real();
+	J = structfact(vec_from_pairvec<1,std::vector,t_cont>()(lstNeighbours), vecq,
+		vec_from_pairvec<0,std::vector,t_cont>()(lstNeighbours), &J0).real();
 
 	return T(2)*tS*(J0 - J).real();
 }

@@ -92,9 +92,9 @@ T tic_trafo_inv(unsigned int iDim, T dMin, T dMax, bool bLog, T dVal)
 }
 
 template<typename T1, typename T2>
-void convert(T1* pDst, const T2* pSrc, unsigned int iSize)
+void convert(T1* pDst, const T2* pSrc, std::size_t iSize)
 {
-	for(unsigned int i=0; i<iSize; ++i)
+	for(std::size_t i=0; i<iSize; ++i)
 		pDst[i] = T1(pSrc[i]);
 }
 
@@ -108,16 +108,16 @@ typename vec_type::value_type sum_vec(const vec_type& vec)
 }
 
 template<typename T>
-void apply_fkt(const T* pIn, T* pOut, T(*fkt)(T), unsigned int iSize)
+void apply_fkt(const T* pIn, T* pOut, T(*fkt)(T), std::size_t iSize)
 {
-	for(unsigned int i=0; i<iSize; ++i)
+	for(std::size_t i=0; i<iSize; ++i)
 		pOut[i] = (*fkt)(pIn[i]);
 }
 
 template<typename T=double>
 unsigned int lerprgb(unsigned char r1, unsigned char g1, unsigned char b1,
-				unsigned char r2, unsigned char g2, unsigned char b2,
-				T dval)
+	unsigned char r2, unsigned char g2, unsigned char b2,
+	T dval)
 {
 	unsigned char r = lerp(r1, r2, dval);
 	unsigned char g = lerp(g1, g2, dval);
@@ -164,16 +164,16 @@ void sort_2(Iter begin1, Iter end1, Iter begin2)
 {
 	typedef typename std::iterator_traits<Iter>::value_type T;
 
-	const unsigned int N = end1-begin1;
+	const std::size_t N = end1-begin1;
 	sort_obj<T> *pObj = new sort_obj<T>[N];
-	for(unsigned int i=0; i<N; ++i)
+	for(std::size_t i=0; i<N; ++i)
 	{
 		pObj[i].vec.push_back(*(begin1+i));
 		pObj[i].vec.push_back(*(begin2+i));
 	}
 
 	std::sort(pObj, pObj+N, comp_fkt<T>);
-	for(unsigned int i=0; i<N; ++i)
+	for(std::size_t i=0; i<N; ++i)
 	{
 		*(begin1+i) = pObj[i].vec[0];
 		*(begin2+i) = pObj[i].vec[1];
@@ -188,9 +188,9 @@ void sort_3(Iter begin1, Iter end1, Iter begin2, Iter begin3)
 {
 	typedef typename std::iterator_traits<Iter>::value_type T;
 
-	const unsigned int N = end1-begin1;
+	const std::size_t N = end1-begin1;
 	sort_obj<T> *pObj = new sort_obj<T>[N];
-	for(unsigned int i=0; i<N; ++i)
+	for(std::size_t i=0; i<N; ++i)
 	{
 		pObj[i].vec.push_back(*(begin1+i));
 		pObj[i].vec.push_back(*(begin2+i));
@@ -198,7 +198,7 @@ void sort_3(Iter begin1, Iter end1, Iter begin2, Iter begin3)
 	}
 
 	std::sort(pObj, pObj+N, comp_fkt<T>);
-	for(unsigned int i=0; i<N; ++i)
+	for(std::size_t i=0; i<N; ++i)
 	{
 		*(begin1+i) = pObj[i].vec[0];
 		*(begin2+i) = pObj[i].vec[1];
@@ -208,6 +208,34 @@ void sort_3(Iter begin1, Iter end1, Iter begin2, Iter begin3)
 	delete[] pObj;
 }
 
+
+/**
+ * get the sorted indices of a container
+ */
+template<template<class...> class t_cont = std::vector,
+	class t_val, class t_func>
+t_cont<std::size_t> sorted_idx(const t_cont<t_val>& vec, t_func fkt)
+{
+	t_cont<std::size_t> vecIdx;
+	vecIdx.reserve(vec.size());
+	for(std::size_t i=0; i<vec.size(); ++i)
+		vecIdx.push_back(i);
+
+	std::sort(vecIdx.begin(), vecIdx.end(),
+		[&vec, &fkt] (std::size_t iIdx0, std::size_t iIdx1) -> bool
+	{
+		return fkt(vec[iIdx0], vec[iIdx1]);
+	});
+
+	return vecIdx;
+}
+
+template<template<class...> class t_cont = std::vector, class t_val>
+t_cont<std::size_t> sorted_idx(const t_cont<t_val>& vec)
+{
+	auto fkt = [](const t_val& v0, const t_val& v1) -> bool { return v0<v1; };
+	return sorted_idx<t_cont, t_val, decltype(fkt)>(vec, fkt);
+}
 
 // -----------------------------------------------------------------------------
 

@@ -5,8 +5,8 @@
  * @license GPLv2 or GPLv3
  */
 
-#ifndef __LATTICE_H__
-#define __LATTICE_H__
+#ifndef __TLIBS_LATTICE_H__
+#define __TLIBS_LATTICE_H__
 
 #include "linalg.h"
 #include "math.h"
@@ -30,33 +30,34 @@ bool reciprocal(const ublas::matrix<T>& matReal, ublas::matrix<T>& matRecip)
 template<typename T=double>
 class Lattice
 {
+	public:
+		using t_vec = ublas::vector<T>;
+		using t_mat = ublas::matrix<T>;
+	
 	protected:
-		ublas::vector<T> m_vecs[3];
+		t_vec m_vecs[3];
 
 	public:
 		Lattice(T a, T b, T c, T alpha, T beta, T gamma);
-		Lattice(const ublas::vector<T>& vec0,
-			const ublas::vector<T>& vec1,
-			const ublas::vector<T>& vec2);
+		Lattice(const t_vec& vec0, const t_vec& vec1, const t_vec& vec2);
 		Lattice(const Lattice<T>& lattice);
-		Lattice();
-		virtual ~Lattice();
+		Lattice() = default;
+		~Lattice() = default;
 
 		bool IsInited() const { return m_vecs[0].size()!=0; }
 
 		// Euler ZXZ rotation
 		void RotateEuler(T dPhi, T dTheta, T dPsi);
 		// Euler vecRecipZ vecRecipX vecRecipZ rotation
-		void RotateEulerRecip(const ublas::vector<T>& vecRecipX,
-			const ublas::vector<T>& vecRecipY,
-			const ublas::vector<T>& vecRecipZ,
+		void RotateEulerRecip(const t_vec& vecRecipX,
+			const t_vec& vecRecipY, const t_vec& vecRecipZ,
 			T dPhi, T dTheta, T dPsi);
 
 		Lattice GetRecip() const;
 		Lattice GetAligned() const;
 
-		ublas::vector<T> GetPos(T h, T k, T l) const;
-		ublas::vector<T> GetHKL(const ublas::vector<T>& vec) const;
+		t_vec GetPos(T h, T k, T l) const;
+		t_vec GetHKL(const t_vec& vec) const;
 
 		T GetAlpha() const;
 		T GetBeta() const;
@@ -68,12 +69,9 @@ class Lattice
 
 		T GetVol() const;
 
-		const ublas::vector<T>& GetVec(unsigned int i) const { return m_vecs[i]; }
-		ublas::matrix<T> GetMetric() const;
+		const t_vec& GetVec(std::size_t i) const { return m_vecs[i]; }
+		t_mat GetMetric() const;
 };
-
-template<typename T> Lattice<T>::Lattice() {}
-template<typename T> Lattice<T>::~Lattice() {}
 
 template<typename T>
 Lattice<T>::Lattice(T a, T b, T c, T alpha, T beta, T gamma)
@@ -86,9 +84,7 @@ Lattice<T>::Lattice(T a, T b, T c, T alpha, T beta, T gamma)
 }
 
 template<typename T>
-Lattice<T>::Lattice(const ublas::vector<T>& vec0,
-	const ublas::vector<T>& vec1,
-	const ublas::vector<T>& vec2)
+Lattice<T>::Lattice(const t_vec& vec0, const t_vec& vec1, const t_vec& vec2)
 {
 	this->m_vecs[0] = vec0;
 	this->m_vecs[1] = vec1;
@@ -106,36 +102,35 @@ Lattice<T>::Lattice(const Lattice<T>& lattice)
 template<typename T>
 void Lattice<T>::RotateEuler(T dPhi, T dTheta, T dPsi)
 {
-	ublas::matrix<T> mat1 = rotation_matrix_3d_z(dPhi);
-	ublas::matrix<T> mat2 = rotation_matrix_3d_x(dTheta);
-	ublas::matrix<T> mat3 = rotation_matrix_3d_z(dPsi);
+	t_mat mat1 = rotation_matrix_3d_z(dPhi);
+	t_mat mat2 = rotation_matrix_3d_x(dTheta);
+	t_mat mat3 = rotation_matrix_3d_z(dPsi);
 
-	ublas::matrix<T> mat21 = ublas::prod(mat2,mat1);
-	ublas::matrix<T> mat = ublas::prod(mat3, mat21);
+	t_mat mat21 = ublas::prod(mat2,mat1);
+	t_mat mat = ublas::prod(mat3, mat21);
 
-	for(unsigned int i=0; i<3; ++i)
+	for(std::size_t i=0; i<3; ++i)
 		m_vecs[i] = ublas::prod(mat, m_vecs[i]);
 }
 
 template<typename T>
-void Lattice<T>::RotateEulerRecip(const ublas::vector<T>& vecRecipX,
-	const ublas::vector<T>& vecRecipY,
-	const ublas::vector<T>& vecRecipZ,
+void Lattice<T>::RotateEulerRecip(const t_vec& vecRecipX,
+	const t_vec& vecRecipY, const t_vec& vecRecipZ,
 	T dPhi, T dTheta, T dPsi)
 {
 	// get real vectors
-	const unsigned int iDim=3;
-	ublas::matrix<T> matReal = column_matrix({vecRecipX, vecRecipY, vecRecipZ});
+	const std::size_t iDim=3;
+	t_mat matReal = column_matrix({vecRecipX, vecRecipY, vecRecipZ});
 	if(matReal.size1()!=matReal.size2() || matReal.size1()!=iDim)
 		throw Err("Invalid real matrix.");
 
-	ublas::matrix<T> matRecip;
+	t_mat matRecip;
 	if(!reciprocal(matReal, matRecip))
 		throw Err("Reciprocal matrix could not be calculated.");
 
-	ublas::vector<T> vecX = get_column(matRecip,0);
-	ublas::vector<T> vecY = get_column(matRecip,1);
-	ublas::vector<T> vecZ = get_column(matRecip,2);
+	t_vec vecX = get_column(matRecip,0);
+	t_vec vecY = get_column(matRecip,1);
+	t_vec vecZ = get_column(matRecip,2);
 
 	T dLenX = ublas::norm_2(vecX);
 	T dLenY = ublas::norm_2(vecY);
@@ -157,14 +152,14 @@ void Lattice<T>::RotateEulerRecip(const ublas::vector<T>& vecRecipX,
 
 
 	// rotate around real vectors
-	ublas::matrix<T> mat1 = rotation_matrix(vecZ, dPhi);
-	ublas::matrix<T> mat2 = rotation_matrix(vecX, dTheta);
-	ublas::matrix<T> mat3 = rotation_matrix(vecZ, dPsi);
+	t_mat mat1 = rotation_matrix(vecZ, dPhi);
+	t_mat mat2 = rotation_matrix(vecX, dTheta);
+	t_mat mat3 = rotation_matrix(vecZ, dPsi);
 
-	ublas::matrix<T> mat21 = ublas::prod(mat2,mat1);
-	ublas::matrix<T> mat = ublas::prod(mat3, mat21);
+	t_mat mat21 = ublas::prod(mat2,mat1);
+	t_mat mat = ublas::prod(mat3, mat21);
 
-	for(unsigned int i=0; i<3; ++i)
+	for(std::size_t i=0; i<3; ++i)
 		m_vecs[i] = ublas::prod(mat, m_vecs[i]);
 }
 
@@ -191,7 +186,7 @@ T Lattice<T>::GetVol() const
  (z)   (v0_z v1_z v2_z) (l)
  */
 template<typename T>
-ublas::vector<T> Lattice<T>::GetPos(T h, T k, T l) const
+typename Lattice<T>::t_vec Lattice<T>::GetPos(T h, T k, T l) const
 {
 	return h*m_vecs[0] + k*m_vecs[1] + l*m_vecs[2];
 }
@@ -202,11 +197,11 @@ ublas::vector<T> Lattice<T>::GetPos(T h, T k, T l) const
  (l)   (v0_z v1_z v2_z)      (z)
  */
 template<typename T>
-ublas::vector<T> Lattice<T>::GetHKL(const ublas::vector<T>& vec) const
+typename Lattice<T>::t_vec Lattice<T>::GetHKL(const t_vec& vec) const
 {
-	ublas::matrix<T> mat = column_matrix({m_vecs[0], m_vecs[1], m_vecs[2]});
+	t_mat mat = column_matrix({m_vecs[0], m_vecs[1], m_vecs[2]});
 
-	ublas::matrix<T> matInv;
+	t_mat matInv;
 	if(!inverse(mat, matInv))
 		throw Err("Miller indices could not be calculated.");
 
@@ -216,12 +211,12 @@ ublas::vector<T> Lattice<T>::GetHKL(const ublas::vector<T>& vec) const
 template<typename T>
 Lattice<T> Lattice<T>::GetRecip() const
 {
-	const unsigned int iDim=3;
-	ublas::matrix<T> matReal = column_matrix({m_vecs[0], m_vecs[1], m_vecs[2]});
+	const std::size_t iDim=3;
+	t_mat matReal = column_matrix({m_vecs[0], m_vecs[1], m_vecs[2]});
 	if(matReal.size1()!=matReal.size2() || matReal.size1()!=iDim)
 		throw Err("Invalid real lattice matrix.");
 
-	ublas::matrix<T> matRecip;
+	t_mat matRecip;
 	if(!reciprocal(matReal, matRecip))
 		throw Err("Reciprocal lattice could not be calculated.");
 

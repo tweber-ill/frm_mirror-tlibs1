@@ -5,12 +5,13 @@
  * @license GPLv2 or GPLv3
  */
 
-#ifndef __ATOMS_H__
-#define __ATOMS_H__
+#ifndef __TLIBS_ATOMS_H__
+#define __TLIBS_ATOMS_H__
 
 
 #include "linalg.h"
 #include "linalg_ops.h"
+#include "lattice.h"
 #include <tuple>
 
 
@@ -34,10 +35,11 @@ void restrict_to_uc(t_vec& vec,
 	}
 }
 
+
 /**
  * Generates atom positions using trafo matrices
  */
-template<class t_mat, class t_vec, template<class ...Args> class t_cont>
+template<class t_mat, class t_vec, template<class...> class t_cont>
 t_cont<t_vec> generate_atoms(const t_cont<t_mat>& trafos, const t_vec& vecAtom,
 	typename t_vec::value_type tUCMin=0, typename t_vec::value_type tUCMax=1,
 	typename t_vec::value_type eps = std::numeric_limits<typename t_vec::value_type>::epsilon())
@@ -64,14 +66,16 @@ t_cont<t_vec> generate_atoms(const t_cont<t_mat>& trafos, const t_vec& vecAtom,
 		if(bPushBack)
 			vecvecRes.push_back(std::move(vecRes));
 	}
+
 	return vecvecRes;
 }
 
 
 /**
  * Generates atom positions using trafo matrices for all atoms in unit cell
+ * @return tuple of (names, positions, positions in rlu, atom types)
  */
-template<class t_mat, class t_vec, template<class ...Args> class t_cont,
+template<class t_mat, class t_vec, template<class...> class t_cont,
 	class t_str=std::string, class t_real = typename t_mat::value_type>
 std::tuple<t_cont<t_str>, t_cont<t_vec>, t_cont<t_vec>, t_cont<std::size_t>>
 generate_all_atoms(const t_cont<t_mat>& trafos,
@@ -137,6 +141,48 @@ generate_all_atoms(const t_cont<t_mat>& trafos,
 		vecAllAtoms, vecAllAtomsFrac, vecAllAtomTypes);
 }
 
+
+/**
+ * Generates supercell
+ * @return tuple of positions and (user-defined) factors
+ */
+template<class t_vec = ublas::vector<double>,
+	template<class...> class t_cont = std::vector,
+	class t_real = typename t_vec::value_type>
+std::tuple<t_cont<t_vec>, t_cont<std::complex<t_real>>>
+generate_supercell(const Lattice<t_real>& latt,
+	const t_cont<t_vec>& vecAtomsUC,
+	const t_cont<std::complex<t_real>>& vecFactsUC,
+	std::ptrdiff_t N)
+{
+	using t_cplx = std::complex<t_real>;
+
+	t_cont<t_vec> vecAllAtoms;
+	t_cont<t_cplx> vecAllFacts;
+
+	for(std::ptrdiff_t h=-N+1; h<N; ++h)
+	for(std::ptrdiff_t k=-N+1; k<N; ++k)
+	for(std::ptrdiff_t l=-N+1; l<N; ++l)
+	{
+		t_vec vecPos = latt.GetPos(h,k,l);
+
+		for(std::size_t iAtom=0; iAtom<vecAtomsUC.size(); ++iAtom)
+		{
+			const t_vec& vecAtom = vecAtomsUC[iAtom];
+			t_cplx cFact;
+			if(vecFactsUC.size() == vecAtomsUC.size())
+				cFact = vecFactsUC[iAtom];
+			else if(vecFactsUC.size() == 1)		// use the same for all atoms
+				cFact = vecFactsUC[0];
+
+			vecAllAtoms.push_back(vecPos + vecAtom);
+			if(vecFactsUC.size() != 0)
+				vecAllFacts.push_back(cFact);
+		}
+	}
+
+	return std::make_tuple(vecAllAtoms, vecAllFacts);
+}
 // ----------------------------------------------------------------------------
 
 
