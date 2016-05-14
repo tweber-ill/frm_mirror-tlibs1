@@ -1,4 +1,4 @@
-/*
+/**
  * magnetic dispersion relations
  * @author tweber
  * @date 7-jul-15
@@ -21,10 +21,6 @@
 namespace tl {
 // ----------------------------------------------------------------------------
 
-// coupling J and atom position
-template<typename T=double> using t_magatompos = std::pair<std::complex<T>, ublas::vector<T>>;
-
-
 /**
  * Simple ferromagnetic dispersion
  * @param lstNeighbours list of distances to neighbour atoms and their coupling constants
@@ -32,17 +28,26 @@ template<typename T=double> using t_magatompos = std::pair<std::complex<T>, ubla
  * @param tS spin
  * @return E(q)
  */
-template<typename T=double, typename t_cont=std::initializer_list<t_magatompos<T>>>
-T ferromag(const t_cont& lstNeighbours, const ublas::vector<T>& vecq, T tS)
+template<class t_vec = ublas::vector<double>,
+	typename T = typename t_vec::value_type,
+	template<class...> class t_cont = std::vector>
+T ferromag(const t_cont<t_vec>& vecNeighbours, const t_cont<std::complex<T>>& vecJ,
+	const ublas::vector<T>& vecq, T tS)
 {
 	std::complex<T> J(0., 0.), J0(0., 0.);
-
-	J = structfact(vec_from_pairvec<1,std::vector,t_cont>()(lstNeighbours), vecq,
-		vec_from_pairvec<0,std::vector,t_cont>()(lstNeighbours), &J0).real();
-
+	J = structfact(vecNeighbours, vecq, vecJ, &J0).real();
 	return T(2)*tS*(J0 - J).real();
 }
 
+template<class t_vec = ublas::vector<double>,
+	typename T = typename t_vec::value_type,
+	typename t_cont = std::initializer_list<std::tuple<t_vec, std::complex<T>>>>
+T ferromag(const t_cont& lstNeighbours, const ublas::vector<T>& vecq, T tS)
+{
+	return ferromag(vec_from_pairvec<0,std::vector,t_cont>()(lstNeighbours),
+		vec_from_pairvec<1,std::vector,t_cont>()(lstNeighbours),
+		vecq, tS);
+}
 // ----------------------------------------------------------------------------
 
 

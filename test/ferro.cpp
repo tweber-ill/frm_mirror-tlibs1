@@ -3,16 +3,19 @@
 #include "../math/mag.h"
 #include "../math/neutrons.hpp"
 #include "../gfx/gnuplot.h"
+
+#include <tuple>
 #include <iostream>
 
 using namespace tl;
+template<class T> using t_magatompos = std::tuple<ublas::vector<T>, std::complex<T>>;
 
 int main()
 {
 	double k = co::k_B / one_meV * kelvin;
-	double a = 5.;
+	double a = 1.;
 	double J1 = 0.5*k;
-	double J2 = 0.1*k;
+	double J2 = 0.5*k;
 	double S = 7./2.;
 
 	std::vector<ublas::vector<double>> vecAtomsN0 = get_neighbour_atoms(UCType::FCC, 0, a);
@@ -20,9 +23,15 @@ int main()
 
 	std::vector<t_magatompos<double>> vecMagAtoms;
 	for(const ublas::vector<double>& vec : vecAtomsN0)
-		vecMagAtoms.push_back(t_magatompos<double>(J1, vec));
+	{
+		vecMagAtoms.push_back(t_magatompos<double>(vec, J1));
+		std::cout << vec << ": " << J1 << std::endl;
+	}
 	for(const ublas::vector<double>& vec : vecAtomsN1)
-		vecMagAtoms.push_back(t_magatompos<double>(J2, vec));
+	{
+		vecMagAtoms.push_back(t_magatompos<double>(vec, J2));
+		std::cout << vec << ": " << J2 << std::endl;
+	}
 
 
 
@@ -38,7 +47,7 @@ int main()
 		ublas::vector<double> vec11 = make_vec({1., 1., 0.}); vec11 /= ublas::norm_2(vec11);
 		ublas::vector<double> vec111 = make_vec({1., 1., 1.}); vec111 /= ublas::norm_2(vec111);
 
-		vec1 *= q; vec11 *= q; vec111 *= q;
+		vec1 *= q * 2*M_PI/a; vec11 *= q * 2*M_PI/a; vec111 *= q * 2*M_PI/a;
 
 		double E1 = ferromag(vecMagAtoms, vec1, S);
 		double E11 = ferromag(vecMagAtoms, vec11, S);
@@ -53,7 +62,7 @@ int main()
 	GnuPlot plt;
 	plt.Init();
 	plt.SetLegendPlace("bottom right");
-	plt.SetXLabel("q (1/A)");
+	plt.SetXLabel("q (rlu)");
 	plt.SetYLabel("E (meV)");
 	plt.StartPlot();
 

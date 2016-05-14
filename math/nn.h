@@ -51,8 +51,9 @@ get_neighbours(const t_cont<t_vec>& vecAtoms, const t_vec& vecCentre,
 	t_real distLast = vecLens[vecIdx[0]];
 	t_cont<std::size_t> vecNearest;
 
-	for(std::size_t iIdx : vecIdx)
+	for(typename decltype(vecIdx)::const_iterator iter=vecIdx.begin(); iter!=vecIdx.end(); ++iter)
 	{
+		std::size_t iIdx = *iter;
 		//std::cout << vecLens[iIdx] << ": " << vecAtoms[iIdx] << std::endl;
 
 		t_real distCur = vecLens[iIdx];
@@ -68,6 +69,9 @@ get_neighbours(const t_cont<t_vec>& vecAtoms, const t_vec& vecCentre,
 			vecNearest.push_back(iIdx);
 			distLast = distCur;
 		}
+
+		if(iter+1 == vecIdx.end() && vecNearest.size())
+			vecN.push_back(vecNearest);
 	}
 	return vecN;
 }

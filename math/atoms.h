@@ -144,12 +144,12 @@ generate_all_atoms(const t_cont<t_mat>& trafos,
 
 /**
  * Generates supercell
- * @return tuple of positions and (user-defined) factors
+ * @return tuple of positions, (user-defined) factors and indices
  */
 template<class t_vec = ublas::vector<double>,
 	template<class...> class t_cont = std::vector,
 	class t_real = typename t_vec::value_type>
-std::tuple<t_cont<t_vec>, t_cont<std::complex<t_real>>>
+std::tuple<t_cont<t_vec>, t_cont<std::complex<t_real>>, t_cont<std::size_t>>
 generate_supercell(const Lattice<t_real>& latt,
 	const t_cont<t_vec>& vecAtomsUC,
 	const t_cont<std::complex<t_real>>& vecFactsUC,
@@ -159,6 +159,7 @@ generate_supercell(const Lattice<t_real>& latt,
 
 	t_cont<t_vec> vecAllAtoms;
 	t_cont<t_cplx> vecAllFacts;
+	t_cont<std::size_t> vecAllIdx;
 
 	for(std::ptrdiff_t h=-N+1; h<N; ++h)
 	for(std::ptrdiff_t k=-N+1; k<N; ++k)
@@ -168,6 +169,7 @@ generate_supercell(const Lattice<t_real>& latt,
 
 		for(std::size_t iAtom=0; iAtom<vecAtomsUC.size(); ++iAtom)
 		{
+			vecAllIdx.push_back(iAtom);
 			const t_vec& vecAtom = vecAtomsUC[iAtom];
 			t_cplx cFact;
 			if(vecFactsUC.size() == vecAtomsUC.size())
@@ -181,7 +183,7 @@ generate_supercell(const Lattice<t_real>& latt,
 		}
 	}
 
-	return std::make_tuple(vecAllAtoms, vecAllFacts);
+	return std::make_tuple(vecAllAtoms, vecAllFacts, vecAllIdx);
 }
 // ----------------------------------------------------------------------------
 

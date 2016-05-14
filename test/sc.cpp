@@ -28,7 +28,7 @@ int main()
 
 	std::vector<ublas::vector<double>> vecAllAtoms;
 	std::vector<std::complex<double>> vecAllFacts;
-	std::tie(vecAllAtoms, vecAllFacts) = generate_supercell(latt, vecAtoms, vecFacts, 2);
+	std::tie(vecAllAtoms, vecAllFacts, std::ignore) = generate_supercell(latt, vecAtoms, vecFacts, 2);
 
 	for(std::size_t i=0; i<vecAllAtoms.size(); ++i)
 		std::cout << i << ": " << vecAllAtoms[i] << std::endl;
