@@ -68,6 +68,11 @@ angle_ki_Q(ki, kf, Q)
 	return acos(c);	
 }
 
+angle_vec(vec)
+{
+	return atan2(vec[1], vec[0]);
+}
+
 
 # -----------------------------------------------------------------------------
 B_matrix(a,b,c, alpha, beta, gamma)
@@ -229,12 +234,9 @@ hkl2tas(a,b,c, alpha,beta,gamma, orient1,orient2, h,k,l, ki,kf, dm,da)
 	ttheta = angle_sample_tt(ki, kf, Q);
 	print("2theta = " + (ttheta/pi*180.) + " deg");
 
-	kiQ = angle_ki_Q(ki, kf, Q);
-	theta = -kiQ - atan2(Q_vec[1], Q_vec[0]) + pi;
-	theta_takin = theta - pi/2.;
-	print("theta = " + (theta/pi*180.) + " deg" + 
-		"\t(theta_takin = " + (theta_takin/pi*180) + " deg)");
-
+	# theta = angle between ki and orient1
+	theta = 0.5*pi - (angle_ki_Q(ki, kf, Q) + angle_vec(Q_vec));
+	print("theta = " + (theta/pi*180.) + " deg");
 	print("-"*80);
 
 	return [ttheta_m*0.5, ttheta_a*0.5, theta, ttheta];
@@ -268,19 +270,13 @@ usage(app)
 
 main(args)
 {
-	orient1 = [1,1,0];
-	orient2 = [0,0,1];
+	orient1 = [1,0,0];
+	orient2 = [0,1,0];
 
-	h = 1.;
-	k = 1.;
-	l = 1.;
+	h = 1.; k = 1.; l = 1.;
 	ki = 1.4;
-	a = 6.07;
-	b = a;
-	c = a;
-	alpha = 90.;
-	beta = alpha;
-	gamma = alpha;
+	a = 5.; b = a; c = a;
+	alpha = 90.; beta = alpha; gamma = alpha;
 
 	dm = 3.355;
 	da = 3.355;

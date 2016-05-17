@@ -1,4 +1,4 @@
-/*
+/**
  * Bravais Lattice Calculations
  * @author tweber
  * @date 13-feb-2014
@@ -33,7 +33,7 @@ class Lattice
 	public:
 		using t_vec = ublas::vector<T>;
 		using t_mat = ublas::matrix<T>;
-	
+
 	protected:
 		t_vec m_vecs[3];
 
@@ -355,9 +355,9 @@ void get_tas_angles(const Lattice<T>& lattice_real,
 		T dKiQ = get_angle_ki_Q(dKi/get_one_angstrom<T>(), dKf/get_one_angstrom<T>(), dQ/get_one_angstrom<T>(), /*bSense*/1) / get_one_radian<T>();
 		vecQ.resize(2, true);
 
+		// sample rotation = angle between ki and first orientation reflex (plus an arbitrary, but fixed constant)
 		T dAngleKiOrient1 = -dKiQ - vec_angle(vecQ);
-		*pTheta = dAngleKiOrient1 + get_pi<T>();	// a3 convention
-		*pTheta -= get_pi<T>()/T(2);			// theta here
+		*pTheta = dAngleKiOrient1 + get_pi<T>()/T(2);	// a3 convention would be: kiorient1 + pi
 		if(!bSense) *pTheta = -*pTheta;
 	}
 	/*catch(const std::exception& ex)
