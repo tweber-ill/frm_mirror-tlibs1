@@ -208,7 +208,7 @@ public:
 
 	bool GetSide(const t_vec& vecP, T *pdDist=0) const
 	{
-		const unsigned int N = m_vecDir.size();
+		const std::size_t N = m_vecDir.size();
 		if(N != 2)
 		{
 			log_err("\"Side of line\" only defined for 2d vectors.");
@@ -232,7 +232,7 @@ public:
 	// http://mathworld.wolfram.com/Line-PlaneIntersection.html
 	bool intersect(const Plane<T>& plane, T& t) const
 	{
-		const unsigned int N = m_vecDir.size();
+		const std::size_t N = m_vecDir.size();
 		if(N != 3)
 		{
 			log_err("Line-plane intersection only implemented for 3d vectors.");
@@ -276,7 +276,7 @@ public:
 		const t_vec& dir0 =  this->GetDir();
 		const t_vec& dir1 =  line.GetDir();
 
-		const unsigned int N = pos0.size();
+		const std::size_t N = pos0.size();
 
 		// pos0 + t0*dir0 = pos1 + t1*dir1
 		// pos0 - pos1 = t1*dir1 - t0*dir0
@@ -284,7 +284,7 @@ public:
 		const t_vec pos = pos0-pos1;
 		t_mat mat = ublas::identity_matrix<T>(N);
 
-		for(unsigned int i=0; i<N; ++i)
+		for(std::size_t i=0; i<N; ++i)
 		{
 			mat(i, 0) = -dir0[i];
 			mat(i, 1) = dir1[i];
@@ -306,7 +306,7 @@ public:
 
 	bool GetMiddlePerp(Line<T>& linePerp) const
 	{
-		const unsigned int N = m_vecDir.size();
+		const std::size_t N = m_vecDir.size();
 		if(N != 2)
 		{
 			log_err("Perpendicular line only implemented for 2d vectors.");
@@ -360,7 +360,7 @@ protected:
 
 public:
 	Quadric() {}
-	Quadric(unsigned int iDim)
+	Quadric(std::size_t iDim)
 		: m_Q(ublas::zero_matrix<T>(iDim,iDim))/*, m_r(ublas::zero_vector<T>(iDim))*/
 	{}
 	Quadric(const t_mat& Q) : m_Q(Q) {}
@@ -368,7 +368,7 @@ public:
 			: m_Q(Q), /*m_r(r),*/ m_s(s) {}
 	virtual ~Quadric() {}
 
-	void SetDim(unsigned int iDim) { m_Q.resize(iDim, iDim, 1); }
+	void SetDim(std::size_t iDim) { m_Q.resize(iDim, iDim, 1); }
 
 	const Quadric<T>& operator=(const Quadric<T>& quad)
 	{
@@ -416,7 +416,7 @@ public:
 	}
 
 	// remove column and row iIdx
-	void RemoveElems(unsigned int iIdx)
+	void RemoveElems(std::size_t iIdx)
 	{
 		m_Q = remove_elems(m_Q, iIdx);
 		//m_r = remove_elem(m_r, iIdx);
@@ -497,7 +497,7 @@ protected:
 
 public:
 	QuadSphere() {}
-	QuadSphere(unsigned int iDim) : Quadric<T>(iDim) {}
+	QuadSphere(std::size_t iDim) : Quadric<T>(iDim) {}
 
 	QuadSphere(T r) : Quadric<T>(3)
 	{
@@ -508,9 +508,9 @@ public:
 		this->m_s = -1.;
 	}
 
-	QuadSphere(unsigned int iDim, T r) : Quadric<T>(iDim)
+	QuadSphere(std::size_t iDim, T r) : Quadric<T>(iDim)
 	{
-		for(unsigned int i=0; i<iDim; ++i)
+		for(std::size_t i=0; i<iDim; ++i)
 			this->m_Q(i,i) = 1./(r*r);
 
 		this->m_s = -1.;
@@ -531,7 +531,7 @@ protected:
 
 public:
 	QuadEllipsoid() {}
-	QuadEllipsoid(unsigned int iDim) : Quadric<T>(iDim) {}
+	QuadEllipsoid(std::size_t iDim) : Quadric<T>(iDim) {}
 
 	QuadEllipsoid(T a, T b) : Quadric<T>(2)
 	{
@@ -563,7 +563,7 @@ public:
 	virtual ~QuadEllipsoid() {}
 
 	// only valid in principal axis system
-	T GetRadius(unsigned int i) const { return 1./std::sqrt(std::abs(this->m_Q(i,i))); }
+	T GetRadius(std::size_t i) const { return 1./std::sqrt(std::abs(this->m_Q(i,i))); }
 	T GetVolume() const { return get_ellipsoid_volume(this->m_Q); }
 };
 
@@ -572,7 +572,7 @@ public:
 
 
 template<typename T=double>
-std::vector<unsigned int> find_zeroes(unsigned int N, const T* pIn)
+std::vector<std::size_t> find_zeroes(std::size_t N, const T* pIn)
 {
 	/*
 	double dMin = 0.;
@@ -585,9 +585,9 @@ std::vector<unsigned int> find_zeroes(unsigned int N, const T* pIn)
 	//const double dThres = std::numeric_limits<double>::epsilon();
 
 	using t_vec = ublas::vector<T>;
-	std::vector<unsigned int> vecIndices;
+	std::vector<std::size_t> vecIndices;
 
-	for(unsigned int i=0; i<N-1; ++i)
+	for(std::size_t i=0; i<N-1; ++i)
 	{
 		t_vec zero(2);
 		zero[0] = zero[1] = 0.;
@@ -603,11 +603,11 @@ std::vector<unsigned int> find_zeroes(unsigned int N, const T* pIn)
 
 		T param;
 		if(!line.intersect(xaxis, param))
-        {
-            //std::cerr << "No intersection." << std::endl;
+		{
+			//std::cerr << "No intersection." << std::endl;
 			continue;
-        }
-        //std::cout << "Intersection param: " << param << std::endl;
+		}
+		//std::cout << "Intersection param: " << param << std::endl;
 
 		t_vec posInters = line(param);
 		if(posInters[0]>=0. && posInters[0]<=1.)

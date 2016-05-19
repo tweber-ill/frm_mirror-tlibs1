@@ -23,31 +23,30 @@ template<class mat_type=ublas::matrix<double>,
 quat_type rot3_to_quat(const mat_type& rot)
 {
 	using T = typename quat_type::value_type;
-
 	const T tr = trace(rot);
 	T v[3], w;
 
-	if(tr > 0.)								// scalar component is largest
+	if(tr > T(0))								// scalar component is largest
 	{
-		w    = 0.5 * std::sqrt(tr+1.);
-		v[0] = (rot(2,1) - rot(1,2)) / (4.*w);
-		v[1] = (rot(0,2) - rot(2,0)) / (4.*w);
-		v[2] = (rot(1,0) - rot(0,1)) / (4.*w);
+		w    = T(0.5) * std::sqrt(tr+T(1));
+		v[0] = (rot(2,1) - rot(1,2)) / (T(4)*w);
+		v[1] = (rot(0,2) - rot(2,0)) / (T(4)*w);
+		v[2] = (rot(1,0) - rot(0,1)) / (T(4)*w);
 	}
 	else
 	{
-		for(unsigned int iComp=0; iComp<3; ++iComp)			// find largest vector component
+		for(std::size_t iComp=0; iComp<3; ++iComp)			// find largest vector component
 		{
-			const unsigned int iM = iComp;		// major comp.
-			const unsigned int im1 = (iComp+1)%3;	// minor comp. 1
-			const unsigned int im2 = (iComp+2)%3;	// minor comp. 2
+			const std::size_t iM = iComp;		// major comp.
+			const std::size_t im1 = (iComp+1)%3;	// minor comp. 1
+			const std::size_t im2 = (iComp+2)%3;	// minor comp. 2
 
 			if(rot(iM,iM)>=rot(im1,im1) && rot(iM,iM)>=rot(im2,im2))
 			{
-				v[iM]  = 0.5 * std::sqrt(1. + rot(iM,iM) - rot(im1,im1) - rot(im2,im2));
-				v[im1] = (rot(im1, iM) + rot(iM, im1)) / (v[iM]*4.);
-				v[im2] = (rot(iM, im2) + rot(im2, iM)) / (v[iM]*4.);
-				w      = (rot(im2,im1) - rot(im1,im2)) / (v[iM]*4.);
+				v[iM]  = T(0.5) * std::sqrt(T(1) + rot(iM,iM) - rot(im1,im1) - rot(im2,im2));
+				v[im1] = (rot(im1, iM) + rot(iM, im1)) / (v[iM]*T(4));
+				v[im2] = (rot(iM, im2) + rot(im2, iM)) / (v[iM]*T(4));
+				w      = (rot(im2,im1) - rot(im1,im2)) / (v[iM]*T(4));
 
 				break;
 			}
@@ -74,7 +73,7 @@ mat_type quat_to_rot3(const quat_type& quat)
 										quat*k*cquat};
 
 	mat_type mat(3,3);
-	for(unsigned int icol=0; icol<3; ++icol)
+	for(std::size_t icol=0; icol<3; ++icol)
 	{
 		mat(0, icol) = cols[icol].R_component_2();
 		mat(1, icol) = cols[icol].R_component_3();
@@ -85,20 +84,20 @@ mat_type quat_to_rot3(const quat_type& quat)
 }
 
 
-template<class quat_type=math::quaternion<double>, 
+template<class quat_type=math::quaternion<double>,
 	typename T=typename quat_type::value_type>
 std::vector<T> quat_to_euler(const quat_type& quat)
 {
 	T q[] = {quat.R_component_1(),
-			quat.R_component_2(),
-			quat.R_component_3(),
-			quat.R_component_4()};
+		quat.R_component_2(),
+		quat.R_component_3(),
+		quat.R_component_4()};
 
 	// formulas from:
 	// http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
-	T phi = std::atan2(2.*(q[0]*q[1] + q[2]*q[3]), 1.-2.*(q[1]*q[1] + q[2]*q[2]));
-	T theta = std::asin(2.*(q[0]*q[2] - q[3]*q[1]));
-	T psi = std::atan2(2.*(q[0]*q[3] + q[1]*q[2]), 1.-2.*(q[2]*q[2] + q[3]*q[3]));
+	T phi = std::atan2(T(2)*(q[0]*q[1] + q[2]*q[3]), T(1)-T(2)*(q[1]*q[1] + q[2]*q[2]));
+	T theta = std::asin(T(2)*(q[0]*q[2] - q[3]*q[1]));
+	T psi = std::atan2(T(2)*(q[0]*q[3] + q[1]*q[2]), T(1)-T(2)*(q[2]*q[2] + q[3]*q[3]));
 
 	std::vector<T> vec = { phi, theta, psi };
 	return vec;
@@ -118,7 +117,6 @@ std::vector<T> rotation_angle(const ublas::matrix<T, Args...>& rot)
 	{
 		// rot = ( c -s )
 		//       ( s  c )
-
 		T angle = std::atan2(rot(1,0), rot(0,0));
 		vecResult.push_back(angle);
 	}
@@ -138,19 +136,21 @@ template<typename T=double>
 T rotation_angle(const math::quaternion<T>& quat)
 {
 	//return 2.*std::asin(math::abs(math::unreal(quat)));
-	return 2.*std::acos(quat.R_component_1());
+	return T(2)*std::acos(quat.R_component_1());
 }
 
 template<class t_vec=ublas::vector<double>>
 t_vec rotation_axis(const math::quaternion<typename t_vec::value_type>& quat)
 {
+	using T = typename t_vec::value_type;
+
 	t_vec vec(3);
 	vec[0] = quat.R_component_2();
 	vec[1] = quat.R_component_3();
 	vec[2] = quat.R_component_4();
 
 	typename t_vec::value_type angle = rotation_angle(quat);
-	vec /= std::sin(0.5*angle);
+	vec /= std::sin(T(0.5)*angle);
 
 	return vec;
 }
@@ -160,8 +160,8 @@ template<class quat_type=math::quaternion<double>,
 	typename T = typename quat_type::value_type>
 quat_type rotation_quat(const vec_type& vec, const T angle)
 {
-	const T s = std::sin(0.5*angle);
-	const T c = std::cos(0.5*angle);
+	const T s = std::sin(T(0.5)*angle);
+	const T c = std::cos(T(0.5)*angle);
 	const T n = std::sqrt(vec[0]*vec[0] + vec[1]*vec[1] + vec[2]*vec[2]);
 
 	const T x = s * vec[0] / n;
@@ -172,26 +172,26 @@ quat_type rotation_quat(const vec_type& vec, const T angle)
 	return quat_type(r, x,y,z);
 }
 
-template<class quat_type=math::quaternion<double>>
+template<class quat_type=math::quaternion<double>, typename T = typename quat_type::value_type>
 quat_type rotation_quat_x(typename quat_type::value_type angle)
-{ return quat_type(std::cos(0.5*angle), std::sin(0.5*angle), 0., 0.); }
-template<class quat_type=math::quaternion<double>>
+{ return quat_type(std::cos(T(0.5)*angle), std::sin(T(0.5)*angle), T(0), T(0)); }
+template<class quat_type=math::quaternion<double>, typename T = typename quat_type::value_type>
 quat_type rotation_quat_y(typename quat_type::value_type angle)
-{ return quat_type(std::cos(0.5*angle), 0., std::sin(0.5*angle), 0.); }
-template<class quat_type=math::quaternion<double>>
+{ return quat_type(std::cos(T(0.5)*angle), T(0), std::sin(T(0.5)*angle), T(0)); }
+template<class quat_type=math::quaternion<double>, typename T = typename quat_type::value_type>
 quat_type rotation_quat_z(typename quat_type::value_type angle)
-{ return quat_type(std::cos(0.5*angle), 0., 0., std::sin(0.5*angle)); }
+{ return quat_type(std::cos(T(0.5)*angle), T(0), T(0), std::sin(T(0.5)*angle)); }
 
 
 
 
-template<class quat_type=math::quaternion<double>>
+template<class quat_type=math::quaternion<double>, typename T = typename quat_type::value_type>
 quat_type stereo_proj(const quat_type& quat)
-{ return (1.+quat)/(1.-quat); }
+{ return (T(1)+quat)/(T(1)-quat); }
 
-template<class quat_type=math::quaternion<double>>
+template<class quat_type=math::quaternion<double>, typename T = typename quat_type::value_type>
 quat_type stereo_proj_inv(const quat_type& quat)
-{ return (1.-quat)/(1.+quat); }
+{ return (T(1)-quat)/(T(1)+quat); }
 
 
 template<class QUAT>
@@ -201,9 +201,9 @@ struct vec_angle_unsigned_impl<QUAT, LinalgType::QUATERNION>
 	{
 		typedef typename QUAT::value_type REAL;
 		REAL dot = q1.R_component_1()*q2.R_component_1() +
-					q1.R_component_2()*q2.R_component_2() +
-					q1.R_component_3()*q2.R_component_3() +
-					q1.R_component_4()*q2.R_component_4();
+			q1.R_component_2()*q2.R_component_2() +
+			q1.R_component_3()*q2.R_component_3() +
+			q1.R_component_4()*q2.R_component_4();
 
 		dot /= math::abs(q1);
 		dot /= math::abs(q2);
