@@ -84,8 +84,8 @@ t_flux<Sys,Y> larmor_B(const t_freq<Sys,Y>& om)
  */
 template<class Sys, class Y=double>
 t_flux<Sys,Y> larmor_field(const t_length<Sys,Y>& lam,
-		const t_length<Sys,Y>& len,
-		const t_angle<Sys,Y>& phi)
+	const t_length<Sys,Y>& len,
+	const t_angle<Sys,Y>& phi)
 {
 	t_velocity<Sys,Y> v = lam2p(lam) / co::m_n;
 	t_freq<Sys,Y> om = -Y(phi/radians)*v/len;
@@ -105,7 +105,7 @@ Y mieze_reduction_det(const t_length<Sys,Y>& lx, const t_length<Sys,Y>& ly,
 	const t_time<Sys,Y>& tau,
 	const t_length<Sys,Y>& lam,
 	const t_angle<Sys,Y>& central_phase,
-	unsigned int iXPixels=128, unsigned int iYPixels=128,
+	std::size_t iXPixels=128, std::size_t iYPixels=128,
 	ublas::matrix<Y>* pPhaseMatrix=0)
 {
 	using namespace units;
@@ -127,7 +127,7 @@ Y mieze_reduction_det(const t_length<Sys,Y>& lx, const t_length<Sys,Y>& ly,
 	t_area<Sys,Y> int_red = 0.*meters*meters;
 
 
-	unsigned int iX, iY;
+	std::size_t iX, iY;
 	// integrate over detector
 	for(dx=-lx/2., iX=0; dx<lx/2. && iX<iXPixels; dx+=lx_inc, ++iX)
 	{
@@ -199,7 +199,7 @@ Y mieze_reduction_sample_cuboid(const t_length<Sys,Y>& len_x,
 	const t_freq<Sys,Y>& fM,
 	const t_length<Sys,Y>& lam,
 	const t_angle<Sys,Y>& twotheta, const t_angle<Sys,Y>& theta_s,
-	unsigned int ITERS=100)
+	std::size_t ITERS=100)
 {
 	using namespace units;
 	using namespace co;
@@ -265,7 +265,7 @@ Y mieze_reduction_sample_cuboid_extinction(const t_length<Sys,Y>& len_x,
 	const t_freq<Sys,Y>& fM,
 	const t_length<Sys,Y>& lam,
 	const t_angle<Sys,Y>& twotheta,
-	unsigned int ITERS=100)
+	std::size_t ITERS=100)
 {
 	const Y SUBDIVS = Y(ITERS);
 
@@ -343,13 +343,13 @@ Y mieze_reduction_sample_cuboid_extinction(const t_length<Sys,Y>& len_x,
 // Bragg scattering with extinction
 template<class Sys, class Y>
 Y mieze_reduction_sample_cuboid_bragg(const t_length<Sys,Y>& len_x,
-			const t_length<Sys,Y>& len_y,
-			const t_length<Sys,Y>& len_z,
-			const t_length_inverse<Sys, Y>& mu,
-			const t_freq<Sys,Y>& fM,
-			const t_length<Sys,Y>& lam,
-			const t_length<Sys,Y>& d_ana,
-			unsigned int ITERS=100)
+	const t_length<Sys,Y>& len_y,
+	const t_length<Sys,Y>& len_z,
+	const t_length_inverse<Sys, Y>& mu,
+	const t_freq<Sys,Y>& fM,
+	const t_length<Sys,Y>& lam,
+	const t_length<Sys,Y>& d_ana,
+	std::size_t ITERS=100)
 {
 	const t_angle<Sys,Y>
 		twotheta = bragg_real_twotheta(d_ana, lam, 1.);
