@@ -52,7 +52,8 @@ T ferromag(const t_cont& lstNeighbours, const ublas::vector<T>& vecq, T tS)
 
 
 // Magnetic form factors
-// see Neutron Data Booklet sec. 2.5-1 (p. 60)
+// see: ILL Neutron Data Booklet sec. 2.5-1 (p. 60)
+// also see: https://www.ill.eu/sites/ccsl/ffacts/
 
 template<class T=double>
 T j0_avg(T q, T A, T a, T B, T b, T C, T c, T D)
