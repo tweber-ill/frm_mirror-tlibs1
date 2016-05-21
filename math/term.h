@@ -13,13 +13,16 @@
 #include <numeric>
 #include <cstdint>
 #include <cmath>
+#include <sstream>
+#include <unordered_map>
 
 #include "../string/string.h"
 #include "../helper/exception.h"
 
 namespace tl
 {
-	/** Hund's rules
+	/**
+	 * Hund's rules
 	 *
 	 * @return [S, L, J]
 	 */
@@ -71,6 +74,66 @@ namespace tl
 		t_str strJ = var_to_str<t_real, t_str>(J);
 
 		return strS + strL + strJ;
+	}
+
+
+	/**
+	* transforms e.g. 1s2 -> [1,0,2]
+	* @return [n, l, #electrons]
+	*/
+	template<class t_str=std::string>
+	std::tuple<uint16_t, uint16_t, uint16_t>
+	get_orbital(const t_str& strOrbital)
+	{
+		using t_ch = typename t_str::value_type;
+		static const std::unordered_map<t_ch, uint16_t> mapSubOrbitals =
+		{
+			{'s',0}, {'p',1}, {'d',2}, {'f',3},
+			{'g',4}, {'h',5}, {'i',6}, {'j',7},
+			{'k',8}, {'l',9}, {'m',10}, {'n',11},
+			{'o',12},
+		};
+
+		std::istringstream istr(strOrbital);
+		uint16_t n = 0, l = 0, iNumE = 0;
+		t_ch cSub = 's';
+
+		istr >> n >> cSub >> iNumE;
+		auto iter = mapSubOrbitals.find(cSub);
+		if(iter == mapSubOrbitals.end())
+			throw Err("Invalid orbital.");
+		l = iter->second;
+
+		return std::make_tuple(n,l,iNumE);
+	}
+
+
+	/*
+	 * gets term symbol from orbitals
+	 * @return [S, L, J]
+	 */
+	template<class t_real=double, class t_str=std::string>
+	std::tuple<t_real, t_real, t_real>
+	hund(const t_str& strOrbitals)
+	{
+		std::tuple<t_real, t_real, t_real> tupTerm(0,0,0);
+		std::vector<t_str> vecOrbitals;
+		tl::get_tokens<t_str,t_str>(strOrbitals, " ,;", vecOrbitals);
+
+		// all orbitals
+		for(const t_str& strOrbital : vecOrbitals)
+		{
+			std::tuple<uint16_t, uint16_t, uint16_t> tup_nle =
+				get_orbital(strOrbital);
+			std::tuple<t_real, t_real, t_real> tup =
+				hund(std::get<1>(tup_nle), std::get<2>(tup_nle));
+
+			std::get<0>(tupTerm) += std::get<0>(tup);
+			std::get<1>(tupTerm) += std::get<1>(tup);
+			std::get<2>(tupTerm) += std::get<2>(tup);
+		}
+
+		return tupTerm;
 	}
 }
 

@@ -3,12 +3,17 @@
 
 int main()
 {
+	//auto tup = tl::get_orbital<std::string>("2p3");
+	//std::cout << std::get<0>(tup) << ", " << std::get<1>(tup) << ", " << std::get<2>(tup) << std::endl;
+
+
 	double S,L,J;
 	std::uint16_t l, es;
 
 	std::cout << "l = "; std::cin >> l;
 	std::cout << "Number of electrons: "; std::cin >> es;
 
+	//std::tie(S,L,J) = tl::hund(std::string("1s2 2p3"));
 	std::tie(S,L,J) = tl::hund(l, es);
 	std::string strTerm = tl::get_termsymbol(S,L,J);
 
