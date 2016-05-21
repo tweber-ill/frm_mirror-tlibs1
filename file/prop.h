@@ -71,7 +71,9 @@ template<class t_str> struct StringComparer<t_str, 0>
 			str2.begin(), str2.end());
 	}
 };
+
 // ----------------------------------------------------------------------------
+
 
 template<class _t_str = std::string, bool bCaseSensitive=0>
 class Prop
@@ -79,10 +81,10 @@ class Prop
 public:
 	using t_str = _t_str;
 	using t_ch = typename t_str::value_type;
+	using t_prop = prop::basic_ptree<t_str, t_str, StringComparer<t_str, bCaseSensitive>>;
 
 protected:
-
-	prop::basic_ptree<t_str, t_str, StringComparer<t_str, bCaseSensitive>> m_prop;
+	t_prop m_prop;
 	t_ch m_chSep = '/';
 
 public:
@@ -91,6 +93,7 @@ public:
 
 	void SetSeparator(t_ch ch) { m_chSep = ch; }
 
+	const t_prop& GetProp() const { return m_prop; }
 
 	bool Load(const t_ch* pcFile)
 	{
@@ -379,7 +382,29 @@ public:
 			Add<t_str>(std::move(strKey), std::move(strVal));
 		}
 	}
+
+	friend std::ostream& operator<<(std::ostream& ostr,
+		const Prop<_t_str, bCaseSensitive>& prop)
+	{
+		return operator << (ostr, prop.m_prop);
+	}
 };
+
+
+template<class t_str = std::string, bool bCaseSens = 0>
+std::ostream& operator<<(std::ostream& ostr,
+	const prop::basic_ptree<t_str, t_str, StringComparer<t_str, bCaseSens>>& prop)
+{
+	using t_prop = prop::basic_ptree<t_str, t_str, StringComparer<t_str, bCaseSens>>;
+
+	for(typename t_prop::const_iterator iter = prop.begin();
+		iter!= prop.end(); ++iter)
+	{
+		std::cout << iter->first << " " << iter->second.data() << " "
+			<< iter->second << "\n";
+	}
+	return ostr;
+}
 
 }
 #endif
