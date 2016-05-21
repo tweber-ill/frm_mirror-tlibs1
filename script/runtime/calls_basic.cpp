@@ -38,14 +38,14 @@
 
 
 static Symbol* fkt_version(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	extern const t_char* g_pcVersion;
 	return new SymbolString(g_pcVersion);
 }
 
 static Symbol* fkt_traceback(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!info.bEnableDebug)
 		tl::log_warn(linenr(runinfo), "Debugging is disabled.");
@@ -71,7 +71,7 @@ static Symbol* fkt_traceback(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_is_valid(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	for(const Symbol* pSym : vecSyms)
 	{
@@ -82,7 +82,7 @@ static Symbol* fkt_is_valid(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_is_rval(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ANY}, {0}, "is_rval", "Symbol needed."))
 		return 0;
@@ -178,7 +178,7 @@ static Symbol* fkt_call(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_int(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size() == 0)
 		return new SymbolInt(0);
@@ -187,10 +187,10 @@ static Symbol* fkt_int(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_cplx_real(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab);
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab);
 
 static Symbol* fkt_double(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size() == 0)
 		return new SymbolReal(0.);
@@ -221,7 +221,7 @@ static Symbol* fkt_double(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_double_vec(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY}, {0}, "real_vec"))
 		return 0;
@@ -250,7 +250,7 @@ static Symbol* fkt_double_vec(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_str(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	SymbolString *pSymRet = new SymbolString;
 	for(const Symbol *pSym : vecSyms)
@@ -263,7 +263,7 @@ static Symbol* fkt_str(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_output(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	t_ostream& ostr = G_COUT;
 
@@ -276,7 +276,7 @@ static Symbol* fkt_output(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_print(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	fkt_output(vecSyms, info, runinfo, pSymTab);
 	G_COUT << std::endl;
@@ -294,7 +294,7 @@ static Symbol* fkt_input(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_sleep(const std::vector<Symbol*>& vecSyms,
-		ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_DOUBLE|SYMBOL_INT}, {0}, "sleep", "Number of ms needed."))
 		return 0;
@@ -370,7 +370,7 @@ static bool _import_file(const t_string& strFile, ParseInfo& info, RuntimeInfo &
 }
 
 static Symbol* fkt_import(const std::vector<Symbol*>& vecSyms,
-			ParseInfo& info, RuntimeInfo& runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo& runinfo, SymbolTable* pSymTab)
 {
 	for(Symbol *pSym : vecSyms)
 		if(pSym && pSym->GetType()==SYMBOL_STRING)
@@ -393,7 +393,7 @@ static Symbol* fkt_import(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_has_var(const std::vector<Symbol*>& vecSyms,
-			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING}, {0}, "has_var", "Symbol name needed."))
 		return 0;
@@ -418,7 +418,7 @@ static Symbol* fkt_has_var(const std::vector<Symbol*>& vecSyms,
 
 // register a variable in the symbol table
 static Symbol* fkt_register_var(const std::vector<Symbol*>& vecSyms,
-			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	bool bUseGlobal = 0;
 
@@ -474,7 +474,7 @@ static Symbol* fkt_register_var(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_typeof(const std::vector<Symbol*>& vecSyms,
-			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ANY}, {0}, "typeof"))
 		return 0;
@@ -485,7 +485,7 @@ static Symbol* fkt_typeof(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_setprec(const std::vector<Symbol*>& vecSyms,
-			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_SCALAR}, {0}, "set_prec"))
 		return 0;
@@ -506,7 +506,7 @@ static Symbol* fkt_setprec(const std::vector<Symbol*>& vecSyms,
 // map
 
 static Symbol* fkt_map(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size()>=1 && vecSyms[0]->GetType()==SYMBOL_MAP)
 		return vecSyms[0]->clone();
@@ -520,7 +520,7 @@ static Symbol* fkt_map(const std::vector<Symbol*>& vecSyms,
 // --------------------------------------------------------------------------------
 // complex
 static Symbol* fkt_complex(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size() == 0)
 		return new SymbolComplex(0., 0.);
@@ -555,7 +555,7 @@ static Symbol* fkt_complex(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_complex_polar(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	t_real tRho = 0.;
 	t_real tTheta = 0.;
@@ -569,7 +569,7 @@ static Symbol* fkt_complex_polar(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_cplx_real(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_COMPLEX}, {0}, "real"))
 		return 0;
@@ -579,7 +579,7 @@ static Symbol* fkt_cplx_real(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_cplx_imag(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_COMPLEX}, {0}, "imag"))
 		return 0;
@@ -589,7 +589,7 @@ static Symbol* fkt_cplx_imag(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_cplx_arg(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_COMPLEX}, {0}, "carg"))
 		return 0;
@@ -606,7 +606,7 @@ static Symbol* fkt_cplx_arg(const std::vector<Symbol*>& vecSyms,
 // array
 
 static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size()<1)
 		return new SymbolArray();
@@ -654,7 +654,7 @@ static Symbol* fkt_array(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_array_size(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_CONTAINER}, {0}, "vec_size"))
 		return 0;
@@ -731,7 +731,7 @@ static int pos_in_array(const SymbolArray* pSymArr, const Symbol *pSym)
 }
 
 static Symbol* fkt_find(const std::vector<Symbol*>& vecSyms,
-							ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_CONTAINER, SYMBOL_ANY}, {0,0}, "find"))
 		return 0;
@@ -817,7 +817,7 @@ static Symbol* fkt_cur_iter(const std::vector<Symbol*>& vecSyms,
 
 
 static Symbol* fkt_splice(const std::vector<Symbol*>& vecSyms,
-			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size() == 0)
 	{
@@ -917,8 +917,8 @@ static void _rearrangearr(std::vector<Symbol*>& vecSyms, const std::vector<unsig
 }
 
 static Symbol* _fkt_sort(const std::vector<Symbol*>& vecSyms,
-			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab,
-			bool bReverse=0)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab,
+	bool bReverse=0)
 {
 	if(vecSyms.size()<1 || vecSyms[0]->GetType()!=SYMBOL_ARRAY)
 	{
@@ -988,19 +988,19 @@ static Symbol* _fkt_sort(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_sort(const std::vector<Symbol*>& vecSyms,
-			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	return _fkt_sort(vecSyms, info, runinfo, pSymTab, 0);
 }
 
 static Symbol* fkt_sort_rev(const std::vector<Symbol*>& vecSyms,
-			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	return _fkt_sort(vecSyms, info, runinfo, pSymTab, 1);
 }
 
 static Symbol* fkt_zip(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	SymbolArray* pArrRet = new SymbolArray();
 	std::vector<Symbol*>* pVec = &pArrRet->GetArr();
@@ -1053,7 +1053,7 @@ static Symbol* fkt_zip(const std::vector<Symbol*>& vecSyms,
 // --------------------------------------------------------------------------------
 // string operations
 static Symbol* fkt_trim(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ANY}, {0}, "trim"))
 		return 0;
@@ -1087,7 +1087,7 @@ static Symbol* fkt_trim(const std::vector<Symbol*>& vecSyms,
 
 // split(string, delim)
 static Symbol* fkt_split(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING, SYMBOL_STRING}, {0, 1}, "split"))
 		return 0;
@@ -1120,7 +1120,7 @@ static Symbol* fkt_split(const std::vector<Symbol*>& vecSyms,
 
 // tokens(string, delim)
 static Symbol* fkt_tokens(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	t_string *pstrInput = 0;
 	t_string strDelim = T_STR" \t\n";
@@ -1153,7 +1153,7 @@ static Symbol* fkt_tokens(const std::vector<Symbol*>& vecSyms,
 
 
 static Symbol* fkt_replace(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING, SYMBOL_STRING, SYMBOL_STRING}, {0,0,0}, "replace"))
 		return 0;
@@ -1170,7 +1170,7 @@ static Symbol* fkt_replace(const std::vector<Symbol*>& vecSyms,
 
 // replace_regex(str, regex, repl);
 static Symbol* fkt_replace_regex(const std::vector<Symbol*>& vecSyms,
-				ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING, SYMBOL_STRING, SYMBOL_STRING}, {0,0,0}, "regex_replace"))
 		return 0;
@@ -1196,7 +1196,7 @@ static Symbol* fkt_replace_regex(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_find_regex(const std::vector<Symbol*>& vecSyms,
-				ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING, SYMBOL_STRING}, {0,0}, "regex_find"))
 		return 0;
@@ -1264,7 +1264,7 @@ static Symbol* fkt_find_regex(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_match_regex(const std::vector<Symbol*>& vecSyms,
-				ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING, SYMBOL_STRING}, {0,0}, "regex_match"))
 		return 0;
@@ -1294,7 +1294,7 @@ static Symbol* fkt_match_regex(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_subfind_regex(const std::vector<Symbol*>& vecSyms,
-				ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_STRING, SYMBOL_STRING, SYMBOL_INT}, {0,0,1}, "regex_subfind"))
 		return 0;
@@ -1340,7 +1340,7 @@ static Symbol* fkt_subfind_regex(const std::vector<Symbol*>& vecSyms,
 // map operations
 
 static Symbol* fkt_has_key(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_MAP, SYMBOL_ANY}, {0,0}, "has_key"))
 		return 0;
@@ -1352,7 +1352,7 @@ static Symbol* fkt_has_key(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_rm_key(const std::vector<Symbol*>& vecSyms,
-			ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_MAP, SYMBOL_ANY}, {0,0}, "rm_key"))
 		return 0;

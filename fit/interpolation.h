@@ -35,13 +35,13 @@ template<typename T> T bernstein(int i, int n, T t)
 
 // see: http://mathworld.wolfram.com/BezierCurve.html
 template<typename T>
-ublas::vector<T> bezier(const ublas::vector<T>* P, unsigned int N, T t)
+ublas::vector<T> bezier(const ublas::vector<T>* P, std::size_t N, T t)
 {
 	if(N==0) return ublas::vector<T>(0);
 	const int n = N-1;
 
 	ublas::vector<T> vec(P[0].size());
-	for(unsigned int i=0; i<vec.size(); ++i) vec[i] = T(0);
+	for(std::size_t i=0; i<vec.size(); ++i) vec[i] = T(0);
 
 	for(int i=0; i<=n; ++i)
 		vec += P[i]*bernstein(i, n, t);
@@ -76,7 +76,7 @@ T bspline_base(int i, int j, T t, const std::vector<T>& knots)
 
 // see: http://mathworld.wolfram.com/B-Spline.html
 template<typename T>
-ublas::vector<T> bspline(const ublas::vector<T>* P, unsigned int N, T t, const std::vector<T>& knots)
+ublas::vector<T> bspline(const ublas::vector<T>* P, std::size_t N, T t, const std::vector<T>& knots)
 {
 	if(N==0) return ublas::vector<T>(0);
 	const int n = N-1;
@@ -84,7 +84,7 @@ ublas::vector<T> bspline(const ublas::vector<T>* P, unsigned int N, T t, const s
 	const int degree = m-n-1;
 
 	ublas::vector<T> vec(P[0].size());
-	for(unsigned int i=0; i<vec.size(); ++i) vec[i] = T(0);
+	for(std::size_t i=0; i<vec.size(); ++i) vec[i] = T(0);
 
 	for(int i=0; i<=n; ++i)
 		vec += P[i]*bspline_base(i, degree, t, knots);
@@ -98,10 +98,10 @@ class Bezier : public FunctionModel_param_gen<ublas::vector<T>>
 {
 	protected:
 		ublas::vector<T> *m_pvecs;
-		unsigned int m_iN;
+		std::size_t m_iN;
 
 	public:
-		Bezier(unsigned int N, const T *px, const T *py);
+		Bezier(std::size_t N, const T *px, const T *py);
 		virtual ~Bezier();
 
 		virtual ublas::vector<T> operator()(T t) const override;
@@ -114,11 +114,11 @@ class BSpline : public FunctionModel_param_gen<ublas::vector<T>>
 {
 	protected:
 		ublas::vector<T> *m_pvecs;
-		unsigned int m_iN, m_iDegree;
+		std::size_t m_iN, m_iDegree;
 		std::vector<T> m_vecKnots;
 
 	public:
-		BSpline(unsigned int N, const T *px, const T *py, unsigned int iDegree=3);
+		BSpline(std::size_t N, const T *px, const T *py, unsigned int iDegree=3);
 		virtual ~BSpline();
 
 		virtual ublas::vector<T> operator()(T t) const override;
@@ -127,11 +127,11 @@ class BSpline : public FunctionModel_param_gen<ublas::vector<T>>
 
 
 template<typename T>
-void find_peaks(unsigned int iLen, const T* px, const T* py, unsigned int iOrder,
-		std::vector<T>& vecMaximaX, std::vector<T>& vecMaximaSize, std::vector<T>& vecMaximaWidth)
+void find_peaks(std::size_t iLen, const T* px, const T* py, unsigned int iOrder,
+	std::vector<T>& vecMaximaX, std::vector<T>& vecMaximaSize, std::vector<T>& vecMaximaWidth)
 {
 	BSpline<T> spline(iLen, px, py, iOrder);
-	const unsigned int iNumSpline = 512;    // TODO: in config
+	const std::size_t iNumSpline = 512;    // TODO: in config
 
 	T *pSplineX = new T[iNumSpline];
 	T *pSplineY = new T[iNumSpline];
@@ -140,7 +140,7 @@ void find_peaks(unsigned int iLen, const T* px, const T* py, unsigned int iOrder
 
 	const T* pdyMin = std::min_element(py, py+iLen);
 
-	for(unsigned int iSpline=0; iSpline<iNumSpline; ++iSpline)
+	for(std::size_t iSpline=0; iSpline<iNumSpline; ++iSpline)
 	{
 		const T dT = T(iSpline) / T(iNumSpline-1);
 		ublas::vector<T> vec = spline(dT);
@@ -151,12 +151,12 @@ void find_peaks(unsigned int iLen, const T* px, const T* py, unsigned int iOrder
 
 	tl::diff(iNumSpline, pSplineX, pSplineY, pSplineDiff);
 	tl::diff(iNumSpline, pSplineX, pSplineDiff, pSplineDiff2);
-	std::vector<unsigned int> vecZeroes = tl::find_zeroes<T>(iNumSpline, pSplineDiff);
+	std::vector<std::size_t> vecZeroes = tl::find_zeroes<T>(iNumSpline, pSplineDiff);
 
 
-	for(unsigned int iZeroIdx = 0; iZeroIdx<vecZeroes.size(); ++iZeroIdx)
+	for(std::size_t iZeroIdx = 0; iZeroIdx<vecZeroes.size(); ++iZeroIdx)
 	{
-		const unsigned int iZero = vecZeroes[iZeroIdx];
+		const std::size_t iZero = vecZeroes[iZeroIdx];
 
 		// minima / saddle points
 		if(pSplineDiff2[iZero] >= 0.)
@@ -233,12 +233,12 @@ void find_peaks(unsigned int iLen, const T* px, const T* py, unsigned int iOrder
 
 
 template<class T>
-Bezier<T>::Bezier(unsigned int N, const T *px, const T *py)
+Bezier<T>::Bezier(std::size_t N, const T *px, const T *py)
 	: m_pvecs(0), m_iN(N)
 {
 	m_pvecs = new ublas::vector<T>[m_iN];
 
-	for(unsigned int i=0; i<N; ++i)
+	for(std::size_t i=0; i<N; ++i)
 	{
 		m_pvecs[i].resize(2);
 		m_pvecs[i][0] = px[i];
@@ -265,19 +265,19 @@ ublas::vector<T> Bezier<T>::operator()(T t) const
 
 
 template<class T>
-BSpline<T>::BSpline(unsigned int N, const T *px, const T *py, unsigned int iDegree)
+BSpline<T>::BSpline(std::size_t N, const T *px, const T *py, unsigned int iDegree)
 	: m_pvecs(0), m_iN(N), m_iDegree(iDegree)
 {
 	m_pvecs = new ublas::vector<T>[m_iN];
 
-	for(unsigned int i=0; i<m_iN; ++i)
+	for(std::size_t i=0; i<m_iN; ++i)
 	{
 		m_pvecs[i].resize(2);
 		m_pvecs[i][0] = px[i];
 		m_pvecs[i][1] = py[i];
 	}
 
-	unsigned int iM = m_iDegree + m_iN + 1;
+	std::size_t iM = m_iDegree + m_iN + 1;
 	m_vecKnots.resize(iM);
 
 	const T eps = std::numeric_limits<T>::epsilon();
