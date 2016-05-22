@@ -12,6 +12,7 @@
 #include <vector>
 #include <cmath>
 #include <complex>
+#include <cassert>
 
 #include "linalg.h"
 #include "atoms.h"
@@ -55,38 +56,40 @@ T ferromag(const t_cont& lstNeighbours, const ublas::vector<T>& vecq, T tS)
 // see: ILL Neutron Data Booklet sec. 2.5-1 (p. 60)
 // also see: https://www.ill.eu/sites/ccsl/ffacts/
 
-template<class T=double>
-T j0_avg(T Q, T A, T a, T B, T b, T C, T c, T D)
+template<class T=double, template<class...> class t_vec=std::initializer_list>
+T j0_avg(T Q, const t_vec<T>& A, const t_vec<T>& a)
 {
-	return A * std::exp(-a * Q/(T(4)*get_pi<T>())*Q/(T(4)*get_pi<T>())) +
-		B * std::exp(-b * Q/(T(4)*get_pi<T>())*Q/(T(4)*get_pi<T>())) +
-		C * std::exp(-c * Q/(T(4)*get_pi<T>())*Q/(T(4)*get_pi<T>())) + D;
+	assert(A.size() == a.size()+1);
+
+	T tJ = T(0);
+	for(std::size_t i=0; i<a.size(); ++i)
+		tJ += A[i] * std::exp(-a[i] * Q/(T(4)*get_pi<T>())*Q/(T(4)*get_pi<T>()));
+	tJ += *A.rbegin();
+	return tJ;
 }
 
-template<class T=double>
-T j2_avg(T Q, T A, T a, T B, T b, T C, T c, T D)
+template<class T=double, template<class...> class t_vec=std::initializer_list>
+T j2_avg(T Q, const t_vec<T>& A, const t_vec<T>& a)
 {
-	return j0_avg(Q, A,a, B,b, C,c, D) *
-		Q/(T(4)*get_pi<T>()) * Q/(T(4)*get_pi<T>());
+	return j0_avg(Q, A, a) * Q/(T(4)*get_pi<T>()) * Q/(T(4)*get_pi<T>());
 }
 
-template<class T=double>
+template<class T=double, template<class...> class t_vec=std::initializer_list>
 T mag_formfact(T Q, T L, T S,
-	T A0, T a0, T B0, T b0, T C0, T c0, T D0,
-	T A2, T a2, T B2, T b2, T C2, T c2, T D2)
+	const t_vec<T>& A0, const t_vec<T>& a0,
+	const t_vec<T>& A2, const t_vec<T>& a2)
 {
-	return (L+T(2)*S) * j0_avg(Q, A0,a0, B0,b0, C0,c0, D0) *
-		L * j2_avg(Q, A2,a2, B2,b2, C2,c2, D2);
+	return (L+T(2)*S) * j0_avg(Q, A0, a0) * L * j2_avg(Q, A2, a2);
 }
 
 // see: Squires, p. 139
-template<class T=double>
+template<class T=double, template<class...> class t_vec=std::initializer_list>
 T mag_formfact(T Q, T L, T S, T J,
-	T A0, T a0, T B0, T b0, T C0, T c0, T D0,
-	T A2, T a2, T B2, T b2, T C2, T c2, T D2)
+	const t_vec<T>& A0, const t_vec<T>& a0,
+	const t_vec<T>& A2, const t_vec<T>& a2)
 {
-	T j0 = j0_avg(Q, A0,a0, B0,b0, C0,c0, D0);
-	T j2 = j2_avg(Q, A2,a2, B2,b2, C2,c2, D2);
+	T j0 = j0_avg(Q, A0, a0);
+	T j2 = j2_avg(Q, A2, a2);
 
 	T gL = T(0.5) + (L*(L+T(1)) - S*(S+T(1))) / (T(2)*J* (J+T(1)));
 	T gS = T(1) + (S*(S+T(1)) - L*(L+T(1))) / (J * (J+T(1)));

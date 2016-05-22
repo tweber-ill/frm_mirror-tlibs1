@@ -67,7 +67,7 @@ namespace tl
 	t_str get_termsymbol(t_real S, t_real L, t_real J)
 	{
 		static const std::vector<t_str> vecL =
-			{"S","P","D","F","G","H","I","J","K","L","M","N","O"};
+			{"S","P","D","F","G","H","I","K","L","M","N","O"};
 
 		t_str strS = var_to_str<t_real, t_str>(t_real(2)*S+1);
 		t_str strL = vecL[std::size_t(L)];
@@ -89,9 +89,8 @@ namespace tl
 		static const std::unordered_map<t_ch, uint16_t> mapSubOrbitals =
 		{
 			{'s',0}, {'p',1}, {'d',2}, {'f',3},
-			{'g',4}, {'h',5}, {'i',6}, {'j',7},
-			{'k',8}, {'l',9}, {'m',10}, {'n',11},
-			{'o',12},
+			{'g',4}, {'h',5}, {'i',6}, {'k',8},
+			{'l',9}, {'m',10}, {'n',11}, {'o',12},
 		};
 
 		std::istringstream istr(strOrbital);
