@@ -89,8 +89,8 @@ namespace tl
 		static const std::unordered_map<t_ch, uint16_t> mapSubOrbitals =
 		{
 			{'s',0}, {'p',1}, {'d',2}, {'f',3},
-			{'g',4}, {'h',5}, {'i',6}, {'k',8},
-			{'l',9}, {'m',10}, {'n',11}, {'o',12},
+			{'g',4}, {'h',5}, {'i',6}, {'k',7},
+			{'l',8}, {'m',9}, {'n',10}, {'o',11},
 		};
 
 		std::istringstream istr(strOrbital);
