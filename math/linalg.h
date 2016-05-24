@@ -578,7 +578,12 @@ bool is_nan_or_inf(const T& mat)
 // -----------------------------------------------------------------------------
 
 
-// code for inverse based on boost/libs/numeric/ublas/test/test_lu.cpp
+/**
+ * calculates the matrix inverse
+ *
+ * @desc code for inverse based on boost/libs/numeric/ublas/test/test_lu.cpp
+ * @desc Boost's test_lu.cpp is (c) 2008 by G. Winkler
+ */
 template<class mat_type=ublas::matrix<double>>
 bool inverse(const mat_type& mat, mat_type& inv)
 {

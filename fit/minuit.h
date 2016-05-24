@@ -1,15 +1,15 @@
-/*
+/**
  * Minuit interface
  *
  * @author Tobias Weber
  * @date April 2012
  * @license GPLv2 or GPLv3
  *
- * general fitter structure (i.e. function => chi^2 calculation => calling
- * minuit) originally based on the examples in the Minuit user's guide:
- * http://seal.cern.ch/documents/minuit/mnusersguide.pdf
- *
+ * @desc general fitter structure (i.e. function => chi^2 calculation => calling
+ * 	minuit) originally based on the examples in the Minuit user's guide:
+ * 	http://seal.cern.ch/documents/minuit/mnusersguide.pdf
  */
+
 #ifndef __MINUIT_IFACE_H__
 #define __MINUIT_IFACE_H__
 
