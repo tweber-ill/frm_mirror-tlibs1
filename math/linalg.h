@@ -465,20 +465,21 @@ typename matrix_type::value_type trace(const matrix_type& mat)
 }
 
 // see: https://www.opengl.org/sdk/docs/man2/xhtml/gluPerspective.xml
+// also see: similar gnomonic projection of spherical coordinates onto a plane
 template<class matrix_type=ublas::matrix<double,ublas::row_major, ublas::bounded_array<double,4*4>>,
 	class T=typename matrix_type::value_type>
 matrix_type perspective_matrix(T yfov, T asp, T n, T f)
 {
-	const T y = cot(0.5*yfov);
+	const T y = cot(T(0.5)*yfov);
 	const T x = y/asp;
 	const T dsgn = -1.;
 
 	return make_mat<matrix_type>
 	({
-		{     x,        0.,                0.,              0. },
-		{    0.,         y,                0.,              0. },
-		{    0.,        0.,  dsgn*(f+n)/(f-n), (-2.*f*n)/(f-n) },
-		{    0.,        0.,           dsgn*1.,              0. }
+		{    x, T(0),             T(0),              T(0) },
+		{ T(0),    y,             T(0),              T(0) },
+		{ T(0), T(0), dsgn*(f+n)/(f-n), (-T(2)*f*n)/(f-n) },
+		{ T(0), T(0),             dsgn,              T(0) }
 	});
 }
 
@@ -489,10 +490,10 @@ matrix_type ortho_matrix(T l, T r, T b, T t, T n, T f)
 {
 	return make_mat<matrix_type>
 	({
-		{ 2./(r-l),       0.,       0., (l+r)/(l-r) },
-		{       0., 2./(t-b),       0., (b+t)/(b-t) },
-		{       0.,       0., 2./(n-f), (n+f)/(n-f) },
-		{       0.,       0.,       0., 1.          }
+		{ T(2)/(r-l),       T(0),       T(0), (l+r)/(l-r) },
+		{       T(0), T(2)/(t-b),       T(0), (b+t)/(b-t) },
+		{       T(0),       T(0), T(2)/(n-f), (n+f)/(n-f) },
+		{       T(0),       T(0),       T(0), T(1)        }
 	});
 }
 

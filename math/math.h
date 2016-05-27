@@ -436,11 +436,35 @@ std::tuple<T,T> sph_to_crys(T phi, T theta)
 }
 
 
+/**
+ * gnomonic projection (similar to perspective projection with fov=90°)
+ * @return [x,y]
+ * @desc: see http://mathworld.wolfram.com/GnomonicProjection.html
+ */
 template<class T = double>
 std::tuple<T,T> gnomonic_proj(T twophi_crys, T twotheta_crys)
 {
 	T x = -std::tan(twophi_crys);
 	T y = std::tan(twotheta_crys) / std::cos(twophi_crys);
+
+	return std::make_tuple(x, y);
+}
+
+/**
+ * stereographic projection
+ * @return [x,y]
+ * @desc: see http://mathworld.wolfram.com/StereographicProjection.html
+ */
+template<class T = double>
+std::tuple<T,T> stereographic_proj(T twophi_crys, T twotheta_crys, T rad)
+{
+	const T sth = std::sin(twotheta_crys);
+	const T cth = std::cos(twotheta_crys);
+	const T sph = std::sin(twophi_crys);
+	const T cph = std::cos(twophi_crys);
+
+	T x = T(2) * rad * sph * cth / (T(1) + cth*cph);
+	T y = T(2) * rad * sth / (T(1) + cth*cph);
 
 	return std::make_tuple(x, y);
 }
