@@ -66,8 +66,8 @@ public:
 		m_bValid = 1;
 	}
 
-	virtual ~Plane()
-	{}
+	Plane() = default;
+	virtual ~Plane() = default;
 
 	const t_vec& GetX0() const { return m_vecX0; }
 	const t_vec& GetDir0() const { return m_vecDir0; }
