@@ -541,7 +541,9 @@ template<class T> struct _var_to_str_print_impl<T, true>
 template<typename T, class t_str=std::string>
 struct _var_to_str_impl
 {
-	t_str operator()(const T& t, std::streamsize iPrec=std::numeric_limits<T>::max_digits10, int iGroup=-1)
+	t_str operator()(const T& t,
+		std::streamsize iPrec = std::numeric_limits<T>::max_digits10,
+		int iGroup=-1)
 	{
 		//if(std::is_convertible<T, t_str>::value)
 		//	return *reinterpret_cast<const t_str*>(&t);
@@ -598,7 +600,9 @@ struct _var_to_str_impl<t_str, t_str>
 };
 
 template<typename T, class t_str=std::string>
-t_str var_to_str(const T& t, std::streamsize iPrec=std::numeric_limits<T>::max_digits10-1, int iGroup=-1)
+t_str var_to_str(const T& t,
+	std::streamsize iPrec = std::numeric_limits<T>::max_digits10-1,
+	int iGroup = -1)
 {
 	_var_to_str_impl<T, t_str> _impl;
 	return _impl(t, iPrec, iGroup);
