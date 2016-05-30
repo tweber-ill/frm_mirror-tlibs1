@@ -47,7 +47,11 @@ T sign(T t)
 	return T(1);
 }
 
-template<typename T> T cot(T t) { return T(1)/std::tan(t); }
+template<typename T> T cot(T t)
+{
+	//return T(1)/std::tan(t);
+	return std::tan(T(0.5)*get_pi<T>() - t);
+}
 
 
 // -----------------------------------------------------------------------------

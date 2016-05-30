@@ -470,7 +470,7 @@ template<class matrix_type=ublas::matrix<double,ublas::row_major, ublas::bounded
 	class T=typename matrix_type::value_type>
 matrix_type perspective_matrix(T yfov, T asp, T n, T f)
 {
-	const T y = cot(T(0.5)*yfov);
+	const T y = std::tan(T(0.5)*get_pi<T>() - T(0.5)*yfov);
 	const T x = y/asp;
 	const T dsgn = -1.;
 
