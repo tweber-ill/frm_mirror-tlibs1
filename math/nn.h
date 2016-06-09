@@ -15,6 +15,7 @@
 #include <complex>
 
 #include "linalg.h"
+#include "../helper/misc.h"
 
 
 namespace tl {

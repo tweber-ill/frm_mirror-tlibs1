@@ -36,7 +36,8 @@ T ferromag(const t_cont<t_vec>& vecNeighbours, const t_cont<std::complex<T>>& ve
 	const ublas::vector<T>& vecq, T tS)
 {
 	std::complex<T> J(0., 0.), J0(0., 0.);
-	J = structfact(vecNeighbours, vecq, vecJ, &J0).real();
+	J = structfact<T, std::complex<T>, t_vec, t_cont>
+		(vecNeighbours, vecq, vecJ, &J0).real();
 	return T(2)*tS*(J0 - J).real();
 }
 
@@ -71,7 +72,7 @@ T j0_avg(T Q, const t_vec<T>& A, const t_vec<T>& a)
 template<class T=double, template<class...> class t_vec=std::initializer_list>
 T j2_avg(T Q, const t_vec<T>& A, const t_vec<T>& a)
 {
-	return j0_avg(Q, A, a) * Q/(T(4)*get_pi<T>()) * Q/(T(4)*get_pi<T>());
+	return j0_avg<T, t_vec>(Q, A, a) * Q/(T(4)*get_pi<T>()) * Q/(T(4)*get_pi<T>());
 }
 
 template<class T=double, template<class...> class t_vec=std::initializer_list>
@@ -79,7 +80,7 @@ T mag_formfact(T Q, T L, T S,
 	const t_vec<T>& A0, const t_vec<T>& a0,
 	const t_vec<T>& A2, const t_vec<T>& a2)
 {
-	return (L+T(2)*S) * j0_avg(Q, A0, a0) * L * j2_avg(Q, A2, a2);
+	return (L+T(2)*S) * j0_avg<T, t_vec>(Q, A0, a0) * L * j2_avg<T, t_vec>(Q, A2, a2);
 }
 
 // see: Squires, p. 139
@@ -88,8 +89,8 @@ T mag_formfact(T Q, T L, T S, T J,
 	const t_vec<T>& A0, const t_vec<T>& a0,
 	const t_vec<T>& A2, const t_vec<T>& a2)
 {
-	T j0 = j0_avg(Q, A0, a0);
-	T j2 = j2_avg(Q, A2, a2);
+	T j0 = j0_avg<T, t_vec>(Q, A0, a0);
+	T j2 = j2_avg<T, t_vec>(Q, A2, a2);
 
 	T gL = T(0.5) + (L*(L+T(1)) - S*(S+T(1))) / (T(2)*J* (J+T(1)));
 	T gS = T(1) + (S*(S+T(1)) - L*(L+T(1))) / (J * (J+T(1)));
