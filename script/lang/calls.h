@@ -24,10 +24,10 @@ extern const std::string& get_type_name(unsigned int ty);
 
 // errors
 extern bool check_args(RuntimeInfo& info, 
-			const std::vector<Symbol*>& vecSyms, 
-			const std::initializer_list<unsigned int>& lstTypes, 
-			const std::initializer_list<bool> &lstOptional, 
-			const char* pcFkt, const char* pcErr=0);
+	const std::vector<Symbol*>& vecSyms, 
+	const std::initializer_list<unsigned int>& lstTypes, 
+	const std::initializer_list<bool> &lstOptional, 
+	const char* pcFkt, const char* pcErr=0);
 
 // typedefs
 typedef Symbol*(*t_extcall)(const std::vector<Symbol*>&, ParseInfo&, RuntimeInfo&, SymbolTable*);
@@ -43,9 +43,7 @@ extern const t_mapFkts* get_ext_calls();
 
 // calling external functions from interpreter
 extern Symbol* ext_call(const t_string& strFkt,
-			const std::vector<Symbol*>& vecSyms,
-			ParseInfo &info,
-			RuntimeInfo &runinfo,
-			SymbolTable* pSymTab);
+	const std::vector<Symbol*>& vecSyms, ParseInfo &info,
+	RuntimeInfo &runinfo, SymbolTable* pSymTab);
 
 #endif

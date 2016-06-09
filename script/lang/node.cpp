@@ -798,7 +798,7 @@ Node* NodeRange::clone() const
 Node* NodeArrayAccess::clone() const
 {
 	NodeArrayAccess *pNode = new NodeArrayAccess(m_pIdent?m_pIdent->clone():0,
-										m_pExpr?m_pExpr->clone():0);
+		m_pExpr?m_pExpr->clone():0);
 	*((Node*)pNode) = *((Node*)this);
 	return pNode;
 }
@@ -813,8 +813,7 @@ Node* NodeUnaryOp::clone() const
 Node* NodeBinaryOp::clone() const
 {
 	NodeBinaryOp* pNode = new NodeBinaryOp(m_pLeft?m_pLeft->clone():0,
-							m_pRight?m_pRight->clone():0,
-							GetType());
+		m_pRight?m_pRight->clone():0, GetType());
 	pNode->m_vecNodesFlat = this->m_vecNodesFlat;
 	*((Node*)pNode) = *((Node*)this);
 	return pNode;
@@ -823,8 +822,7 @@ Node* NodeBinaryOp::clone() const
 Node* NodeFunction::clone() const
 {
 	NodeFunction* pFkt = new NodeFunction(m_pIdent?m_pIdent->clone():0,
-							m_pArgs?m_pArgs->clone():0,
-							m_pStmts?m_pStmts->clone():0);
+		m_pArgs?m_pArgs->clone():0, m_pStmts?m_pStmts->clone():0);
 	pFkt->m_strScrFile = this->m_strScrFile;
 
 	*((Node*)pFkt) = *((Node*)this);

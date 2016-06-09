@@ -54,10 +54,10 @@ extern const t_string& get_type_name(unsigned int ty)
 }
 
 extern bool check_args(RuntimeInfo& runinfo, 
-			const std::vector<Symbol*>& vecSyms, 
-			const std::initializer_list<unsigned int>& lstTypes, 
-			const std::initializer_list<bool> &lstOptional, 
-			const char* pcFkt, const char* pcErr)
+	const std::vector<Symbol*>& vecSyms, 
+	const std::initializer_list<unsigned int>& lstTypes, 
+	const std::initializer_list<bool> &lstOptional, 
+	const char* pcFkt, const char* pcErr)
 {
 	const std::size_t iSyms = vecSyms.size();
 	const std::size_t iTypes = lstTypes.size();
@@ -95,9 +95,9 @@ extern bool check_args(RuntimeInfo& runinfo,
 		{
 			std::ostringstream ostrErr;
 			ostrErr << linenr(runinfo)
-					<< "Argument " << (iCurSym+1) 
-					<< " of function \"" << pcFkt << "\""
-					<< " is invalid.";
+				<< "Argument " << (iCurSym+1) 
+				<< " of function \"" << pcFkt << "\""
+				<< " is invalid.";
 			if(pcErr) ostrErr << " " << pcErr;
 			ostrErr << std::endl;
 
@@ -108,12 +108,12 @@ extern bool check_args(RuntimeInfo& runinfo,
 		{
 			std::ostringstream ostrErr;
 			ostrErr << linenr(runinfo)
-					<< "Argument " << (iCurSym+1)
-					<< " of function \"" << pcFkt << "\""
-					<< " has wrong type. "
-					<< "Expected " << get_type_name(*iterTypes)
-					<< ", received " << get_type_name((*iterSym)->GetType()) 
-					<< ".";
+				<< "Argument " << (iCurSym+1)
+				<< " of function \"" << pcFkt << "\""
+				<< " has wrong type. "
+				<< "Expected " << get_type_name(*iterTypes)
+				<< ", received " << get_type_name((*iterSym)->GetType()) 
+				<< ".";
 			if(pcErr) ostrErr << " " << pcErr;
 			ostrErr << std::endl;
 
@@ -126,10 +126,8 @@ extern bool check_args(RuntimeInfo& runinfo,
 
 
 extern Symbol* ext_call(const t_string& strFkt,
-			const std::vector<Symbol*>& vecSyms,
-			ParseInfo& info,
-			RuntimeInfo &runinfo,
-			SymbolTable* pSymTab)
+	const std::vector<Symbol*>& vecSyms, ParseInfo& info,
+	RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	t_mapFkts::iterator iter = g_mapFkts.find(strFkt);
 	if(iter == g_mapFkts.end())

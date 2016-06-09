@@ -656,8 +656,8 @@ bool solve_linear_approx(const ublas::matrix<T>& M, const ublas::vector<T>& v,
 
 // solve Mx = v for x
 template<typename T=double>
-bool solve_linear(const ublas::matrix<T>& M, const ublas::vector<T>& v,
-						ublas::vector<T>& x)
+bool solve_linear(const ublas::matrix<T>& M,
+	const ublas::vector<T>& v, ublas::vector<T>& x)
 {
 	if(M.size1() == M.size2())		// determined, TODO: check rank
 	{
@@ -772,8 +772,8 @@ bool solve_linear(const ublas::matrix<T>& M, const ublas::vector<T>& v,
 
 // solve M^T M x = M^T v for x
 template<typename T=double>
-bool solve_linear_approx(const ublas::matrix<T>& M, const ublas::vector<T>& v,
-			ublas::vector<T>& x)
+bool solve_linear_approx(const ublas::matrix<T>& M,
+	const ublas::vector<T>& v, ublas::vector<T>& x)
 {
 	if(M.size1() <= M.size2())
 	{

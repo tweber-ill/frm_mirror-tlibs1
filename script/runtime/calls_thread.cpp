@@ -17,7 +17,7 @@
 #include <cstdlib>
 
 static inline Symbol* fkt_exec(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	t_string strExec;
 
@@ -56,7 +56,7 @@ static inline Symbol* fkt_exec(const std::vector<Symbol*>& vecSyms,
 }
 
 static inline Symbol* fkt_exit(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	int iStatus = 0;
 	if(vecSyms.size()>=1 && vecSyms[0])
@@ -70,7 +70,7 @@ static inline Symbol* fkt_exit(const std::vector<Symbol*>& vecSyms,
 // thread
 
 std::vector<Symbol*>* clone_symbols(const std::vector<Symbol*>* pvecSyms,
-								unsigned int iBegin=0)
+	unsigned int iBegin=0)
 {
 	if(!pvecSyms)
 		return 0;
@@ -184,8 +184,7 @@ static Symbol* fkt_thread_task(const std::vector<Symbol*>& vecSyms,
 		//else log_debug("starting as thread");
 
 		std::future<Symbol*> *pFuture = new std::future<Symbol*>(
-					std::async(policy, ::task_proc,
-						pFunc, &info, vecThreadSymsClone));
+			std::async(policy, ::task_proc, pFunc, &info, vecThreadSymsClone));
 		iHandle = info.phandles->AddHandle(new HandleTask(pFuture, bIsThread));
 	}
 	else
@@ -198,23 +197,19 @@ static Symbol* fkt_thread_task(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_thread(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info,
-						RuntimeInfo &runinfo, 
-						SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	return fkt_thread_task(vecSyms, info, runinfo, pSymTab, 0);
 }
 
 static Symbol* fkt_task(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info,
-						RuntimeInfo &runinfo, 
-						SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	return fkt_thread_task(vecSyms, info, runinfo, pSymTab, 1);
 }
 
 static Symbol* fkt_thread_hwcount(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	unsigned int iNumThreads = std::thread::hardware_concurrency();
 	if(iNumThreads == 0)
@@ -224,9 +219,7 @@ static Symbol* fkt_thread_hwcount(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_mutex(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info,
-						RuntimeInfo &runinfo, 
-						SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	std::mutex* pMutex = new std::mutex;
 	t_int iHandle = info.phandles->AddHandle(new HandleMutex(pMutex));
@@ -331,7 +324,7 @@ static Symbol* fkt_end_critical(const std::vector<Symbol*>& vecSyms,
 
 
 static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size()<1)
 	{
@@ -409,7 +402,7 @@ static Symbol* fkt_thread_join(const std::vector<Symbol*>& vecSyms,
 
 // nthread(iNumThreads, strFunc, vecArgs, ...)
 static Symbol* fkt_nthread(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(vecSyms.size()<3)
 	{

@@ -534,7 +534,7 @@ public:
 	}
 
 	void GetRangeIndices(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym,
-				t_int iMaxLen, t_int& iBeginIdx, t_int& iEndIdx);
+		t_int iMaxLen, t_int& iBeginIdx, t_int& iEndIdx);
 
 	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
 	virtual Node* clone() const;
@@ -625,8 +625,8 @@ public:
 
 	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
 	virtual Symbol* eval_assign(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0, 
-					Node* pLeft=0, Node *pRight=0, Symbol* pSymRightAlt=0, 
-					const bool *pbGlob=0) const;
+		Node* pLeft=0, Node *pRight=0, Symbol* pSymRightAlt=0, 
+		const bool *pbGlob=0) const;
 	virtual Symbol* eval_funcinit(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
 
 	virtual Symbol* eval_recursive(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;

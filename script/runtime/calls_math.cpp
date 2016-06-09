@@ -439,7 +439,7 @@ static Symbol* _fkt_fft(const std::vector<Symbol*>& vecSyms,
 
 	tl::Fourier_gen<t_real> fourier(vecRealIn.size());
 	(fourier.*pFkt)(vecRealIn.data(), vecImagIn.data(),
-			vecRealOut.data(), vecImagOut.data());
+		vecRealOut.data(), vecImagOut.data());
 
 	SymbolArray* pArrReal = new SymbolArray();
 	SymbolArray* pArrImag = new SymbolArray();
@@ -585,7 +585,7 @@ static Symbol* fkt_matrix(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 }
 
 static Symbol* fkt_transpose(const std::vector<Symbol*>& vecSyms, 
-				ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY}, {0}, "trans"))
 		return 0;
@@ -604,7 +604,7 @@ static Symbol* fkt_transpose(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_inverse(const std::vector<Symbol*>& vecSyms, 
-				ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY}, {0}, "inv"))
 		return 0;
@@ -629,7 +629,7 @@ static Symbol* fkt_inverse(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_determinant(const std::vector<Symbol*>& vecSyms,
-                                ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY}, {0}, "det"))
 		return 0;
@@ -646,7 +646,8 @@ static Symbol* fkt_determinant(const std::vector<Symbol*>& vecSyms,
 	return new SymbolReal(dDet);
 }
 
-static Symbol* fkt_unitmatrix(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+static Symbol* fkt_unitmatrix(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_INT}, {0}, "unity"))
 		return 0;
@@ -657,7 +658,8 @@ static Symbol* fkt_unitmatrix(const std::vector<Symbol*>& vecSyms, ParseInfo& in
 	return mat_to_sym<t_mat>(mat);
 }
 
-static Symbol* fkt_outerproduct(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+static Symbol* fkt_outerproduct(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY, SYMBOL_ARRAY}, {0,0}, "outer_prod"))
 		return 0;
@@ -676,7 +678,8 @@ static Symbol* fkt_outerproduct(const std::vector<Symbol*>& vecSyms, ParseInfo& 
 	return mat_to_sym<t_mat>(mat);
 }
 
-static Symbol* fkt_dot(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+static Symbol* fkt_dot(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY, SYMBOL_ARRAY}, {0,0}, "dot"))
 		return 0;
@@ -694,7 +697,8 @@ static Symbol* fkt_dot(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Run
 	return new SymbolReal(ublas::inner_prod(vec1, vec2));
 }
 
-static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ANY, SYMBOL_ANY}, {0,0}, "prod"))
 		return 0;
@@ -767,7 +771,8 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms, ParseInfo& info,
 // advanced linalg stuff
 
 #ifdef USE_LAPACK
-static Symbol* fkt_eigenvecs(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+static Symbol* fkt_eigenvecs(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY}, {0}, "eigenvecs"))
 		return 0;
@@ -824,7 +829,8 @@ static Symbol* fkt_eigenvecs(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 	return pSymRet;
 }
 #else
-static Symbol* fkt_eigenvecs(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+static Symbol* fkt_eigenvecs(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	std::ostringstream ostrErr;
 	ostrErr << linenr(runinfo) << "Function eigenvecs not linked." << std::endl;
@@ -832,7 +838,8 @@ static Symbol* fkt_eigenvecs(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 }
 #endif
 
-static Symbol* fkt_eigenvecs_sym(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+static Symbol* fkt_eigenvecs_sym(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY}, {0}, "eigenvecs_sym"))
 		return 0;
@@ -875,7 +882,8 @@ static Symbol* fkt_eigenvecs_sym(const std::vector<Symbol*>& vecSyms, ParseInfo&
 	return pSymRet;
 }
 
-static Symbol* fkt_qr(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+static Symbol* fkt_qr(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY}, {0}, "qr"))
 		return 0;
@@ -912,13 +920,15 @@ static Symbol* fkt_qr(const std::vector<Symbol*>& vecSyms, ParseInfo& info, Runt
 // rand stuff
 
 
-static Symbol* fkt_rand01(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+static Symbol* fkt_rand01(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	t_real dRand = tl::rand01<t_real>();
 	return new SymbolReal(dRand);
 }
 
-static Symbol* fkt_rand_real(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+static Symbol* fkt_rand_real(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_SCALAR, SYMBOL_SCALAR}, {0,0}, "rand_real"))
 		return 0;
@@ -930,7 +940,8 @@ static Symbol* fkt_rand_real(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 	return new SymbolReal(dRand);
 }
 
-static Symbol* fkt_rand_int(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+static Symbol* fkt_rand_int(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_SCALAR, SYMBOL_SCALAR}, {0,0}, "rand_int"))
 		return 0;
@@ -942,7 +953,8 @@ static Symbol* fkt_rand_int(const std::vector<Symbol*>& vecSyms, ParseInfo& info
 	return new SymbolInt(iRand);
 }
 
-static Symbol* fkt_rand_norm(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+static Symbol* fkt_rand_norm(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_SCALAR, SYMBOL_SCALAR}, {0,0}, "rand_norm"))
 		return 0;
@@ -959,7 +971,8 @@ static Symbol* fkt_rand_norm(const std::vector<Symbol*>& vecSyms, ParseInfo& inf
 	return new SymbolReal(dRand);
 }
 
-static Symbol* fkt_rand_norm_nd(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+static Symbol* fkt_rand_norm_nd(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY, SYMBOL_ARRAY}, {0,0}, "rand_norm_nd"))
 		return 0;
@@ -985,7 +998,7 @@ static Symbol* fkt_rand_norm_nd(const std::vector<Symbol*>& vecSyms, ParseInfo& 
 // minmax
 
 static Symbol* fkt_minmax_elem(const std::vector<Symbol*>& vecSyms, 
-						ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY}, {0}, "minmax_elem"))
 		return 0;
@@ -1015,7 +1028,8 @@ static Symbol* fkt_minmax_elem(const std::vector<Symbol*>& vecSyms,
 	return new SymbolArray({new SymbolInt(iIdxMin), new SymbolInt(iIdxMax)});
 }
 
-static Symbol* fkt_minmax(const std::vector<Symbol*>& vecSyms, ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+static Symbol* fkt_minmax(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	SymbolArray* pElem = (SymbolArray*)fkt_minmax_elem(vecSyms, info, runinfo, pSymTab);
 	if(!pElem || pElem->GetArr().size()!=2)

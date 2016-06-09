@@ -28,8 +28,7 @@ class FFTw : public Fourier_base<double>
 		virtual ~FFTw();
 
 		virtual void trafo(const double* pInR, const double *pInI,
-					double *pOutR, double *pOutI,
-					bool bInv=0) override;
+			double *pOutR, double *pOutI, bool bInv=0) override;
 };
 
 }

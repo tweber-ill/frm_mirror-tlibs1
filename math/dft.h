@@ -323,7 +323,7 @@ class DFT : public Fourier_base<T>
 					m_matCoeff(i,j) = std::complex<T>(c, -s);
 				}
 
-				m_matCoeffInv = ublas::conj(m_matCoeff);
+			m_matCoeffInv = ublas::conj(m_matCoeff);
 		}
 
 	public:
@@ -386,7 +386,7 @@ class FFT : public Fourier_base<T>
 
 		struct CoeffKeyHash
 		{
-        		std::size_t operator()(const CoeffKey& key) const
+			std::size_t operator()(const CoeffKey& key) const
 			{
 				std::size_t iHsh = key.N;
 				boost::hash_combine<std::size_t>(iHsh, key.i);
@@ -396,8 +396,8 @@ class FFT : public Fourier_base<T>
 
 		struct CoeffKeyEqual
 		{
-        		bool operator()(const CoeffKey& key0, const CoeffKey& key1) const
-        		{
+			bool operator()(const CoeffKey& key0, const CoeffKey& key1) const
+			{
 				return key0.N==key1.N && key0.i==key1.i;
 			}
 		};
@@ -421,9 +421,9 @@ class FFT : public Fourier_base<T>
 		}
 
 		std::vector<std::complex<T>> FFTMerge(const std::vector<std::complex<T>>& vecIn,
-							bool bInv=0)
+			bool bInv=0)
 		{
-        		typedef std::vector<std::complex<T>> t_vec;
+			typedef std::vector<std::complex<T>> t_vec;
 			/*const*/ t_mapCoeff *pCoeff = bInv ? &m_mapCoeffInv : &m_mapCoeff;
 
 			const std::size_t N = vecIn.size();
@@ -444,11 +444,11 @@ class FFT : public Fourier_base<T>
 			{
 				// 2-point, upper
 				std::complex<T> cU[] = { vecIn[0] + vecIn[1]*pCoeff->operator[](CoeffKey(2,0)),
-							vecIn[0] + vecIn[1]*pCoeff->operator[](CoeffKey(2,1))};
+					vecIn[0] + vecIn[1]*pCoeff->operator[](CoeffKey(2,1))};
 
 				// 2-point, lower
 				std::complex<T> cL[] = { vecIn[2] + vecIn[3]*pCoeff->operator[](CoeffKey(2,0)),
-							vecIn[2] + vecIn[3]*pCoeff->operator[](CoeffKey(2,1))};
+					vecIn[2] + vecIn[3]*pCoeff->operator[](CoeffKey(2,1))};
 
 				// merge 2-points
 				for(std::size_t i=0; i<4; ++i)
@@ -460,19 +460,19 @@ class FFT : public Fourier_base<T>
 			{
 				// 2-point, top
 				std::complex<T> cT[] = { vecIn[0] + vecIn[1]*pCoeff->operator[](CoeffKey(2,0)),
-							vecIn[0] + vecIn[1]*pCoeff->operator[](CoeffKey(2,1)) };
+					vecIn[0] + vecIn[1]*pCoeff->operator[](CoeffKey(2,1)) };
 
 				// 2-point, uppper
 				std::complex<T> cU[] = { vecIn[2] + vecIn[3]*pCoeff->operator[](CoeffKey(2,0)),
-							vecIn[2] + vecIn[3]*pCoeff->operator[](CoeffKey(2,1)) };
+					vecIn[2] + vecIn[3]*pCoeff->operator[](CoeffKey(2,1)) };
 
 				// 2-point, lower
 				std::complex<T> cL[] = { vecIn[4] + vecIn[5]*pCoeff->operator[](CoeffKey(2,0)),
-							vecIn[4] + vecIn[5]*pCoeff->operator[](CoeffKey(2,1)) };
+					vecIn[4] + vecIn[5]*pCoeff->operator[](CoeffKey(2,1)) };
 
 				// 2-point, bottom
 				std::complex<T> cB[] = { vecIn[6] + vecIn[7]*pCoeff->operator[](CoeffKey(2,0)),
-							vecIn[6] + vecIn[7]*pCoeff->operator[](CoeffKey(2,1)) };
+					vecIn[6] + vecIn[7]*pCoeff->operator[](CoeffKey(2,1)) };
 
 				// 4-points: merge 2-points, top+upper
 				t_vec c4U; c4U.reserve(4);
@@ -521,8 +521,7 @@ class FFT : public Fourier_base<T>
 		}
 
 		virtual void trafo(const T* pInR, const T* pInI,
-					T* pOutR, T* pOutI,
-					bool bInv=0) override
+			T* pOutR, T* pOutI, bool bInv=0) override
 		{
 			typedef std::vector<std::complex<T>> t_vec;
 			t_vec vecIn(m_n), vecOut;

@@ -385,8 +385,8 @@ void NodeRange::GetRangeIndices(ParseInfo &info, RuntimeInfo& runinfo, SymbolTab
 	/*if(!pArr)
 	{
 		G_CERR << linenr(T_STR"Error", info)
-					<< "Range operation needs an array."
-					<< std::endl;
+			<< "Range operation needs an array."
+			<< std::endl;
 		return;
 	}*/
 

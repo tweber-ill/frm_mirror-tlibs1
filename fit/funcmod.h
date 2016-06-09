@@ -76,7 +76,7 @@ public:
 	virtual const char* GetModelName() const = 0;
 };
 
-// synonmy
+// synonyme
 template<class T=double> using FunctionModel_nd = class FunctionModel_nd_gen<T>;
 
 

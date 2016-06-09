@@ -103,9 +103,9 @@ static bool isoctdigit(t_char c)
 static bool ishexdigit(t_char c)
 {
 	static const t_char chs[] = {T_STR'0',T_STR'1',T_STR'2',T_STR'3',T_STR'4',
-					T_STR'5',T_STR'6',T_STR'7',T_STR'8',T_STR'9',
-					T_STR'a',T_STR'A',T_STR'b',T_STR'B',T_STR'c',T_STR'C',
-					T_STR'd',T_STR'D',T_STR'e',T_STR'E',T_STR'f',T_STR'F'};
+		T_STR'5',T_STR'6',T_STR'7',T_STR'8',T_STR'9',
+		T_STR'a',T_STR'A',T_STR'b',T_STR'B',T_STR'c',T_STR'C',
+		T_STR'd',T_STR'D',T_STR'e',T_STR'E',T_STR'f',T_STR'F'};
 
 	for(t_char ch : chs)
 	{
