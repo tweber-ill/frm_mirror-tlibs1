@@ -131,10 +131,8 @@ static void thread_proc(NodeFunction* pFunc, ParseInfo* pinfo, std::vector<Symbo
 }
 
 static Symbol* fkt_thread_task(const std::vector<Symbol*>& vecSyms,
-						ParseInfo& info,
-						RuntimeInfo &runinfo, 
-						SymbolTable* pSymTab,
-						bool bTask=0)
+	ParseInfo& info, RuntimeInfo &runinfo, 
+	SymbolTable* pSymTab, bool bTask=0)
 {
 	if(vecSyms.size()<1)
 	{
@@ -228,7 +226,7 @@ static Symbol* fkt_mutex(const std::vector<Symbol*>& vecSyms,
 }
 
 static Symbol* fkt_begin_critical(const std::vector<Symbol*>& vecSyms,
-								ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	// no argument given: lock global mutex
 	if(vecSyms.size() == 0)
