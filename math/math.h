@@ -113,10 +113,50 @@ template<typename T> T t_abs(const T& t)
 	return t;
 }
 
-template<typename T=double>
-bool float_equal(T t1, T t2, T eps = std::numeric_limits<T>::epsilon())
+
+
+template<class T=double>
+struct _get_epsilon_impl
 {
-	return t_abs<T>(t1-t2) < eps;
+	using t_eps = underlying_value_type_t<T>;
+
+	t_eps operator()() const
+	{
+		return std::numeric_limits<t_eps>::epsilon();
+	}
+};
+
+template<class T>
+typename _get_epsilon_impl<T>::t_eps get_epsilon()
+{
+	return _get_epsilon_impl<T>()();
+}
+
+
+template<class T = double, class t_eps = typename _get_epsilon_impl<T>::t_eps,
+	LinalgType ty = get_linalg_type<T>::value>
+struct _float_equal_impl
+{
+	bool operator()(T t1, T t2, t_eps eps = get_epsilon<T>()) const
+	{
+		return t_abs<T>(t1-t2) < eps;
+	}
+};
+
+template<class T, class t_eps>
+struct _float_equal_impl<T, t_eps, LinalgType::COMPLEX>
+{
+	bool operator()(const T& t1, const T& t2, t_eps eps = get_epsilon<T>()) const
+	{
+		return t_abs<t_eps>(t1.real()-t2.real()) < eps &&
+			t_abs<t_eps>(t1.imag()-t2.imag()) < eps;
+	}
+};
+
+template<typename T = double>
+bool float_equal(T t1, T t2, typename _get_epsilon_impl<T>::t_eps eps = get_epsilon<T>())
+{
+	return _float_equal_impl<T>()(t1, t2, eps);
 }
 
 

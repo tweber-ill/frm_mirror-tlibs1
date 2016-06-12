@@ -68,9 +68,12 @@ mat_type quat_to_rot3(const quat_type& quat)
 	const quat_type cquat = math::conj(quat);
 	const quat_type i(0,1,0,0), j(0,0,1,0), k(0,0,0,1);
 
-	const quat_type cols[] = {quat*i*cquat,
-										quat*j*cquat,
-										quat*k*cquat};
+	const quat_type cols[] =
+	{
+		quat * i * cquat,
+		quat * j * cquat,
+		quat * k * cquat
+	};
 
 	mat_type mat(3,3);
 	for(std::size_t icol=0; icol<3; ++icol)
@@ -200,10 +203,10 @@ struct vec_angle_unsigned_impl<QUAT, LinalgType::QUATERNION>
 	typename QUAT::value_type operator()(const QUAT& q1, const QUAT& q2) const
 	{
 		typedef typename QUAT::value_type REAL;
-		REAL dot = q1.R_component_1()*q2.R_component_1() +
-			q1.R_component_2()*q2.R_component_2() +
-			q1.R_component_3()*q2.R_component_3() +
-			q1.R_component_4()*q2.R_component_4();
+		REAL dot = q1.R_component_1() * q2.R_component_1() +
+			q1.R_component_2() * q2.R_component_2() +
+			q1.R_component_3() * q2.R_component_3() +
+			q1.R_component_4() * q2.R_component_4();
 
 		dot /= math::abs(q1);
 		dot /= math::abs(q2);

@@ -14,9 +14,6 @@ using t_vec = ublas::vector<std::complex<double>>;
 
 int main()
 {
-	//auto vecLadder = get_ladder_ops();
-	//std::cout << vecLadder << std::endl;
-
 	auto vec = get_spin_matrices();
 	auto I = unit_matrix<t_mat>(2);
 
@@ -33,7 +30,7 @@ int main()
 	// two-spin operator
 	t_mat S1S2 = S1x*S2x + S1y*S2y + S1z*S2z;
 
-	std::cout << "S1*S2 = " << S1S2 << std::endl;
+	std::cout << "S1*S2 (direct) = " << S1S2 << std::endl;
 
 
 	std::vector<t_vec> evecs;
@@ -47,6 +44,19 @@ int main()
 			<< ", eval: " << evals[iEV]
 			<< std::endl;
 	}
+
+
+	// ---------------------------------------------------------
+
+
+	auto vecLadder = get_ladder_ops();
+	//std::cout << vecLadder << std::endl;
+
+	t_mat C = 0.5 * (tensor_prod(vecLadder[0], I) * tensor_prod(I, vecLadder[1]) +
+		tensor_prod(vecLadder[1], I) * tensor_prod(I, vecLadder[0]))
+		+ S1z*S2z;
+	std::cout << "S1*S2 (via ladder) = " << C << std::endl;
+	std::cout << std::boolalpha << (C == S1S2) << std::endl;
 
 	return 0;
 }

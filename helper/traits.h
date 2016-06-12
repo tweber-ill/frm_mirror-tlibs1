@@ -27,13 +27,13 @@ struct underlying_value_type<T, 1>
 template<class T>
 struct underlying_value_type<T, 0>
 {
-	using value_type = typename T::value_type;
+	using value_type = typename underlying_value_type<
+		typename T::value_type>::value_type;
 };
 
 template<class T>
 using underlying_value_type_t =
 	typename underlying_value_type<T, std::is_scalar<T>::value>::value_type;
-
 // -----------------------------------------------------------------------------
 
 
@@ -72,16 +72,18 @@ enum class LinalgType : short
 	VECTOR,
 	MATRIX,
 	QUATERNION,
-	REAL
+	REAL,
+	COMPLEX
 };
 
-template<LinalgType val>  struct linalg_type { static constexpr LinalgType value = val; };
+template<LinalgType val> struct linalg_type { static constexpr LinalgType value = val; };
 
 template<class> struct get_linalg_type : linalg_type<LinalgType::UNKNOWN> {};
 template<class... PARAMS> struct get_linalg_type<std::vector<PARAMS...>> : linalg_type<LinalgType::VECTOR> {};
 template<class... PARAMS> struct get_linalg_type<boost::numeric::ublas::vector<PARAMS...>> : linalg_type<LinalgType::VECTOR> {};
 template<class... PARAMS> struct get_linalg_type<boost::numeric::ublas::matrix<PARAMS...>> : linalg_type<LinalgType::MATRIX> {};
 template<class... PARAMS> struct get_linalg_type<boost::math::quaternion<PARAMS...>> : linalg_type<LinalgType::QUATERNION> {};
+template<class... PARAMS> struct get_linalg_type<std::complex<PARAMS...>> : linalg_type<LinalgType::COMPLEX> {};
 template<> struct get_linalg_type<double> : linalg_type<LinalgType::REAL> {};
 template<> struct get_linalg_type<float> : linalg_type<LinalgType::REAL> {};
 // -----------------------------------------------------------------------------

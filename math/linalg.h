@@ -109,7 +109,7 @@ t_vec<t_to> convert_vec(const t_vec<t_from>& vec)
 
 template<class vec_type>
 bool vec_equal(const vec_type& vec0, const vec_type& vec1,
-	typename vec_type::value_type eps = std::numeric_limits<typename vec_type::value_type>::epsilon())
+	typename tl::_get_epsilon_impl<vec_type>::t_eps eps = get_epsilon<vec_type>())
 {
 	typedef typename vec_type::value_type T;
 
@@ -124,7 +124,7 @@ bool vec_equal(const vec_type& vec0, const vec_type& vec1,
 
 template<class mat_type>
 bool mat_equal(const mat_type& mat0, const mat_type& mat1,
-	typename mat_type::value_type eps = std::numeric_limits<typename mat_type::value_type>::epsilon())
+	typename tl::_get_epsilon_impl<mat_type>::t_eps eps = get_epsilon<mat_type>())
 {
 	typedef typename mat_type::value_type T;
 
@@ -1042,7 +1042,7 @@ struct set_eps_0_impl
 template<typename real_type>
 struct set_eps_0_impl<real_type, 1>
 {
-	real_type eps = std::numeric_limits<real_type>::epsilon();
+	real_type eps = get_epsilon<real_type>();
 
 	void operator()(real_type& d) const
 	{
@@ -1055,7 +1055,7 @@ template<typename vec_type>
 struct set_eps_0_impl<vec_type, 0>
 {
 	using real_type = typename vec_type::value_type;
-	real_type eps = std::numeric_limits<real_type>::epsilon();
+	real_type eps = get_epsilon<real_type>();
 
 	void operator()(vec_type& vec) const
 	{
@@ -1075,7 +1075,7 @@ void set_eps_0(T& d, underlying_value_type_t<T> eps)
 // -----------------------------------------------------------------------------
 
 template<typename t_vec, typename T = typename t_vec::value_type>
-bool vec_is_collinear(const t_vec& _vec1, const t_vec& _vec2, T eps = std::numeric_limits<T>::epsilon())
+bool vec_is_collinear(const t_vec& _vec1, const t_vec& _vec2, T eps = get_epsilon<T>())
 {
 	const t_vec vec1 = _vec1 / ublas::norm_2(_vec1);
 	const t_vec vec2 = _vec2 / ublas::norm_2(_vec2);
@@ -1419,7 +1419,7 @@ t_mat norm_col_vecs(const t_mat& M)
 }
 
 template<class t_mat=ublas::matrix<double>, class t_real=underlying_value_type_t<t_mat>>
-bool is_symmetric(const t_mat& mat, t_real eps=std::numeric_limits<t_real>::epsilon())
+bool is_symmetric(const t_mat& mat, t_real eps = get_epsilon<t_real>())
 {
 	if(mat.size1() != mat.size2())
 		return false;
@@ -1602,7 +1602,7 @@ bool eigenvec_sym_simple(const t_mat& mat, std::vector<t_vec>& evecs, std::vecto
 	t_mat I = ublas::identity_matrix<T>(n);
 	t_mat M = mat;
 
-	const T tEps = std::cbrt(std::numeric_limits<T>::epsilon());
+	const T tEps = std::cbrt(get_epsilon<T>());
 	const std::size_t MAX_ITER = 512;
 	std::size_t iIter = 0;
 	for(iIter=0; iIter<MAX_ITER; ++iIter)
@@ -1790,6 +1790,15 @@ t_vec<t_mat<std::complex<t_real>>> get_ladder_ops()
 	vec[1] = vecS[0] - i*vecS[1];	// down
 
 	return vec;
+}
+
+
+template<class t_mat=ublas::matrix<double>>
+t_mat commutator(const t_mat& A, const t_mat& B)
+{
+	t_mat AB = ublas::prod(A, B);
+	t_mat BA = ublas::prod(B, A);
+	return AB - BA;
 }
 
 }

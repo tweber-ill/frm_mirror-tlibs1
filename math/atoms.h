@@ -10,6 +10,7 @@
 
 
 #include "linalg.h"
+#define TLIBS_NO_OPEQU
 #include "linalg_ops.h"
 #include "lattice.h"
 #include <tuple>
