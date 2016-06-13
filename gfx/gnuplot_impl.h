@@ -127,10 +127,10 @@ void GnuPlot_gen<t_real>::SimplePlot(const std::vector<t_real>& vecX, const std:
 	switch(style)
 	{
 		case STYLE_LINES_SOLID:
-			(*m_postr) << "with lines linetype 1 linewidth 1";
+			(*m_postr) << "with lines linetype 1 linewidth 1 ";
 			break;
 		case STYLE_LINES_DASHED:
-			(*m_postr) << "with lines linetype 2 linewidth 1";
+			(*m_postr) << "with lines linetype 2 linewidth 1 ";
 			break;
 		default:
 		case STYLE_POINTS:
@@ -305,10 +305,10 @@ std::string GnuPlot_gen<t_real>::BuildCmd()
 		switch(obj.linestyle)
 		{
 			case STYLE_LINES_SOLID:
-				ostr << "with lines linetype 1 linewidth " << dSize;
+				ostr << "with lines linetype 1 linewidth " << dSize << " ";
 				break;
 			case STYLE_LINES_DASHED:
-				ostr << "with lines linetype 2 linewidth " << dSize;
+				ostr << "with lines linetype 2 linewidth " << dSize << " ";
 				break;
 			default:
 				log_warn("Unknown line style.");

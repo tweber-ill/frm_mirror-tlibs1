@@ -23,7 +23,7 @@ namespace tl {
 // ----------------------------------------------------------------------------
 
 /**
- * Simple ferromagnetic dispersion
+ * Simple ferromagnetic dispersion (see e.g. Squires p. 161)
  * @param lstNeighbours list of distances to neighbour atoms and their coupling constants
  * @param vecq q position
  * @param tS spin
