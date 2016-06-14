@@ -1,6 +1,7 @@
 // clang -I/usr/include/lapacke -o spin test/spin.cpp log/log.cpp -lstdc++ -std=c++11 -lm -llapacke -llapack
 // tw
 
+#define TLIBS_USE_GLOBAL_OPS
 #include "../math/linalg.h"
 #include "../math/linalg_ops.h"
 #include "../math/linalg2.h"
@@ -56,7 +57,8 @@ int main()
 		tensor_prod(vecLadder[1], I) * tensor_prod(I, vecLadder[0]))
 		+ S1z*S2z;
 	std::cout << "S1*S2 (via ladder) = " << C << std::endl;
+	//std::cout << int(tl::get_linalg_type<decltype(C)>::value) << std::endl;
+	//std::cout << int(tl::get_linalg_type<decltype(S1S2)>::value) << std::endl;
 	std::cout << std::boolalpha << (C == S1S2) << std::endl;
-
 	return 0;
 }

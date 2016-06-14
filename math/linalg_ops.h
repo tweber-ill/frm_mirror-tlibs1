@@ -1,4 +1,4 @@
-/*
+/**
  * Linalg operators
  * @author tweber
  * @date apr-2015
@@ -8,9 +8,10 @@
 #ifndef __TL_LINALG_OPS_H__
 #define __TL_LINALG_OPS_H__
 
-#include <boost/numeric/ublas/vector.hpp>
-#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/vector_expression.hpp>
+#include <boost/numeric/ublas/matrix_expression.hpp>
 
+#include "math.h"
 #include "../helper/traits.h"
 
 namespace tl {
@@ -69,6 +70,16 @@ struct linalg_mult_op_impl<T1, T2,
 };
 
 
+
+template<class T1, class T2>
+typename tl::linalg_mult_op_impl<T1, T2>::ret_type mult(
+	const typename std::enable_if<tl::get_linalg_type<T1>::value != tl::LinalgType::UNKNOWN, T1>::type& t1,
+	const typename std::enable_if<tl::get_linalg_type<T1>::value != tl::LinalgType::UNKNOWN, T2>::type& t2)
+{
+	return tl::linalg_mult_op_impl<T1, T2>()(t1, t2);
+}
+
+
 // ----------------------------------------------------------------------------
 
 
@@ -103,22 +114,34 @@ struct linalg_equ_op_impl<T1, T2, EPS,
 	}
 };
 
-}
 
 template<class T1, class T2>
-typename tl::linalg_mult_op_impl<T1, T2>::ret_type operator*(const T1& t1, const T2& t2)
+bool equ(
+	const typename std::enable_if<tl::get_linalg_type<T1>::value != tl::LinalgType::UNKNOWN, T1>::type& t1,
+	const typename std::enable_if<tl::get_linalg_type<T2>::value != tl::LinalgType::UNKNOWN, T2>::type& t2,
+	typename tl::_get_epsilon_impl<T1>::t_eps eps = tl::get_epsilon<T1>())
 {
-	return tl::linalg_mult_op_impl<T1, T2>()(t1, t2);
+	return tl::linalg_equ_op_impl<T1, T2, decltype(eps)>()(t1, t2, eps);
+}
+
 }
 
 
-#ifndef TLIBS_NO_OPEQU
+#ifdef TLIBS_USE_GLOBAL_OPS
+
+template<class T1, class T2>
+typename tl::linalg_mult_op_impl<T1, T2>::ret_type operator*
+	(const T1& t1, const T2& t2)
+{
+	return tl::mult<T1, T2>(t1, t2);
+}
+
 
 template<class T1, class T2>
 bool operator==(const T1& t1, const T2& t2)
 {
 	typename tl::_get_epsilon_impl<T1>::t_eps eps = tl::get_epsilon<T1>();
-	return tl::linalg_equ_op_impl<T1, T2, decltype(eps)>()(t1, t2, eps);
+	return tl::equ<T1, T2>(t1, t2, eps);
 }
 
 #endif

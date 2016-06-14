@@ -10,7 +10,6 @@
 
 
 #include "linalg.h"
-#define TLIBS_NO_OPEQU
 #include "linalg_ops.h"
 #include "lattice.h"
 #include <tuple>
@@ -50,7 +49,7 @@ t_cont<t_vec> generate_atoms(const t_cont<t_mat>& trafos, const t_vec& vecAtom,
 
 	for(const t_mat& mat : trafos)
 	{
-		t_vec vecRes = mat * vecAtom;
+		t_vec vecRes = mult<t_mat, t_vec>(mat, vecAtom);
 		restrict_to_uc<t_vec>(vecRes, tUCMin, tUCMax);
 
 		bool bPushBack = 1;
@@ -122,7 +121,7 @@ generate_all_atoms(const t_cont<t_mat>& trafos,
 				vecAllAtomsFrac.push_back(vecThisAtom);
 
 				// converts from fractional coordinates
-				vecThisAtom = matA * vecThisAtom;
+				vecThisAtom = mult<t_mat, t_vec>(matA, vecThisAtom);
 				vecAllAtoms.push_back(std::move(vecThisAtom));
 				vecAllNames.push_back(strElem);
 				vecAllAtomTypes.push_back(iAtom);
@@ -249,7 +248,7 @@ std::complex<T> structfact(const t_cont<t_vec>& lstAtoms, const t_vec& vecG,
 		if(iterFFact != lstf.end())
 			tFF = *iterFFact;
 
-		F += tFF * std::exp(i * (vecG * *iterAtom));
+		F += tFF * std::exp(i * (mult<t_vec, t_vec>(vecG, *iterAtom)));
 		if(pF0) *pF0 += tFF;
 
 		// if there is only one form factor in the list, use it for all positions

@@ -57,7 +57,6 @@ add_definitions(-std=c++11)
 # -----------------------------------------------------------------------------
 add_library(tlibs SHARED
 	file/tmp.cpp  file/loadinstr.cpp  file/recent.cpp  file/x3d.cpp
-	#fit/minuit.cpp
 	log/log.cpp log/debug.cpp
 	helper/flags.cpp
 	math/fourier.cpp  math/linalg2.cpp  math/rand.cpp
@@ -94,7 +93,7 @@ install(TARGETS tlibs  DESTINATION lib)
 file(GLOB tlibs_rt  ${PROJECT_SOURCE_DIR}/*.h)
 file(GLOB tlibs_file  ${PROJECT_SOURCE_DIR}/file/*.h)
 file(GLOB tlibs_helper  ${PROJECT_SOURCE_DIR}/helper/*.h)
-file(GLOB tlibs_math  ${PROJECT_SOURCE_DIR}/math/*.h ${PROJECT_SOURCE_DIR}/math/*.hpp)
+file(GLOB tlibs_math  ${PROJECT_SOURCE_DIR}/math/*.h)
 file(GLOB tlibs_net  ${PROJECT_SOURCE_DIR}/net/*.h)
 file(GLOB tlibs_string  ${PROJECT_SOURCE_DIR}/string/*.h)
 file(GLOB tlibs_gfx  ${PROJECT_SOURCE_DIR}/gfx/*.h)
@@ -117,7 +116,7 @@ install(FILES ${tlibs_fit}  DESTINATION include/tlibs/fit)
 
 install(FILES ${PROJECT_SOURCE_DIR}/FindMinuit2.cmake DESTINATION share/tlibs)
 
-install(FILES ${PROJECT_SOURCE_DIR}/COPYING.GPLv2 ${PROJECT_SOURCE_DIR}/COPYING.GPLv3 
+install(FILES ${PROJECT_SOURCE_DIR}/COPYING.GPLv2 ${PROJECT_SOURCE_DIR}/COPYING.GPLv3
 	${PROJECT_SOURCE_DIR}/AUTHORS ${PROJECT_SOURCE_DIR}/LICENSES
         DESTINATION share/tlibs
 )

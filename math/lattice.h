@@ -10,7 +10,7 @@
 
 #include "linalg.h"
 #include "math.h"
-#include "neutrons.hpp"
+#include "neutrons.h"
 #include <ostream>
 
 namespace tl {

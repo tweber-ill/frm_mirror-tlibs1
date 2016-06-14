@@ -8,7 +8,7 @@
 #ifndef __MIEZE_FORMULAS__
 #define __MIEZE_FORMULAS__
 
-#include "neutrons.hpp"
+#include "neutrons.h"
 #include "linalg.h"
 
 #include <boost/numeric/ublas/vector.hpp>
