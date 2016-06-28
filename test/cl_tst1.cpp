@@ -1,4 +1,4 @@
-// gcc -o cl_tst1 test/cl_tst1.cpp log/log.cpp -std=c++11 -lOpenCL -lstdc++ -ljpeg -lpng
+// gcc -o cl_tst1 cl_tst1.cpp ../log/log.cpp -std=c++11 -lOpenCL -lstdc++ -ljpeg -lpng -ltiff
 
 #include "../cl/cl.h"
 #include "../gfx/gil.h"

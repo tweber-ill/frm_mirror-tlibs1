@@ -25,13 +25,13 @@ get_atten(a,b,c, vol_uc, atoms_per_uc, sig_a, sig_coh, sig_inc, lam, len)
 main()
 {
 	# numerical values from: McStas -> Al.lau 
-	a = 4.04932e-8;				# cm
+	a = 4.05e-8;				# cm
 	b = a;
 	c = a;					# cm
 
-	sig_a = 0.231e-24;			# cm^2
-	sig_coh = 1.495e-24;
-	sig_inc = 0.0082e-24;
+	sig_a = 0.23e-24;			# cm^2
+	sig_coh = 1.5e-24;
+	sig_inc = 0.008e-24;
 	sig = sig_a + sig_coh + sig_inc;
 
 	atoms_per_uc = 4.;

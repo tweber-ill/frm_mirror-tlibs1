@@ -1,3 +1,5 @@
+// gcc -I. -o mat0 mat0.cpp -std=c++11 -lstdc++ -lm
+
 #include "../math/linalg.h"
 #include <iostream>
 

@@ -19,7 +19,7 @@
 namespace tl {
 
 template<class t_real>
-class Fourier_gen
+class Fourier
 {
 protected:
 	std::size_t m_iSize;
@@ -31,9 +31,9 @@ protected:
 #endif
 
 public:
-	Fourier_gen(std::size_t iSize) : m_iSize(iSize), m_dft(m_iSize)
+	Fourier(std::size_t iSize) : m_iSize(iSize), m_dft(m_iSize)
 	{}
-	virtual ~Fourier_gen() = default;
+	virtual ~Fourier() = default;
 
 	void fft(const t_real *pRealIn, const t_real *pImagIn,
 		t_real *pRealOut, t_real *pImagOut)
@@ -43,8 +43,6 @@ public:
 		t_real *pRealOut, t_real *pImagOut)
 	{ m_dft.trafo(pRealIn, pImagIn, pRealOut, pImagOut, 1); }
 };
-
-using Fourier = Fourier_gen<double>;
 
 }
 

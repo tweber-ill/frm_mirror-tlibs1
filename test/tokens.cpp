@@ -1,3 +1,5 @@
+// gcc -o tokens tokens.cpp -std=c++11 -lstdc++ -lm
+
 #include "../string/string.h"
 
 int main()

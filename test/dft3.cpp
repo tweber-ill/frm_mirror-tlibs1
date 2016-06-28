@@ -1,8 +1,8 @@
-// gcc -o dft3 dft3.cpp ../math/fftw.cpp ../helper/log.cpp -lfftw3 -lstdc++ -lm -std=c++11
+// gcc -o dft3 dft3.cpp ../math/fftw.cpp ../log/log.cpp -lfftw3 -lstdc++ -lm -std=c++11
 
 #include "../math/dft.h"
 #include "../math/fftw.h"
-#include "../helper/stopwatch.h"
+#include "../time/stopwatch.h"
 #include <iostream>
 
 #define NUM 4096

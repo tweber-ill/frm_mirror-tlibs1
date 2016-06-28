@@ -94,7 +94,7 @@ ublas::vector<T> bspline(const ublas::vector<T>* P, std::size_t N, T t, const st
 
 
 template<typename T=double>
-class Bezier : public FunctionModel_param_gen<ublas::vector<T>>
+class Bezier : public FunctionModel_param<ublas::vector<T>>
 {
 	protected:
 		ublas::vector<T> *m_pvecs;
@@ -110,7 +110,7 @@ class Bezier : public FunctionModel_param_gen<ublas::vector<T>>
 
 
 template<typename T=double>
-class BSpline : public FunctionModel_param_gen<ublas::vector<T>>
+class BSpline : public FunctionModel_param<ublas::vector<T>>
 {
 	protected:
 		ublas::vector<T> *m_pvecs;

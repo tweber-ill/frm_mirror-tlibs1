@@ -1,6 +1,8 @@
+// gcc -I. -o numint numint.cpp -std=c++11 -lstdc++ -lm
+
 #include <iostream>
 #include <cmath>
-#include "../math/numint.hpp"
+#include "../math/numint.h"
 
 
 double fkt(double x)

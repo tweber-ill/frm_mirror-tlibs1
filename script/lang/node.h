@@ -139,8 +139,8 @@ public:
 		if(m_pExpr) delete m_pExpr;
 	}
 
-	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
-	virtual Node* clone() const;
+	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const override;
+	virtual Node* clone() const override;
 
 	Node* GetExpr() const { return m_pExpr; }
 
@@ -157,8 +157,8 @@ public:
 	virtual ~NodeBreak()
 	{}
 
-	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
-	virtual Node* clone() const;
+	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const override;
+	virtual Node* clone() const override;
 
 	virtual Node* optimize() override;
 };
@@ -173,8 +173,8 @@ public:
 	virtual ~NodeContinue()
 	{}
 
-	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
-	virtual Node* clone() const;
+	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const override;
+	virtual Node* clone() const override;
 
 	virtual Node* optimize() override;
 };
@@ -195,8 +195,8 @@ public:
 		if(m_pDefArg) delete m_pDefArg;
 	}
 
-	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
-	virtual Node* clone() const;
+	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const override;
+	virtual Node* clone() const override;
 
 	void SetDefArg(Node *pDefArg) { m_pDefArg = pDefArg; }
 	const Node* GetDefArg() const { return m_pDefArg; }
@@ -225,8 +225,8 @@ public:
 		if(m_pArgs) delete m_pArgs;
 	}
 
-	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
-	virtual Node* clone() const;
+	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const override;
+	virtual Node* clone() const override;
 
 	Node* GetIdent() const { return m_pIdent; }
 	Node* GetArgs() const { return m_pArgs; }
@@ -260,8 +260,8 @@ public:
 		if(m_pElse) delete m_pElse;
 	}
 
-	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
-	virtual Node* clone() const;
+	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const override;
+	virtual Node* clone() const override;
 
 	Node* GetExpr() const { return m_pExpr; }
 	Node* GetIf() const { return m_pIf; }
@@ -291,8 +291,8 @@ public:
 		if(m_pStmt) delete m_pStmt;
 	}
 
-	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
-	virtual Node* clone() const;
+	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const override;
+	virtual Node* clone() const override;
 
 	Node* GetExpr() const { return m_pExpr; }
 	Node* GetStmt() const { return m_pStmt; }
@@ -327,8 +327,8 @@ public:
 		if(m_pStmt) delete m_pStmt;
 	}
 
-	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
-	virtual Node* clone() const;
+	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const override;
+	virtual Node* clone() const override;
 
 	Node* GetExprInit() const { return m_pExprInit; }
 	Node* GetExprCond() const { return m_pExprCond; }
@@ -362,8 +362,8 @@ public:
 		if(m_pStmt) delete m_pStmt;
 	}
 
-	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
-	virtual Node* clone() const;
+	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const override;
+	virtual Node* clone() const override;
 
 	Node* GetIdent() const { return m_pIdent; }
 	Node* GetExpr() const { return m_pExpr; }
@@ -383,8 +383,8 @@ public:
 		if(m_pSymbol) delete m_pSymbol;
 	}
 
-	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
-	virtual Node* clone() const;
+	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const override;
+	virtual Node* clone() const override;
 
 	virtual Node* optimize() override;
 	SymbolReal* GetSym() { return m_pSymbol; }
@@ -403,8 +403,8 @@ public:
 		if(m_pSymbol) delete m_pSymbol;
 	}
 
-	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
-	virtual Node* clone() const;
+	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const override;
+	virtual Node* clone() const override;
 
 	virtual Node* optimize() override;
 	SymbolInt* GetSym() { return m_pSymbol; }
@@ -423,8 +423,8 @@ public:
 		if(m_pSymbol) delete m_pSymbol;
 	}
 
-	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
-	virtual Node* clone() const;
+	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const override;
+	virtual Node* clone() const override;
 
 	virtual Node* optimize() override;
 	SymbolString* GetSym() { return m_pSymbol; }
@@ -449,8 +449,8 @@ public:
 		if(m_pArr) delete m_pArr;
 	}
 
-	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
-	virtual Node* clone() const;
+	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const override;
+	virtual Node* clone() const override;
 
 	Node* GetArr() const { return m_pArr; }
 
@@ -473,8 +473,8 @@ public:
 		if(m_pMap) delete m_pMap;
 	}
 
-	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
-	virtual Node* clone() const;
+	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const override;
+	virtual Node* clone() const override;
 
 	Node* GetMap() const { return m_pMap; }
 
@@ -498,8 +498,8 @@ public:
 		if(m_pSecond) delete m_pSecond;
 	}
 
-	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
-	virtual Node* clone() const;
+	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const override;
+	virtual Node* clone() const override;
 
 	Node* GetFirst() const { return m_pFirst; }
 	Node* GetSecond() const { return m_pSecond; }
@@ -536,8 +536,8 @@ public:
 	void GetRangeIndices(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym,
 		t_int iMaxLen, t_int& iBeginIdx, t_int& iEndIdx);
 
-	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
-	virtual Node* clone() const;
+	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const override;
+	virtual Node* clone() const override;
 
 	RangeType GetRangeType() const { return m_rangetype; }
 	Node* GetBegin() const { return m_pBegin; }
@@ -564,8 +564,8 @@ public:
 		if(m_pExpr) delete m_pExpr;
 	}
 
-	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
-	virtual Node* clone() const;
+	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const override;
+	virtual Node* clone() const override;
 
 	Node* GetIdent() const { return m_pIdent; }
 	Node* GetExpr() const { return m_pExpr; }
@@ -595,8 +595,8 @@ public:
 		if(m_pChild) delete m_pChild;
 	}
 
-	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
-	virtual Node* clone() const;
+	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const override;
+	virtual Node* clone() const override;
 
 	Node* GetChild() const { return m_pChild; }
 
@@ -623,7 +623,7 @@ public:
 		if(m_pRight && ((void*)m_pRight)!=((void*)m_pLeft)) delete m_pRight;
 	}
 
-	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
+	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const override;
 	virtual Symbol* eval_assign(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0, 
 		Node* pLeft=0, Node *pRight=0, Symbol* pSymRightAlt=0, 
 		const bool *pbGlob=0) const;
@@ -632,7 +632,7 @@ public:
 	virtual Symbol* eval_recursive(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
 	virtual Symbol* eval_sequential(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
 
-	virtual Node* clone() const;
+	virtual Node* clone() const override;
 
 	void FlattenNodes(NodeType ntype);
 	std::vector<Node*> flatten(NodeType ntype=NODE_ARGS) const;
@@ -672,8 +672,8 @@ public:
 		if(m_pStmts) delete m_pStmts;
 	}
 
-	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const;
-	virtual Node* clone() const;
+	virtual Symbol* eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym=0) const override;
+	virtual Node* clone() const override;
 
 	Node* GetIdent() const { return m_pIdent; }
 	Node* GetArgs() const { return m_pArgs; }

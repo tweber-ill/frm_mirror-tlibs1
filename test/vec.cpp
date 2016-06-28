@@ -1,5 +1,6 @@
-// gcc -o vec vec.cpp ../helper/log.cpp -lstdc++ -lm -std=c++11
+// gcc -o vec vec.cpp ../log/log.cpp -lstdc++ -lm -std=c++11
 
+#define TLIBS_USE_GLOBAL_OPS
 #include "../math/linalg.h"
 #include "../math/linalg_ops.h"
 

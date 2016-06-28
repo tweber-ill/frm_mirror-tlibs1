@@ -653,9 +653,14 @@ mat_type transform_inv(const mat_type& mat, const mat_type& matTrafo, bool bOrth
 }
 
 
+// -> linalg2.h
+template<typename T=double>
+bool qr(const ublas::matrix<T>& M, ublas::matrix<T>& Q, ublas::matrix<T>& R);
+
+
 template<typename T>
 bool solve_linear_approx(const ublas::matrix<T>& M, const ublas::vector<T>& v,
-				ublas::vector<T>& x);
+	ublas::vector<T>& x);
 
 // solve Mx = v for x
 template<typename T=double>
@@ -1200,8 +1205,7 @@ ublas::matrix<T> covariance(const std::vector<ublas::vector<T>>& vecVals,
 	using t_vecvec = typename std::remove_reference<decltype(vecVals)>::type;
 	using t_innervec_org = decltype(vecVals[0]);
 	using t_innervec = typename std::remove_const<
-						typename std::remove_reference<t_innervec_org>::type>
-								::type;
+		typename std::remove_reference<t_innervec_org>::type>::type;
 
 	t_innervec vecMean = mean_value<t_vecvec>(vecVals);
 	//std::cout << "Mean: " << vecMean << std::endl;
@@ -1227,7 +1231,6 @@ ublas::matrix<T> covariance(const std::vector<ublas::vector<T>>& vecVals,
 		tSum += tprob;
 	}
 	matCov /= tSum;
-
 	return matCov;
 }
 
@@ -1635,7 +1638,9 @@ bool eigenvec_sym_simple(const t_mat& mat, std::vector<t_vec>& evecs, std::vecto
 			break;
 	}
 
-	//std::cout << "Iterations: " << iIter << std::endl;
+	/*bool bFlipVec = 0;
+	if(determinant<t_mat>(I) < T(0))
+		bFlipVec = 1;*/
 
 	evals.resize(n);
 	evecs.resize(n);
@@ -1646,12 +1651,15 @@ bool eigenvec_sym_simple(const t_mat& mat, std::vector<t_vec>& evecs, std::vecto
 		evecs[iVal] = get_column(I, iVal);
 	}
 
+	//if(bFlipVec) evecs[0] = -evecs[0];
 	return true;
 }
 
+
 template<typename T=double>
-void sort_eigenvecs(std::vector<ublas::vector<T> >& evecs,
-	std::vector<T>& evals, bool bOrder=0, T (*pEvalFkt)(T)=0)
+void sort_eigenvecs(std::vector<ublas::vector<T>>& evecs,
+	std::vector<T>& evals, bool bOrder=0, T (*pEvalFkt)(T)=0,
+	ublas::vector<T>* pUserVec = nullptr)
 {
 	if(evecs.size() != evals.size())
 		return;
@@ -1660,6 +1668,8 @@ void sort_eigenvecs(std::vector<ublas::vector<T> >& evecs,
 	{
 		ublas::vector<T> vec;
 		T val;
+
+		T userval = 0;
 	};
 
 	std::vector<Evec> myevecs;
@@ -1670,6 +1680,7 @@ void sort_eigenvecs(std::vector<ublas::vector<T> >& evecs,
 		Evec ev;
 		ev.vec = evecs[i];
 		ev.val = evals[i];
+		if(pUserVec) ev.userval = (*pUserVec)[i];
 
 		myevecs.push_back(ev);
 	}
@@ -1693,6 +1704,7 @@ void sort_eigenvecs(std::vector<ublas::vector<T> >& evecs,
 	{
 		evecs[i] = myevecs[i].vec;
 		evals[i] = myevecs[i].val;
+		if(pUserVec) (*pUserVec)[i] = myevecs[i].userval;
 	}
 }
 

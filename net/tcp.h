@@ -1,4 +1,4 @@
-/*
+/**
  * TcpClient
  * @author tweber
  * @date aug-2014
@@ -30,7 +30,7 @@ namespace lf = boost::lockfree;
 
 
 template<class t_ch=char, class t_str=std::basic_string<t_ch>>
-class TcpTxtClient_gen
+class TcpTxtClient
 {
 public:
 	static bool get_cmd_tokens(const t_str& str, const t_str& strDelim,
@@ -56,8 +56,8 @@ protected:
 	t_sigConn m_sigConn;
 
 public:
-	TcpTxtClient_gen();
-	virtual ~TcpTxtClient_gen();
+	TcpTxtClient();
+	virtual ~TcpTxtClient();
 	void set_delim(const t_str& strDelim) { m_strCmdDelim = strDelim; }
 
 	void add_receiver(const typename t_sigRecv::slot_type& conn);
@@ -78,7 +78,7 @@ protected:
 
 
 template<class t_ch=char, class t_str=std::basic_string<t_ch>>
-class TcpTxtServer_gen : public TcpTxtClient_gen<t_ch, t_str>
+class TcpTxtServer : public TcpTxtClient<t_ch, t_str>
 {
 protected:
 	ip::tcp::endpoint* m_pendpoint = nullptr;
@@ -90,19 +90,14 @@ protected:
 	t_sigServerStart m_sigServerStart;
 
 public:
-	TcpTxtServer_gen();
-	virtual ~TcpTxtServer_gen();
+	TcpTxtServer();
+	virtual ~TcpTxtServer();
 
 	virtual void disconnect(bool bAlwaysSendSignal=0) override;
 	bool start_server(unsigned short iPort);
 
 	void add_server_start(const typename t_sigServerStart::slot_type& start);
 };
-
-
-// for legacy compatibility
-using TcpClient = TcpTxtClient_gen<>;
-using TcpServer = TcpTxtServer_gen<>;
 
 }
 

@@ -1,4 +1,6 @@
-#include "../math/mieze.hpp"
+// gcc -o larmor larmor.cpp -lstdc++ -std=c++11
+
+#include "../math/mieze.h"
 
 #include <iostream>
 #include <boost/units/io.hpp>

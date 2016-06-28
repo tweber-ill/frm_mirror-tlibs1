@@ -1,4 +1,4 @@
-// gcc -o sc test/sc.cpp -std=c++11 -lstdc++ -lm
+// gcc -o sc sc.cpp -std=c++11 -lstdc++ -lm
 
 #include "../math/lattice.h"
 #include "../math/atoms.h"

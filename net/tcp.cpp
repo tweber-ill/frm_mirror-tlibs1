@@ -1,4 +1,4 @@
-/*
+/**
  * TcpClient
  * @author tweber
  * @date aug-2014
@@ -11,5 +11,5 @@
 #include "tcp.h"
 #include "tcp_impl.h"
 
-template class tl::TcpTxtClient_gen<>;
-template class tl::TcpTxtServer_gen<>;
+template class tl::TcpTxtClient<>;
+template class tl::TcpTxtServer<>;

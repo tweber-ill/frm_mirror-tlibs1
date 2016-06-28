@@ -25,7 +25,7 @@ enum LineStyle
 };
 
 template<class t_real = double>
-struct PlotObj_gen
+struct PlotObj
 {
 	std::vector<t_real> vecX, vecY;
 	std::vector<t_real> vecErrX, vecErrY;
@@ -37,13 +37,13 @@ struct PlotObj_gen
 	boost::optional<t_real> odSize;
 	boost::optional<unsigned int> oiColor;
 
-	PlotObj_gen() = default;
-	~PlotObj_gen() = default;
+	PlotObj() = default;
+	~PlotObj() = default;
 };
 
 
 template<class t_real = double>
-class GnuPlot_gen
+class GnuPlot
 {
 protected:
 	FILE *m_pipe = nullptr;
@@ -51,7 +51,7 @@ protected:
 	std::unique_ptr<boost::iostreams::stream_buffer<boost::iostreams::file_descriptor_sink>> m_psbuf;
 	std::unique_ptr<std::ostream> m_postr;
 
-	std::vector<PlotObj_gen<t_real>> m_vecObjs;
+	std::vector<PlotObj<t_real>> m_vecObjs;
 	// has to be 0 to show plot
 	int m_iStartCounter = 0;
 
@@ -70,8 +70,8 @@ protected:
 	void RefreshVars();
 
 public:
-	GnuPlot_gen() = default;
-	virtual ~GnuPlot_gen() { DeInit(); }
+	GnuPlot() = default;
+	virtual ~GnuPlot() { DeInit(); }
 
 	void Init();
 	void DeInit();
@@ -84,7 +84,7 @@ public:
 	void SetCmdFileOutput(const char* pcFile);
 
 	void StartPlot();
-	void AddLine(const PlotObj_gen<t_real>& obj);
+	void AddLine(const PlotObj<t_real>& obj);
 	void FinishPlot();
 
 	void SimplePlot(const std::vector<t_real>& vecX, const std::vector<t_real>& vecY,
@@ -113,9 +113,6 @@ public:
 	void SetLegendPlace(const std::string& strPlace) { m_strLegendPlacement = strPlace; }
 };
 
-
-	using PlotObj = PlotObj_gen<>;
-	using GnuPlot = GnuPlot_gen<>;
 }
 
 

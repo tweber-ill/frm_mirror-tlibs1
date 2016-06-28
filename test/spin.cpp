@@ -1,5 +1,7 @@
-// clang -I/usr/include/lapacke -o spin test/spin.cpp log/log.cpp -lstdc++ -std=c++11 -lm -llapacke -llapack
-// tw
+/*
+ * clang -I/usr/include/lapacke -o spin ../test/spin.cpp ../log/log.cpp -lstdc++ -std=c++11 -lm -llapacke -llapack
+ * @author tweber
+ */
 
 #define TLIBS_USE_GLOBAL_OPS
 #include "../math/linalg.h"

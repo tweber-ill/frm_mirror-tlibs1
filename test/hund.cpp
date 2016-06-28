@@ -1,3 +1,5 @@
+// clang -o hund hund.cpp -std=c++11 -lstdc++
+
 #include <iostream>
 #include "../math/term.h"
 

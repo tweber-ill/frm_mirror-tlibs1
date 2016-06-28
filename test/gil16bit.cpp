@@ -1,8 +1,8 @@
-// gcc -I . -o gil16bit test/gil16bit.cpp log/log.cpp -std=c++11 -lstdc++ -lpng -ltiff
+// gcc -I . -o gil16bit gil16bit.cpp ../log/log.cpp -std=c++11 -lstdc++ -lpng -ltiff
 
 #define NO_JPEG
-#include "gfx/gil.h"
-#include "log/debug.h"
+#include "../gfx/gil.h"
+#include "../log/debug.h"
 #include <iostream>
 
 namespace gil = tl::gil;

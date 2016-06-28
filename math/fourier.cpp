@@ -10,6 +10,6 @@
 
 namespace tl {
 
-template class Fourier_gen<double>;
+template class Fourier<double>;
 
 }

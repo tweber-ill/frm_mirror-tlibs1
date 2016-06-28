@@ -1,3 +1,5 @@
+// gcc -I. -o limits limits.cpp -std=c++11 -lstdc++ -lm
+
 #include <iostream>
 #include <limits>
 

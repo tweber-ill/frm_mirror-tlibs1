@@ -1,6 +1,8 @@
-#include "../helper/misc.h"
-#include <iostream>
+// clang -o typeidx typeidx.cpp -std=c++11 -lstdc++ -lm
 
+#include "../log/debug.h"
+#include <iostream>
+#include <vector>
 
 template<class T> void tst(T&& t)
 {

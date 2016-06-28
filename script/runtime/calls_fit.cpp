@@ -383,7 +383,7 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 	unsigned int iSize = std::min<unsigned int>(vecX.size(), vecY.size());
 	iSize = std::min<unsigned int>(iSize, vecYErr.size());
 
-	tl::Chi2Function_gen<t_real> chi2fkt(&mod, iSize, vecX.data(), vecY.data(), vecYErr.data());
+	tl::Chi2Function<t_real> chi2fkt(&mod, iSize, vecX.data(), vecY.data(), vecYErr.data());
 	chi2fkt.SetSigma(dSigma);
 
 
@@ -671,7 +671,7 @@ static Symbol* _fkt_param(FktParam whichfkt, const std::vector<Symbol*>& vecSyms
 
 	unsigned int iSize = std::min(vecX.size(), vecY.size());
 
-	tl::FunctionModel_param_gen<ublas::vector<t_real>>* pfkt = 0;
+	tl::FunctionModel_param<ublas::vector<t_real>>* pfkt = 0;
 	if(whichfkt == FKT_SPLINE)
 		pfkt = new tl::BSpline<t_real>(iSize, vecX.data(), vecY.data(), ideg);
 	else if(whichfkt == FKT_BEZIER)

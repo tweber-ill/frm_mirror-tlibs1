@@ -14,7 +14,7 @@ rotmat(angle)
 
 main()
 {
-	a = 4.54288;
+	a = 4.56;
 	kh = 0.036;
 	scale = 2.25;
 

@@ -179,8 +179,8 @@ public:
 	virtual t_real GetValDouble() const override { return m_dVal; }
 	virtual t_complex GetValComplex() const override { return t_complex(m_dVal, 0.); }
 
-	static const int GetDefPrec() { return m_defprec; }
-	static const int GetPrec() { return m_prec; }
+	static int GetDefPrec() { return m_defprec; }
+	static int GetPrec() { return m_prec; }
 	static void SetPrec(int iPrec) { m_prec = iPrec; }
 
 	void SetVal(t_real dVal) { m_dVal = dVal; }
@@ -302,8 +302,8 @@ public:
 	virtual t_real GetValDouble() const override { throw tl::Err("Cannot convert complex to scalar type."); /*return GetValReal();*/ }
 	virtual t_complex GetValComplex() const override { return m_val; }
 
-	static const int GetDefPrec() { return m_defprec; }
-	static const int GetPrec() { return m_prec; }
+	static int GetDefPrec() { return m_defprec; }
+	static int GetPrec() { return m_prec; }
 	static void SetPrec(int iPrec) { m_prec = iPrec; }
 
 	void SetVal(t_real dReal, t_real dImag) { m_val=t_complex(dReal, dImag); }
@@ -458,25 +458,25 @@ public:
 
 #include <type_traits>
 
-template<typename T> static T convert_symbol(const Symbol* pSym)
+template<typename T> static inline T convert_symbol(const Symbol* pSym)
 { std::cerr << "Error: Invalid symbol conversion." << std::endl; return T(); }
 
-template<> t_string convert_symbol<t_string>(const Symbol* pSym)
+template<> inline t_string convert_symbol<t_string>(const Symbol* pSym)
 { return pSym->print(); }
-template<>  t_real convert_symbol<t_real>(const Symbol* pSym)
+template<> inline t_real convert_symbol<t_real>(const Symbol* pSym)
 { return pSym->GetValDouble(); }
-template<> t_int convert_symbol<t_int>(const Symbol* pSym)
+template<> inline t_int convert_symbol<t_int>(const Symbol* pSym)
 { return pSym->GetValInt(); }
 
 
-template<typename T> static Symbol* create_symbol(const T& t)
+template<typename T> static inline Symbol* create_symbol(const T& t)
 { G_CERR << "Error: Invalid symbol creation." << std::endl; return 0; }
 
-template<> Symbol* create_symbol<t_real>(const t_real& t)
+template<> inline Symbol* create_symbol<t_real>(const t_real& t)
 { return new SymbolReal(t); }
-template<> Symbol* create_symbol<t_int>(const t_int& t)
+template<> inline Symbol* create_symbol<t_int>(const t_int& t)
 { return new SymbolInt(t); }
-template<> Symbol* create_symbol<t_string>(const t_string& t)
+template<> inline Symbol* create_symbol<t_string>(const t_string& t)
 { return new SymbolString(t); }
 
 

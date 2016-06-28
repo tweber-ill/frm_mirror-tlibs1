@@ -1,4 +1,4 @@
-// gcc -I/usr/include/lapacke -o eig2 test/eig2.cpp math/linalg2.cpp log/log.cpp -lstdc++ -lm -llapacke -llapack -std=c++11
+// gcc -I/usr/include/lapacke -o eig2 eig2.cpp ../math/linalg2.cpp ../log/log.cpp -lstdc++ -lm -llapacke -llapack -std=c++11
 
 #define TLIBS_INC_HDR_IMPLS
 #include "../math/linalg.h"

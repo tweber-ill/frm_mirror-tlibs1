@@ -42,8 +42,8 @@ template<typename T=double> T get_E2KSQ()
 	template<class T=double> T t_E2KSQ = T(1)/t_KSQ2E<T>;
 #endif
 
-static const double KSQ2E = (co::hbar*co::hbar / (2.*co::m_n)) / one_meV / (angstrom*angstrom);
-static const double E2KSQ = 1./KSQ2E;
+//static const double KSQ2E = (co::hbar*co::hbar / (2.*co::m_n)) / one_meV / (angstrom*angstrom);
+//static const double E2KSQ = 1./KSQ2E;
 
 // --------------------------------------------------------------------------------
 

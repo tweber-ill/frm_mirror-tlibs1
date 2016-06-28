@@ -26,7 +26,7 @@ namespace tl {
 namespace ios = boost::iostreams;
 
 template<class t_real>
-void GnuPlot_gen<t_real>::DeInit()
+void GnuPlot<t_real>::DeInit()
 {
 	m_postr.reset();
 	m_psbuf.reset();
@@ -39,7 +39,7 @@ void GnuPlot_gen<t_real>::DeInit()
 }
 
 template<class t_real>
-void GnuPlot_gen<t_real>::Init()
+void GnuPlot<t_real>::Init()
 {
 	if(IsReady()) return;
 	DeInit();
@@ -63,7 +63,7 @@ void GnuPlot_gen<t_real>::Init()
 }
 
 template<class t_real>
-void GnuPlot_gen<t_real>::SetTerminal(int iWnd, const char* pcBackend)
+void GnuPlot<t_real>::SetTerminal(int iWnd, const char* pcBackend)
 {
 	if(m_bTermLocked) return;
 
@@ -81,7 +81,7 @@ void GnuPlot_gen<t_real>::SetTerminal(int iWnd, const char* pcBackend)
 }
 
 template<class t_real>
-void GnuPlot_gen<t_real>::SetFileTerminal(const char* pcFile)
+void GnuPlot<t_real>::SetFileTerminal(const char* pcFile)
 {
 	if(m_bTermLocked) return;
 
@@ -107,7 +107,7 @@ void GnuPlot_gen<t_real>::SetFileTerminal(const char* pcFile)
 }
 
 template<class t_real>
-void GnuPlot_gen<t_real>::RefreshVars()
+void GnuPlot<t_real>::RefreshVars()
 {
 	if(m_bHasLegend)
 		(*m_postr) << "set key on " << m_strLegendPlacement
@@ -117,7 +117,7 @@ void GnuPlot_gen<t_real>::RefreshVars()
 }
 
 template<class t_real>
-void GnuPlot_gen<t_real>::SimplePlot(const std::vector<t_real>& vecX, const std::vector<t_real>& vecY,
+void GnuPlot<t_real>::SimplePlot(const std::vector<t_real>& vecX, const std::vector<t_real>& vecY,
 	const std::vector<t_real>& vecYErr, const std::vector<t_real>& vecXErr,
 	LineStyle style)
 {
@@ -145,7 +145,7 @@ void GnuPlot_gen<t_real>::SimplePlot(const std::vector<t_real>& vecX, const std:
 
 
 template<class t_real>
-void GnuPlot_gen<t_real>::SimplePlot2d(const std::vector<std::vector<t_real> >& vec,
+void GnuPlot<t_real>::SimplePlot2d(const std::vector<std::vector<t_real> >& vec,
 	t_real dMinX, t_real dMaxX, t_real dMinY, t_real dMaxY)
 {
 	if(!IsReady()) return;
@@ -217,13 +217,13 @@ void GnuPlot_gen<t_real>::SimplePlot2d(const std::vector<std::vector<t_real> >& 
 }
 
 template<class t_real>
-void GnuPlot_gen<t_real>::AddLine(const PlotObj_gen<t_real>& obj)
+void GnuPlot<t_real>::AddLine(const PlotObj<t_real>& obj)
 {
 	m_vecObjs.push_back(obj);
 }
 
 template<class t_real>
-void GnuPlot_gen<t_real>::StartPlot()
+void GnuPlot<t_real>::StartPlot()
 {
 	if(!IsReady()) return;
 
@@ -234,13 +234,13 @@ void GnuPlot_gen<t_real>::StartPlot()
 }
 
 template<class t_real>
-void GnuPlot_gen<t_real>::SetCmdFileOutput(const char* pcFile)
+void GnuPlot<t_real>::SetCmdFileOutput(const char* pcFile)
 {
 	m_strCmdFileOutput = pcFile;
 }
 
 template<class t_real>
-void GnuPlot_gen<t_real>::FinishPlot()
+void GnuPlot<t_real>::FinishPlot()
 {
 	if(!IsReady()) return;
 
@@ -270,14 +270,14 @@ void GnuPlot_gen<t_real>::FinishPlot()
 }
 
 template<class t_real>
-std::string GnuPlot_gen<t_real>::BuildCmd()
+std::string GnuPlot<t_real>::BuildCmd()
 {
 	m_bHasLegend = 0;
 
 	std::ostringstream ostr;
 	ostr << "plot ";
 
-	for(const PlotObj_gen<t_real>& obj : m_vecObjs)
+	for(const PlotObj<t_real>& obj : m_vecObjs)
 	{
 		const bool bConnectLines = (obj.linestyle != STYLE_POINTS);
 		const bool bHasXErr = (obj.vecErrX.size() != 0);
@@ -341,7 +341,7 @@ std::string GnuPlot_gen<t_real>::BuildCmd()
 	}
 	ostr << "\n";
 
-	for(const PlotObj_gen<t_real>& obj : m_vecObjs)
+	for(const PlotObj<t_real>& obj : m_vecObjs)
 	{
 		std::string strTab = BuildTable(obj.vecX, obj.vecY, obj.vecErrY, obj.vecErrX);
 		ostr << strTab;
@@ -351,7 +351,7 @@ std::string GnuPlot_gen<t_real>::BuildCmd()
 }
 
 template<class t_real>
-std::string GnuPlot_gen<t_real>::BuildTable(const std::vector<t_real>& vecX, const std::vector<t_real>& vecY,
+std::string GnuPlot<t_real>::BuildTable(const std::vector<t_real>& vecX, const std::vector<t_real>& vecY,
 	const std::vector<t_real>& vecYErr, const std::vector<t_real>& vecXErr)
 {
 	std::ostringstream ostr;
@@ -375,7 +375,7 @@ std::string GnuPlot_gen<t_real>::BuildTable(const std::vector<t_real>& vecX, con
 }
 
 template<class t_real>
-void GnuPlot_gen<t_real>::SetXLabel(const char* pcLab)
+void GnuPlot<t_real>::SetXLabel(const char* pcLab)
 {
 	if(!IsReady()) return;
 	(*m_postr) << "set xlabel \"" << pcLab << "\"\n";
@@ -383,7 +383,7 @@ void GnuPlot_gen<t_real>::SetXLabel(const char* pcLab)
 }
 
 template<class t_real>
-void GnuPlot_gen<t_real>::SetYLabel(const char* pcLab)
+void GnuPlot<t_real>::SetYLabel(const char* pcLab)
 {
 	if(!IsReady()) return;
 	(*m_postr) << "set ylabel \"" << pcLab << "\"\n";
@@ -391,7 +391,7 @@ void GnuPlot_gen<t_real>::SetYLabel(const char* pcLab)
 }
 
 template<class t_real>
-void GnuPlot_gen<t_real>::SetTitle(const char* pcTitle)
+void GnuPlot<t_real>::SetTitle(const char* pcTitle)
 {
 	if(!IsReady()) return;
 	(*m_postr) << "set title \"" << pcTitle << "\"\n";
@@ -399,7 +399,7 @@ void GnuPlot_gen<t_real>::SetTitle(const char* pcTitle)
 }
 
 template<class t_real>
-void GnuPlot_gen<t_real>::SetXRange(t_real dMin, t_real dMax)
+void GnuPlot<t_real>::SetXRange(t_real dMin, t_real dMax)
 {
 	if(!IsReady()) return;
 	//std::cout << "xmin: "  << dMin << ", xmax: " << dMax << std::endl;
@@ -408,7 +408,7 @@ void GnuPlot_gen<t_real>::SetXRange(t_real dMin, t_real dMax)
 }
 
 template<class t_real>
-void GnuPlot_gen<t_real>::SetYRange(t_real dMin, t_real dMax)
+void GnuPlot<t_real>::SetYRange(t_real dMin, t_real dMax)
 {
 	if(!IsReady()) return;
 	(*m_postr) << "set yrange [" << dMin << ":" << dMax << "]\n";
@@ -416,7 +416,7 @@ void GnuPlot_gen<t_real>::SetYRange(t_real dMin, t_real dMax)
 }
 
 template<class t_real>
-void GnuPlot_gen<t_real>::SetLogX(t_real tBase)
+void GnuPlot<t_real>::SetLogX(t_real tBase)
 {
 	if(!IsReady()) return;
 	if(tBase >= 0.)
@@ -427,7 +427,7 @@ void GnuPlot_gen<t_real>::SetLogX(t_real tBase)
 }
 
 template<class t_real>
-void GnuPlot_gen<t_real>::SetLogY(t_real tBase)
+void GnuPlot<t_real>::SetLogY(t_real tBase)
 {
 	if(!IsReady()) return;
 	if(tBase >= 0.)
@@ -438,7 +438,7 @@ void GnuPlot_gen<t_real>::SetLogY(t_real tBase)
 }
 
 template<class t_real>
-void GnuPlot_gen<t_real>::SetGrid(bool bOn)
+void GnuPlot<t_real>::SetGrid(bool bOn)
 {
 	if(!IsReady()) return;
 
@@ -451,7 +451,7 @@ void GnuPlot_gen<t_real>::SetGrid(bool bOn)
 }
 
 template<class t_real>
-void GnuPlot_gen<t_real>::AddArrow(t_real dX0, t_real dY0, t_real dX1, t_real dY1, bool bHead)
+void GnuPlot<t_real>::AddArrow(t_real dX0, t_real dY0, t_real dX1, t_real dY1, bool bHead)
 {
 	if(!IsReady()) return;
 
@@ -465,7 +465,7 @@ void GnuPlot_gen<t_real>::AddArrow(t_real dX0, t_real dY0, t_real dX1, t_real dY
 }
 
 template<class t_real>
-void GnuPlot_gen<t_real>::SetColorBarRange(t_real dMin, t_real dMax, bool bCyclic)
+void GnuPlot<t_real>::SetColorBarRange(t_real dMin, t_real dMax, bool bCyclic)
 {
 	if(!IsReady()) return;
 
@@ -480,10 +480,10 @@ void GnuPlot_gen<t_real>::SetColorBarRange(t_real dMin, t_real dMax, bool bCycli
 }
 
 template<class t_real>
-bool GnuPlot_gen<t_real>::IsReady() const { return m_postr!=0; }
+bool GnuPlot<t_real>::IsReady() const { return m_postr!=0; }
 
 template<class t_real>
-std::ostream& GnuPlot_gen<t_real>::GetStream() { return *m_postr; }
+std::ostream& GnuPlot<t_real>::GetStream() { return *m_postr; }
 
 }
 

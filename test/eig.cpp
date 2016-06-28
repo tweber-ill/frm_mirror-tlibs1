@@ -1,4 +1,4 @@
-// gcc -I/usr/include/lapacke -o eig eig.cpp ../math/linalg2.cpp ../helper/log.cpp -lstdc++ -lm -llapacke -llapack -std=c++11
+// gcc -I/usr/include/lapacke -o eig eig.cpp ../math/linalg2.cpp ../log/log.cpp -lstdc++ -lm -llapacke -llapack -std=c++11
 
 #include "../math/linalg.h"
 #include "../math/linalg2.h"

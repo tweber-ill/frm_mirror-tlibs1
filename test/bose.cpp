@@ -1,8 +1,8 @@
-// gcc -I. -o bose test/bose.cpp -std=c++11 -lstdc++ -lm
+// gcc -I. -o bose bose.cpp -std=c++11 -lstdc++ -lm
 
 #include <iostream>
 #include <fstream>
-#include "math/neutrons.hpp"
+#include "../math/neutrons.h"
 
 int main()
 {

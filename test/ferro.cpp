@@ -1,7 +1,7 @@
-// clang -o ferro test/ferro.cpp gfx/gnuplot.cpp log/log.cpp  -lstdc++ -lm -lboost_iostreams -std=c++11
+// clang -o ferro ferro.cpp ../gfx/gnuplot.cpp ../log/log.cpp -lstdc++ -lm -lboost_iostreams -std=c++11
 
 #include "../math/mag.h"
-#include "../math/neutrons.hpp"
+#include "../math/neutrons.h"
 #include "../gfx/gnuplot.h"
 
 #include <tuple>
@@ -59,14 +59,14 @@ int main()
 	}
 
 
-	GnuPlot plt;
+	GnuPlot<> plt;
 	plt.Init();
 	plt.SetLegendPlace("bottom right");
 	plt.SetXLabel("q (rlu)");
 	plt.SetYLabel("E (meV)");
 	plt.StartPlot();
 
-	PlotObj obj1;
+	PlotObj<> obj1;
 	obj1.linestyle = STYLE_LINES_SOLID;
 	obj1.vecX = vecq;
 	obj1.vecY = vecE1;
@@ -74,7 +74,7 @@ int main()
 	obj1.strLegend = "[100]";
 	plt.AddLine(obj1);
 
-	PlotObj obj11;
+	PlotObj<> obj11;
 	obj11.linestyle = STYLE_LINES_SOLID;
 	obj11.vecX = vecq;
 	obj11.vecY = vecE11;
@@ -82,7 +82,7 @@ int main()
 	obj11.strLegend = "[110]";
 	plt.AddLine(obj11);
 
-	PlotObj obj111;
+	PlotObj<> obj111;
 	obj111.linestyle = STYLE_LINES_SOLID;
 	obj111.vecX = vecq;
 	obj111.vecY = vecE111;

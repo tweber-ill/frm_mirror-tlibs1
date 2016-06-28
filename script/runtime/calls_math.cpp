@@ -179,7 +179,7 @@ static Symbol* fkt_math_1arg(const std::vector<Symbol*>& vecSyms,
 	}
 	else
 	{
-		if(vecSyms[0]->GetType() == SYMBOL_COMPLEX || (FKT_C && !FKT))
+		if(vecSyms[0]->GetType() == SYMBOL_COMPLEX || (FKT_C!=nullptr && FKT==nullptr))
 		{
 			if(FKT_C == nullptr)
 			{
@@ -388,8 +388,8 @@ static Symbol* _fkt_fft(const std::vector<Symbol*>& vecSyms,
 	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab,
 	bool bInv)
 {
-	void (tl::Fourier_gen<t_real>::*pFkt)(const t_real*, const t_real*, t_real*, t_real*)
-		= (bInv ? &tl::Fourier_gen<t_real>::ifft : &tl::Fourier_gen<t_real>::fft);
+	void (tl::Fourier<t_real>::*pFkt)(const t_real*, const t_real*, t_real*, t_real*)
+		= (bInv ? &tl::Fourier<t_real>::ifft : &tl::Fourier<t_real>::fft);
 
 	bool bArgsOk=1;
 	std::vector<t_real> vecRealIn, vecImagIn;
@@ -437,7 +437,7 @@ static Symbol* _fkt_fft(const std::vector<Symbol*>& vecSyms,
 	vecRealOut.resize(vecRealIn.size());
 	vecImagOut.resize(vecImagIn.size());
 
-	tl::Fourier_gen<t_real> fourier(vecRealIn.size());
+	tl::Fourier<t_real> fourier(vecRealIn.size());
 	(fourier.*pFkt)(vecRealIn.data(), vecImagIn.data(),
 		vecRealOut.data(), vecImagOut.data());
 
@@ -758,6 +758,44 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms,
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo) << "Invalid call to prod." << std::endl;
+		throw tl::Err(ostrErr.str(),0);
+	}
+	return pRet;
+}
+
+static Symbol* fkt_tensor_product(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+{
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ANY, SYMBOL_ANY}, {0,0}, "tensor_prod"))
+		return 0;
+
+	Symbol* pRet = 0;
+
+	unsigned int iCols1, iRows1, iCols2, iRows2;
+	bool bFirstIsMat = is_mat(vecSyms[0], &iCols1, &iRows1);
+	bool bSecondIsMat = is_mat(vecSyms[1], &iCols2, &iRows2);
+
+	if(bFirstIsMat && bSecondIsMat)
+	{
+		if(iCols1!=iRows2 /*|| iCols1!=iRows2*/)
+		{
+			tl::log_err(linenr(runinfo), "Row and column counts of matrices do not match: ",
+				"Rows: ", iRows1, ", ", iRows2, 
+				", columns: ", iCols1, ", ", iCols2, ".");
+			return 0;
+		}
+
+		t_mat<t_real> mat1 = sym_to_mat<t_mat, t_vec>(vecSyms[0]);
+		t_mat<t_real> mat2 = sym_to_mat<t_mat, t_vec>(vecSyms[1]);
+
+		t_mat<t_real> matProd = tl::tensor_prod(mat1, mat2);
+		pRet = mat_to_sym<t_mat>(matProd);
+	}
+
+	if(!pRet)
+	{
+		std::ostringstream ostrErr;
+		ostrErr << linenr(runinfo) << "Invalid call to tensor_prod." << std::endl;
 		throw tl::Err(ostrErr.str(),0);
 	}
 	return pRet;
@@ -1160,8 +1198,9 @@ extern void init_ext_math_calls()
 		t_mapFkts::value_type(T_STR"inv", fkt_inverse),
 		t_mapFkts::value_type(T_STR"det", fkt_determinant),
 
-		// matrix-vector operations
+		// matrix-vector or matrix-matrix operations
 		t_mapFkts::value_type(T_STR"prod", fkt_product),
+		t_mapFkts::value_type(T_STR"tensor_prod", fkt_tensor_product),
 
 		// advanced linalg
 		t_mapFkts::value_type(T_STR"eigenvecs", fkt_eigenvecs),

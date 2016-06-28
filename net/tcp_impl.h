@@ -1,4 +1,4 @@
-/*
+/**
  * TcpClient
  * @author tweber
  * @date aug-2014
@@ -19,7 +19,7 @@
 namespace tl {
 
 template<class t_ch, class t_str>
-bool TcpTxtClient_gen<t_ch, t_str>::get_cmd_tokens(const t_str& str, const t_str& strDelim,
+bool TcpTxtClient<t_ch, t_str>::get_cmd_tokens(const t_str& str, const t_str& strDelim,
 	std::vector<t_str>& vecStr, t_str& strRemainder)
 {
 	boost::char_separator<t_ch> delim(strDelim.c_str(), "", boost::keep_empty_tokens);
@@ -53,11 +53,11 @@ bool TcpTxtClient_gen<t_ch, t_str>::get_cmd_tokens(const t_str& str, const t_str
 
 
 template<class t_ch, class t_str>
-TcpTxtClient_gen<t_ch, t_str>::TcpTxtClient_gen() : m_listWriteBuffer(1024)
+TcpTxtClient<t_ch, t_str>::TcpTxtClient() : m_listWriteBuffer(1024)
 {}
 
 template<class t_ch, class t_str>
-TcpTxtClient_gen<t_ch, t_str>::~TcpTxtClient_gen()
+TcpTxtClient<t_ch, t_str>::~TcpTxtClient()
 {
 	disconnect();
 
@@ -71,7 +71,7 @@ TcpTxtClient_gen<t_ch, t_str>::~TcpTxtClient_gen()
 }
 
 template<class t_ch, class t_str>
-bool TcpTxtClient_gen<t_ch, t_str>::connect(const t_str& strHost, const t_str& strService)
+bool TcpTxtClient<t_ch, t_str>::connect(const t_str& strHost, const t_str& strService)
 {
 	m_strHost = strHost;
 	m_strService = strService;
@@ -127,7 +127,7 @@ bool TcpTxtClient_gen<t_ch, t_str>::connect(const t_str& strHost, const t_str& s
 }
 
 template<class t_ch, class t_str>
-void TcpTxtClient_gen<t_ch, t_str>::disconnect(bool bAlwaysSendSignal)
+void TcpTxtClient<t_ch, t_str>::disconnect(bool bAlwaysSendSignal)
 {
 	const bool bConnected = is_connected();
 	if(bConnected)
@@ -154,21 +154,21 @@ void TcpTxtClient_gen<t_ch, t_str>::disconnect(bool bAlwaysSendSignal)
 }
 
 template<class t_ch, class t_str>
-bool TcpTxtClient_gen<t_ch, t_str>::is_connected()
+bool TcpTxtClient<t_ch, t_str>::is_connected()
 {
 	if(!m_psock) return 0;
 	return m_psock->is_open();
 }
 
 template<class t_ch, class t_str>
-void TcpTxtClient_gen<t_ch, t_str>::wait()
+void TcpTxtClient<t_ch, t_str>::wait()
 {
 	if(m_pthread)
 		m_pthread->join();
 }
 
 template<class t_ch, class t_str>
-void TcpTxtClient_gen<t_ch, t_str>::write(const t_str& str)
+void TcpTxtClient<t_ch, t_str>::write(const t_str& str)
 {
 	//tl::log_debug("write: ", str);
 	try
@@ -190,7 +190,7 @@ void TcpTxtClient_gen<t_ch, t_str>::write(const t_str& str)
 }
 
 template<class t_ch, class t_str>
-void TcpTxtClient_gen<t_ch, t_str>::flush_write()
+void TcpTxtClient<t_ch, t_str>::flush_write()
 {
 	const t_str* pstr = nullptr;
 	if(m_listWriteBuffer.empty()) return;
@@ -216,7 +216,7 @@ void TcpTxtClient_gen<t_ch, t_str>::flush_write()
 }
 
 template<class t_ch, class t_str>
-void TcpTxtClient_gen<t_ch, t_str>::read_loop()
+void TcpTxtClient<t_ch, t_str>::read_loop()
 {
 	static const std::size_t iBufLen = 512;
 	static t_ch pcBuf[iBufLen];
@@ -256,19 +256,19 @@ void TcpTxtClient_gen<t_ch, t_str>::read_loop()
 // --------------------------------------------------------------------------------
 // Signals
 template<class t_ch, class t_str>
-void TcpTxtClient_gen<t_ch, t_str>::add_receiver(const typename t_sigRecv::slot_type& conn)
+void TcpTxtClient<t_ch, t_str>::add_receiver(const typename t_sigRecv::slot_type& conn)
 {
 	m_sigRecv.connect(conn);
 }
 
 template<class t_ch, class t_str>
-void TcpTxtClient_gen<t_ch, t_str>::add_disconnect(const typename t_sigDisconn::slot_type& disconn)
+void TcpTxtClient<t_ch, t_str>::add_disconnect(const typename t_sigDisconn::slot_type& disconn)
 {
 	m_sigDisconn.connect(disconn);
 }
 
 template<class t_ch, class t_str>
-void TcpTxtClient_gen<t_ch, t_str>::add_connect(const typename t_sigConn::slot_type& conn)
+void TcpTxtClient<t_ch, t_str>::add_connect(const typename t_sigConn::slot_type& conn)
 {
 	m_sigConn.connect(conn);
 }
@@ -279,27 +279,27 @@ void TcpTxtClient_gen<t_ch, t_str>::add_connect(const typename t_sigConn::slot_t
 
 
 template<class t_ch, class t_str>
-TcpTxtServer_gen<t_ch, t_str>::TcpTxtServer_gen()
-	: TcpTxtClient_gen<t_ch, t_str>()
+TcpTxtServer<t_ch, t_str>::TcpTxtServer()
+	: TcpTxtClient<t_ch, t_str>()
 {}
 
 template<class t_ch, class t_str>
-TcpTxtServer_gen<t_ch, t_str>::~TcpTxtServer_gen()
+TcpTxtServer<t_ch, t_str>::~TcpTxtServer()
 {}
 
 template<class t_ch, class t_str>
-void TcpTxtServer_gen<t_ch, t_str>::disconnect(bool bAlwaysSendSignal)
+void TcpTxtServer<t_ch, t_str>::disconnect(bool bAlwaysSendSignal)
 {
 	if(this->is_connected())
 	{}
 	if(m_pacceptor) { delete m_pacceptor; m_pacceptor = nullptr; }
 	if(m_pendpoint) { delete m_pendpoint; m_pendpoint = nullptr; }
 
-	TcpTxtClient_gen<t_ch, t_str>::disconnect(bAlwaysSendSignal);
+	TcpTxtClient<t_ch, t_str>::disconnect(bAlwaysSendSignal);
 }
 
 template<class t_ch, class t_str>
-bool TcpTxtServer_gen<t_ch, t_str>::start_server(unsigned short iPort)
+bool TcpTxtServer<t_ch, t_str>::start_server(unsigned short iPort)
 {
 	this->m_strHost = "localhost";
 	this->m_strService = tl::var_to_str(iPort);
@@ -357,7 +357,7 @@ bool TcpTxtServer_gen<t_ch, t_str>::start_server(unsigned short iPort)
 // --------------------------------------------------------------------------------
 // Signals
 template<class t_ch, class t_str>
-void TcpTxtServer_gen<t_ch, t_str>::add_server_start(const typename t_sigServerStart::slot_type& conn)
+void TcpTxtServer<t_ch, t_str>::add_server_start(const typename t_sigServerStart::slot_type& conn)
 {
 	m_sigServerStart.connect(conn);
 }

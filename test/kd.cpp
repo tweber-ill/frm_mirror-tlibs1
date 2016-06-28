@@ -1,3 +1,5 @@
+// gcc -I. -o kd kd.cpp -std=c++11 -lstdc++ -lm
+
 #include <iostream>
 #include <vector>
 #include <list>

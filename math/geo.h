@@ -1,4 +1,4 @@
-/*
+/**
  * linalg and geometry helpers
  *
  * @author: tweber
@@ -13,10 +13,12 @@
 #include "../helper/exception.h"
 #include "linalg.h"
 #include "linalg2.h"
+#include "quat.h"
 #include "../log/log.h"
 
 #include <iostream>
 #include <cmath>
+#include <utility>
 #include <boost/algorithm/minmax_element.hpp>
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
@@ -350,10 +352,9 @@ public:
 	using t_mat = ublas::matrix<T>;
 
 protected:
-	// general: x^T Q x  +  r x  +  s  =  0
-	// here: x^T Q x + s  =  0
+	// x^T Q x  +  r x  +  s  =  0
 	t_mat m_Q = ublas::zero_matrix<T>(3,3);
-	//t_vec m_r = ublas::zero_vector<T>(3);
+	t_vec m_r = ublas::zero_vector<T>(3);
 	T m_s = 0;
 
 	t_vec m_vecOffs = ublas::zero_vector<T>(3);
@@ -361,11 +362,11 @@ protected:
 public:
 	Quadric() {}
 	Quadric(std::size_t iDim)
-		: m_Q(ublas::zero_matrix<T>(iDim,iDim))/*, m_r(ublas::zero_vector<T>(iDim))*/
+		: m_Q(ublas::zero_matrix<T>(iDim,iDim)), m_r(ublas::zero_vector<T>(iDim))
 	{}
 	Quadric(const t_mat& Q) : m_Q(Q) {}
-	Quadric(const t_mat& Q, /*const t_vec& r,*/ T s)
-			: m_Q(Q), /*m_r(r),*/ m_s(s) {}
+	Quadric(const t_mat& Q, const t_vec& r, T s)
+		: m_Q(Q), m_r(r), m_s(s) {}
 	virtual ~Quadric() {}
 
 	void SetDim(std::size_t iDim) { m_Q.resize(iDim, iDim, 1); }
@@ -373,7 +374,7 @@ public:
 	const Quadric<T>& operator=(const Quadric<T>& quad)
 	{
 		this->m_Q = quad.m_Q;
-		//this->m_r = quad.m_r;
+		this->m_r = quad.m_r;
 		this->m_s = quad.m_s;
 		this->m_vecOffs = quad.m_vecOffs;
 
@@ -383,7 +384,7 @@ public:
 	Quadric<T>& operator=(Quadric<T>&& quad)
 	{
 		this->m_Q = std::move(quad.m_Q);
-		//this->m_r = std::move(quad.m_r);
+		this->m_r = std::move(quad.m_r);
 		this->m_s = std::move(quad.m_s);
 		this->m_vecOffs = std::move(quad.m_vecOffs);
 
@@ -397,11 +398,11 @@ public:
 	const t_vec& GetOffset() const { return m_vecOffs; }
 
 	const t_mat& GetQ() const { return m_Q; }
-	//const t_vec& GetR() const { return m_r; }
+	const t_vec& GetR() const { return m_r; }
 	T GetS() const { return m_s; }
 
 	void SetQ(const t_mat& Q) { m_Q = Q; }
-	//void SetR(const t_vec& r) { m_r = r; }
+	void SetR(const t_vec& r) { m_r = r; }
 	void SetS(T s) { m_s = s; }
 
 	T operator()(const t_vec& _x) const
@@ -410,16 +411,16 @@ public:
 
 		t_vec vecQ = ublas::prod(m_Q, x);
 		T dQ = ublas::inner_prod(x, vecQ);
-		//T dR = ublas::inner_prod(m_r, x);
+		T dR = ublas::inner_prod(m_r, x);
 
-		return dQ /*+ dR*/ + m_s;
+		return dQ + dR + m_s;
 	}
 
 	// remove column and row iIdx
 	void RemoveElems(std::size_t iIdx)
 	{
 		m_Q = remove_elems(m_Q, iIdx);
-		//m_r = remove_elem(m_r, iIdx);
+		m_r = remove_elem(m_r, iIdx);
 		m_vecOffs = remove_elem(m_vecOffs, iIdx);
 	}
 
@@ -433,7 +434,7 @@ public:
 	bool GetPrincipalAxes(t_mat& matEvecs, std::vector<T>& vecEvals,
 		Quadric<T>* pquadPrincipal=nullptr) const
 	{
-		std::vector<t_vec > evecs;
+		std::vector<t_vec> evecs;
 		if(!eigenvec_sym(m_Q, evecs, vecEvals))
 		{
 			log_err("Cannot determine eigenvectors.");
@@ -443,16 +444,56 @@ public:
 		sort_eigenvecs<T>(evecs, vecEvals, 1,
 			[](T d) -> T { return 1./std::sqrt(d); });
 
+		if(determinant(matEvecs) < T(0) && evecs.size() >= 2)
+		{
+			std::swap(evecs[evecs.size()-2], evecs[evecs.size()-1]);
+			std::swap(vecEvals[vecEvals.size()-2], vecEvals[vecEvals.size()-1]);
+		}
+
 		matEvecs = column_matrix(evecs);
 
 		if(pquadPrincipal)
 		{
+			t_mat matEvals = diag_matrix(vecEvals);
+
+			//tl::log_debug("evecs = ", matEvecs);
+			//tl::log_debug("evals = ", matEvals);
+			/*auto vecAngle = rotation_angle(matEvecs);
+			if(vecAngle.size() >= 1)
+			{
+				T dAngle = vecAngle[0];
+				tl::log_debug("angle = ", dAngle);
+			}*/
+
 			pquadPrincipal->SetDim(vecEvals.size());
-			pquadPrincipal->SetQ(diag_matrix(vecEvals));
+			pquadPrincipal->SetQ(matEvals);
+			pquadPrincipal->SetS(GetS());
+
+			t_mat matEvecsT = ublas::trans(matEvecs);
+			pquadPrincipal->SetR(ublas::prod(matEvecsT, GetR()));
 		}
+
 		return true;
 	}
 
+	// only valid in principal axis system:
+	// x^T Q x + rx = 0
+	// q11*x1^2 + r1*x1 + ... = 0
+	// q11*(x1^2 + r1/q11*x1) = 0
+	// completing the square: q11*(x1 + r1/(2*q11))^2 - r1^2/(4*q11)
+	t_vec GetPrincipalOffset() const
+	{
+		t_vec vecOffs = GetR();
+		//tl::log_debug("offset in: ", vecOffs);
+
+		for(std::size_t i=0; i<vecOffs.size(); ++i)
+			vecOffs[i] /= -T(2)*GetQ()(i,i);
+
+		//tl::log_debug("offset out: ", vecOffs);
+		return vecOffs;
+	}
+
+	// here: only for x^T Q x + s  =  0, i.e. for r=0
 	// quad: x^T Q x + s = 0; line: x = x0 + t d
 	// (x0 + t d)^T Q (x0 + t d) + s = 0
 	// (x0 + t d)^T Q x0 + (x0 + t d)^T Q t d + s = 0
@@ -496,29 +537,45 @@ class QuadSphere : public Quadric<T>
 protected:
 
 public:
-	QuadSphere() {}
-	QuadSphere(std::size_t iDim) : Quadric<T>(iDim) {}
+	QuadSphere() : Quadric<T>()
+	{
+		this->m_s = T(-1);
+	}
+
+	QuadSphere(std::size_t iDim) : Quadric<T>(iDim)
+	{
+		this->m_s = T(-1);
+	}
 
 	QuadSphere(T r) : Quadric<T>(3)
 	{
 		this->m_Q(0,0) =
 		this->m_Q(1,1) =
-		this->m_Q(2,2) = 1./(r*r);
+		this->m_Q(2,2) = T(1.)/(r*r);
 
-		this->m_s = -1.;
+		this->m_s = T(-1.);
 	}
 
 	QuadSphere(std::size_t iDim, T r) : Quadric<T>(iDim)
 	{
 		for(std::size_t i=0; i<iDim; ++i)
-			this->m_Q(i,i) = 1./(r*r);
+			this->m_Q(i,i) = T(1.)/(r*r);
 
-		this->m_s = -1.;
+		this->m_s = T(-1.);
 	}
 
 	// only valid in principal axis system
-	T GetRadius() const { return 1./std::sqrt(this->m_Q(0,0)); }
-	T GetVolume() const { return get_ellipsoid_volume(this->m_Q); }
+	T GetRadius() const
+	{
+		return std::abs(this->m_s) /
+			std::sqrt(std::abs(this->m_Q(0,0)));
+	}
+
+	T GetVolume() const
+	{
+		return get_ellipsoid_volume(this->m_Q) /
+			std::abs(this->m_s);
+	}
 
 	virtual ~QuadSphere() {}
 };
@@ -530,41 +587,57 @@ class QuadEllipsoid : public Quadric<T>
 protected:
 
 public:
-	QuadEllipsoid() {}
-	QuadEllipsoid(std::size_t iDim) : Quadric<T>(iDim) {}
+	QuadEllipsoid() : Quadric<T>()
+	{
+		this->m_s = T(-1);
+	}
+
+	QuadEllipsoid(std::size_t iDim) : Quadric<T>(iDim)
+	{
+		this->m_s = T(-1);
+	}
 
 	QuadEllipsoid(T a, T b) : Quadric<T>(2)
 	{
-		this->m_Q(0,0) = 1./(a*a);
-		this->m_Q(1,1) = 1./(b*b);
+		this->m_Q(0,0) = T(1)/(a*a);
+		this->m_Q(1,1) = T(1)/(b*b);
 
-		this->m_s = -1.;
+		this->m_s = T(-1);
 	}
 
 	QuadEllipsoid(T a, T b, T c) : Quadric<T>(3)
 	{
-		this->m_Q(0,0) = 1./(a*a);
-		this->m_Q(1,1) = 1./(b*b);
-		this->m_Q(2,2) = 1./(c*c);
+		this->m_Q(0,0) = T(1)/(a*a);
+		this->m_Q(1,1) = T(1)/(b*b);
+		this->m_Q(2,2) = T(1)/(c*c);
 
-		this->m_s = -1.;
+		this->m_s = T(-1);
 	}
 
 	QuadEllipsoid(T a, T b, T c, T d) : Quadric<T>(4)
 	{
-		this->m_Q(0,0) = 1./(a*a);
-		this->m_Q(1,1) = 1./(b*b);
-		this->m_Q(2,2) = 1./(c*c);
-		this->m_Q(3,3) = 1./(d*d);
+		this->m_Q(0,0) = T(1)/(a*a);
+		this->m_Q(1,1) = T(1)/(b*b);
+		this->m_Q(2,2) = T(1)/(c*c);
+		this->m_Q(3,3) = T(1)/(d*d);
 
-		this->m_s = -1.;
+		this->m_s = T(-1);
 	}
 
 	virtual ~QuadEllipsoid() {}
 
 	// only valid in principal axis system
-	T GetRadius(std::size_t i) const { return 1./std::sqrt(std::abs(this->m_Q(i,i))); }
-	T GetVolume() const { return get_ellipsoid_volume(this->m_Q); }
+	T GetRadius(std::size_t i) const
+	{
+		return std::abs(this->m_s) /
+			std::sqrt(std::abs(this->m_Q(i,i)));
+	}
+
+	T GetVolume() const
+	{
+		return get_ellipsoid_volume(this->m_Q) /
+			std::abs(this->m_s);
+	}
 };
 
 
@@ -574,16 +647,6 @@ public:
 template<typename T=double>
 std::vector<std::size_t> find_zeroes(std::size_t N, const T* pIn)
 {
-	/*
-	double dMin = 0.;
-	double dMax = 0.;
-	std::pair<const double*, const double*> minmax = boost::minmax_element(pIn, pIn+N);
-	if(minmax.first != pIn+N) dMin = *minmax.first;
-	if(minmax.second != pIn+N) dMax = *minmax.second;
-	*/
-
-	//const double dThres = std::numeric_limits<double>::epsilon();
-
 	using t_vec = ublas::vector<T>;
 	std::vector<std::size_t> vecIndices;
 

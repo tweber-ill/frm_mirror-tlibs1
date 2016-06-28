@@ -1,3 +1,5 @@
+// gcc -o atoms atoms.cpp -std=c++11 -lstdc++ -lm
+
 #include "../math/linalg.h"
 #include "../math/atoms.h"
 #include <vector>

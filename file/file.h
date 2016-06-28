@@ -52,7 +52,7 @@ std::size_t get_file_size(const std::basic_string<t_char>& _strFile)
 	return fs::file_size(fs::path(strFile));
 }
 template<>
-std::size_t get_file_size(const std::basic_string<typename fs::path::value_type>& strFile)
+inline std::size_t get_file_size(const std::basic_string<typename fs::path::value_type>& strFile)
 {
 	return fs::file_size(fs::path(strFile));
 }

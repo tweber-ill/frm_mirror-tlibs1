@@ -1,6 +1,6 @@
-/*
+/**
  * Loads instrument-specific data files
- * @author tweber
+ * @author Tobias Weber
  * @date feb-2015
  * @license GPLv2 or GPLv3
  */
@@ -416,11 +416,6 @@ class FileRaw : public FileInstrBase<_t_real>
 
 		virtual std::string GetScanCommand() const override;
 };
-
-
-
-// for legacy compatibility
-using FileInstr = FileInstrBase<>;
 
 }
 

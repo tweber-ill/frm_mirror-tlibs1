@@ -1,3 +1,5 @@
+// gcc -o fft_rev fft_rev.cpp -lstdc++ -std=c++11
+
 #include "../math/fourier.h"
 #include <iostream>
 

@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <fstream>
-#include "math/neutrons.hpp"
+#include "../math/neutrons.h"
 
 
 int main()

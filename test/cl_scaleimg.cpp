@@ -1,4 +1,4 @@
-// gcc -o cl_scaleimg test/cl_scaleimg.cpp log/log.cpp -std=c++11 -lOpenCL -lstdc++ -ljpeg -lpng
+// gcc -o cl_scaleimg cl_scaleimg.cpp ../log/log.cpp -std=c++11 -lOpenCL -lstdc++ -ljpeg -lpng -ltiff
 
 #include "../cl/cl.h"
 #include "../gfx/gil.h"

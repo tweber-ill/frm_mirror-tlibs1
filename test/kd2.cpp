@@ -1,5 +1,5 @@
 // test for k-d implementation: sort image into tree and recreate it again
-// clang -march=native -O2 -o kd2 test/kd2.cpp -std=c++11 -lstdc++ -ljpeg
+// clang -march=native -O2 -o kd2 kd2.cpp -std=c++11 -lstdc++ -ljpeg
 
 #include <iostream>
 #include <vector>

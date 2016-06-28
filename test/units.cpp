@@ -1,4 +1,4 @@
-// gcc -o units test/units.cpp -std=c++14 -lstdc++ -lm
+// gcc -o units units.cpp -std=c++14 -lstdc++ -lm
 
 #include <iostream>
 #include "../math/units.h"

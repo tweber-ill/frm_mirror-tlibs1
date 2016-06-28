@@ -1,8 +1,12 @@
+// gcc -I. -o kd3 kd3.cpp -std=c++11 -lstdc++ -lm
+
 #include <iostream>
 #include <sstream>
 #include <vector>
 #include <list>
 #include "../math/kd.h"
+
+using namespace tl;
 
 double fkt(double x)
 {

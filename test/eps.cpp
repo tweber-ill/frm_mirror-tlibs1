@@ -1,3 +1,5 @@
+// gcc -o eps eps.cpp -lstdc++ -std=c++11
+
 #include "../math/math.h"
 #include "../math/linalg.h"
 #include <complex>

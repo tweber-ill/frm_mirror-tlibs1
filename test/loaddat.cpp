@@ -1,4 +1,4 @@
-// clang -DNO_IOSTR -o loaddat test/loaddat.cpp log/log.cpp -std=c++11 -lstdc++ -lboost_iostreams -lm
+// clang -DNO_IOSTR -o loaddat loaddat.cpp ../log/log.cpp -std=c++11 -lstdc++ -lboost_iostreams -lm
 
 #include <iostream>
 #include "../file/loaddat.h"

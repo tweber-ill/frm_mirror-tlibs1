@@ -1,5 +1,5 @@
-CC = gcc
-#CC = clang
+#CC = gcc
+CC = clang
 
 DEBUG = 0
 USE_FFTW = 0
@@ -19,7 +19,7 @@ endif
 DEFINES = -DNO_QT -DTLIBS_INC_HDR_IMPLS
 INCS =
 FLAGS = -std=c++11 -fopenmp ${OPT_FLAGS} ${DEFINES} ${INCS}
-#FLAGS += -Wall -Wpedantic
+FLAGS += -Wpedantic -Wextra
 
 LIBS = -L/usr/local/lib
 

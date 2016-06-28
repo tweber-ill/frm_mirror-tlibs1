@@ -23,7 +23,7 @@ namespace tl {
 
 #ifdef NO_LAPACK
 
-template<typename T=double>
+template<typename T/*=double*/>
 bool qr(const ublas::matrix<T>& M, ublas::matrix<T>& Q, ublas::matrix<T>& R)
 {
 	return qr_decomp(M, Q, R);
@@ -38,7 +38,7 @@ bool eigenvec_sym(const ublas::matrix<T>& mat,
 
 #else
 
-template<typename T=double>
+template<typename T/*=double*/>
 bool qr(const ublas::matrix<T>& M, ublas::matrix<T>& Q, ublas::matrix<T>& R);
 
 

@@ -1,7 +1,7 @@
-// gcc -I . -o gil1 test/gil1.cpp log/log.cpp -std=c++11 -lstdc++ -ljpeg -lpng
+// gcc -I . -o gil1 gil1.cpp ../log/log.cpp -std=c++11 -lstdc++ -ljpeg -lpng -ltiff
 
-#include "gfx/gil.h"
-#include "log/debug.h"
+#include "../gfx/gil.h"
+#include "../log/debug.h"
 #include <iostream>
 
 namespace gil = tl::gil;

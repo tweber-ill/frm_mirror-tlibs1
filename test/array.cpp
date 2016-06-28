@@ -1,3 +1,5 @@
+// gcc -o array array.cpp -std=c++11 -lstdc++ -lm
+
 #include <iostream>
 #include "../helper/array.h"
 

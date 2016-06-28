@@ -1,6 +1,7 @@
-// gcc -o eval test/eval.cpp log/log.cpp -std=c++11 -lstdc++ -lm
+// gcc -o eval eval.cpp ../log/log.cpp -std=c++11 -lstdc++ -lm
 
 #include "../string/eval.h"
+#include "../string/eval_impl.h"
 #include <iostream>
 #include <tuple>
 #include <vector>

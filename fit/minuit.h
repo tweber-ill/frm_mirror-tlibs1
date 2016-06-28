@@ -122,7 +122,7 @@ public:
 
 // generic chi^2 calculation
 template<class t_real = t_real_min>
-class Chi2Function_gen : public ROOT::Minuit2::FCNBase
+class Chi2Function : public ROOT::Minuit2::FCNBase
 {
 protected:
 	const MinuitFuncModel *m_pfkt;
@@ -136,13 +136,13 @@ protected:
 	bool m_bDebug = 0;
 
 public:
-	Chi2Function_gen(const MinuitFuncModel* fkt=0,
+	Chi2Function(const MinuitFuncModel* fkt=0,
 		std::size_t uiLen=0, const t_real *px=0,
 		const t_real *py=0, const t_real *pdy=0)
 		: m_pfkt(fkt), m_uiLen(uiLen), m_px(px), m_py(py), m_pdy(pdy)
 	{}
 
-	virtual ~Chi2Function_gen() {}
+	virtual ~Chi2Function() {}
 
 	/*
 	 * chi^2 calculation
@@ -178,9 +178,6 @@ public:
 	void SetDebug(bool b) { m_bDebug = b; }
 };
 
-// for most cases data type of measured values and internal data type is the same: t_real_min
-using Chi2Function = Chi2Function_gen<t_real_min>;
-
 
 // ----------------------------------------------------------------------------
 
@@ -190,7 +187,7 @@ using Chi2Function = Chi2Function_gen<t_real_min>;
  * function can additionally have multiple parameter sets
  */
 template<class t_real = t_real_min, template<class...> class t_cont=std::vector>
-class Chi2Function_mult_gen : public ROOT::Minuit2::FCNBase
+class Chi2Function_mult : public ROOT::Minuit2::FCNBase
 {
 protected:
 	t_cont<const MinuitMultiFuncModel<t_real>*> m_vecFkt;
@@ -204,8 +201,8 @@ protected:
 	bool m_bDebug = 0;
 
 public:
-	Chi2Function_mult_gen() = default;
-	virtual ~Chi2Function_mult_gen() = default;
+	Chi2Function_mult() = default;
+	virtual ~Chi2Function_mult() = default;
 
 	void AddFunc(const MinuitMultiFuncModel<t_real>* pMod, std::size_t iNumDat,
 		const t_real *pX, const t_real *pY, const t_real *pdY)
@@ -285,7 +282,7 @@ public:
 };
 
 // for most cases data type of measured values and internal data type is the same: t_real_min
-using Chi2FunctionMult = Chi2Function_mult_gen<t_real_min, std::vector>;
+using Chi2FunctionMult = Chi2Function_mult<t_real_min, std::vector>;
 
 
 // ----------------------------------------------------------------------------

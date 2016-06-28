@@ -64,7 +64,6 @@ add_library(tlibs SHARED
 	string/spec_char.cpp  string/eval.cpp
 	gfx/gl.cpp  gfx/gnuplot.cpp
 	version.cpp
-	old/xml.cpp  old/loadtxt.cpp
 )
 
 

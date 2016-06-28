@@ -26,6 +26,8 @@
 
 #include <boost/numeric/ublas/vector.hpp>
 
+#include "math.h"
+
 
 namespace tl {
 

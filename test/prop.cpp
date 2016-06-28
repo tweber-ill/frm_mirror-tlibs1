@@ -1,3 +1,5 @@
+// clang -o prop prop.cpp ../log/log.cpp -std=c++11 -lstdc++ -lm -lboost_iostreams
+
 #include "../file/prop.h"
 
 int main()
@@ -6,7 +8,7 @@ int main()
 	//prop.Load("tst.ini");
 	prop.Add<std::string>("Sec1/Key1", "123");
 	prop.Add<std::string>("Sec1/Key2", "Test");
-	
+
 	std::map<std::string, std::string> map;
 	map["Sec2/Key1"] = "abcde";
 	map["Sec2/Key2"] = "xyz";

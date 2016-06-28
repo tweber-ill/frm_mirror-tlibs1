@@ -1,5 +1,5 @@
-// gcc -DUSE_FFTW -o dft dft.cpp ../math/fourier.cpp ../helper/log.cpp -lstdc++ -lm -std=c++11 -lfftw3
-// gcc -o dft dft.cpp ../math/fourier.cpp ../helper/log.cpp -lstdc++ -lm -std=c++11
+// gcc -DUSE_FFTW -o dft dft.cpp ../math/fourier.cpp ../math/fftw.cpp ../log/log.cpp -lstdc++ -lm -std=c++11 -lfftw3
+// gcc -o dft dft.cpp ../math/fourier.cpp ../log/log.cpp -lstdc++ -lm -std=c++11
 
 #include "../math/fourier.h"
 #include <iostream>
@@ -15,7 +15,7 @@ int main()
 
 	double dOutR[iSize], dOutI[8];
 
-	tl::Fourier fourier(iSize);
+	tl::Fourier<double> fourier(iSize);
 	fourier.fft(dInR, dInI, dOutR, dOutI);
 
 	std::cout << "fft: ";

@@ -1,3 +1,5 @@
+// gcc -o coord coord.cpp -lstdc++ -std=c++11 -lm
+
 #include "../math/math.h"
 #include <iostream>
 #include <fstream>

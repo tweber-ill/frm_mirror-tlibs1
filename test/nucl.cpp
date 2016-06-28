@@ -1,3 +1,5 @@
+// gcc -I. -o nucl nucl.cpp -std=c++11 -lstdc++ -lm
+
 #include "../math/nuclear.h"
 #include <fstream>
 
