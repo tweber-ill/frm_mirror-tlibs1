@@ -55,6 +55,8 @@ protected:
 	using t_threadmap = std::unordered_map<std::thread::id, std::string>;
 	t_threadmap m_threadmap;
 
+	static bool s_bTermCmds;
+
 protected:
 	static std::string get_timestamp();
 	static std::string get_thread_id();
@@ -126,6 +128,8 @@ public:
 	void SetEnabled(bool bEnab) { m_bEnabled = bEnab; }
 	void SetShowDate(bool bDate) { m_bShowDate = bDate; }
 	void SetShowThread(bool bThread) { m_bShowThread = bThread; }
+
+	static void SetUseTermCmds(bool bCmds) { s_bTermCmds = bCmds; }
 };
 
 

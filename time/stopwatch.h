@@ -68,7 +68,7 @@ class Stopwatch
 		std::string GetStartTimeStr() const { return to_str(m_timeStart); }
 		std::string GetStopTimeStr() const { return to_str(m_timeStart+m_dur_sys); }
 
-		std::string GetEstStopTimeStr(T dProg) const
+		t_tp_sys GetEstStopTime(T dProg) const
 		{
 			t_tp_st timeStop_st = std::chrono::steady_clock::now();
 			t_dur dur = std::chrono::duration_cast<t_dur>(timeStop_st - m_timeStart_st);
@@ -76,7 +76,12 @@ class Stopwatch
 
 			t_dur_sys dur_sys = std::chrono::duration_cast<t_dur_sys>(dur);
 			t_tp_sys tpEnd = m_timeStart + dur_sys;
-			return to_str(tpEnd);
+			return tpEnd;
+		}
+
+		std::string GetEstStopTimeStr(T dProg) const
+		{
+			return to_str(GetEstStopTime(dProg));
 		}
 };
 
