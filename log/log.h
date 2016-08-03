@@ -52,9 +52,6 @@ protected:
 	bool m_bShowThread = 0;
 	unsigned int m_iNumThreads = 0;
 
-	using t_threadmap = std::unordered_map<std::thread::id, std::string>;
-	t_threadmap m_threadmap;
-
 	static bool s_bTermCmds;
 
 protected:

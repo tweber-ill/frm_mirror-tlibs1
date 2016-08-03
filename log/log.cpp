@@ -88,18 +88,21 @@ void Log::begin_log()
 			(*pOstr) << get_timestamp() << ", ";
 		if(m_bShowThread)
 		{
+			using t_threadmap = std::unordered_map<std::thread::id, std::string>;
+			static t_threadmap s_threadmap;
+
 			using t_mapKey = typename t_threadmap::value_type::first_type;
 			//using t_mapVal = typename t_threadmap::value_type::second_type;
 
 			t_mapKey idThread = std::this_thread::get_id();
-			typename t_threadmap::const_iterator iterMap = m_threadmap.find(idThread);
-			if(iterMap == m_threadmap.end())
+			typename t_threadmap::const_iterator iterMap = s_threadmap.find(idThread);
+			if(iterMap == s_threadmap.end())
 			{
 				++m_iNumThreads;
 				std::ostringstream ostrThread;
 				ostrThread << "Thread " << m_iNumThreads;
 
-				iterMap = m_threadmap.insert({idThread, ostrThread.str()}).first;
+				iterMap = s_threadmap.insert({idThread, ostrThread.str()}).first;
 			}
 
 			(*pOstr) << iterMap->second << ", ";
