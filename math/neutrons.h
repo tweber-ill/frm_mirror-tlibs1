@@ -1,4 +1,4 @@
-/*
+/**
  * neutron formulas
  * @author Tobias Weber
  * @date 2012-2016
@@ -685,6 +685,8 @@ t_real bose_cutoff(t_real E, t_real T, t_real E_cutoff=t_real(0.02))
 	E_cutoff = std::abs(E_cutoff);
 	if(std::abs(E) < E_cutoff)
 		dB = bose<t_real>(sign(E)*E_cutoff, T);
+
+	return dB;
 }
 
 template<class Sys, class Y>
