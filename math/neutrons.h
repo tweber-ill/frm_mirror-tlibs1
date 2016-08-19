@@ -507,7 +507,7 @@ template<class Sys, class Y>
 Y ana_effic_factor(const t_wavenumber<Sys, Y>& kf, const t_length<Sys, Y>& d)
 {
 	t_angle<Sys, Y> theta = Y(0.5)*units::abs(get_mono_twotheta<Sys, Y>(kf, d, true));
-	ana_effic_factor<Sys, Y>(kf, theta);
+	return ana_effic_factor<Sys, Y>(kf, theta);
 }
 
 // --------------------------------------------------------------------------------
