@@ -288,8 +288,7 @@ ublas::matrix<T> get_U(const ublas::vector<T>& _vec1, const ublas::vector<T>& _v
 	using t_vec = ublas::vector<T>;
 	using t_mat = ublas::matrix<T>;
 
-	t_vec vec1;
-	t_vec vec2;
+	t_vec vec1, vec2;
 
 	if(pmatB)
 	{
@@ -334,6 +333,10 @@ ublas::matrix<T> get_UB(const Lattice<T>& lattice_real,
 // distance for point to be considered inside scattering plane
 template<typename T> constexpr T get_plane_dist_tolerance() { return T(1e-6); }
 
+
+/**
+ * hklE -> TAS angles
+ */
 template<typename T=double>
 void get_tas_angles(const Lattice<T>& lattice_real,
 	const ublas::vector<T>& _vec1, const ublas::vector<T>& _vec2,
@@ -383,6 +386,10 @@ void get_tas_angles(const Lattice<T>& lattice_real,
 	}*/
 }
 
+
+/**
+ * TAS angles -> hklE
+ */
 template<typename T=double>
 void get_hkl_from_tas_angles(const Lattice<T>& lattice_real,
 	const ublas::vector<T>& _vec1, const ublas::vector<T>& _vec2,
