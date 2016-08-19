@@ -33,7 +33,7 @@ namespace tl {
 namespace ublas = boost::numeric::ublas;
 
 
-template<class matrix_type=ublas::matrix<double> >
+template<class matrix_type=ublas::matrix<double>>
 typename matrix_type::value_type determinant(const matrix_type& mat);
 
 
@@ -191,6 +191,7 @@ matrix_type submatrix(const matrix_type& mat, std::size_t iRow, std::size_t iCol
 
 	return matret;
 }
+
 
 template<class matrix_type>
 matrix_type remove_column(const matrix_type& mat, std::size_t iCol)
@@ -959,6 +960,55 @@ typename t_mat::value_type determinant(const t_mat& mat)
 
 	return T(0);
 }
+
+
+/**
+ * minor determinant
+ * see e.g.: https://en.wikipedia.org/wiki/Minor_(linear_algebra)
+ */
+template<class t_mat = ublas::matrix<double>>
+typename t_mat::value_type minor_det(const t_mat& mat, std::size_t iRow, std::size_t iCol)
+{
+	using T = typename t_mat::value_type;
+
+	t_mat M = submatrix(mat, iRow, iCol);
+	return determinant<t_mat>(M);
+}
+
+template<class t_mat = ublas::matrix<double>>
+typename t_mat::value_type cofactor(const t_mat& mat, std::size_t iRow, std::size_t iCol)
+{
+	using T = typename t_mat::value_type;
+
+	T m = minor_det(mat, iRow, iCol);
+	T s = std::pow(T(-1), T(iRow+1 + iCol+1));
+
+	return m*s;
+}
+
+/**
+ * adjugate matrix
+ * see e.g.: https://en.wikipedia.org/wiki/Adjugate_matrix
+ */
+template<class t_mat = ublas::matrix<double>>
+t_mat adjugate(const t_mat& mat, bool bTranspose=1)
+{
+	using T = typename t_mat::value_type;
+
+	t_mat matRet(mat.size1(), mat.size2());
+
+	for(std::size_t i=0; i<mat.size1(); ++i)
+		for(std::size_t j=0; j<mat.size2(); ++j)
+		{
+			T c = cofactor<t_mat>(mat, i, j);
+			matRet(i,j) = c;
+		}
+
+	if(bTranspose)
+		matRet = ublas::trans(matRet);
+	return matRet;
+}
+
 
 template<class matrix_type=ublas::matrix<double>>
 typename matrix_type::value_type get_volume(const matrix_type& mat)
