@@ -779,7 +779,9 @@ t_length<Sys, Y> focal_len(const t_length<Sys, Y>& lenBefore, const t_length<Sys
 }
 
 /**
- * optimal mono/ana curvature, see e.g. Monochromator_curved.comp in McStas or Shirane p. 66
+ * optimal mono/ana curvature, see e.g. Shirane p. 66
+ * or nicos/nicos-core.git/tree/nicos/devices/tas/mono.py in nicos
+ * or Monochromator_curved.comp in McStas
  */
 template<class Sys, class Y=double>
 t_length<Sys, Y> foc_curv(const t_length<Sys, Y>& lenBefore, const t_length<Sys, Y>& lenAfter,
@@ -790,9 +792,6 @@ t_length<Sys, Y> foc_curv(const t_length<Sys, Y>& lenBefore, const t_length<Sys,
 
 	const t_length<Sys, Y> curv = bVert ? Y(2)*f*s : Y(2)*f/s;
 
-	//std::cout << "f = " << f << std::endl;
-	//std::cout << "s = " << s << std::endl;
-	//std::cout << "curv = " <<  curv << std::endl;
 	return curv;
 }
 
