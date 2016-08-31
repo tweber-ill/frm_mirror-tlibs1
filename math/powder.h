@@ -1,4 +1,4 @@
-/*
+/**
  * Powder peaks
  * @author Tobias Weber
  * @date apr-2015
@@ -120,7 +120,9 @@ class Powder
 		}
 
 		const t_peaks& GetPeaks() const { return m_peaks; }
+		t_peaks& GetPeaks() { return m_peaks; }
 		const t_peaks& GetUniquePeaks() const { return m_peaks_unique; }
+		t_peaks& GetUniquePeaks() { return m_peaks_unique; }
 
 		bool HasPeak(int h, int k, int l) const
 		{
