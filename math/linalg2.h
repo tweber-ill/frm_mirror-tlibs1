@@ -14,6 +14,7 @@
 #include "linalg.h"
 #include <complex>
 
+
 namespace tl {
 
 #if !defined NO_LAPACK && !defined USE_LAPACK
@@ -34,6 +35,13 @@ bool eigenvec_sym(const ublas::matrix<T>& mat,
 	std::vector<ublas::vector<T>>& evecs, std::vector<T>& evals)
 {
 	return eigenvec_sym_simple(mat, evecs, evals);
+}
+
+template<typename T=double>
+bool eigenvec_approxsym(const ublas::matrix<T>& mat,
+	std::vector<ublas::vector<T>>& evecs, std::vector<T>& evals)
+{
+	return eigenvec_approxsym_simple(mat, evecs, evals);
 }
 
 #else
@@ -61,6 +69,20 @@ template<typename T=double>
 bool eigenvec_herm(const ublas::matrix<std::complex<T>>& mat,
 	std::vector<ublas::vector<std::complex<T>>>& evecs,
 	std::vector<T>& evals);
+
+// TODO: more specialised version
+template<typename T=double>
+bool eigenvec_approxsym(const ublas::matrix<T>& mat,
+	std::vector<ublas::vector<T>>& evecs, std::vector<T>& evals)
+{
+	ublas::matrix<T> MtM = ublas::prod(ublas::trans(mat), mat);
+	bool bOk = eigenvec_sym<T>(MtM, evecs, evals);
+
+	for(T& eval : evals)
+		eval = std::sqrt(std::abs(eval));
+	return bOk;
+}
+
 
 
 #ifdef TLIBS_INC_HDR_IMPLS
