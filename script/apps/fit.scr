@@ -170,11 +170,11 @@ doublegauss_model(x, x0_0, sigma_0, amp_0, x0_1, sigma_1, amp_1, offs)
 
 doublevoigt_model(x, x0_0, sigma_0, gamma_0, amp_0, x0_1, sigma_1, gamma_1, amp_1, offs)
 {
-        z0 = complex(x-x0_0, gamma_0) / (sigma_0 * sqrt(2.));
-        pk0 = amp_0 * real(faddeeva(z0)) / (sigma_0 * sqrt(2.*pi));
+	z0 = complex(x-x0_0, gamma_0) / (sigma_0 * sqrt(2.));
+	pk0 = amp_0 * real(faddeeva(z0)) / (sigma_0 * sqrt(2.*pi));
 
-        z1 = complex(x-x0_1, gamma_1) / (sigma_1 * sqrt(2.));
-        pk1 = amp_1 * real(faddeeva(z1)) / (sigma_1 * sqrt(2.*pi));
+	z1 = complex(x-x0_1, gamma_1) / (sigma_1 * sqrt(2.));
+	pk1 = amp_1 * real(faddeeva(z1)) / (sigma_1 * sqrt(2.*pi));
 
 	return pk0 + pk1 + offs;
 }
