@@ -70,16 +70,28 @@ bool eigenvec_herm(const ublas::matrix<std::complex<T>>& mat,
 	std::vector<ublas::vector<std::complex<T>>>& evecs,
 	std::vector<T>& evals);
 
-// TODO: more specialised version
+
+template<typename T=double>
+bool singvec(const ublas::matrix<T>& mat,
+	ublas::matrix<T>& matU, ublas::matrix<T>& matV, std::vector<T>& vecsvals);
+
+template<typename T=double>
+bool singvec_cplx(const ublas::matrix<std::complex<T>>& mat,
+	ublas::matrix<std::complex<T>>& matU, ublas::matrix<std::complex<T>>& matV,
+	std::vector<T>& vecsvals);
+
+
 template<typename T=double>
 bool eigenvec_approxsym(const ublas::matrix<T>& mat,
 	std::vector<ublas::vector<T>>& evecs, std::vector<T>& evals)
 {
-	ublas::matrix<T> MtM = ublas::prod(ublas::trans(mat), mat);
-	bool bOk = eigenvec_sym<T>(MtM, evecs, evals);
+	ublas::matrix<T> matU, matV;
+	bool bOk = singvec(mat, matU, matV, evals);
 
-	for(T& eval : evals)
-		eval = std::sqrt(std::abs(eval));
+	evecs.resize(matV.size2());
+	for(std::size_t j=0; j<matV.size2(); ++j)
+		evecs[j] = get_column(matV, j);
+
 	return bOk;
 }
 
