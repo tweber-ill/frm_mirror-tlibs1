@@ -371,7 +371,7 @@ bool singvec_cplx(const ublas::matrix<std::complex<T>>& mat,
 	bool bOk = true;
 	if(iInfo != 0)
 	{
-		log_err("Could not solve real singular value problem",
+		log_err("Could not solve complex singular value problem",
 			" (lapack error ", iInfo, ").");
 		bOk = false;
 	}
