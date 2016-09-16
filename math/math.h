@@ -348,6 +348,18 @@ T gauss_model(T x, T x0, T sigma, T amp, T offs)
 	return amp * norm * std::exp(-0.5 * ((x-x0)/sigma)*((x-x0)/sigma)) + offs;
 }
 
+template<class T=double>
+T gauss_model_amp(T x, T x0, T sigma, T amp, T offs)
+{
+	return amp * std::exp(-0.5 * ((x-x0)/sigma)*((x-x0)/sigma)) + offs;
+}
+
+template<class T=double>
+T lorentz_model_amp(T x, T x0, T hwhm, T amp, T offs)
+{
+	return amp*hwhm*hwhm / ((x-x0)*(x-x0) + hwhm*hwhm) + offs;
+}
+
 
 // -----------------------------------------------------------------------------
 template<class t_real_to, class t_real_from,

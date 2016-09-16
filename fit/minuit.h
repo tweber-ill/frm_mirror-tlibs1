@@ -432,6 +432,7 @@ bool fit(t_func&& func,
 	const std::vector<std::string>& vecParamNames,	// size: iNumArgs-1
 	std::vector<t_real_min>& vecVals,
 	std::vector<t_real_min>& vecErrs,
+	const std::vector<bool>* pVecFixed = nullptr,
 	
 	bool bDebug=1)
 {
@@ -442,6 +443,8 @@ bool fit(t_func&& func,
 	for(std::size_t iParam=0; iParam<vecParamNames.size(); ++iParam)
 	{
 		params.Add(vecParamNames[iParam], vecVals[iParam], vecErrs[iParam]);
+		if(pVecFixed && (*pVecFixed)[iParam])
+			params.Fix(vecParamNames[iParam]);
 	}
 
 	ROOT::Minuit2::MnMigrad migrad(chi2, params, 2);
