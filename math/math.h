@@ -344,7 +344,7 @@ static const double FWHM2SIGMA = 1./SIGMA2FWHM;
 template<class T=double>
 T gauss_model(T x, T x0, T sigma, T amp, T offs)
 {
-	T norm = T(1)/(std::sqrt(2*get_pi<T>()) * sigma);
+	T norm = T(1)/(std::sqrt(T(2)*get_pi<T>()) * sigma);
 	return amp * norm * std::exp(-0.5 * ((x-x0)/sigma)*((x-x0)/sigma)) + offs;
 }
 
@@ -413,10 +413,17 @@ std::complex<T> faddeeva(const std::complex<T>& z)
 template<class T=double>
 T voigt_model(T x, T x0, T sigma, T gamma, T amp, T offs)
 {
+	T norm = T(1)/(std::sqrt(T(2)*get_pi<T>()) * sigma);
 	std::complex<T> z = std::complex<T>(x-x0, gamma) / (sigma * std::sqrt(T(2)));
-	return amp * (faddeeva<T>(z)).real() /
-		(sigma * std::sqrt(T(2)*boost::math::constants::pi<T>()))
-			+ offs;
+
+	return amp*norm * faddeeva<T>(z).real() + offs;
+}
+
+template<class T=double>
+T voigt_model_amp(T x, T x0, T sigma, T gamma, T amp, T offs)
+{
+	std::complex<T> z = std::complex<T>(x-x0, gamma) / (sigma * std::sqrt(T(2)));
+	return amp * faddeeva<T>(z).real() + offs;
 }
 
 #endif
