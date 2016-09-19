@@ -387,6 +387,9 @@ using t_real_fadd = double;
 
 namespace tl{
 
+/**
+* Complex error function
+*/
 template<class T=double>
 std::complex<T> erf(const std::complex<T>& z)
 {
@@ -395,6 +398,9 @@ std::complex<T> erf(const std::complex<T>& z)
 	return inv_cst(::Faddeeva::erf(cst(z)));
 }
 
+/**
+* Complex complementary error function
+*/
 template<class T=double>
 std::complex<T> erfc(const std::complex<T>& z)
 {
@@ -403,6 +409,9 @@ std::complex<T> erfc(const std::complex<T>& z)
 	return inv_cst(::Faddeeva::erfc(cst(z)));
 }
 
+/**
+* Faddeeva function
+*/
 template<class T=double>
 std::complex<T> faddeeva(const std::complex<T>& z)
 {
@@ -410,6 +419,10 @@ std::complex<T> faddeeva(const std::complex<T>& z)
 	return std::exp(-z*z) * erfc(-i*z);
 }
 
+/**
+* Voigt profile
+* see e.g.: https://en.wikipedia.org/wiki/Voigt_profile
+*/
 template<class T=double>
 T voigt_model(T x, T x0, T sigma, T gamma, T amp, T offs)
 {
