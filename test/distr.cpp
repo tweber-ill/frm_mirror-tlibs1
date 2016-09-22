@@ -15,6 +15,7 @@
 #include <boost/math/distributions/normal.hpp>
 #include <boost/math/distributions/students_t.hpp>
 #include <boost/math/distributions/chi_squared.hpp>
+#include <boost/math/distributions/cauchy.hpp>
 #include "../gfx/gnuplot.h"
 #include "../math/math.h"
 
@@ -27,7 +28,9 @@ using t_real = double;
 //using t_dist = m::binomial_distribution<t_real>;
 //using t_dist = m::hypergeometric_distribution<t_real>;
 //using t_dist = m::poisson_distribution<t_real>;
-using t_dist = m::chi_squared_distribution<t_real>;
+//using t_dist = m::chi_squared_distribution<t_real>;
+using t_dist = m::cauchy_distribution<t_real>;
+//#define SHOW_PROPERTIES
 
 
 int main()
@@ -37,12 +40,15 @@ int main()
 	//t_dist dist(5., 0.5);		// binomial
 	//t_dist dist(2., 5., 10.);	// hypergeo
 	//t_dist dist(3.);			// poisson
-	t_dist dist(4.);			// chi^2
+	//t_dist dist(4.);			// chi^2
+	t_dist dist(2.5, 0.5);		// Cauchy / Lorentzian
 
 
+#ifdef SHOW_PROPERTIES
 	try
 	{
-		std::cout << "mean: " << m::mean(dist)
+		std::cout
+			<< "mean: " << m::mean(dist)
 			<< ", median: " << m::median(dist)
 			<< ", mode: " << m::mode(dist)
 			<< ", kurtosis: " << m::kurtosis(dist)
@@ -58,6 +64,7 @@ int main()
 	{
 		std::cerr << ex.what() << std::endl;
 	}
+#endif
 
 	tl::PlotObj<t_real> line1, line2, line3;
 	line1.linestyle = tl::STYLE_LINES_SOLID;

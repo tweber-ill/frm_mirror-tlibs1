@@ -423,7 +423,7 @@ public:
 
 
 template<std::size_t iNumArgs, typename t_func>
-bool fit(t_func&& func, 
+bool fit(t_func&& func,
 
 	const std::vector<t_real_min>& vecX,
 	const std::vector<t_real_min>& vecY,
@@ -433,7 +433,7 @@ bool fit(t_func&& func,
 	std::vector<t_real_min>& vecVals,
 	std::vector<t_real_min>& vecErrs,
 	const std::vector<bool>* pVecFixed = nullptr,
-	
+
 	bool bDebug=1)
 {
 	MinuitLamFuncModel<iNumArgs, t_func> mod(func);
