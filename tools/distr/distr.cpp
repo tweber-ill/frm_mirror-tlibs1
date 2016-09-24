@@ -23,10 +23,18 @@ DistrDlg::DistrDlg(QWidget* pParent)
 	if(m_settings.contains("distr_dlg/geo"))
 		restoreGeometry(m_settings.value("distr_dlg/geo").toByteArray());
 
-	tl::DistrType tyDistrs[] = { tl::DistrType::NORMAL, tl::DistrType::CAUCHY, tl::DistrType::POISSON,
-		tl::DistrType::BINOMIAL, tl::DistrType::HYPERGEOMETRIC, tl::DistrType::CHI2, tl::DistrType::STUDENT };
-	const char* pcDistrNames[] = { "Normal", "Cauchy", "Poisson", "Binomial", "Hypergeometric",
-		"Chi-Squared", "Student-t" };
+	tl::DistrType tyDistrs[] = { tl::DistrType::NORMAL, tl::DistrType::LOGNORMAL,
+		tl::DistrType::CAUCHY, tl::DistrType::CHI2,
+		tl::DistrType::STUDENT, tl::DistrType::FISHER,
+		tl::DistrType::EXP, tl::DistrType::BETA,
+		tl::DistrType::GAMMA, tl::DistrType::LOGISTIC,
+		tl::DistrType::BINOMIAL, tl::DistrType::HYPERGEOMETRIC, tl::DistrType::POISSON, };
+	const char* pcDistrNames[] = { "Normal", "Log-Normal",
+		"Cauchy", "Chi-Squared",
+		"Student-t", "Fisher-f",
+		"Exponential", "Beta",
+		"Gamma", "Logistic",
+		"Binomial", "Hypergeometric", "Poisson", };
 
 	for(std::size_t iDistr=0; iDistr<sizeof(tyDistrs)/sizeof(tyDistrs[0]); ++iDistr)
 	{
@@ -102,6 +110,15 @@ void DistrDlg::Calc()
 
 			m_pDistr.reset(new t_distr(dParam1, dParam2));
 		}
+		else if(m_distrtype == tl::DistrType::LOGNORMAL)
+		{
+			using t_distr = tl::t_lognormal_dist<t_real>;
+			iNumParams = t_distr::traits_type::iNumArgs;
+			strParam[0] = t_distr::traits_type::pcParam1;
+			strParam[1] = t_distr::traits_type::pcParam2;
+
+			m_pDistr.reset(new t_distr(dParam1, dParam2));
+		}
 		else if(m_distrtype == tl::DistrType::CAUCHY)
 		{
 			using t_distr = tl::t_cauchy_dist<t_real>;
@@ -153,6 +170,50 @@ void DistrDlg::Calc()
 			strParam[0] = t_distr::traits_type::pcParam1;
 
 			m_pDistr.reset(new t_distr(dParam1));
+		}
+		else if(m_distrtype == tl::DistrType::FISHER)
+		{
+			using t_distr = tl::t_fisher_dist<t_real>;
+			iNumParams = t_distr::traits_type::iNumArgs;
+			strParam[0] = t_distr::traits_type::pcParam1;
+			strParam[1] = t_distr::traits_type::pcParam2;
+
+			m_pDistr.reset(new t_distr(dParam1, dParam2));
+		}
+		else if(m_distrtype == tl::DistrType::EXP)
+		{
+			using t_distr = tl::t_exp_dist<t_real>;
+			iNumParams = t_distr::traits_type::iNumArgs;
+			strParam[0] = t_distr::traits_type::pcParam1;
+
+			m_pDistr.reset(new t_distr(dParam1));
+		}
+		else if(m_distrtype == tl::DistrType::BETA)
+		{
+			using t_distr = tl::t_beta_dist<t_real>;
+			iNumParams = t_distr::traits_type::iNumArgs;
+			strParam[0] = t_distr::traits_type::pcParam1;
+			strParam[1] = t_distr::traits_type::pcParam2;
+
+			m_pDistr.reset(new t_distr(dParam1, dParam2));
+		}
+		else if(m_distrtype == tl::DistrType::GAMMA)
+		{
+			using t_distr = tl::t_gamma_dist<t_real>;
+			iNumParams = t_distr::traits_type::iNumArgs;
+			strParam[0] = t_distr::traits_type::pcParam1;
+			strParam[1] = t_distr::traits_type::pcParam2;
+
+			m_pDistr.reset(new t_distr(dParam1, dParam2));
+		}
+		else if(m_distrtype == tl::DistrType::LOGISTIC)
+		{
+			using t_distr = tl::t_logistic_dist<t_real>;
+			iNumParams = t_distr::traits_type::iNumArgs;
+			strParam[0] = t_distr::traits_type::pcParam1;
+			strParam[1] = t_distr::traits_type::pcParam2;
+
+			m_pDistr.reset(new t_distr(dParam1, dParam2));
 		}
 		else
 		{

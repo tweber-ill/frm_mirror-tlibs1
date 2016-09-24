@@ -9,12 +9,18 @@
 #define __TLIBS_DISTR_H__
 
 #include <boost/math/distributions/normal.hpp>
+#include <boost/math/distributions/lognormal.hpp>
 #include <boost/math/distributions/cauchy.hpp>
 #include <boost/math/distributions/poisson.hpp>
 #include <boost/math/distributions/binomial.hpp>
 #include <boost/math/distributions/hypergeometric.hpp>
 #include <boost/math/distributions/chi_squared.hpp>
 #include <boost/math/distributions/students_t.hpp>
+#include <boost/math/distributions/fisher_f.hpp>
+#include <boost/math/distributions/exponential.hpp>
+#include <boost/math/distributions/beta.hpp>
+#include <boost/math/distributions/gamma.hpp>
+#include <boost/math/distributions/logistic.hpp>
 
 namespace tl {
 namespace m = boost::math;
@@ -22,13 +28,22 @@ namespace m = boost::math;
 
 enum class DistrType
 {
+	// continuous
 	NORMAL,
+	LOGNORMAL,
 	CAUCHY,
-	POISSON,
-	BINOMIAL,
-	HYPERGEOMETRIC,
 	CHI2,
 	STUDENT,
+	FISHER,
+	EXP,
+	BETA,
+	GAMMA,
+	LOGISTIC,
+
+	// discrete
+	BINOMIAL,
+	HYPERGEOMETRIC,
+	POISSON,
 
 	NONE,
 };
@@ -41,8 +56,21 @@ struct distr_traits<t_real, t_distr, typename std::enable_if<std::is_same<t_dist
 {
 	using value_type = t_real;
 	static constexpr std::size_t iNumArgs = 2;
+	static constexpr bool bIsDiscrete = 0;
 	static constexpr DistrType distr_type = DistrType::NORMAL;
 	static constexpr const char* pcName = "Normal";
+	static constexpr const char* pcParam1 = "mu";
+	static constexpr const char* pcParam2 = "sigma";
+};
+
+template<class t_real, class t_distr>
+struct distr_traits<t_real, t_distr, typename std::enable_if<std::is_same<t_distr, m::lognormal_distribution<t_real>>::value>::type>
+{
+	using value_type = t_real;
+	static constexpr std::size_t iNumArgs = 2;
+	static constexpr bool bIsDiscrete = 0;
+	static constexpr DistrType distr_type = DistrType::LOGNORMAL;
+	static constexpr const char* pcName = "Log-Normal";
 	static constexpr const char* pcParam1 = "mu";
 	static constexpr const char* pcParam2 = "sigma";
 };
@@ -52,6 +80,7 @@ struct distr_traits<t_real, t_distr, typename std::enable_if<std::is_same<t_dist
 {
 	using value_type = t_real;
 	static constexpr std::size_t iNumArgs = 2;
+	static constexpr bool bIsDiscrete = 0;
 	static constexpr DistrType distr_type = DistrType::CAUCHY;
 	static constexpr const char* pcName = "Cauchy";
 	static constexpr const char* pcParam1 = "mu";
@@ -63,6 +92,7 @@ struct distr_traits<t_real, t_distr, typename std::enable_if<std::is_same<t_dist
 {
 	using value_type = t_real;
 	static constexpr std::size_t iNumArgs = 1;
+	static constexpr bool bIsDiscrete = 1;
 	static constexpr DistrType distr_type = DistrType::POISSON;
 	static constexpr const char* pcName = "Poisson";
 	static constexpr const char* pcParam1 = "lambda";
@@ -73,6 +103,7 @@ struct distr_traits<t_real, t_distr, typename std::enable_if<std::is_same<t_dist
 {
 	using value_type = t_real;
 	static constexpr std::size_t iNumArgs = 2;
+	static constexpr bool bIsDiscrete = 1;
 	static constexpr DistrType distr_type = DistrType::BINOMIAL;
 	static constexpr const char* pcName = "Binomial";
 	static constexpr const char* pcParam1 = "n";
@@ -84,6 +115,7 @@ struct distr_traits<t_real, t_distr, typename std::enable_if<std::is_same<t_dist
 {
 	using value_type = t_real;
 	static constexpr std::size_t iNumArgs = 3;
+	static constexpr bool bIsDiscrete = 1;
 	static constexpr DistrType distr_type = DistrType::HYPERGEOMETRIC;
 	static constexpr const char* pcName = "Hypergeometric";
 	static constexpr const char* pcParam1 = "r";
@@ -96,6 +128,7 @@ struct distr_traits<t_real, t_distr, typename std::enable_if<std::is_same<t_dist
 {
 	using value_type = t_real;
 	static constexpr std::size_t iNumArgs = 1;
+	static constexpr bool bIsDiscrete = 0;
 	static constexpr DistrType distr_type = DistrType::CHI2;
 	static constexpr const char* pcName = "Chi^2";
 	static constexpr const char* pcParam1 = "dof";
@@ -106,9 +139,69 @@ struct distr_traits<t_real, t_distr, typename std::enable_if<std::is_same<t_dist
 {
 	using value_type = t_real;
 	static constexpr std::size_t iNumArgs = 1;
+	static constexpr bool bIsDiscrete = 0;
 	static constexpr DistrType distr_type = DistrType::STUDENT;
 	static constexpr const char* pcName = "Student";
 	static constexpr const char* pcParam1 = "dof";
+};
+
+template<class t_real, class t_distr>
+struct distr_traits<t_real, t_distr, typename std::enable_if<std::is_same<t_distr, m::fisher_f_distribution<t_real>>::value>::type>
+{
+	using value_type = t_real;
+	static constexpr std::size_t iNumArgs = 2;
+	static constexpr bool bIsDiscrete = 0;
+	static constexpr DistrType distr_type = DistrType::FISHER;
+	static constexpr const char* pcName = "Fisher";
+	static constexpr const char* pcParam1 = "dof1";
+	static constexpr const char* pcParam2 = "dof2";
+};
+
+template<class t_real, class t_distr>
+struct distr_traits<t_real, t_distr, typename std::enable_if<std::is_same<t_distr, m::exponential_distribution<t_real>>::value>::type>
+{
+	using value_type = t_real;
+	static constexpr std::size_t iNumArgs = 1;
+	static constexpr bool bIsDiscrete = 0;
+	static constexpr DistrType distr_type = DistrType::EXP;
+	static constexpr const char* pcName = "Exponential";
+	static constexpr const char* pcParam1 = "lambda";
+};
+
+template<class t_real, class t_distr>
+struct distr_traits<t_real, t_distr, typename std::enable_if<std::is_same<t_distr, m::beta_distribution<t_real>>::value>::type>
+{
+	using value_type = t_real;
+	static constexpr std::size_t iNumArgs = 2;
+	static constexpr bool bIsDiscrete = 0;
+	static constexpr DistrType distr_type = DistrType::BETA;
+	static constexpr const char* pcName = "Beta";
+	static constexpr const char* pcParam1 = "alpha";
+	static constexpr const char* pcParam2 = "beta";
+};
+
+template<class t_real, class t_distr>
+struct distr_traits<t_real, t_distr, typename std::enable_if<std::is_same<t_distr, m::gamma_distribution<t_real>>::value>::type>
+{
+	using value_type = t_real;
+	static constexpr std::size_t iNumArgs = 2;
+	static constexpr bool bIsDiscrete = 0;
+	static constexpr DistrType distr_type = DistrType::GAMMA;
+	static constexpr const char* pcName = "Gamma";
+	static constexpr const char* pcParam1 = "mu";
+	static constexpr const char* pcParam2 = "sigma";
+};
+
+template<class t_real, class t_distr>
+struct distr_traits<t_real, t_distr, typename std::enable_if<std::is_same<t_distr, m::logistic_distribution<t_real>>::value>::type>
+{
+	using value_type = t_real;
+	static constexpr std::size_t iNumArgs = 2;
+	static constexpr bool bIsDiscrete = 0;
+	static constexpr DistrType distr_type = DistrType::LOGISTIC;
+	static constexpr const char* pcName = "Logistic";
+	static constexpr const char* pcParam1 = "mu";
+	static constexpr const char* pcParam2 = "sigma";
 };
 
 
@@ -154,22 +247,32 @@ public:
 
 	virtual t_real pdf(t_real x) const override
 	{
+		if(traits_type::bIsDiscrete) x = std::round(x);
 		return m::pdf(distr, x);
 	}
 
 	virtual t_real cdf(t_real x) const override
 	{
+		if(traits_type::bIsDiscrete) x = std::round(x);
 		return m::cdf(distr, x);
 	}
 };
 
+
 template<class t_real> using t_normal_dist = Distr<m::normal_distribution<t_real>>;
+template<class t_real> using t_lognormal_dist = Distr<m::lognormal_distribution<t_real>>;
 template<class t_real> using t_cauchy_dist = Distr<m::cauchy_distribution<t_real>>;
+template<class t_real> using t_chi2_dist = Distr<m::chi_squared_distribution<t_real>>;
+template<class t_real> using t_student_dist = Distr<m::students_t_distribution<t_real>>;
+template<class t_real> using t_fisher_dist = Distr<m::fisher_f_distribution<t_real>>;
+template<class t_real> using t_exp_dist = Distr<m::exponential_distribution<t_real>>;
+template<class t_real> using t_beta_dist = Distr<m::beta_distribution<t_real>>;
+template<class t_real> using t_gamma_dist = Distr<m::gamma_distribution<t_real>>;
+template<class t_real> using t_logistic_dist = Distr<m::logistic_distribution<t_real>>;
+
 template<class t_real> using t_poisson_dist = Distr<m::poisson_distribution<t_real>>;
 template<class t_real> using t_binomial_dist = Distr<m::binomial_distribution<t_real>>;
 template<class t_real> using t_hypergeo_dist = Distr<m::hypergeometric_distribution<t_real>>;
-template<class t_real> using t_chi2_dist = Distr<m::chi_squared_distribution<t_real>>;
-template<class t_real> using t_student_dist = Distr<m::students_t_distribution<t_real>>;
 
 }
 #endif
