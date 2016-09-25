@@ -97,128 +97,95 @@ void DistrDlg::Calc()
 	const t_real dParam4 = tl::str_to_var<t_real>(editParam4->text().toStdString());
 
 	std::size_t iNumParams = 0;
-	std::string strParam[] = { "Param 1", "Param 2", "Param 3", "Param 4" };
+	std::vector<const char*> vecParamNames;
+	constexpr const char* strParam[] = { "Param 1", "Param 2", "Param 3", "Param 4" };
 
 	try
 	{
 		if(m_distrtype == tl::DistrType::NORMAL)
 		{
 			using t_distr = tl::t_normal_dist<t_real>;
-			iNumParams = t_distr::traits_type::iNumArgs;
-			strParam[0] = t_distr::traits_type::pcParam1;
-			strParam[1] = t_distr::traits_type::pcParam2;
-
+			vecParamNames = t_distr::GetParamNamesVec();
 			m_pDistr.reset(new t_distr(dParam1, dParam2));
 		}
 		else if(m_distrtype == tl::DistrType::LOGNORMAL)
 		{
 			using t_distr = tl::t_lognormal_dist<t_real>;
-			iNumParams = t_distr::traits_type::iNumArgs;
-			strParam[0] = t_distr::traits_type::pcParam1;
-			strParam[1] = t_distr::traits_type::pcParam2;
-
+			vecParamNames = t_distr::GetParamNamesVec();
 			m_pDistr.reset(new t_distr(dParam1, dParam2));
 		}
 		else if(m_distrtype == tl::DistrType::CAUCHY)
 		{
 			using t_distr = tl::t_cauchy_dist<t_real>;
-			iNumParams = t_distr::traits_type::iNumArgs;
-			strParam[0] = t_distr::traits_type::pcParam1;
-			strParam[1] = t_distr::traits_type::pcParam2;
-
+			vecParamNames = t_distr::GetParamNamesVec();
 			m_pDistr.reset(new t_distr(dParam1, dParam2));
 		}
 		else if(m_distrtype == tl::DistrType::POISSON)
 		{
 			using t_distr = tl::t_poisson_dist<t_real>;
-			iNumParams = t_distr::traits_type::iNumArgs;
-			strParam[0] = t_distr::traits_type::pcParam1;
-
+			vecParamNames = t_distr::GetParamNamesVec();
 			m_pDistr.reset(new t_distr(dParam1));
 		}
 		else if(m_distrtype == tl::DistrType::BINOMIAL)
 		{
 			using t_distr = tl::t_binomial_dist<t_real>;
-			iNumParams = t_distr::traits_type::iNumArgs;
-			strParam[0] = t_distr::traits_type::pcParam1;
-			strParam[1] = t_distr::traits_type::pcParam2;
-
+			vecParamNames = t_distr::GetParamNamesVec();
 			m_pDistr.reset(new t_distr(dParam1, dParam2));
 		}
 		else if(m_distrtype == tl::DistrType::HYPERGEOMETRIC)
 		{
 			using t_distr = tl::t_hypergeo_dist<t_real>;
-			iNumParams = t_distr::traits_type::iNumArgs;
-			strParam[0] = t_distr::traits_type::pcParam1;
-			strParam[1] = t_distr::traits_type::pcParam2;
-			strParam[2] = t_distr::traits_type::pcParam3;
-
+			vecParamNames = t_distr::GetParamNamesVec();
 			m_pDistr.reset(new t_distr(dParam1, dParam2, dParam3));
 		}
 		else if(m_distrtype == tl::DistrType::CHI2)
 		{
 			using t_distr = tl::t_chi2_dist<t_real>;
-			iNumParams = t_distr::traits_type::iNumArgs;
-			strParam[0] = t_distr::traits_type::pcParam1;
-
+			vecParamNames = t_distr::GetParamNamesVec();
 			m_pDistr.reset(new t_distr(dParam1));
 		}
 		else if(m_distrtype == tl::DistrType::STUDENT)
 		{
 			using t_distr = tl::t_student_dist<t_real>;
-			iNumParams = t_distr::traits_type::iNumArgs;
-			strParam[0] = t_distr::traits_type::pcParam1;
-
+			vecParamNames = t_distr::GetParamNamesVec();
 			m_pDistr.reset(new t_distr(dParam1));
 		}
 		else if(m_distrtype == tl::DistrType::FISHER)
 		{
 			using t_distr = tl::t_fisher_dist<t_real>;
-			iNumParams = t_distr::traits_type::iNumArgs;
-			strParam[0] = t_distr::traits_type::pcParam1;
-			strParam[1] = t_distr::traits_type::pcParam2;
-
+			vecParamNames = t_distr::GetParamNamesVec();
 			m_pDistr.reset(new t_distr(dParam1, dParam2));
 		}
 		else if(m_distrtype == tl::DistrType::EXP)
 		{
 			using t_distr = tl::t_exp_dist<t_real>;
-			iNumParams = t_distr::traits_type::iNumArgs;
-			strParam[0] = t_distr::traits_type::pcParam1;
-
+			vecParamNames = t_distr::GetParamNamesVec();
 			m_pDistr.reset(new t_distr(dParam1));
 		}
 		else if(m_distrtype == tl::DistrType::BETA)
 		{
 			using t_distr = tl::t_beta_dist<t_real>;
-			iNumParams = t_distr::traits_type::iNumArgs;
-			strParam[0] = t_distr::traits_type::pcParam1;
-			strParam[1] = t_distr::traits_type::pcParam2;
-
+			vecParamNames = t_distr::GetParamNamesVec();
 			m_pDistr.reset(new t_distr(dParam1, dParam2));
 		}
 		else if(m_distrtype == tl::DistrType::GAMMA)
 		{
 			using t_distr = tl::t_gamma_dist<t_real>;
-			iNumParams = t_distr::traits_type::iNumArgs;
-			strParam[0] = t_distr::traits_type::pcParam1;
-			strParam[1] = t_distr::traits_type::pcParam2;
-
+			vecParamNames = t_distr::GetParamNamesVec();
 			m_pDistr.reset(new t_distr(dParam1, dParam2));
 		}
 		else if(m_distrtype == tl::DistrType::LOGISTIC)
 		{
 			using t_distr = tl::t_logistic_dist<t_real>;
-			iNumParams = t_distr::traits_type::iNumArgs;
-			strParam[0] = t_distr::traits_type::pcParam1;
-			strParam[1] = t_distr::traits_type::pcParam2;
-
+			vecParamNames = t_distr::GetParamNamesVec();
 			m_pDistr.reset(new t_distr(dParam1, dParam2));
 		}
 		else
 		{
 			return;
 		}
+
+		iNumParams = vecParamNames.size();
 	}
 	catch(const std::exception& ex)
 	{
@@ -227,11 +194,6 @@ void DistrDlg::Calc()
 
 	try
 	{
-		labelParam1->setText((strParam[0]+": ").c_str());
-		labelParam2->setText((strParam[1]+": ").c_str());
-		labelParam3->setText((strParam[2]+": ").c_str());
-		labelParam4->setText((strParam[3]+": ").c_str());
-
 		QLabel *pLabels[] = { labelParam1, labelParam2, labelParam3, labelParam4 };
 		QLineEdit *pEdits[] = { editParam1, editParam2, editParam3, editParam4 };
 
@@ -240,11 +202,13 @@ void DistrDlg::Calc()
 		{
 			pLabels[iEdit]->setEnabled(1);
 			pEdits[iEdit]->setEnabled(1);
+			pLabels[iEdit]->setText(vecParamNames[iEdit]);
 		}
 		for(; iEdit<sizeof(pEdits)/sizeof(pEdits[0]); ++iEdit)
 		{
 			pLabels[iEdit]->setEnabled(0);
 			pEdits[iEdit]->setEnabled(0);
+			pLabels[iEdit]->setText(strParam[iEdit]);
 		}
 
 		m_vecX.clear();
@@ -276,7 +240,7 @@ void DistrDlg::Calc()
 void DistrDlg::PlotPicked(const QPointF& pt)
 {
 	t_real dX = t_real(pt.x());
-	
+
 	std::ostringstream ostr;
 	ostr << "x = " << dX;
 

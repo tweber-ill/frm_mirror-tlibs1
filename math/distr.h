@@ -8,6 +8,9 @@
 #ifndef __TLIBS_DISTR_H__
 #define __TLIBS_DISTR_H__
 
+#include <vector>
+#include <array>
+
 #include <boost/math/distributions/normal.hpp>
 #include <boost/math/distributions/lognormal.hpp>
 #include <boost/math/distributions/cauchy.hpp>
@@ -49,6 +52,10 @@ enum class DistrType
 };
 
 
+// ----------------------------------------------------------------------------
+/**
+ * collect properties of the various distributions
+ */
 template<class t_real, class t_distr, class=void> struct distr_traits {};
 
 template<class t_real, class t_distr>
@@ -203,8 +210,75 @@ struct distr_traits<t_real, t_distr, typename std::enable_if<std::is_same<t_dist
 	static constexpr const char* pcParam1 = "mu";
 	static constexpr const char* pcParam2 = "sigma";
 };
+// ----------------------------------------------------------------------------
 
 
+
+// ----------------------------------------------------------------------------
+/**
+ * sort parameter names into runtime and static containers
+ */
+template<class t_distr_traits, class=void> struct _distr_params {};
+
+template<class t_distr_traits>
+struct _distr_params<t_distr_traits,
+	typename std::enable_if<t_distr_traits::iNumArgs==1>::type>
+{
+	static constexpr std::array<const char*, t_distr_traits::iNumArgs> get_arr()
+	{
+		return std::array<const char*, t_distr_traits::iNumArgs>
+		({ t_distr_traits::pcParam1 });
+	}
+
+	template<template<class...> class t_vec=std::vector>
+	static t_vec<const char*> get_vec()
+	{
+		return t_vec<const char*>({ t_distr_traits::pcParam1 });
+	}
+};
+
+template<class t_distr_traits>
+struct _distr_params<t_distr_traits,
+	typename std::enable_if<t_distr_traits::iNumArgs==2>::type>
+{
+	static constexpr std::array<const char*, t_distr_traits::iNumArgs> get_arr()
+	{
+		return std::array<const char*, t_distr_traits::iNumArgs>
+		({ t_distr_traits::pcParam1, t_distr_traits::pcParam2 });
+	}
+
+	template<template<class...> class t_vec=std::vector>
+	static t_vec<const char*> get_vec()
+	{
+		return t_vec<const char*>({ t_distr_traits::pcParam1, t_distr_traits::pcParam2 });
+	}
+};
+
+template<class t_distr_traits>
+struct _distr_params<t_distr_traits,
+	typename std::enable_if<t_distr_traits::iNumArgs==3>::type>
+{
+	static constexpr std::array<const char*, t_distr_traits::iNumArgs> get_arr()
+	{
+		return std::array<const char*, t_distr_traits::iNumArgs>
+		({ t_distr_traits::pcParam1, t_distr_traits::pcParam2, t_distr_traits::pcParam3 });
+	}
+
+	template<template<class...> class t_vec=std::vector>
+	static t_vec<const char*> get_vec()
+	{
+		return t_vec<const char*>({ t_distr_traits::pcParam1, t_distr_traits::pcParam2,
+			t_distr_traits::pcParam3 });
+	}
+};
+// ----------------------------------------------------------------------------
+
+
+
+// ----------------------------------------------------------------------------
+/**
+ * probability distribution base class
+ */
 template<class t_real=double>
 class DistrBase
 {
@@ -214,6 +288,9 @@ public:
 };
 
 
+/**
+ * class for specific distributions
+ */
 template<class t_distr, class t_real=typename t_distr::value_type,
 	std::size_t iParams=distr_traits<t_real, t_distr>::iNumArgs>
 class Distr : public DistrBase<t_real>
@@ -245,6 +322,19 @@ public:
 		: distr(dParam1, dParam2, dParam3)
 	{}
 
+
+	static constexpr const char* GetName()
+	{ return traits_type::pcName; }
+
+	static constexpr std::size_t GetNumParams()
+	{ return traits_type::iNumArgs; }
+
+	static constexpr std::array<const char*, GetNumParams()> GetParamNames()
+	{ return _distr_params<traits_type>::get_arr(); }
+	static std::vector<const char*> GetParamNamesVec()
+	{ return _distr_params<traits_type>::get_vec(); }
+
+
 	virtual t_real pdf(t_real x) const override
 	{
 		if(traits_type::bIsDiscrete) x = std::round(x);
@@ -257,8 +347,14 @@ public:
 		return m::cdf(distr, x);
 	}
 };
+// ----------------------------------------------------------------------------
 
 
+
+// ----------------------------------------------------------------------------
+/**
+ * typedefs for specific distributions
+ */
 template<class t_real> using t_normal_dist = Distr<m::normal_distribution<t_real>>;
 template<class t_real> using t_lognormal_dist = Distr<m::lognormal_distribution<t_real>>;
 template<class t_real> using t_cauchy_dist = Distr<m::cauchy_distribution<t_real>>;
@@ -273,6 +369,8 @@ template<class t_real> using t_logistic_dist = Distr<m::logistic_distribution<t_
 template<class t_real> using t_poisson_dist = Distr<m::poisson_distribution<t_real>>;
 template<class t_real> using t_binomial_dist = Distr<m::binomial_distribution<t_real>>;
 template<class t_real> using t_hypergeo_dist = Distr<m::hypergeometric_distribution<t_real>>;
+// ----------------------------------------------------------------------------
+
 
 }
 #endif
