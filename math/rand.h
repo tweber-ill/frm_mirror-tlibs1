@@ -1,7 +1,7 @@
 /**
  * random numbers
- * @author tweber
- * @date 16-aug-2013
+ * @author Tobias Weber
+ * @date 2013-2016
  * @license GPLv2 or GPLv3
  */
 
@@ -18,19 +18,28 @@ namespace tl {
 
 extern std::mt19937/*_64*/ g_randeng;
 
+
 // ----------------------------------------------------------------------------
+// initialisers
 
 extern void init_rand();
 extern void init_rand_seed(unsigned int uiSeed);
 
+
+
 // ----------------------------------------------------------------------------
+// very simple distributions
 
 extern unsigned int simple_rand(unsigned int iMax);
 
 
+
 // ----------------------------------------------------------------------------
+// simple distributions
 
-
+/**
+ * generates a random integer between iMin and iMax
+ */
 template<typename INT>
 INT rand_int(INT iMin, INT iMax)
 {
@@ -38,6 +47,9 @@ INT rand_int(INT iMin, INT iMax)
 	return dist(g_randeng);
 }
 
+/**
+ * generates a random real between iMin and iMax
+ */
 template<typename REAL>
 REAL rand_real(REAL dMin, REAL dMax)
 {
@@ -45,12 +57,50 @@ REAL rand_real(REAL dMin, REAL dMax)
 	return dist(g_randeng);
 }
 
-template<typename REAL>
-REAL rand01()
+
+/**
+ * generates a random real between 0 and 1
+ */
+template<typename T>
+T rand01()
 {
-	return rand_real<REAL>(0., 1.);
+	return rand_real<T>(T(0), T(1));
 }
 
+
+template<typename INT> struct _rand_int
+{
+	INT operator()(INT iMin, INT iMax) const
+	{ return rand_int<INT>(iMin, iMax); }
+};
+
+template<typename REAL> struct _rand_real
+{
+	REAL operator()(REAL dMin, REAL dMax) const
+	{ return rand_real<REAL>(dMin, dMax); }
+};
+
+/**
+ * generates a random real or integer between tMin and tMax
+ */
+template<typename T>
+T rand_minmax(T tMin, T tMax)
+{
+	using t_rand = typename
+		std::conditional<std::is_integral<T>::value,
+		_rand_int<T>, _rand_real<T>>::type;
+
+	t_rand rand;
+	return rand(tMin, tMax);
+}
+
+
+// ----------------------------------------------------------------------------
+// continuous distributions
+
+/**
+ * generates Gaussian-distributed random numbers
+ */
 template<typename REAL>
 REAL rand_norm(REAL dMu, REAL dSigma)
 {
@@ -58,51 +108,277 @@ REAL rand_norm(REAL dMu, REAL dSigma)
 	return dist(g_randeng);
 }
 
-template<typename INT, typename REAL=double>
-INT rand_poisson(REAL dMu)
+/**
+ * generates lognormally-distributed random numbers
+ */
+template<typename REAL>
+REAL rand_lognorm(REAL dMu, REAL dSigma)
 {
-	std::poisson_distribution<INT> dist(dMu);
+	std::lognormal_distribution<REAL> dist(dMu, dSigma);
+	return dist(g_randeng);
+}
+
+/**
+ * generates Cauchy-distributed random numbers
+ */
+template<typename REAL>
+REAL rand_cauchy(REAL dMu, REAL dSigma)
+{
+	std::cauchy_distribution<REAL> dist(dMu, dSigma);
+	return dist(g_randeng);
+}
+
+/**
+ * generates chi^2-distributed random numbers
+ */
+template<typename REAL=double>
+REAL rand_chi2(REAL dDof)
+{
+	std::chi_squared_distribution<REAL> dist(dDof);
+	return dist(g_randeng);
+}
+
+/**
+ * generates t-distributed random numbers
+ */
+template<typename REAL=double>
+REAL rand_student(REAL dDof)
+{
+	std::student_t_distribution<REAL> dist(dDof);
+	return dist(g_randeng);
+}
+
+/**
+ * generates f-distributed random numbers
+ */
+template<typename REAL=double>
+REAL rand_fisher(REAL dDof1, REAL dDof2)
+{
+	std::fisher_f_distribution<REAL> dist(dDof1, dDof2);
+	return dist(g_randeng);
+}
+
+/**
+ * generates Gamma-distributed random numbers
+ */
+template<typename REAL=double>
+REAL rand_gamma(REAL dMu, REAL dSigma)
+{
+	std::gamma_distribution<REAL> dist(dMu, dSigma);
+	return dist(g_randeng);
+}
+
+/**
+ * generates exp-distributed random numbers
+ */
+template<typename REAL=double>
+REAL rand_exp(REAL dLam)
+{
+	std::exponential_distribution<REAL> dist(dLam);
 	return dist(g_randeng);
 }
 
 
+
 // ----------------------------------------------------------------------------
+// discrete distributions
 
-
-template<class t_vec=std::vector<double>, class REAL=typename t_vec::value_type,
-	class t_initlst=std::initializer_list<REAL>>
-t_vec rand_norm_nd(const t_initlst& vecMu, const t_initlst& vecSigma)
+/**
+ * generates Poisson-distributed random numbers
+ */
+template<typename INT, typename REAL=double>
+INT rand_poisson(REAL dLam)
 {
-	if(vecMu.size() != vecSigma.size())
-		return t_vec();
+	std::poisson_distribution<INT> dist(dLam);
+	return dist(g_randeng);
+}
 
-	std::size_t iDim = vecMu.size();
-	t_vec vecRet(iDim);
-
-	std::vector<std::future<REAL>> vecFut;
-	vecFut.reserve(iDim);
-
-	using iter = typename t_initlst::const_iterator;
-	iter iterMu = vecMu.begin();
-	iter iterSig = vecSigma.begin();
-
-	for(; iterMu!=vecMu.end(); ++iterMu, ++iterSig)
-	{
-		vecFut.emplace_back(
-			std::async(std::launch::deferred | std::launch::async,
-			std::function<REAL(REAL,REAL)>(rand_norm<REAL>), *iterMu, *iterSig));
-	}
-
-	for(std::size_t i=0; i<iDim; ++i)
-		vecRet[i] = vecFut[i].get();
-
-	return vecRet;
+/**
+ * generates binomially-distributed random numbers
+ */
+template<typename INT, typename REAL=double>
+INT rand_binomial(INT n, REAL p)
+{
+	std::binomial_distribution<INT> dist(n, p);
+	return dist(g_randeng);
 }
 
 
+
 // ----------------------------------------------------------------------------
+// multi-dimensional distributions
 
 
+template<class t_real=double, template<class...> class t_vec=std::vector,
+	template<class...> class t_param=std::initializer_list>
+struct _rand_nd_1arg
+{
+	using t_func = std::function<t_real(t_real)>;
+	t_func m_func;
+
+	_rand_nd_1arg(const t_func& func) : m_func(func) {}
+
+	t_vec<t_real> operator()(const t_param<t_real>& vecParam1) const
+	{
+		std::size_t iDim = vecParam1.size();
+		t_vec<t_real> vecRet(iDim);
+
+		std::vector<std::future<t_real>> vecFut;
+		vecFut.reserve(iDim);
+
+		using iter = typename t_param<t_real>::const_iterator;
+		iter iter1 = vecParam1.begin();
+
+		for(; iter1!=vecParam1.end(); ++iter1)
+		{
+			vecFut.emplace_back(
+				std::async(std::launch::deferred | std::launch::async,
+					m_func, *iter1));
+		}
+
+		for(std::size_t i=0; i<iDim; ++i)
+			vecRet[i] = vecFut[i].get();
+
+		return vecRet;
+	}
+};
+
+template<class t_real=double, template<class...> class t_vec=std::vector,
+	template<class...> class t_param=std::initializer_list>
+struct _rand_nd_2args
+{
+	using t_func = std::function<t_real(t_real, t_real)>;
+	t_func m_func;
+
+	_rand_nd_2args(const t_func& func) : m_func(func) {}
+
+	t_vec<t_real> operator()(const t_param<t_real>& vecParam1,
+		const t_param<t_real>& vecParam2) const
+	{
+		if(vecParam1.size() != vecParam2.size())
+			return t_vec<t_real>();
+
+		std::size_t iDim = vecParam1.size();
+		t_vec<t_real> vecRet(iDim);
+
+		std::vector<std::future<t_real>> vecFut;
+		vecFut.reserve(iDim);
+
+		using iter = typename t_param<t_real>::const_iterator;
+		iter iter1 = vecParam1.begin();
+		iter iter2 = vecParam2.begin();
+
+		for(; iter1!=vecParam1.end(); ++iter1, ++iter2)
+		{
+			vecFut.emplace_back(
+				std::async(std::launch::deferred | std::launch::async,
+					m_func, *iter1, *iter2));
+		}
+
+		for(std::size_t i=0; i<iDim; ++i)
+			vecRet[i] = vecFut[i].get();
+
+		return vecRet;
+	}
+};
+
+
+/**
+ * generates n-dimensional Gaussian-distributed random numbers
+ */
+template<class t_real=double, template<class...> class t_vec=std::vector,
+	template<class...> class t_param=std::initializer_list>
+t_vec<t_real> rand_norm_nd(const t_param<t_real>& vecMu, const t_param<t_real>& vecSigma)
+{
+	_rand_nd_2args<t_real, t_vec, t_param> rnd(rand_norm<t_real>);
+	return rnd(vecMu, vecSigma);
+}
+
+/**
+ * generates n-dimensional lognorm-distributed random numbers
+ */
+template<class t_real=double, template<class...> class t_vec=std::vector,
+	template<class...> class t_param=std::initializer_list>
+t_vec<t_real> rand_lognorm_nd(const t_param<t_real>& vecMu, const t_param<t_real>& vecSigma)
+{
+	_rand_nd_2args<t_real, t_vec, t_param> rnd(rand_lognorm<t_real>);
+	return rnd(vecMu, vecSigma);
+}
+
+/**
+ * generates n-dimensional Cauchy-distributed random numbers
+ */
+template<class t_real=double, template<class...> class t_vec=std::vector,
+	template<class...> class t_param=std::initializer_list>
+t_vec<t_real> rand_cauchy_nd(const t_param<t_real>& vecMu, const t_param<t_real>& vecSigma)
+{
+	_rand_nd_2args<t_real, t_vec, t_param> rnd(rand_cauchy<t_real>);
+	return rnd(vecMu, vecSigma);
+}
+
+/**
+ * generates n-dimensional Gamma-distributed random numbers
+ */
+template<class t_real=double, template<class...> class t_vec=std::vector,
+	template<class...> class t_param=std::initializer_list>
+t_vec<t_real> rand_gamma_nd(const t_param<t_real>& vecMu, const t_param<t_real>& vecSigma)
+{
+	_rand_nd_2args<t_real, t_vec, t_param> rnd(rand_gamma<t_real>);
+	return rnd(vecMu, vecSigma);
+}
+
+/**
+ * generates n-dimensional f-distributed random numbers
+ */
+template<class t_real=double, template<class...> class t_vec=std::vector,
+	template<class...> class t_param=std::initializer_list>
+t_vec<t_real> rand_fisher_nd(const t_param<t_real>& vecDof1, const t_param<t_real>& vecDof2)
+{
+	_rand_nd_2args<t_real, t_vec, t_param> rnd(rand_fisher<t_real>);
+	return rnd(vecDof1, vecDof2);
+}
+
+/**
+ * generates n-dimensional t-distributed random numbers
+ */
+template<class t_real=double, template<class...> class t_vec=std::vector,
+	template<class...> class t_param=std::initializer_list>
+t_vec<t_real> rand_student_nd(const t_param<t_real>& vecDof)
+{
+	_rand_nd_1arg<t_real, t_vec, t_param> rnd(rand_student<t_real>);
+	return rnd(vecDof);
+}
+
+/**
+ * generates n-dimensional chi^2-distributed random numbers
+ */
+template<class t_real=double, template<class...> class t_vec=std::vector,
+	template<class...> class t_param=std::initializer_list>
+t_vec<t_real> rand_chi2_nd(const t_param<t_real>& vecDof)
+{
+	_rand_nd_1arg<t_real, t_vec, t_param> rnd(rand_chi2<t_real>);
+	return rnd(vecDof);
+}
+
+/**
+ * generates n-dimensional exp-distributed random numbers
+ */
+template<class t_real=double, template<class...> class t_vec=std::vector,
+	template<class...> class t_param=std::initializer_list>
+t_vec<t_real> rand_exp_nd(const t_param<t_real>& vecDof)
+{
+	_rand_nd_1arg<t_real, t_vec, t_param> rnd(rand_exp<t_real>);
+	return rnd(vecDof);
+}
+
+
+
+// ----------------------------------------------------------------------------
+// other distributions
+
+/**
+ * generates a random character sequence usable for temporary file names
+ */
 template<class t_str=std::string>
 t_str rand_name(std::size_t iLen=8)
 {
@@ -118,5 +394,4 @@ t_str rand_name(std::size_t iLen=8)
 }
 
 }
-
 #endif
