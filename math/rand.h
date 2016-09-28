@@ -11,8 +11,11 @@
 #include <random>
 #include <vector>
 #include <initializer_list>
-#include <type_traits>
 #include <future>
+#include <type_traits>
+#include <boost/type_traits/function_traits.hpp>
+#include "../helper/traits.h"
+
 
 namespace tl {
 
@@ -208,71 +211,48 @@ INT rand_binomial(INT n, REAL p)
 // ----------------------------------------------------------------------------
 // multi-dimensional distributions
 
-
-template<class t_real=double, template<class...> class t_vec=std::vector,
-	template<class...> class t_param=std::initializer_list>
-struct _rand_nd_1arg
+template<class _t_func,
+	template<class...> class t_vec = std::vector>
+struct _rand_nd
 {
-	using t_func = std::function<t_real(t_real)>;
+	static constexpr std::size_t iNumArgs = boost::function_traits<_t_func>::arity;
+	using t_real = typename boost::function_traits<_t_func>::result_type;
+	using t_func = std::function<_t_func>;
 	t_func m_func;
 
-	_rand_nd_1arg(const t_func& func) : m_func(func) {}
+	_rand_nd(const t_func& func) : m_func(func) {}
 
-	t_vec<t_real> operator()(const t_param<t_real>& vecParam1) const
+	t_vec<t_real> operator()(const t_vec<t_vec<t_real>>& vecParams) const
 	{
-		std::size_t iDim = vecParam1.size();
+		const std::size_t iDim = vecParams[0].size();
 		t_vec<t_real> vecRet(iDim);
 
 		std::vector<std::future<t_real>> vecFut;
 		vecFut.reserve(iDim);
 
-		using iter = typename t_param<t_real>::const_iterator;
-		iter iter1 = vecParam1.begin();
-
-		for(; iter1!=vecParam1.end(); ++iter1)
+		using t_iter = typename t_vec<t_real>::const_iterator;
+		t_vec<t_iter> vecIters;
+		for(const t_vec<t_real>& vec : vecParams)
+			vecIters.push_back(vec.begin());
+		while(1)
 		{
+			t_vec<t_real> vecArgs;
+			for(t_iter iter : vecIters)
+				vecArgs.push_back(*iter);
+
+			auto fkt = [this, vecArgs]() -> t_real
+			{
+				return tl::call<iNumArgs, t_func, t_real, t_vec>(m_func, vecArgs);
+			};
+
 			vecFut.emplace_back(
 				std::async(std::launch::deferred | std::launch::async,
-					m_func, *iter1));
-		}
+					fkt));
 
-		for(std::size_t i=0; i<iDim; ++i)
-			vecRet[i] = vecFut[i].get();
-
-		return vecRet;
-	}
-};
-
-template<class t_real=double, template<class...> class t_vec=std::vector,
-	template<class...> class t_param=std::initializer_list>
-struct _rand_nd_2args
-{
-	using t_func = std::function<t_real(t_real, t_real)>;
-	t_func m_func;
-
-	_rand_nd_2args(const t_func& func) : m_func(func) {}
-
-	t_vec<t_real> operator()(const t_param<t_real>& vecParam1,
-		const t_param<t_real>& vecParam2) const
-	{
-		if(vecParam1.size() != vecParam2.size())
-			return t_vec<t_real>();
-
-		std::size_t iDim = vecParam1.size();
-		t_vec<t_real> vecRet(iDim);
-
-		std::vector<std::future<t_real>> vecFut;
-		vecFut.reserve(iDim);
-
-		using iter = typename t_param<t_real>::const_iterator;
-		iter iter1 = vecParam1.begin();
-		iter iter2 = vecParam2.begin();
-
-		for(; iter1!=vecParam1.end(); ++iter1, ++iter2)
-		{
-			vecFut.emplace_back(
-				std::async(std::launch::deferred | std::launch::async,
-					m_func, *iter1, *iter2));
+			for(t_iter& iter : vecIters)
+				++iter;
+			if(vecIters[0] == vecParams[0].end())
+				break;
 		}
 
 		for(std::size_t i=0; i<iDim; ++i)
@@ -286,89 +266,81 @@ struct _rand_nd_2args
 /**
  * generates n-dimensional Gaussian-distributed random numbers
  */
-template<class t_real=double, template<class...> class t_vec=std::vector,
-	template<class...> class t_param=std::initializer_list>
-t_vec<t_real> rand_norm_nd(const t_param<t_real>& vecMu, const t_param<t_real>& vecSigma)
+template<class t_real=double, template<class...> class t_vec=std::vector>
+t_vec<t_real> rand_norm_nd(const t_vec<t_real>& vecMu, const t_vec<t_real>& vecSigma)
 {
-	_rand_nd_2args<t_real, t_vec, t_param> rnd(rand_norm<t_real>);
-	return rnd(vecMu, vecSigma);
+	_rand_nd<decltype(rand_norm<t_real>), t_vec> rnd(rand_norm<t_real>);
+	return rnd(t_vec<t_vec<t_real>>({vecMu, vecSigma}));
 }
 
 /**
  * generates n-dimensional lognorm-distributed random numbers
  */
-template<class t_real=double, template<class...> class t_vec=std::vector,
-	template<class...> class t_param=std::initializer_list>
-t_vec<t_real> rand_lognorm_nd(const t_param<t_real>& vecMu, const t_param<t_real>& vecSigma)
+template<class t_real=double, template<class...> class t_vec=std::vector>
+t_vec<t_real> rand_lognorm_nd(const t_vec<t_real>& vecMu, const t_vec<t_real>& vecSigma)
 {
-	_rand_nd_2args<t_real, t_vec, t_param> rnd(rand_lognorm<t_real>);
-	return rnd(vecMu, vecSigma);
+	_rand_nd<decltype(rand_lognorm<t_real>), t_vec> rnd(rand_lognorm<t_real>);
+	return rnd({vecMu, vecSigma});
 }
 
 /**
  * generates n-dimensional Cauchy-distributed random numbers
  */
-template<class t_real=double, template<class...> class t_vec=std::vector,
-	template<class...> class t_param=std::initializer_list>
-t_vec<t_real> rand_cauchy_nd(const t_param<t_real>& vecMu, const t_param<t_real>& vecSigma)
+template<class t_real=double, template<class...> class t_vec=std::vector>
+t_vec<t_real> rand_cauchy_nd(const t_vec<t_real>& vecMu, const t_vec<t_real>& vecSigma)
 {
-	_rand_nd_2args<t_real, t_vec, t_param> rnd(rand_cauchy<t_real>);
-	return rnd(vecMu, vecSigma);
+	_rand_nd<decltype(rand_cauchy<t_real>), t_vec> rnd(rand_cauchy<t_real>);
+	return rnd({vecMu, vecSigma});
 }
 
 /**
  * generates n-dimensional Gamma-distributed random numbers
  */
-template<class t_real=double, template<class...> class t_vec=std::vector,
-	template<class...> class t_param=std::initializer_list>
-t_vec<t_real> rand_gamma_nd(const t_param<t_real>& vecMu, const t_param<t_real>& vecSigma)
+template<class t_real=double, template<class...> class t_vec=std::vector>
+t_vec<t_real> rand_gamma_nd(const t_vec<t_real>& vecMu, const t_vec<t_real>& vecSigma)
 {
-	_rand_nd_2args<t_real, t_vec, t_param> rnd(rand_gamma<t_real>);
-	return rnd(vecMu, vecSigma);
+	_rand_nd<decltype(rand_gamma<t_real>), t_vec> rnd(rand_gamma<t_real>);
+	return rnd({vecMu, vecSigma});
 }
 
 /**
  * generates n-dimensional f-distributed random numbers
  */
-template<class t_real=double, template<class...> class t_vec=std::vector,
-	template<class...> class t_param=std::initializer_list>
-t_vec<t_real> rand_fisher_nd(const t_param<t_real>& vecDof1, const t_param<t_real>& vecDof2)
+template<class t_real=double, template<class...> class t_vec=std::vector>
+t_vec<t_real> rand_fisher_nd(const t_vec<t_real>& vecDof1, const t_vec<t_real>& vecDof2)
 {
-	_rand_nd_2args<t_real, t_vec, t_param> rnd(rand_fisher<t_real>);
-	return rnd(vecDof1, vecDof2);
+	_rand_nd<decltype(rand_fisher<t_real>), t_vec> rnd(rand_fisher<t_real>);
+	return rnd({vecDof1, vecDof2});
 }
 
 /**
  * generates n-dimensional t-distributed random numbers
  */
-template<class t_real=double, template<class...> class t_vec=std::vector,
-	template<class...> class t_param=std::initializer_list>
-t_vec<t_real> rand_student_nd(const t_param<t_real>& vecDof)
+template<class t_real=double, template<class...> class t_vec=std::vector>
+t_vec<t_real> rand_student_nd(const t_vec<t_real>& vecDof)
 {
-	_rand_nd_1arg<t_real, t_vec, t_param> rnd(rand_student<t_real>);
-	return rnd(vecDof);
+	_rand_nd<decltype(rand_student<t_real>), t_vec> rnd(rand_student<t_real>);
+	return rnd({vecDof});
 }
 
 /**
  * generates n-dimensional chi^2-distributed random numbers
  */
-template<class t_real=double, template<class...> class t_vec=std::vector,
-	template<class...> class t_param=std::initializer_list>
-t_vec<t_real> rand_chi2_nd(const t_param<t_real>& vecDof)
+template<class t_real=double, template<class...> class t_vec=std::vector>
+t_vec<t_real> rand_chi2_nd(const t_vec<t_real>& vecDof)
 {
-	_rand_nd_1arg<t_real, t_vec, t_param> rnd(rand_chi2<t_real>);
-	return rnd(vecDof);
+	_rand_nd<decltype(rand_chi2<t_real>), t_vec> rnd(rand_chi2<t_real>);
+	return rnd({vecDof});
 }
 
 /**
  * generates n-dimensional exp-distributed random numbers
  */
-template<class t_real=double, template<class...> class t_vec=std::vector,
-	template<class...> class t_param=std::initializer_list>
-t_vec<t_real> rand_exp_nd(const t_param<t_real>& vecDof)
+template<class t_real=double, template<class...> class t_vec=std::vector>
+t_vec<t_real> rand_exp_nd(const t_vec<t_real>& vecDof)
 {
-	_rand_nd_1arg<t_real, t_vec, t_param> rnd(rand_exp<t_real>);
-	return rnd(vecDof);
+	_rand_nd<decltype(rand_exp<t_real>), t_vec> rnd(rand_exp<t_real>);
+	return rnd({vecDof});
 }
 
 
