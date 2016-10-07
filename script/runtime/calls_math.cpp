@@ -13,6 +13,7 @@
 #include "math/linalg.h"
 #include "math/linalg2.h"
 #include "math/rand.h"
+#include "math/distr.h"
 #include "log/log.h"
 #include <boost/math/special_functions/erf.hpp>
 
@@ -974,8 +975,91 @@ static Symbol* fkt_qr(const std::vector<Symbol*>& vecSyms,
 
 
 // --------------------------------------------------------------------------------
-// rand stuff
+// distributions
 
+static Symbol* fkt_norm_pdf(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab);
+static Symbol* fkt_norm_cdf(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab);
+
+static Symbol* fkt_norm_pdf_arr(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+{
+	if(!check_args(runinfo, vecSyms,
+		{SYMBOL_SCALAR, SYMBOL_SCALAR, SYMBOL_ARRAY},
+		{0,0,0}, "norm_pdf_arr"))
+		return 0;
+
+	SymbolArray *pArrRet = new SymbolArray();
+	std::vector<Symbol*> &vecArr = ((SymbolArray*)vecSyms[2])->GetArr();
+	for(Symbol* pSym : vecArr)
+	{
+		std::vector<Symbol*> vecNewSyms({vecSyms[0], vecSyms[1], pSym});
+		Symbol* pY = fkt_norm_pdf(vecNewSyms, info, runinfo, pSymTab);
+		pArrRet->GetArr().push_back(pY);
+	}
+
+	pArrRet->UpdateIndices();
+	return pArrRet;
+}
+
+static Symbol* fkt_norm_pdf(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+{
+	if(!check_args(runinfo, vecSyms,
+		{SYMBOL_SCALAR, SYMBOL_SCALAR, SYMBOL_SCALAR|SYMBOL_ARRAY},
+		{0,0,0}, "norm_pdf"))
+		return 0;
+
+	if(vecSyms.size()>=3 && vecSyms[2]->GetType()==SYMBOL_ARRAY)
+		return fkt_norm_pdf_arr(vecSyms, info, runinfo, pSymTab);
+
+	t_real dMu = 0.;
+	t_real dSigma = 1.;
+	t_real dX = 0.;
+
+	if(vecSyms.size() >= 1)
+		dMu = vecSyms[0]->GetValDouble();
+	if(vecSyms.size() >= 2)
+		dSigma = vecSyms[1]->GetValDouble();
+	if(vecSyms.size() >= 3)
+		dX = vecSyms[2]->GetValDouble();
+
+	auto distr = std::unique_ptr<tl::t_normal_dist<t_real>>(
+		new tl::t_normal_dist<t_real>(dMu, dSigma));
+	return new SymbolReal(distr->pdf(dX));
+}
+
+static Symbol* fkt_norm_cdf(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+{
+	if(!check_args(runinfo, vecSyms,
+		{SYMBOL_SCALAR, SYMBOL_SCALAR, SYMBOL_SCALAR},
+		{0,0,0}, "norm_pdf"))
+		return 0;
+
+	t_real dMu = 0.;
+	t_real dSigma = 1.;
+	t_real dX = 0.;
+
+	if(vecSyms.size() >= 1)
+		dMu = vecSyms[0]->GetValDouble();
+	if(vecSyms.size() >= 2)
+		dSigma = vecSyms[1]->GetValDouble();
+	if(vecSyms.size() >= 3)
+		dX = vecSyms[2]->GetValDouble();
+
+	auto distr = std::unique_ptr<tl::t_normal_dist<t_real>>(
+		new tl::t_normal_dist<t_real>(dMu, dSigma));
+	return new SymbolReal(distr->cdf(dX));
+}
+
+// --------------------------------------------------------------------------------
+
+
+
+// --------------------------------------------------------------------------------
+// rand stuff
 
 static Symbol* fkt_rand01(const std::vector<Symbol*>& vecSyms,
 	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
@@ -1228,6 +1312,9 @@ extern void init_ext_math_calls()
 		t_mapFkts::value_type(T_STR"eigenvecs_sym", fkt_eigenvecs_sym),
 		t_mapFkts::value_type(T_STR"qr", fkt_qr),
 
+		// distributions
+		t_mapFkts::value_type(T_STR"norm_cdf", fkt_norm_cdf),
+		t_mapFkts::value_type(T_STR"norm_pdf", fkt_norm_pdf),
 
 		// random numbers
 		t_mapFkts::value_type(T_STR"rand01", fkt_rand01),
