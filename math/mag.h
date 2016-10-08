@@ -112,7 +112,8 @@ template<class t_real, std::size_t DIM,
 	template<class, std::size_t, class...> class t_arr_nd = boost::multi_array>
 t_arr_nd<bool, DIM> metrop(
 	const t_arr_1d<typename t_arr_nd<bool,DIM>::index, DIM>& arrDims,
-	std::size_t iNumIters, t_real dJ, t_real dk, t_real dT)
+	std::size_t iNumIters, t_real dJ, t_real dk, t_real dT,
+	t_real *pEtot = nullptr)
 {
 	using T = bool;
 	using t_arr = t_arr_nd<T, DIM>;
@@ -163,14 +164,14 @@ t_arr_nd<bool, DIM> metrop(
 	};
 
 
+	// TODO: search radius
+	t_dim dimMin; dimMin.fill(0);
+	t_dim dimMax = arrDims;
+
 	t_arr arrSpins = rand_array<T, DIM, t_arr_1d, t_arr_nd>(arrDims);
 
 	for(std::size_t iIter=0; iIter<iNumIters; ++iIter)
 	{
-		// TODO: search radius
-		t_dim dimMin; dimMin.fill(0);
-		t_dim dimMax = arrDims;
-
 		t_dim idx = rand_idx<t_idx, DIM, t_arr_1d>(dimMin, dimMax);
 		std::vector<t_dim> vecNN = getNN(arrDims, idx);
 
@@ -189,6 +190,32 @@ t_arr_nd<bool, DIM> metrop(
 			if(rand_prob<t_real>(dProb))
 				arrSpins(idx) = !arrSpins(idx);
 		}
+	}
+
+	// calculate total energy
+	if(pEtot)
+	{
+		t_dim idxCur; idxCur.fill(0);
+		while(1)
+		{
+			std::vector<t_dim> vecNN = getNN(arrDims, idxCur);
+			*pEtot += calcE(arrSpins, idxCur, vecNN, 0);
+
+			++idxCur[0];
+			for(std::size_t iDim=0; iDim<DIM-1; ++iDim)
+			{
+				if(idxCur[iDim] >= arrDims[iDim])
+				{
+					idxCur[iDim] = 0;
+					++idxCur[iDim+1];
+				}
+			}
+			if(idxCur[DIM-1] >= arrDims[DIM-1])
+				break;
+		}
+
+		for(std::size_t iDim=0; iDim<DIM; ++iDim)
+			*pEtot /= t_real(arrDims[iDim]);
 	}
 
 	return arrSpins;

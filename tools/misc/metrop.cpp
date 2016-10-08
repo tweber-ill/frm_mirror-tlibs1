@@ -35,9 +35,10 @@ int main()
 	std::cout << "J (meV): "; std::cin >> J;
 	std::cout << "T (K): "; std::cin >> T;
 
+	t_real Etot = 0.;
 	tl::log_info("Running Metropolis algo...");
-	auto arr = tl::metrop<t_real, 2>({iW,iH}, iIter, J, k, T);
-	tl::log_info("Finished Metropolis algo.");
+	auto arr = tl::metrop<t_real, 2>({iW,iH}, iIter, J, k, T, &Etot);
+	tl::log_info("Finished Metropolis algo. E/N = ", Etot, " meV.");
 
 
 	tl::log_info("Writing image.");
