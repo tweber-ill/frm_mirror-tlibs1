@@ -110,10 +110,11 @@ T mag_formfact(T Q, T L, T S, T J,
 template<class t_real, std::size_t DIM,
 	template<class, std::size_t, class...> class t_arr_1d = boost::array,
 	template<class, std::size_t, class...> class t_arr_nd = boost::multi_array>
-t_arr_nd<bool, DIM> metrop(
+void metrop(
 	const t_arr_1d<typename t_arr_nd<bool,DIM>::index, DIM>& arrDims,
 	std::size_t iNumIters, t_real dJ, t_real dk, t_real dT,
-	t_real *pEtot = nullptr)
+	t_arr_nd<bool, DIM>& arrSpins,
+	t_real *pEtot = nullptr, t_real *pS = nullptr)
 {
 	using T = bool;
 	using t_arr = t_arr_nd<T, DIM>;
@@ -121,7 +122,6 @@ t_arr_nd<bool, DIM> metrop(
 	using t_dim = t_arr_1d<t_idx, DIM>;
 
 	const t_real dBeta = t_real(1)/(dk*dT);
-
 
 	// get next neighbours
 	auto getNN = [](const t_dim& dim, const t_dim& idx) -> std::vector<t_dim>
@@ -168,19 +168,21 @@ t_arr_nd<bool, DIM> metrop(
 	t_dim dimMin; dimMin.fill(0);
 	t_dim dimMax = arrDims;
 
-	t_arr arrSpins = rand_array<T, DIM, t_arr_1d, t_arr_nd>(arrDims);
+	//t_arr arrRand = rand_array<T, DIM, t_arr_1d, t_arr_nd>(arrDims);
+	//t_arr* parrSpins = &arrRand;
+	t_arr *parrSpins = &arrSpins;
 
 	for(std::size_t iIter=0; iIter<iNumIters; ++iIter)
 	{
 		t_dim idx = rand_idx<t_idx, DIM, t_arr_1d>(dimMin, dimMax);
 		std::vector<t_dim> vecNN = getNN(arrDims, idx);
 
-		t_real dENoFlip = calcE(arrSpins, idx, vecNN, 0);
-		t_real dEFlip = calcE(arrSpins, idx, vecNN, 1);
+		t_real dENoFlip = calcE(*parrSpins, idx, vecNN, 0);
+		t_real dEFlip = calcE(*parrSpins, idx, vecNN, 1);
 
 		if(dEFlip < dENoFlip)
 		{
-			arrSpins(idx) = !arrSpins(idx);
+			(*parrSpins)(idx) = !(*parrSpins)(idx);
 		}
 		else
 		{
@@ -188,18 +190,23 @@ t_arr_nd<bool, DIM> metrop(
 			t_real dProb = std::exp(-dBeta * dEDiff);
 
 			if(rand_prob<t_real>(dProb))
-				arrSpins(idx) = !arrSpins(idx);
+				(*parrSpins)(idx) = !(*parrSpins)(idx);
 		}
 	}
 
-	// calculate total energy
-	if(pEtot)
+	if(pEtot)	// calculate total energy
 	{
+		*pEtot = t_real(0);
+
 		t_dim idxCur; idxCur.fill(0);
 		while(1)
 		{
 			std::vector<t_dim> vecNN = getNN(arrDims, idxCur);
-			*pEtot += calcE(arrSpins, idxCur, vecNN, 0);
+			t_real dENoFlip = calcE(*parrSpins, idxCur, vecNN, 0);
+			//t_real dEFlip = calcE(*parrSpins, idxCur, vecNN, 1);
+
+			//dZ += dBoltzNoFlip + dBoltzFlip;	// partition function
+			*pEtot += dENoFlip;
 
 			++idxCur[0];
 			for(std::size_t iDim=0; iDim<DIM-1; ++iDim)
@@ -214,12 +221,27 @@ t_arr_nd<bool, DIM> metrop(
 				break;
 		}
 
+		// normalise
 		*pEtot /= std::pow(2., t_real(DIM));		// NN
 		for(std::size_t iDim=0; iDim<DIM; ++iDim)	// N
 			*pEtot /= t_real(arrDims[iDim]);
 	}
 
-	return arrSpins;
+	if(pS)	// calculate mean magnetisation
+	{
+		*pS = t_real(0);
+
+		const T* pDat = parrSpins->data();
+		std::size_t iNumElems = parrSpins->num_elements();
+
+		for(std::size_t iElem=0; iElem<iNumElems; ++iElem)
+			*pS += (*(pDat+iElem) ? t_real(1) : t_real(-1));
+
+		// normalise
+		*pS /= std::pow(2., t_real(DIM));			// NN
+		for(std::size_t iDim=0; iDim<DIM; ++iDim)	// N
+			*pS /= t_real(arrDims[iDim]);
+	}
 }
 
 

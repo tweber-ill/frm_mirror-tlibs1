@@ -29,13 +29,16 @@ int main()
 
 	t_real J = 2.5;		// meV
 
+	boost::multi_array<bool, 2> arr
+		= tl::rand_array<bool, 2, boost::array, boost::multi_array>({iW, iH});
 	std::ofstream ofstrE("E.dat");
-	for(t_real T=10.; T<200.; T+=10.)
+
+	for(t_real T=200.; T>=0.; T-=10.)
 	{
-		t_real Etot = 0.;
+		t_real Etot = 0., S = 0.;
 		tl::log_info("T = ", T, " K");
-		auto arr = tl::metrop<t_real, 2>({iW,iH}, iIter, J, k, T, &Etot);
-		ofstrE << T << "\t" << Etot << std::endl;
+		tl::metrop<t_real, 2>({iW,iH}, iIter, J, k, T, arr, &Etot, &S);
+		ofstrE << T << "\t" << Etot <<  "\t" << S << std::endl;
 
 		using t_view = tl::gil::gray8_view_t;
 		using t_pix = typename t_view::value_type;
@@ -51,5 +54,6 @@ int main()
 		ostrImg << "T" << T << ".png";
 		tl::save_view(ostrImg.str().c_str(), &view);
 	}
+
 	return 0;
 }

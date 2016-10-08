@@ -35,9 +35,12 @@ int main()
 	std::cout << "J (meV): "; std::cin >> J;
 	std::cout << "T (K): "; std::cin >> T;
 
+	boost::multi_array<bool, 2> arr
+		= tl::rand_array<bool, 2, boost::array, boost::multi_array>({iW, iH});
+
 	t_real Etot = 0.;
 	tl::log_info("Running Metropolis algo...");
-	auto arr = tl::metrop<t_real, 2>({iW,iH}, iIter, J, k, T, &Etot);
+	tl::metrop<t_real, 2>({iW,iH}, iIter, J, k, T, arr, &Etot);
 	tl::log_info("Finished Metropolis algo. E/N = ", Etot, " meV.");
 
 
