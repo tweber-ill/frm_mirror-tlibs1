@@ -17,6 +17,7 @@
 #include "linalg.h"
 #include "atoms.h"
 #include "nn.h"
+#include "rand.h"
 
 
 namespace tl {
@@ -53,10 +54,11 @@ T ferromag(const t_cont& lstNeighbours, const ublas::vector<T>& vecq, T tS)
 // ----------------------------------------------------------------------------
 
 
-// Magnetic form factors
-// see: ILL Neutron Data Booklet sec. 2.5-1 (p. 60)
-// also see: https://www.ill.eu/sites/ccsl/ffacts/
-
+/**
+ * Magnetic form factors
+ * see: ILL Neutron Data Booklet sec. 2.5-1 (p. 60)
+ * also see: https://www.ill.eu/sites/ccsl/ffacts/
+ */
 template<class T=double, template<class...> class t_vec=std::initializer_list>
 T j0_avg(T Q, const t_vec<T>& A, const t_vec<T>& a)
 {
@@ -83,7 +85,7 @@ T mag_formfact(T Q, T L, T S,
 	return (L+T(2)*S) * j0_avg<T, t_vec>(Q, A0, a0) * L * j2_avg<T, t_vec>(Q, A2, a2);
 }
 
-/*
+/**
  * @desc see: Squires, p. 139
  */
 template<class T=double, template<class...> class t_vec=std::initializer_list>
@@ -99,6 +101,100 @@ T mag_formfact(T Q, T L, T S, T J,
 
 	return (gS*j0 + gL*(j0+j2)) / (gL + gS);
 }
+// ----------------------------------------------------------------------------
+
+
+/**
+ * metropolis algorithm
+ */
+template<class t_real, std::size_t DIM,
+	template<class, std::size_t, class...> class t_arr_1d = boost::array,
+	template<class, std::size_t, class...> class t_arr_nd = boost::multi_array>
+t_arr_nd<bool, DIM> metrop(
+	const t_arr_1d<typename t_arr_nd<bool,DIM>::index, DIM>& arrDims,
+	std::size_t iNumIters, t_real dJ, t_real dk, t_real dT)
+{
+	using T = bool;
+	using t_arr = t_arr_nd<T, DIM>;
+	using t_idx = typename t_arr::index;
+	using t_dim = t_arr_1d<t_idx, DIM>;
+
+	const t_real dBeta = t_real(1)/(dk*dT);
+
+
+	// get next neighbours
+	auto getNN = [](const t_dim& dim, const t_dim& idx) -> std::vector<t_dim>
+	{
+		std::vector<t_dim> vecNN;
+		for(std::size_t iDim=0; iDim<DIM; ++iDim)
+		{
+			if(idx[iDim] > 0)
+			{
+				t_dim idxNew = idx;
+				--idxNew[iDim];
+				vecNN.emplace_back(std::move(idxNew));
+			}
+			if(idx[iDim] < dim[iDim]-1)
+			{
+				t_dim idxNew = idx;
+				++idxNew[iDim];
+				vecNN.emplace_back(std::move(idxNew));
+			}
+		}
+		return vecNN;
+	};
+
+	// calculate energy
+	auto calcE = [dJ](const t_arr& arr,
+		const t_dim& idxSpin, const std::vector<t_dim>& vecNN,
+		bool bFlip=0) -> t_real
+	{
+		t_real dE = t_real(0);
+		bool bSpin = arr(idxSpin);
+		if(bFlip) bSpin = !bSpin;
+		t_real dSpin = (bSpin ? t_real(1) : t_real(-1));
+
+		for(const t_dim& idxNN : vecNN)
+		{
+			t_real dSpinNN = (arr(idxNN) ? t_real(1) : t_real(-1));
+			dE += dJ*dSpin*dSpinNN;
+		}
+		return dE;
+	};
+
+
+	t_arr arrSpins = rand_array<T, DIM, t_arr_1d, t_arr_nd>(arrDims);
+
+	for(std::size_t iIter=0; iIter<iNumIters; ++iIter)
+	{
+		// TODO: search radius
+		t_dim dimMin; dimMin.fill(0);
+		t_dim dimMax = arrDims;
+
+		t_dim idx = rand_idx<t_idx, DIM, t_arr_1d>(dimMin, dimMax);
+		std::vector<t_dim> vecNN = getNN(arrDims, idx);
+
+		t_real dENoFlip = calcE(arrSpins, idx, vecNN, 0);
+		t_real dEFlip = calcE(arrSpins, idx, vecNN, 1);
+
+		if(dEFlip < dENoFlip)
+		{
+			arrSpins(idx) = !arrSpins(idx);
+		}
+		else
+		{
+			t_real dEDiff = dEFlip - dENoFlip;
+			t_real dProb = std::exp(-dBeta * dEDiff);
+
+			if(rand_prob<t_real>(dProb))
+				arrSpins(idx) = !arrSpins(idx);
+		}
+	}
+
+	return arrSpins;
+}
+
+
 // ----------------------------------------------------------------------------
 
 }
