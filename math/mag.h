@@ -158,7 +158,7 @@ t_arr_nd<bool, DIM> metrop(
 		for(const t_dim& idxNN : vecNN)
 		{
 			t_real dSpinNN = (arr(idxNN) ? t_real(1) : t_real(-1));
-			dE += dJ*dSpin*dSpinNN;
+			dE += -dJ*dSpin*dSpinNN;
 		}
 		return dE;
 	};
@@ -214,7 +214,8 @@ t_arr_nd<bool, DIM> metrop(
 				break;
 		}
 
-		for(std::size_t iDim=0; iDim<DIM; ++iDim)
+		*pEtot /= std::pow(2., t_real(DIM));		// NN
+		for(std::size_t iDim=0; iDim<DIM; ++iDim)	// N
 			*pEtot /= t_real(arrDims[iDim]);
 	}
 

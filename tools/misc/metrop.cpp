@@ -24,7 +24,7 @@ int main()
 	long iW = 256;
 	long iH = 256;
 
-	t_real J = -1.;		// meV
+	t_real J = 1.;		// meV
 	t_real T = 25.;		// K
 
 	std::size_t iIter = 1e7;

@@ -22,12 +22,12 @@ int main()
 {
 	tl::init_rand();
 
-	std::size_t iIter = 5e6;
+	std::size_t iIter = 1e7;
 
 	long iW = 256;
 	long iH = 256;
 
-	t_real J = -2.5;		// meV
+	t_real J = 2.5;		// meV
 
 	std::ofstream ofstrE("E.dat");
 	for(t_real T=10.; T<200.; T+=10.)
