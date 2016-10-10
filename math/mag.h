@@ -10,6 +10,7 @@
 
 #include <initializer_list>
 #include <vector>
+#include <tuple>
 #include <cmath>
 #include <complex>
 #include <cassert>
@@ -56,8 +57,8 @@ T ferromag(const t_cont& lstNeighbours, const ublas::vector<T>& vecq, T tS)
 
 /**
  * Magnetic form factors
- * see: ILL Neutron Data Booklet sec. 2.5-1 (p. 60)
- * also see: https://www.ill.eu/sites/ccsl/ffacts/
+ * @desc see: ILL Neutron Data Booklet sec. 2.5-1 (p. 60)
+ * @desc also see: https://www.ill.eu/sites/ccsl/ffacts/
  */
 template<class T=double, template<class...> class t_vec=std::initializer_list>
 T j0_avg(T Q, const t_vec<T>& A, const t_vec<T>& a)
@@ -86,10 +87,28 @@ T mag_formfact(T Q, T L, T S,
 }
 
 /**
- * @desc see: Squires, p. 139
+ * form factor for transition metals (d orbitals, spin-only)
+ * @desc see: Squires, p. 138
+ * @desc also see: http://www.neutron.ethz.ch/research/resources/magnetic-form-factors.html
  */
 template<class T=double, template<class...> class t_vec=std::initializer_list>
-T mag_formfact(T Q, T L, T S, T J,
+std::tuple<T,T,T> mag_formfact_d(T Q, T g,
+	const t_vec<T>& A0, const t_vec<T>& a0,
+	const t_vec<T>& A2, const t_vec<T>& a2)
+{
+	T j0 = j0_avg<T, t_vec>(Q, A0, a0);
+	T j2 = j2_avg<T, t_vec>(Q, A2, a2);
+
+	return std::tuple<T,T,T>(j0, j2, j0 + (T(1)-T(2)/g)*j2);
+}
+
+/**
+ * form factor for rare earths (f orbitals, LS)
+ * @desc see: Squires, p. 139
+ * @desc also see: http://www.neutron.ethz.ch/research/resources/magnetic-form-factors.html
+ */
+template<class T=double, template<class...> class t_vec=std::initializer_list>
+std::tuple<T,T,T> mag_formfact_f(T Q, T L, T S, T J,
 	const t_vec<T>& A0, const t_vec<T>& a0,
 	const t_vec<T>& A2, const t_vec<T>& a2)
 {
@@ -99,7 +118,7 @@ T mag_formfact(T Q, T L, T S, T J,
 	T gL = T(0.5) + (L*(L+T(1)) - S*(S+T(1))) / (T(2)*J* (J+T(1)));
 	T gS = T(1) + (S*(S+T(1)) - L*(L+T(1))) / (J * (J+T(1)));
 
-	return (gS*j0 + gL*(j0+j2)) / (gL + gS);
+	return std::tuple<T,T,T>(j0, j2, (gS*j0 + gL*(j0+j2)) / (gL + gS));
 }
 // ----------------------------------------------------------------------------
 
