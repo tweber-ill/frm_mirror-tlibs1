@@ -387,7 +387,7 @@ void GlFontMap::DrawText(double _dX, double _dY, const std::string& str, bool bC
 	double dX = _dX;
 	double dY = _dY;
 
-	double dScX = (m_iTileH / 12.) * 0.025;
+	double dScX = (m_iTileH / 12.) * m_dScale;
 	double dScY = double(m_iTileH)/double(m_iTileW) * dScX;
 
 	double dXInc = 1.75*dScX;

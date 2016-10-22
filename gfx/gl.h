@@ -282,7 +282,7 @@ public:
  * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_02
  */
 #define DEF_FONT "/usr/share/fonts/dejavu/DejaVuSansMono.ttf"
-#define DEF_FONT_SIZE 12
+#define DEF_FONT_SIZE 24
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -342,6 +342,7 @@ class GlFontMap : public FontMap
 	protected:
 		bool m_bOk = 0;
 		GLuint m_tex = 0;
+		double m_dScale = 0.01;
 
 	protected:
 		bool CreateFontTexture();
@@ -357,10 +358,11 @@ class GlFontMap : public FontMap
 		void BindTexture();
 		void DrawText(double dX, double dY, const std::string& str, bool bCenter=1);
 		void DrawText(double dX, double dY, double dZ, const std::string& str, bool bCenter=1);
+
+		void SetScale(double dScale) { m_dScale = dScale; }
 };
 
 // --------------------------------------------------------------------------------
-
 
 }
 
