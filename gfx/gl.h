@@ -11,7 +11,7 @@
 #include <string>
 #include <ostream>
 #include <unordered_map>
-#include <GL/gl.h>
+#include <gl.h>
 
 #include "../math/linalg.h"
 #include "../math/geo.h"
@@ -281,7 +281,6 @@ public:
  * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_01
  * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_02
  */
-
 #define DEF_FONT "/usr/share/fonts/dejavu/DejaVuSansMono.ttf"
 #define DEF_FONT_SIZE 12
 
