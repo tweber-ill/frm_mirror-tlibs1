@@ -77,7 +77,11 @@ get_col_mean(instrdat, thelabel)
 
 load_instr(filenames, norm_to_monitor=1, opts=map())
 {
-	instr = loadinstr(filenames);
+	if(has_key(opts, "eps") && has_key(opts, "eps_col"))
+		instr = loadinstr(filenames, opts["eps_col"], opts["eps"]);
+	else
+		instr = loadinstr(filenames);
+
 	if(!instr["ok"])
 	{
 		print("Cannot load file(s).");

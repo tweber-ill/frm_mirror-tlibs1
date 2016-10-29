@@ -701,6 +701,10 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 
 // --------------------------------------------------------------------------------
 
+/**
+ * Bose factor
+ * see e.g.: Shirane, p. 28
+ */
 template<class t_real=double>
 t_real bose(t_real E, t_real T)
 {
