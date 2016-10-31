@@ -57,7 +57,7 @@ class FileInstrBase
 		virtual std::size_t GetScanCount() const = 0;
 		virtual std::array<t_real, 5> GetScanHKLKiKf(std::size_t i) const = 0;
 		virtual bool MergeWith(const FileInstrBase<t_real>* pDat);
-		virtual void SmoothData(const std::string& strCol, t_real dEps);
+		virtual void SmoothData(const std::string& strCol, t_real dEps, bool bIterate=1);
 
 		virtual std::string GetTitle() const = 0;
 		virtual std::string GetUser() const = 0;

@@ -1,4 +1,4 @@
-/*
+/**
  * Loads instrument-specific data files
  * @author tweber
  * @date feb-2015
@@ -208,7 +208,8 @@ bool FileInstrBase<t_real>::MergeWith(const FileInstrBase<t_real>* pDat)
 }
 
 template<class t_real>
-void FileInstrBase<t_real>::SmoothData(const std::string& strCol, t_real dEps)
+void FileInstrBase<t_real>::SmoothData(const std::string& strCol,
+	t_real dEps, bool bIterate)
 {
 	std::size_t iIdxCol;
 	this->GetCol(strCol, &iIdxCol);		// get column index
@@ -217,39 +218,45 @@ void FileInstrBase<t_real>::SmoothData(const std::string& strCol, t_real dEps)
 		log_err("No such data column: \"", strCol, "\".");
 		return;
 	}
-	t_vecDat& vecDatOld = this->GetData();
-	const std::size_t iNumCols = vecDatOld.size();
-	const std::size_t iNumRows = vecDatOld[0].size();
-	t_vecDat vecDatNew(iNumCols);
-	std::vector<bool> vecValidRows(iNumRows, 1);
 
-	for(std::size_t iPt1=0; iPt1<iNumRows; ++iPt1)
+	while(1)
 	{
-		if(!vecValidRows[iPt1]) continue;
+		t_vecDat& vecDatOld = this->GetData();
+		const std::size_t iNumCols = vecDatOld.size();
+		const std::size_t iNumRows = vecDatOld[0].size();
+		t_vecDat vecDatNew(iNumCols);
+		std::vector<bool> vecValidRows(iNumRows, 1);
 
-		t_vecVals vecVals(iNumCols, 0);
-		std::size_t iNumUnited = 0;
-		for(std::size_t iPt2=iPt1; iPt2<iNumRows; ++iPt2)
+		for(std::size_t iPt1=0; iPt1<iNumRows; ++iPt1)
 		{
-			if(!vecValidRows[iPt2]) continue;
-			if(std::abs(vecDatOld[iIdxCol][iPt1]-vecDatOld[iIdxCol][iPt2]) <= dEps)
+			if(!vecValidRows[iPt1]) continue;
+
+			t_vecVals vecVals(iNumCols, 0);
+			std::size_t iNumUnited = 0;
+			for(std::size_t iPt2=iPt1; iPt2<iNumRows; ++iPt2)
 			{
-				for(std::size_t iCol=0; iCol<iNumCols; ++iCol)
-					vecVals[iCol] += vecDatOld[iCol][iPt2];
-				++iNumUnited;
-				vecValidRows[iPt2] = 0;
+				if(!vecValidRows[iPt2]) continue;
+				if(std::abs(vecDatOld[iIdxCol][iPt1]-vecDatOld[iIdxCol][iPt2]) <= dEps)
+				{
+					for(std::size_t iCol=0; iCol<iNumCols; ++iCol)
+						vecVals[iCol] += vecDatOld[iCol][iPt2];
+					++iNumUnited;
+					vecValidRows[iPt2] = 0;
+				}
+			}
+
+			for(std::size_t iCol=0; iCol<iNumCols; ++iCol)
+			{
+				vecVals[iCol] /= t_real(iNumUnited);
+				vecDatNew[iCol].push_back(vecVals[iCol]);
 			}
 		}
 
-		for(std::size_t iCol=0; iCol<iNumCols; ++iCol)
-		{
-			vecVals[iCol] /= t_real(iNumUnited);
-			vecDatNew[iCol].push_back(vecVals[iCol]);
-		}
+		vecDatOld = vecDatNew;
+		// if no iteration requested or no more change -> break
+		if(!bIterate || iNumRows==vecDatNew[0].size())
+			break;
 	}
-
-	//tl::log_debug("Old row count: ", iNumRows, ", new row count: ", vecDatNew[0].size());
-	vecDatOld = vecDatNew;
 }
 
 
