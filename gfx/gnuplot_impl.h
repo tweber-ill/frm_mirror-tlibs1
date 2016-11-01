@@ -74,7 +74,7 @@ void GnuPlot<t_real>::SetTerminal(int iWnd, const char* pcBackend)
 		<< "size 640,480 "
 		<< "enhanced "
 		<< "font \"NimbusSanL-Regu,12\" "
-//		<< "title \"" << "Plot " << (iWnd+1) << "\" " 
+//		<< "title \"" << "Plot " << (iWnd+1) << "\" "
 		<< "persist "
 //		<< "noraise "
 		<< "dashed "
@@ -92,11 +92,11 @@ void GnuPlot<t_real>::SetFileTerminal(const char* pcFile)
 
 	if(str_is_equal(strExt, std::string("pdf"), 0))
 	{
-		(*m_postr) << "set term pdf enhanced color font \"NimbusSanL-Regu,16\" \n";
+		(*m_postr) << "set term pdf enhanced color font \"NimbusSanL-Regu,16\"\n";
 	}
 	else if(str_is_equal(strExt, std::string("ps"), 0))
 	{
-		(*m_postr) << "set term postscript eps enhanced color font \"NimbusSanL-Regu,16\" \n";
+		(*m_postr) << "set term postscript eps enhanced color font \"NimbusSanL-Regu,16\"\n";
 	}
 	else
 	{
@@ -256,6 +256,9 @@ void GnuPlot<t_real>::FinishPlot()
 			if(!!ofCmd)
 			{
 				ofCmd << "#!/usr/bin/gnuplot -p\n\n";
+				ofCmd << "#set term pdf enhanced color font \"NimbusSanL-Regu,16\"\n";
+				ofCmd << "#set output \"" << m_strCmdFileOutput << ".pdf\"\n\n";
+
 				ofCmd << strCmd << "\n";
 				ofCmd.close();
 				m_strCmdFileOutput = "";
