@@ -195,7 +195,7 @@ generate_supercell(const Lattice<t_real>& latt,
  * @param vecB "b" coefficients
  * @param c "c" coefficient
  * @return form factor
- * @desc: see Waasmaier and Kirfel, Acta Cryst. A51, 416-431 (1995)
+ * @desc see: Waasmaier and Kirfel, Acta Cryst. A51, 416-431 (1995)
  */
 template<class T=double, template<class...> class t_cont>
 T formfact(T G, const t_cont<T>& vecA, const t_cont<T>& vecB, T c)
@@ -223,10 +223,11 @@ T formfact(T G, const t_cont<T>& vecA, const t_cont<T>& vecB, T c)
  * @param pF0 optional total form factor.
  * @param dVuc optionally normalise by the unit cell volume
  * @return structure factor
+ * @desc see: Shirane, p. 25, equ. 2.26
  */
 template<typename T = double, typename t_ff = std::complex<T>,
 	class t_vec = ublas::vector<T>,
-	template<class ...> class t_cont=std::initializer_list>
+	template<class ...> class t_cont = std::initializer_list>
 std::complex<T> structfact(const t_cont<t_vec>& lstAtoms, const t_vec& vecG,
 	const t_cont<t_ff>& lstf = t_cont<t_ff>(),
 	t_ff *pF0 = nullptr, T dVuc = T(-1))

@@ -122,7 +122,91 @@ std::tuple<T,T,T> mag_formfact_f(T Q, T L, T S, T J,
 }
 // ----------------------------------------------------------------------------
 
+/**
+ * spin S perpendicular to scattering vector Q
+ * @desc see: Shirane, p. 37, equ. 2.63
+ */
+template<class t_vec = ublas::vector<double>>
+t_vec get_S_perp_Q(const t_vec& S, const t_vec& Q)
+{
+	t_vec Qnorm = Q / ublas::norm_2(Q);
+	return S - mult<t_vec, t_vec>(Qnorm, S)*Qnorm;
+}
 
+/**
+ * calculates the magnetic structure factor Fm
+ * @param lstAtoms list of atom positions
+ * @param lstAtoms list of spins
+ * @param vecG lattice vector
+ * @param lstf G-dependent Atomic form factors (x-rays) or coherent scattering length (neutrons)
+ * @param lstg g factors, 2 if none given
+ * @param pF0 optional total form factor.
+ * @param dVuc optionally normalise by the unit cell volume
+ * @return structure factor
+ * @desc see: Shirane, p. 40, equ. 2.81
+ */
+template<typename T = double, typename t_ff = std::complex<T>,
+	template<class...> class t_vec = ublas::vector,
+	template<class ...> class t_cont = std::initializer_list>
+t_vec<std::complex<T>> structfact_mag(const t_cont<t_vec<T>>& lstAtoms,
+	const t_cont<t_vec<T>>& lstS, const t_vec<T>& vecG,
+	const t_cont<t_ff>& lstf = t_cont<t_ff>(),
+	const t_cont<T>& lstg = t_cont<T>(),
+	t_ff *pF0 = nullptr, T dVuc = T(-1))
+{
+	constexpr std::complex<T> i(0., 1.);
+	t_vec<std::complex<T>> Fm = make_vec<t_vec<std::complex<T>>>({{0., 0.},{0., 0.},{0., 0.}});
+
+	using t_iter_atoms = typename t_cont<t_vec<T>>::const_iterator;
+	using t_iter_ffact = typename t_cont<t_ff>::const_iterator;
+	using t_iter_spin = typename t_cont<t_vec<T>>::const_iterator;
+	using t_iter_g = typename t_cont<T>::const_iterator;
+
+	t_iter_atoms iterAtom = lstAtoms.begin();
+	t_iter_ffact iterFFact = lstf.begin();
+	t_iter_spin iterSpin = lstS.begin();
+	t_iter_g iterg = lstg.begin();
+
+	if(pF0) *pF0 = t_ff(0);
+
+	for(; iterAtom != lstAtoms.end(); ++iterAtom)
+	{
+		// only use form factors when available
+		t_ff tFF = T(1);
+		if(iterFFact != lstf.end())
+			tFF = *iterFFact;
+
+		// use g=2 if none given
+		T g = T(2);
+		if(iterg != lstg.end())
+			g = *iterg;
+
+		const t_vec<T>& vecS = *iterSpin;
+		t_vec<std::complex<T>> vecSperp = get_S_perp_Q<t_vec<T>>(vecS, vecG);
+
+		Fm += g * tFF * vecSperp * std::exp(i * (mult<t_vec<T>, t_vec<T>>(vecG, *iterAtom)));
+		if(pF0) *pF0 += tFF;
+
+		// if there is only one form factor in the list, use it for all positions
+		if(iterFFact!=lstf.end() && std::next(iterFFact)!=lstf.end())
+			++iterFFact;
+		// if there is only one g factor in the list, use it for all positions
+		if(iterg!=lstg.end() && std::next(iterg)!=lstg.end())
+			++iterg;
+		// if there is only one spin in the list, use it for all positions
+		if(iterSpin!=lstS.end() && std::next(iterSpin)!=lstS.end())
+			++iterSpin;
+	}
+
+	// if unit cell volume is given, normalise by it
+	if(dVuc > T(0)) Fm /= dVuc;
+	return Fm;
+}
+
+
+
+
+// ----------------------------------------------------------------------------
 /**
  * metropolis algorithm
  */
