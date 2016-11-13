@@ -38,7 +38,7 @@ int main()
 			tl::make_vec({h*2.*M_PI/a, k*2.*M_PI/a, l*2.*M_PI/a}),
 			{1., 1.});
 
-		std::cout << "Fm = " << F << std::endl;
+		std::cout << "Fm = " << Fm << std::endl;
 	}
 	return 0;
 }

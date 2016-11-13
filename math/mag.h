@@ -25,7 +25,7 @@ namespace tl {
 // ----------------------------------------------------------------------------
 
 /**
- * Simple ferromagnetic dispersion (see e.g. Squires p. 161)
+ * Simple ferromagnetic dispersion (see e.g. (Squires 2012) p. 161)
  * @param lstNeighbours list of distances to neighbour atoms and their coupling constants
  * @param vecq q position
  * @param tS spin
@@ -88,7 +88,7 @@ T mag_formfact(T Q, T L, T S,
 
 /**
  * form factor for transition metals (d orbitals, spin-only)
- * @desc see: Squires, p. 138
+ * @desc see: (Squires 2012), p. 138
  * @desc also see: http://www.neutron.ethz.ch/research/resources/magnetic-form-factors.html
  */
 template<class T=double, template<class...> class t_vec=std::initializer_list>
@@ -104,7 +104,7 @@ std::tuple<T,T,T> mag_formfact_d(T Q, T g,
 
 /**
  * form factor for rare earths (f orbitals, LS)
- * @desc see: Squires, p. 139
+ * @desc see: (Squires 2012), p. 139
  * @desc also see: http://www.neutron.ethz.ch/research/resources/magnetic-form-factors.html
  */
 template<class T=double, template<class...> class t_vec=std::initializer_list>
@@ -124,7 +124,7 @@ std::tuple<T,T,T> mag_formfact_f(T Q, T L, T S, T J,
 
 /**
  * spin S perpendicular to scattering vector Q
- * @desc see: Shirane, p. 37, equ. 2.63
+ * @desc see: (Shirane 2002), p. 37, equ. 2.63
  */
 template<class t_vec = ublas::vector<double>>
 t_vec get_S_perp_Q(const t_vec& S, const t_vec& Q)
@@ -143,7 +143,7 @@ t_vec get_S_perp_Q(const t_vec& S, const t_vec& Q)
  * @param pF0 optional total form factor.
  * @param dVuc optionally normalise by the unit cell volume
  * @return structure factor
- * @desc see: Shirane, p. 40, equ. 2.81
+ * @desc see: (Shirane 2002), p. 40, equ. 2.81
  */
 template<typename T = double, typename t_ff = std::complex<T>,
 	template<class...> class t_vec = ublas::vector,
@@ -167,6 +167,13 @@ t_vec<std::complex<T>> structfact_mag(const t_cont<t_vec<T>>& lstAtoms,
 	t_iter_spin iterSpin = lstS.begin();
 	t_iter_g iterg = lstg.begin();
 
+	/*const T cFact = tl::get_r_e<T>() * tl::get_gamma_n<T>() * T(0.5) *
+		tl::get_one_second<T>() * tl::get_one_tesla<T>()
+		/ (tl::get_one_meter<T>() * T(1e-15));*/
+	const T cFact = tl::get_r_e<T>() *
+		(-tl::get_mu_n<T>()/tl::get_mu_N<T>()) * T(0.5)
+		/ (tl::get_one_meter<T>() * T(1e-15));	// in fm
+
 	if(pF0) *pF0 = t_ff(0);
 
 	for(; iterAtom != lstAtoms.end(); ++iterAtom)
@@ -184,7 +191,8 @@ t_vec<std::complex<T>> structfact_mag(const t_cont<t_vec<T>>& lstAtoms,
 		const t_vec<T>& vecS = *iterSpin;
 		t_vec<std::complex<T>> vecSperp = get_S_perp_Q<t_vec<T>>(vecS, vecG);
 
-		Fm += g * tFF * vecSperp * std::exp(i * (mult<t_vec<T>, t_vec<T>>(vecG, *iterAtom)));
+		Fm += cFact * g * tFF * vecSperp *
+			std::exp(i * (mult<t_vec<T>, t_vec<T>>(vecG, *iterAtom)));
 		if(pF0) *pF0 += tFF;
 
 		// if there is only one form factor in the list, use it for all positions
@@ -209,6 +217,7 @@ t_vec<std::complex<T>> structfact_mag(const t_cont<t_vec<T>>& lstAtoms,
 // ----------------------------------------------------------------------------
 /**
  * metropolis algorithm
+ * @desc see e.g. (Scherer 2010), p. 104 or (Schroeder 2000), p. 346
  */
 template<class t_real, std::size_t DIM,
 	template<class, std::size_t, class...> class t_arr_1d = boost::array,

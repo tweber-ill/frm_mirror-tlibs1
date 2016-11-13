@@ -223,7 +223,7 @@ T formfact(T G, const t_cont<T>& vecA, const t_cont<T>& vecB, T c)
  * @param pF0 optional total form factor.
  * @param dVuc optionally normalise by the unit cell volume
  * @return structure factor
- * @desc see: Shirane, p. 25, equ. 2.26
+ * @desc see: (Shirane 2002), p. 25, equ. 2.26
  */
 template<typename T = double, typename t_ff = std::complex<T>,
 	class t_vec = ublas::vector<T>,
