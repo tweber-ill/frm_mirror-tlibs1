@@ -468,11 +468,31 @@ t_mat translation_matrix(const t_cont& lst)
 {
 	t_mat mat = unit_matrix<t_mat>(lst.size()+1);
 
+	const std::size_t iJ = mat.size2();
 	std::size_t i = 0;
 	for(typename t_cont::const_iterator iter=lst.begin(); iter!=lst.end(); ++iter, ++i)
-		mat(i, mat.size2()-1) = *iter;
+		mat(i, iJ-1) = *iter;
 
 	return mat;
+}
+
+/**
+ * is mat a translation matrix in homogeneous coords?
+ */
+template<class t_mat = ublas::matrix<double>>
+bool is_translation_matrix(const t_mat& mat)
+{
+	using T = typename t_mat::value_type;
+
+	const std::size_t iI = mat.size1();
+	const std::size_t iJ = mat.size2();
+
+	for(std::size_t i=0; i<iI-1; ++i)
+	{
+		if(!float_equal<T>(mat(i, iJ-1), T(0)))
+			return true;
+	}
+	return false;
 }
 
 
@@ -1236,7 +1256,7 @@ bool vec_is_collinear(const t_vec& _vec1, const t_vec& _vec2, T eps = get_epsilo
  */
 template<typename vec_type>
 typename vec_type::value_type vec_angle(const vec_type& vec0,
-	const vec_type& vec1, const vec_type* pvec_norm=0)
+	const vec_type& vec1, const vec_type* pvec_norm=nullptr)
 {
 	typedef typename vec_type::value_type real_type;
 
@@ -1249,9 +1269,6 @@ typename vec_type::value_type vec_angle(const vec_type& vec0,
 	}
 	if(vec0.size() == 3)
 	{
-		//real_type dNorm0 = ublas::norm_2(vec0);
-		//real_type dNorm1 = ublas::norm_2(vec1);
-
 		real_type dC = ublas::inner_prod(vec0, vec1);
 		vec_type veccross = cross_3<vec_type>(vec0, vec1);
 		real_type dS = ublas::norm_2(veccross);
