@@ -11,6 +11,7 @@
 
 #include <boost/math/quaternion.hpp>
 #include "linalg.h"
+#include "spin.h"
 
 namespace tl {
 
@@ -179,7 +180,6 @@ t_vec quat_vec_prod(const t_quat& q, const t_vec& v)
 // ------------------------------------------------------------------------------------------------
 
 
-
 /**
  * quat -> complex 2x2 matrix
  * @desc see e.g. (Scherer 2010), p.173
@@ -199,7 +199,6 @@ t_mat<std::complex<t_real>> quat_to_cmat(const t_quat& quat)
 		std::complex<t_real>(quat.R_component_4()) * vecS[2];
 	return mat;
 }
-
 
 
 // ------------------------------------------------------------------------------------------------
@@ -337,12 +336,12 @@ quat_type rotation_quat_z(typename quat_type::value_type angle)
 // Euler angles
 
 /**
- * euler angles -> quat
+ * XYZ euler angles -> quat
  * @desc see: (Kuipers 2002), pp. 166, 167
  */
 template<class t_quat = math::quaternion<double>,
 	typename T = typename t_quat::value_type>
-t_quat euler_to_quat(T phi, T theta, T psi)
+t_quat euler_to_quat_xyz(T phi, T theta, T psi)
 {
 	t_quat q1 = rotation_quat_x<t_quat>(phi);
 	t_quat q2 = rotation_quat_y<t_quat>(theta);
@@ -351,12 +350,27 @@ t_quat euler_to_quat(T phi, T theta, T psi)
 	return q3 * q2 * q1;
 }
 
+/**
+ * ZXZ euler angles -> quat
+ * @desc see: (Kuipers 2002), pp. 166, 167
+ */
+template<class t_quat = math::quaternion<double>,
+	typename T = typename t_quat::value_type>
+t_quat euler_to_quat_zxz(T phi, T theta, T psi)
+{
+	t_quat q1 = rotation_quat_z<t_quat>(phi);
+	t_quat q2 = rotation_quat_x<t_quat>(theta);
+	t_quat q3 = rotation_quat_z<t_quat>(psi);
+
+	return q3 * q2 * q1;
+}
+
 
 /**
- * quat -> euler angles
+ * quat -> XYZ euler angles
  */
 template<class quat_type, typename T>
-std::vector<T> quat_to_euler(const quat_type& quat)
+std::vector<T> quat_to_euler_xyz(const quat_type& quat)
 {
 	T q[] = { quat.R_component_1(), quat.R_component_2(),
 		quat.R_component_3(), quat.R_component_4() };
@@ -368,6 +382,21 @@ std::vector<T> quat_to_euler(const quat_type& quat)
 	T psi = std::atan2(T(2)*(q[0]*q[3] + q[1]*q[2]), T(1)-T(2)*(q[2]*q[2] + q[3]*q[3]));
 
 	return std::vector<T>({ phi, theta, psi });
+}
+
+
+// use XYZ version by default
+template<class t_quat = math::quaternion<double>,
+	typename T = typename t_quat::value_type>
+t_quat euler_to_quat(T phi, T theta, T psi)
+{
+	return euler_to_quat_xyz<t_quat, T>(phi, theta, psi);
+}
+
+template<class quat_type, typename T>
+std::vector<T> quat_to_euler(const quat_type& quat)
+{
+	return quat_to_euler_xyz<quat_type, T>(quat);
 }
 
 // ------------------------------------------------------------------------------------------------

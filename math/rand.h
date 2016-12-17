@@ -25,12 +25,13 @@
 
 namespace tl {
 
-extern std::mt19937/*_64*/ g_randeng;
+extern std::mt19937& get_randeng();
 
 
 // ----------------------------------------------------------------------------
 // initialisers
 
+extern unsigned int get_rand_seed();
 extern void init_rand();
 extern void init_rand_seed(unsigned int uiSeed);
 
@@ -53,7 +54,7 @@ template<typename INT>
 INT rand_int(INT iMin, INT iMax)
 {
 	std::uniform_int_distribution<INT> dist(iMin, iMax);
-	return dist(g_randeng);
+	return dist(get_randeng());
 }
 
 /**
@@ -63,7 +64,7 @@ template<typename REAL>
 REAL rand_real(REAL dMin, REAL dMax)
 {
 	std::uniform_real_distribution<REAL> dist(dMin, dMax);
-	return dist(g_randeng);
+	return dist(get_randeng());
 }
 
 
@@ -136,7 +137,7 @@ template<typename REAL>
 REAL rand_norm(REAL dMu, REAL dSigma)
 {
 	std::normal_distribution<REAL> dist(dMu, dSigma);
-	return dist(g_randeng);
+	return dist(get_randeng());
 }
 
 /**
@@ -146,7 +147,7 @@ template<typename REAL>
 REAL rand_lognorm(REAL dMu, REAL dSigma)
 {
 	std::lognormal_distribution<REAL> dist(dMu, dSigma);
-	return dist(g_randeng);
+	return dist(get_randeng());
 }
 
 /**
@@ -156,7 +157,7 @@ template<typename REAL>
 REAL rand_cauchy(REAL dMu, REAL dSigma)
 {
 	std::cauchy_distribution<REAL> dist(dMu, dSigma);
-	return dist(g_randeng);
+	return dist(get_randeng());
 }
 
 /**
@@ -166,7 +167,7 @@ template<typename REAL=double>
 REAL rand_chi2(REAL dDof)
 {
 	std::chi_squared_distribution<REAL> dist(dDof);
-	return dist(g_randeng);
+	return dist(get_randeng());
 }
 
 /**
@@ -176,7 +177,7 @@ template<typename REAL=double>
 REAL rand_student(REAL dDof)
 {
 	std::student_t_distribution<REAL> dist(dDof);
-	return dist(g_randeng);
+	return dist(get_randeng());
 }
 
 /**
@@ -186,7 +187,7 @@ template<typename REAL=double>
 REAL rand_fisher(REAL dDof1, REAL dDof2)
 {
 	std::fisher_f_distribution<REAL> dist(dDof1, dDof2);
-	return dist(g_randeng);
+	return dist(get_randeng());
 }
 
 /**
@@ -196,7 +197,7 @@ template<typename REAL=double>
 REAL rand_gamma(REAL dMu, REAL dSigma)
 {
 	std::gamma_distribution<REAL> dist(dMu, dSigma);
-	return dist(g_randeng);
+	return dist(get_randeng());
 }
 
 /**
@@ -206,7 +207,7 @@ template<typename REAL=double>
 REAL rand_exp(REAL dLam)
 {
 	std::exponential_distribution<REAL> dist(dLam);
-	return dist(g_randeng);
+	return dist(get_randeng());
 }
 
 
@@ -221,7 +222,7 @@ template<typename INT, typename REAL=double>
 INT rand_poisson(REAL dLam)
 {
 	std::poisson_distribution<INT> dist(dLam);
-	return dist(g_randeng);
+	return dist(get_randeng());
 }
 
 /**
@@ -231,7 +232,7 @@ template<typename INT, typename REAL=double>
 INT rand_binomial(INT n, REAL p)
 {
 	std::binomial_distribution<INT> dist(n, p);
-	return dist(g_randeng);
+	return dist(get_randeng());
 }
 
 
@@ -244,9 +245,12 @@ template<class _t_func,
 struct _rand_nd
 {
 	static constexpr std::size_t iNumArgs = boost::function_traits<_t_func>::arity;
+
 	using t_real = typename boost::function_traits<_t_func>::result_type;
 	using t_func = std::function<_t_func>;
+
 	t_func m_func;
+	bool m_bUseThreads = 0;
 
 	_rand_nd(const t_func& func) : m_func(func) {}
 
@@ -262,6 +266,10 @@ struct _rand_nd
 		t_vec<t_iter> vecIters;
 		for(const t_vec<t_real>& vec : vecParams)
 			vecIters.push_back(vec.begin());
+
+		std::launch lpol = std::launch::deferred;
+		if(m_bUseThreads) lpol |= std::launch::async;
+
 		while(1)
 		{
 			t_vec<t_real> vecArgs;
@@ -273,9 +281,7 @@ struct _rand_nd
 				return tl::call<iNumArgs, t_func, t_real, t_vec>(m_func, vecArgs);
 			};
 
-			vecFut.emplace_back(
-				std::async(std::launch::deferred | std::launch::async,
-					fkt));
+			vecFut.emplace_back(std::async(lpol, fkt));
 
 			for(t_iter& iter : vecIters)
 				++iter;

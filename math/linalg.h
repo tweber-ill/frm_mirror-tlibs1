@@ -518,7 +518,7 @@ mat_type rotation_matrix(const vec_type& _vec, T angle)
 		c = std::cos(angle);
 	}
 
-	return (T(1) - c) * ublas::outer_prod(vec,vec) +
+	return (T(1) - c) * ublas::outer_prod(vec, vec) +
 		c * unit_matrix(vec.size()) +
 		s * skew(vec);
 }
@@ -1403,6 +1403,27 @@ ublas::matrix<T> covariance(const std::vector<ublas::vector<T>>& vecVals,
 }
 
 
+/**
+ * tensor product
+ * see e.g.: (Arfken 2013), p. 109
+ */
+template<class t_mat = ublas::matrix<double>>
+t_mat tensor_prod(const t_mat& mat1, const t_mat& mat2)
+{
+	t_mat mat(mat1.size1()*mat2.size1(), mat1.size2()*mat2.size2());
+
+	for(std::size_t i=0; i<mat1.size1(); ++i)
+	{
+		for(std::size_t j=0; j<mat1.size2(); ++j)
+		{
+			t_mat matElem = mat1(i,j)*mat2;
+			submatrix_copy(mat, matElem,
+				i*mat2.size1(), j*mat2.size2());
+		}
+	}
+	return mat;
+}
+
 
 
 // --------------------------------------------------------------------------------
@@ -2010,66 +2031,6 @@ std::vector<t_vec> get_ortho_rhs(const std::vector<t_vec>& vecs)
 	vecOrtho.push_back(vecUp);
 
 	return vecOrtho;
-}
-
-// --------------------------------------------------------------------------------
-
-
-template<class t_mat = ublas::matrix<double>>
-t_mat tensor_prod(const t_mat& mat1, const t_mat& mat2)
-{
-	t_mat mat(mat1.size1()*mat2.size1(), mat1.size2()*mat2.size2());
-
-	for(std::size_t i=0; i<mat1.size1(); ++i)
-	{
-		for(std::size_t j=0; j<mat1.size2(); ++j)
-		{
-			t_mat matElem = mat1(i,j)*mat2;
-			submatrix_copy(mat, matElem,
-				i*mat2.size1(), j*mat2.size2());
-		}
-	}
-	return mat;
-}
-
-template<template<class...> class t_mat=ublas::matrix,
-	template<class...> class t_vec=ublas::vector,
-	class t_real = double>
-t_vec<t_mat<std::complex<t_real>>> get_spin_matrices()
-{
-	t_vec<t_mat<std::complex<t_real>>> vec(3);
-	const std::complex<t_real> i(0,1);
-
-	vec[0] = make_mat<t_mat<std::complex<t_real>>>({{0,1}, {1,0}});
-	vec[1] = make_mat<t_mat<std::complex<t_real>>>({{0,-i}, {i,0}});
-	vec[2] = make_mat<t_mat<std::complex<t_real>>>({{1,0}, {0,-1}});
-
-	return vec;
-}
-
-template<template<class...> class t_mat=ublas::matrix,
-	template<class...> class t_vec=ublas::vector,
-	class t_real = double>
-t_vec<t_mat<std::complex<t_real>>> get_ladder_ops()
-{
-	t_vec<t_mat<std::complex<t_real>>> vecS = get_spin_matrices();
-
-	t_vec<t_mat<std::complex<t_real>>> vec(2);
-	const std::complex<t_real> i(0,1);
-
-	vec[0] = vecS[0] + i*vecS[1];	// up
-	vec[1] = vecS[0] - i*vecS[1];	// down
-
-	return vec;
-}
-
-
-template<class t_mat=ublas::matrix<double>>
-t_mat commutator(const t_mat& A, const t_mat& B)
-{
-	t_mat AB = ublas::prod(A, B);
-	t_mat BA = ublas::prod(B, A);
-	return AB - BA;
 }
 
 }
