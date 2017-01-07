@@ -336,6 +336,34 @@ public:
 	}
 #endif
 
+	/**
+	 * get a list of children to a node
+	 */
+	std::vector<t_str> GetChildNodes(const t_str& _strAddr) const
+	{
+		std::vector<t_str> vecRet;
+
+		t_str strAddr = _strAddr;
+		trim(strAddr);
+
+		if(strAddr.length() == 0)
+			return vecRet;
+		if(strAddr[0] == m_chSep)
+			strAddr = strAddr.substr(1);
+
+		try
+		{
+			prop::string_path<t_str, prop::id_translator<t_str>> path(strAddr, m_chSep);
+
+			for(const auto &node : m_prop.get_child(path))
+				vecRet.push_back(node.first);
+		}
+		catch(const prop::ptree_bad_path& ex) {}
+		catch(const std::exception& ex) {}
+
+		return vecRet;
+	}
+
 	bool Exists(const t_str& strAddr) const
 	{
 		bool bOk = 0;
