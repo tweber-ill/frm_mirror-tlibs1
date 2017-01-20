@@ -51,10 +51,11 @@ void GnuPlot<t_real>::Init()
 		return;
 	}
 
-	m_pfds.reset(new ios::file_descriptor_sink(fileno(m_pipe), ios::close_handle /*ios::never_close_handle*/));
+	m_pfds.reset(new ios::file_descriptor_sink(fileno(m_pipe), ios::close_handle));
 	m_psbuf.reset(new ios::stream_buffer<ios::file_descriptor_sink>(*m_pfds));
 	m_postr.reset(new std::ostream(m_psbuf.get()));
 
+	m_postr->precision(m_iPrec);
 	(*m_postr) << "set grid\n";
 	(*m_postr) << "set nokey\n";
 	//(*m_postr) << "set noborder\n";
@@ -90,7 +91,6 @@ void GnuPlot<t_real>::SetFileTerminal(const char* pcFile, t_real dW, t_real dH)
 
 	std::string strFile = pcFile;
 	std::string strExt = get_fileext(strFile);
-	//std::cout << "File: " << strFile << "\nExtension: " << strExt << std::endl;
 
 	if(str_is_equal(strExt, std::string("pdf"), 0))
 	{
@@ -117,6 +117,14 @@ void GnuPlot<t_real>::SetFileTerminal(const char* pcFile, t_real dW, t_real dH)
 	}
 
 	(*m_postr) << "set output \"" << strFile << "\"\n";
+}
+
+template<class t_real>
+void GnuPlot<t_real>::SetPrec(unsigned int iPrec)
+{
+	m_iPrec = iPrec;
+	if(m_postr)
+		m_postr->precision(m_iPrec);
 }
 
 template<class t_real>
@@ -163,19 +171,19 @@ void GnuPlot<t_real>::SimplePlot2d(const std::vector<std::vector<t_real> >& vec,
 {
 	if(!IsReady()) return;
 
-	std::vector<unsigned int> vecSizes;
+	std::vector<std::size_t> vecSizes;
 	vecSizes.reserve(vec.size());
 
-	for(unsigned int iY=0; iY<vec.size(); ++iY)
+	for(std::size_t iY=0; iY<vec.size(); ++iY)
 		vecSizes.push_back(vec[iY].size());
 
-	std::vector<unsigned int>::iterator iterMin =
+	std::vector<std::size_t>::iterator iterMin =
 		std::min_element(vecSizes.begin(), vecSizes.end());
-	unsigned int iXCntMin = *iterMin;
+	std::size_t iXCntMin = *iterMin;
 
 
-	unsigned int iYDim = vec.size();
-	unsigned int iXDim = iXCntMin;
+	std::size_t iYDim = vec.size();
+	std::size_t iXDim = iXCntMin;
 
 	// invalid values select image dimensions
 	if(dMinX > dMaxX)
@@ -191,7 +199,7 @@ void GnuPlot<t_real>::SimplePlot2d(const std::vector<std::vector<t_real> >& vec,
 
 	// ----------------------------------------
 	// ranges
-	(*m_postr) << "set tics out scale 0.8\n";
+	(*m_postr) << "set tics out scale 0.75\n";
 
 	t_real dRangeMinX = tic_trafo<t_real>(iXDim, dMinX, dMaxX, 0, -0.5);
 	t_real dRangeMaxX = tic_trafo<t_real>(iXDim, dMinX, dMaxX, 0, t_real(iXDim)-0.5);
@@ -204,21 +212,23 @@ void GnuPlot<t_real>::SimplePlot2d(const std::vector<std::vector<t_real> >& vec,
 
 	// ----------------------------------------
 	// tics
-	std::ostringstream ostrTicsX, ostrTicsY;
-	ostrTicsX << "(" << dMinX << " + " << "($1)/" << iXDim
-			<< " * (" << dMaxX << "-" << dMinX << "))";
-	ostrTicsY << "(" << dMinY << " + " << "($2)/" << iYDim
-			<< " * (" << dMaxY << "-" << dMinY << "))";
+	std::ostringstream ostrTics;
+	ostrTics.precision(m_iPrec);
 
-	std::string strTics = "using " + ostrTicsX.str() + ":" + ostrTicsY.str() + ":3";
+	ostrTics << "using (" << dMinX << " + " << "($1)/" << iXDim
+		<< " * (" << dMaxX << "-" << dMinX << "))" << " : "
+		<< "(" << dMinY << " + " << "($2)/" << iYDim
+		<< " * (" << dMaxY << "-" << dMinY << "))" << " : ($3)";
+
+	std::string strTics = ostrTics.str();
 	// ----------------------------------------
 
 	(*m_postr) << "plot \"-\" " << strTics << " matrix with image\n";
 
 
-	for(unsigned int iY=0; iY<vec.size(); ++iY)
+	for(std::size_t iY=0; iY<vec.size(); ++iY)
 	{
-		for(unsigned int iX=0; iX<iXCntMin; ++iX)
+		for(std::size_t iX=0; iX<iXCntMin; ++iX)
 			(*m_postr) << vec[iY][iX] << " ";
 		(*m_postr) << "\n";
 	}
@@ -277,7 +287,6 @@ void GnuPlot<t_real>::FinishPlot()
 			}
 		}
 
-		//std::cout << "Plot cmd: " << strCmd << std::endl;
 		(*m_postr) << strCmd;
 		//(*m_postr) << "replot\n";
 		m_postr->flush();
@@ -291,6 +300,8 @@ std::string GnuPlot<t_real>::BuildCmd()
 	m_bHasLegend = 0;
 
 	std::ostringstream ostr;
+	ostr.precision(m_iPrec);
+
 	ostr << "plot ";
 
 	for(const PlotObj<t_real>& obj : m_vecObjs)
@@ -313,7 +324,6 @@ std::string GnuPlot<t_real>::BuildCmd()
 			ostrTmp << "with points";
 
 		ostrTmp << " pointtype 7 pointsize " << dSize;
-		//std::cout << "*** point size: " << dSize << std::endl;
 		strPointStyle = ostrTmp.str();
 
 
@@ -375,12 +385,13 @@ std::string GnuPlot<t_real>::BuildTable(const std::vector<t_real>& vecX, const s
 	const std::vector<t_real>& vecYErr, const std::vector<t_real>& vecXErr)
 {
 	std::ostringstream ostr;
+	ostr.precision(m_iPrec);
 
-	const unsigned int iSize = std::min(vecX.size(), vecY.size());
+	const std::size_t iSize = std::min(vecX.size(), vecY.size());
 	const bool bHasXErr = (vecXErr.size() != 0);
 	const bool bHasYErr = (vecYErr.size() != 0);
 
-	for(unsigned int iDat=0; iDat<iSize; ++iDat)
+	for(std::size_t iDat=0; iDat<iSize; ++iDat)
 	{
 		ostr << vecX[iDat] << " " << vecY[iDat];
 
@@ -501,9 +512,9 @@ void GnuPlot<t_real>::SetColorBarRange(t_real dMin, t_real dMax, bool bCyclic)
 	(*m_postr) << "set cbrange [" << dMin << ":" << dMax << "]\n";
 
 	if(bCyclic)
-		(*m_postr) << "set palette defined (0 \"blue\", 0.25 \"cyan\", 0.5 \"yellow\", 0.75 \"red\", 1 \"blue\")\n";
+		(*m_postr) << "set palette defined (0 \"#0000ff\", 0.33333 \"#ff0000\", 0.66666 \"#ff9900\", 1 \"#0000ff\")\n";
 	else
-		(*m_postr) << "set palette defined (0 \"blue\", 0.3333 \"cyan\", 0.6666 \"yellow\", 1 \"red\")\n";
+		(*m_postr) << "set palette defined (0 \"#0000ff\", 1 \"#ff0000\")\n";
 
 	m_postr->flush();
 }

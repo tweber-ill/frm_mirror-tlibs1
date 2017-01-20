@@ -1,4 +1,4 @@
-/*
+/**
  * abstract function model base classes
  * @author tweber
  * @date 2013

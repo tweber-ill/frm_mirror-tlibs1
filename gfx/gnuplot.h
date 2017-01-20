@@ -62,6 +62,7 @@ protected:
 	std::string m_strLegendPlacement = std::string("default");
 
 	std::string m_strCmdFileOutput;
+	unsigned int m_iPrec = 8;
 
 protected:
 	std::string BuildCmd();
@@ -112,6 +113,8 @@ public:
 
 	void SetLegendOpts(const std::string& strOpts) { m_strLegendOpts = strOpts; }
 	void SetLegendPlace(const std::string& strPlace) { m_strLegendPlacement = strPlace; }
+
+	void SetPrec(unsigned int iPrec);
 };
 
 }
