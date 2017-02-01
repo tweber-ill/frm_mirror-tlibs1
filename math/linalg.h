@@ -116,7 +116,7 @@ void resize_unity(t_mat& mat, std::size_t N)
 
 
 /**
- * converts vector
+ * converts vector t_vec<t_from> to t_vec<t_to>
  */
 template<class t_from, class t_to, template<class...> class t_vec = ublas::vector>
 t_vec<t_to> convert_vec(const t_vec<t_from>& vec)
@@ -131,6 +131,23 @@ t_vec<t_to> convert_vec(const t_vec<t_from>& vec)
 
 	return vecRet;
 }
+
+/**
+ * converts vector t_vec_from<t_from> to t_vec_to<t_to>
+ */
+template<class t_from, class t_to,
+	template<class...> class t_vec_from = std::vector,
+	template<class...> class t_vec_to = ublas::vector>
+t_vec_to<t_to> convert_vec_full(const t_vec_from<t_from>& vec)
+{
+	t_vec_to<t_to> vecRet(vec.size());
+
+	for(std::size_t i=0; i<vec.size(); ++i)
+		vecRet[i] = t_to(vec[i]);
+
+	return vecRet;
+}
+
 
 
 template<class vec_type>
