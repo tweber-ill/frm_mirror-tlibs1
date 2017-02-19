@@ -166,6 +166,53 @@ struct container_cast<t_to, t_from, t_cont, 1>
 	{ return vec; }
 };
 
+
+// ----------------------------------------------------------------------------
+
+
+/**
+ * converts container of container with t_from to container of container with t_to
+ */
+template<class t_to, class t_from, template<class...> class t_cont=std::vector,
+	bool bIsEqu = std::is_same<t_from, t_to>::value>
+struct container2_cast
+{
+	using t_from_al = std::allocator<t_from>;
+	using t_to_al = std::allocator<t_to>;
+
+	t_cont<t_cont<t_to, t_to_al>> operator()(const t_cont<t_cont<t_from, t_from_al>>& vec) const
+	{
+		t_cont<t_cont<t_to, t_to_al>> vecvecTo;
+		for(const auto& vecInner : vec)
+		{
+			t_cont<t_to, t_to_al> vecTo;
+			for(const t_from& t : vecInner)
+				vecTo.push_back(t_to(t));
+
+			vecvecTo.emplace_back(std::move(vecTo));
+		}
+
+		return vecvecTo;
+	}
+};
+
+/**
+ * if t_from == t_to  ->  return reference
+ */
+template<class t_to, class t_from, template<class...> class t_cont>
+struct container2_cast<t_to, t_from, t_cont, 1>
+{
+	using t_from_al = std::allocator<t_from>;
+	using t_to_al = std::allocator<t_to>;
+
+	const t_cont<t_cont<t_to, t_to_al>>& operator()(const t_cont<t_cont<t_from, t_from_al>>& vec) const
+	{ return vec; }
+
+	t_cont<t_cont<t_to, t_to_al>>& operator()(t_cont<t_cont<t_from, t_from_al>>& vec) const
+	{ return vec; }
+};
+
+
 // ----------------------------------------------------------------------------
 
 
