@@ -96,6 +96,19 @@ matrix_type unit_matrix(std::size_t N)
 
 
 /**
+ * create a vector of size N filled with value val
+ */
+template<class vector_type = ublas::vector<double>>
+vector_type fill_vector(std::size_t N, typename vector_type::value_type val)
+{
+	vector_type vec(N);
+	for(std::size_t i=0; i<N; ++i)
+		vec[i] = val;
+	return vec;
+}
+
+
+/**
  * resize matrix, filling up with unity
  */
 template<class t_mat = ublas::matrix<double>>

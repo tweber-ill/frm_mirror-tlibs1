@@ -18,7 +18,7 @@ int main()
 {
 	tl::Unkindness<t_real, t_vec> unk;
 	unk.Init(1000, tl::make_vec({0.,0.,0.}), tl::make_vec({1.,1.,1.}));
-
+	unk.Run();
 	
     return 0;
 }

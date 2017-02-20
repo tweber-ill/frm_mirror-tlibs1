@@ -24,6 +24,11 @@ struct Raven
 {
 	t_vec<t_real> vecPos, vecBestPos;
 	t_vec<t_real> vecVel;
+
+	void TimeStep(t_real dDelta)
+	{
+		vecPos += dDelta*vecVel;
+	}
 };
 
 
@@ -83,9 +88,52 @@ public:
 	}
 
 
-	void Run()
+	void Run()	// TODO
 	{
-		// TODO
+		if(!m_vecRavens.size()) return;
+		const std::size_t iDim = m_vecRavens[0].vecPos.size();
+
+		t_real dVelScale = 1;
+		t_real dPartScale = 1;
+		t_real dSwarmScale = 1;
+		t_real dTimeDelta = 1;
+
+		while(1)
+		{
+			t_vec<t_real> vec0 = fill_vector<t_vec<t_real>>(iDim, t_real(0));
+			t_vec<t_real> vec1 = fill_vector<t_vec<t_real>>(iDim, t_real(1));
+
+			for(Raven<t_real, t_vec>& raven : m_vecRavens)
+			{
+				// random vectors
+				t_vec<t_real> vec01_part =
+					convert_vec_full<t_real, t_real, std::vector, t_vec>(
+						rand_minmax_nd<t_real, std::vector>(
+						convert_vec_full<t_real, t_real, t_vec, std::vector>(vec0),
+						convert_vec_full<t_real, t_real, t_vec, std::vector>(vec1)));
+				
+				t_vec<t_real> vec01_swarm =
+					convert_vec_full<t_real, t_real, std::vector, t_vec>(
+						rand_minmax_nd<t_real, std::vector>(
+						convert_vec_full<t_real, t_real, t_vec, std::vector>(vec0),
+						convert_vec_full<t_real, t_real, t_vec, std::vector>(vec1)));
+
+				// new velocity
+				raven.vecVel = dVelScale*raven.vecVel
+					+ dPartScale*ublas::element_prod(vec01_part, raven.vecBestPos-raven.vecPos)
+					+ dSwarmScale*ublas::element_prod(vec01_swarm, m_vecBestPos-raven.vecPos);
+
+				raven.TimeStep(dTimeDelta);
+
+				// new best minimum positions
+				if(m_func(raven.vecPos) < m_func(raven.vecBestPos))
+				{
+					raven.vecBestPos = raven.vecPos;
+					if(m_func(raven.vecPos) < m_func(m_vecBestPos))
+						m_vecBestPos = raven.vecPos;
+				}
+			}
+		}
 	}
 };
 
