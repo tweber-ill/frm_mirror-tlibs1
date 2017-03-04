@@ -58,7 +58,7 @@ fit_sesine(x, y, yerr, thefreq=-1.)
 		print("Using frequency: " + thefreq);
 	}
 
-	hints = [ymax-ymid, thefreq, pi, ymid];
+	hints = [ymax-ymid, thefreq, 0., ymid];
 	hints_err = [0.1*hints[0], 0.1*hints[1], pi, 0.1*hints[2]];
 
 	thefit = fit("sesine_model", x, y, yerr,

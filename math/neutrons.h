@@ -106,6 +106,7 @@ t_wavenumber<Sys,Y> v2k(const t_velocity<Sys,Y>& v)
 
 
 
+
 // --------------------------------------------------------------------------------
 // E = hbar*omega
 
@@ -222,6 +223,21 @@ t_length<Sys,Y> bragg_recip_lam(const t_wavenumber<Sys,Y>& Q,
 {
 	return Y(4)*get_pi<Y>() / Q * units::sin(twotheta/Y(2)) / n;
 }
+
+
+// G = 2pi / d
+template<class Sys, class Y>
+t_length<Sys,Y> G2d(const t_wavenumber<Sys,Y>& G)
+{
+	return Y(2.)*get_pi<Y>() / G;
+}
+
+template<class Sys, class Y>
+t_wavenumber<Sys,Y> d2G(const t_length<Sys,Y>& d)
+{
+	return Y(2.)*get_pi<Y>() / d;
+}
+
 // --------------------------------------------------------------------------------
 
 
@@ -803,6 +819,94 @@ t_length<Sys, Y> foc_curv(const t_length<Sys, Y>& lenBefore, const t_length<Sys,
 }
 
 
+// --------------------------------------------------------------------------------
+
+
+// --------------------------------------------------------------------------------
+/**
+ * @brief disc chopper burst time, see: NIMA 492, pp. 97-104 (2002)
+ * @param r chopper radius
+ * @param L chopper window length
+ * @param om chopper frequency
+ * @param bCounterRot single disc or two counter-rotating discs?
+ * @param bSigma burst time in sigma or fwhm?
+ * @return burst time
+ */
+template<class Sys, class Y=double>
+t_time<Sys,Y> burst_time(const t_length<Sys,Y>& r, 
+	const t_length<Sys,Y>& L, const t_freq<Sys,Y>& om, bool bCounterRot,
+	bool bSigma=1)
+{
+	const Y tSig = bSigma ? get_FWHM2SIGMA<Y>() : Y(1);
+	Y tScale = bCounterRot ? Y(2) : Y(1);
+	return L / (r * om * tScale) * tSig;
 }
 
+template<class Sys, class Y=double>
+t_length<Sys,Y> burst_time_L(const t_length<Sys,Y>& r,
+	const t_time<Sys,Y>& dt, const t_freq<Sys,Y>& om, bool bCounterRot,
+	bool bSigma=1)
+{
+	const Y tSig = bSigma ? get_FWHM2SIGMA<Y>() : Y(1);
+	Y tScale = bCounterRot ? Y(2) : Y(1);
+	return dt * r * om * tScale / tSig;
+}
+
+template<class Sys, class Y=double>
+t_length<Sys,Y> burst_time_r(const t_time<Sys,Y>& dt,
+	const t_length<Sys,Y>& L, const t_freq<Sys,Y>& om, bool bCounterRot,
+	bool bSigma=1)
+{
+	const Y tSig = bSigma ? get_FWHM2SIGMA<Y>() : Y(1);
+	Y tScale = bCounterRot ? Y(2) : Y(1);
+	return L / (dt * om * tScale) * tSig;
+}
+
+template<class Sys, class Y=double>
+t_freq<Sys,Y> burst_time_om(const t_length<Sys,Y>& r, 
+	const t_length<Sys,Y>& L, const t_time<Sys,Y>& dt, bool bCounterRot,
+	bool bSigma=1)
+{
+	const Y tSig = bSigma ? get_FWHM2SIGMA<Y>() : Y(1);
+	Y tScale = bCounterRot ? Y(2) : Y(1);
+	return L / (r * dt * tScale) * tSig;
+}
+// --------------------------------------------------------------------------------
+
+
+
+// --------------------------------------------------------------------------------
+
+/**
+ * @brief collimation
+ * @param L length of collimator
+ * @param w distance between blade
+ * @param bSigma calculate sigma or fwhm?
+ * @return angular divergence
+ */
+template<class Sys, class Y=double>
+t_angle<Sys,Y> colli_div(const t_length<Sys,Y>& L, const t_length<Sys,Y>& w, bool bSigma=1)
+{
+	const Y tSig = bSigma ? get_FWHM2SIGMA<Y>() : Y(1);
+	return units::atan(w/L) * tSig;
+}
+
+template<class Sys, class Y=double>
+t_length<Sys,Y> colli_div_L(const t_angle<Sys,Y>& ang, const t_length<Sys,Y>& w, bool bSigma=1)
+{
+	const Y tSig = bSigma ? get_FWHM2SIGMA<Y>() : Y(1);
+	return w/units::tan(ang/tSig);
+}
+
+template<class Sys, class Y=double>
+t_length<Sys,Y> colli_div_w(const t_length<Sys,Y>& L, const t_angle<Sys,Y>& ang, bool bSigma=1)
+{
+	const Y tSig = bSigma ? get_FWHM2SIGMA<Y>() : Y(1);
+	return units::tan(ang/tSig) * L;
+}
+
+// --------------------------------------------------------------------------------
+
+
+}
 #endif
