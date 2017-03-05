@@ -718,7 +718,7 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 // --------------------------------------------------------------------------------
 
 /**
- * Bose factor
+ * Bose distribution
  * see e.g.: (Shirane 2002), p. 28
  */
 template<class t_real=double>
@@ -732,6 +732,7 @@ t_real bose(t_real E, t_real T)
 
 	return n;
 }
+
 
 /**
  * Bose factor with a lower cutoff energy
@@ -750,6 +751,7 @@ t_real bose_cutoff(t_real E, t_real T, t_real E_cutoff=t_real(0.02))
 	return dB;
 }
 
+
 template<class Sys, class Y>
 Y bose(const t_energy<Sys,Y>& E, const t_temperature<Sys,Y>& T,
 	t_energy<Sys,Y> E_cutoff = -get_one_meV<Y>())
@@ -760,6 +762,7 @@ Y bose(const t_energy<Sys,Y>& E, const t_temperature<Sys,Y>& T,
 		return bose_cutoff<Y>(Y(E/get_one_meV<Y>()), Y(T/kelvin),
 			Y(E_cutoff/get_one_meV<Y>()));
 }
+
 
 /**
  * see: B. Fak, B. Dorner, Physica B 234-236 (1997) pp. 1107-1108
@@ -773,6 +776,27 @@ t_real DHO_model(t_real E, t_real T, t_real E0, t_real hwhm, t_real amp, t_real 
 		+ offs;
 }
 
+
+// --------------------------------------------------------------------------------
+
+/**
+ * Fermi distribution
+ */
+template<class t_real=double>
+t_real fermi(t_real E, t_real mu, t_real T)
+{
+	const t_real kB = get_kB<t_real>() * units::si::kelvin/get_one_meV<t_real>();
+	t_real n = t_real(1)/(std::exp((E-mu)/(kB*T)) + t_real(1));
+	return n;
+}
+
+template<class Sys, class Y>
+Y fermi(const t_energy<Sys,Y>& E, const t_energy<Sys,Y>& mu,
+	const t_temperature<Sys,Y>& T)
+{
+	return fermi<Y>(Y(E/get_one_meV<Y>()), Y(mu/get_one_meV<Y>()),
+		Y(T/kelvin));
+}
 
 // --------------------------------------------------------------------------------
 
