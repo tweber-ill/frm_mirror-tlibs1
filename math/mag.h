@@ -138,7 +138,7 @@ t_vec get_S_perp_Q(const t_vec& S, const t_vec& Q)
  * @param lstAtoms list of atom positions
  * @param lstAtoms list of spins
  * @param vecG lattice vector
- * @param lstf G-dependent Atomic form factors (x-rays) or coherent scattering length (neutrons)
+ * @param lstf G-dependent magnetic form factor
  * @param lstg g factors, 2 if none given
  * @param pF0 optional total form factor.
  * @param dVuc optionally normalise by the unit cell volume
