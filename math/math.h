@@ -49,10 +49,14 @@ T sign(T t)
 
 template<typename T> T cot(T t)
 {
-	//return T(1)/std::tan(t);
+	//return T(1) / std::tan(t);
 	return std::tan(T(0.5)*get_pi<T>() - t);
 }
 
+template<typename T> T coth(T t)
+{
+	return T(1) / std::tanh(t);
+}
 
 // -----------------------------------------------------------------------------
 

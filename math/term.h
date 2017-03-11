@@ -147,6 +147,17 @@ namespace tl
 				/ (T(2)*J*(J+T(1))) * (gL-gS);
 		return g;
 	}
+
+
+	/**
+	 * effective magneton number in units of muB
+	 * see: (Khomskii 2014), p. 33
+	 */
+	template<class T = double>
+	T eff_magnetons(T gJ, T J)
+	{
+		return gJ * std::sqrt(J * (J+T(1)));
+	}
 }
 
 #endif

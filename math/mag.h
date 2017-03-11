@@ -1,5 +1,5 @@
 /**
- * magnetic dispersion relations
+ * magnetism
  * @author tweber
  * @date 7-jul-15
  * @license GPLv2 or GPLv3
@@ -357,7 +357,37 @@ void metrop(
 }
 
 
+
 // ----------------------------------------------------------------------------
+// special paramagnetic functions
+// see e.g.: https://en.wikipedia.org/wiki/Brillouin_and_Langevin_functions
+
+/**
+ * Langevin function for mean cosine
+ */
+template<class T=double>
+T langevin(T x)
+{
+	return tl::coth(x) - T(1)/x;
+}
+
+
+/**
+ * Brillouin function ~ magnetisation
+ * @param x = g muB J B / (kB T)
+ */
+template<class T=double>
+T brillouin(T J, T x)
+{
+	T Jfact = T(1)+T(1)/(T(2)*J);
+	T Jfact2 = T(1)/(T(2)*J);
+
+	return Jfact * tl::coth(Jfact*x)
+		- Jfact2 * tl::coth(Jfact2*x);
+}
+
+// ----------------------------------------------------------------------------
+
 
 }
 #endif
