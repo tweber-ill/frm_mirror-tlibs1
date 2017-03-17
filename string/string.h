@@ -268,6 +268,10 @@ t_str trimmed(const t_str& str)
 	return strret;
 }
 
+
+/**
+ * removes all occurrences of a char in a string
+ */
 template<class t_str=std::string>
 t_str remove_char(const t_str& str, typename t_str::value_type ch)
 {
@@ -276,6 +280,33 @@ t_str remove_char(const t_str& str, typename t_str::value_type ch)
 	for(typename t_str::value_type c : str)
 		if(c != ch)
 			strRet.push_back(c);
+
+	return strRet;
+}
+
+/**
+ * removes all occurrences of specified chars in a string
+ */
+template<class t_str=std::string>
+t_str remove_chars(const t_str& str, const t_str& chs)
+{
+	t_str strRet;
+
+	for(typename t_str::value_type c : str)
+	{
+		bool bRemove = 0;
+		for(typename t_str::value_type ch : chs)
+		{
+			if(c == ch)
+			{
+				bRemove = 1;
+				break;
+			}
+		}
+
+		if(!bRemove)
+			strRet.push_back(c);
+	}
 
 	return strRet;
 }
