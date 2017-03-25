@@ -145,7 +145,7 @@ t_wavenumber<Sys,Y> E2k_direct(const t_energy<Sys,Y>& _E, bool &bImag)
 // --------------------------------------------------------------------------------
 
 
-// ----------------------------------------------------------------------------
+// --------------------------------------------------------------------------------
 // indirect calculations using conversion factors for numerical stability
 
 template<class Sys, class Y>
@@ -166,15 +166,16 @@ t_wavenumber<Sys,Y> E2k(const t_energy<Sys,Y>& _E, bool &bImag)
 	return dk / get_one_angstrom<Y>();
 }
 
-// ----------------------------------------------------------------------------
+// --------------------------------------------------------------------------------
 
 
 
 
 // --------------------------------------------------------------------------------
-// Bragg
-// real: n * lam = 2d * sin(twotheta/2)
-
+/**
+ * Bragg equation
+ * real: n * lam = 2d * sin(twotheta/2)
+ */
 template<class Sys, class Y>
 t_length<Sys,Y> bragg_real_lam(const t_length<Sys,Y>& d,
 	const t_angle<Sys,Y>& twotheta, Y n)
@@ -199,7 +200,10 @@ t_angle<Sys,Y> bragg_real_twotheta(const t_length<Sys,Y>& d,
 	return units::asin(dS) * Y(2.);
 }
 
-// reciprocal: Q * lam = 4pi * sin(twotheta/2)
+
+/**
+ * reciprocal Bragg equation: Q * lam = 4pi * sin(twotheta/2)
+ */
 template<class Sys, class Y>
 t_angle<Sys,Y> bragg_recip_twotheta(const t_wavenumber<Sys,Y>& Q,
 	const t_length<Sys,Y>& lam, Y n)
@@ -236,6 +240,27 @@ template<class Sys, class Y>
 t_wavenumber<Sys,Y> d2G(const t_length<Sys,Y>& d)
 {
 	return Y(2.)*get_pi<Y>() / d;
+}
+
+// --------------------------------------------------------------------------------
+
+
+// --------------------------------------------------------------------------------
+/**
+ * differentiated Bragg equation:
+ * n lam = 2d sin(th)						| diff
+ * n dlam = 2dd sin(th) + 2d cos(th) dth	| / Bragg equ
+ * dlam/lam = dd/d + cos(th)/sin(th) dth
+ *
+ * n G = 2k sin(th)
+ * n dG = 2dk sin(th) + 2k cos(th) dth
+ * dG/G = dk/k + cos(th)/sin(th) dth
+ */
+template<class Sys, class Y=double>
+Y bragg_diff(Y dDoverD, const t_angle<Sys,Y>& theta, Y dTheta)
+{
+	Y dLamOverLam = dDoverD + units::cos(theta)/units::sin(theta) * dTheta;
+	return dLamOverLam;
 }
 
 // --------------------------------------------------------------------------------
