@@ -7,10 +7,7 @@
 
 #include "tmp.h"
 #include "file.h"
-#include "../math/rand.h"
-#include "../string/string.h"
 
-#include <boost/filesystem.hpp>
 #include <unistd.h>
 #include <fcntl.h>
 #include <cstdio>
