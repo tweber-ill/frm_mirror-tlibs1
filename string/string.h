@@ -1,6 +1,6 @@
 /**
  * string helper
- * @author Tobias Weber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 2013-2016
  * @license GPLv2 or GPLv3
  */
@@ -15,6 +15,10 @@
 #include <locale>
 #include <limits>
 #include <map>
+#include <algorithm>
+#include <type_traits>
+#include <cctype>
+#include <cwctype>
 
 #ifndef NO_BOOST
 	#include <boost/tokenizer.hpp>
@@ -740,8 +744,56 @@ void skip_after_char(std::basic_istream<t_char>& istr, t_char ch, bool bCase=0)
 	}
 }
 
+
 // ----------------------------------------------------------------------------
 
+
+/**
+ * functions working on chars
+ */
+template<class t_ch, typename=void> struct char_funcs {};
+
+/**
+ * specialisation for char
+ */
+template<class t_ch>
+struct char_funcs<t_ch, typename std::enable_if<std::is_same<t_ch, char>::value>::type>
+{
+	static bool is_digit(t_ch c) { return std::isdigit(c); }
+};
+
+/**
+ * specialisation for wchar_t
+ */
+template<class t_ch>
+struct char_funcs<t_ch, typename std::enable_if<std::is_same<t_ch, wchar_t>::value>::type>
+{
+	static bool is_digit(t_ch c) { return std::iswdigit(c); }
+};
+
+
+// ----------------------------------------------------------------------------
+
+
+/**
+ * tests if a string consists entirely of numbers
+ */
+template<class t_str = std::string>
+bool str_is_digits(const t_str& str)
+{
+	using t_ch = typename t_str::value_type;
+	using t_fkt = char_funcs<t_ch>;
+
+	bool bAllNums = std::all_of(str.begin(), str.end(),
+		[](t_ch c) -> bool
+		{
+			return t_fkt::is_digit(c);
+		});
+	return bAllNums;
+}
+
+
+// ----------------------------------------------------------------------------
 
 }
 #endif
