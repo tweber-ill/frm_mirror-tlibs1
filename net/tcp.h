@@ -50,9 +50,9 @@ protected:
     t_ch m_pcReadBuffer[m_iReadBufLen];
 	t_str m_strReadBuffer;
 
-	typedef sig::signal<void(const t_str&)> t_sigRecv;
-	typedef sig::signal<void(const t_str&, const t_str&)> t_sigDisconn;
-	typedef sig::signal<void(const t_str&, const t_str&)> t_sigConn;
+	using t_sigRecv = sig::signal<void(const t_str&)>;
+	using t_sigDisconn = sig::signal<void(const t_str&, const t_str&)>;
+	using t_sigConn = sig::signal<void(const t_str&, const t_str&)>;
 
 	t_sigRecv m_sigRecv;
 	t_sigDisconn m_sigDisconn;
@@ -88,7 +88,7 @@ protected:
 	ip::tcp::acceptor* m_pacceptor = nullptr;
 
 protected:
-	typedef sig::signal<void(unsigned short iPort)> t_sigServerStart;
+	using t_sigServerStart = sig::signal<void(unsigned short iPort)>;
 
 	t_sigServerStart m_sigServerStart;
 
