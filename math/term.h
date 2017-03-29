@@ -1,6 +1,6 @@
 /**
  * calculating term symbols
- * @author Tobias Weber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 2016
  * @license GPLv2 or GPLv3
  */

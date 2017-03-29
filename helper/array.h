@@ -1,8 +1,7 @@
 /**
  * array helpers
- *
- * @author: tweber
- * @date: nov-2015
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @date nov-2015
  * @license GPLv2 or GPLv3
  */
 

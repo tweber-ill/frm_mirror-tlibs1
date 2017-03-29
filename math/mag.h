@@ -1,6 +1,6 @@
 /**
  * magnetism
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 7-jul-15
  * @license GPLv2 or GPLv3
  */
