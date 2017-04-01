@@ -1409,6 +1409,7 @@ T slerp(const T& q1, const T& q2, typename T::value_type t)
 
 
 /**
+ * calculates the covariance matrix
  * see e.g.: http://www.itl.nist.gov/div898/handbook/pmc/section5/pmc541.htm
  */
 template<typename T=double>
