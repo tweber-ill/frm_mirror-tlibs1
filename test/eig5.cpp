@@ -71,6 +71,11 @@ int main()
 	ublas::matrix<T> matD = tl::diag_matrix(vecSvals);
 	ublas::matrix<T> matDVt = ublas::prod(matD, ublas::trans(matV));
 	std::cout << "U*D*V^t = " << ublas::prod(matU, matDVt) << std::endl;
+	std::cout << std::endl;
+
+	ublas::matrix<T> Mp;
+	tl::pseudoinverse(M, Mp);
+	std::cout << "M+ = " << Mp << std::endl;
 
 	return 0;
 }
