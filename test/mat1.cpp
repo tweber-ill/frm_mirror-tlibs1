@@ -1,6 +1,10 @@
+/**
+ * tlibs test file
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @license GPLv2 or GPLv3
+ */
+
 // gcc -I. -o mat1 mat1.cpp -std=c++11 -lstdc++ -lm
-// cov test
-// @author tw
 
 
 #include "../math/linalg.h"
