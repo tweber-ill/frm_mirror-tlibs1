@@ -486,8 +486,11 @@ matrix_type skew(const vector_type& vec)
 }
 
 
+/**
+ * diagonal matrix
+ */
 template<class matrix_type = ublas::matrix<double>,
-		class cont_type = std::initializer_list<typename matrix_type::value_type>>
+	class cont_type = std::initializer_list<typename matrix_type::value_type>>
 matrix_type diag_matrix(const cont_type& lst)
 {
 	matrix_type mat = unit_matrix<matrix_type>(lst.size());
@@ -498,6 +501,23 @@ matrix_type diag_matrix(const cont_type& lst)
 
 	return mat;
 }
+
+/**
+ * vector of diagonal matrix elements
+ */
+template<class t_vec = ublas::vector<double>,
+	class t_mat = ublas::matrix<double>>
+t_vec diag_vec(const t_mat& mat)
+{
+	std::size_t N = std::min(mat.size1(), mat.size2());
+
+	t_vec vec(N);
+	for(std::size_t i=0; i<N; ++i)
+		vec[i] = mat(i,i);
+
+	return vec;
+}
+
 
 template<class matrix_type = ublas::matrix<double>,
 		class cont_type = std::initializer_list<typename matrix_type::value_type>>
@@ -1413,34 +1433,46 @@ T slerp(const T& q1, const T& q2, typename T::value_type t)
 
 
 /**
- * calculates the covariance matrix
+ * calculates the covariance and the correlation matrices
+ * covariance: C_ij = cov(X_i, X_j) = < (X_i - <X_i>) * (X_j - <X_j>) >
+ * correlation: K_ij = C_ij / (sigma_i sigma_j)
  * see e.g.: http://www.itl.nist.gov/div898/handbook/pmc/section5/pmc541.htm
+ * see also e.g.: (Arfken 2013) p. 1142
  */
 template<typename T=double>
-ublas::matrix<T> covariance(const std::vector<ublas::vector<T>>& vecVals,
-	const std::vector<T>* pProb = 0)
+std::tuple<ublas::matrix<T>, ublas::matrix<T>>
+covariance(const std::vector<ublas::vector<T>>& vecVals, const std::vector<T>* pProb = 0)
 {
-	if(vecVals.size() == 0) return ublas::matrix<T>();
-
+	using t_mat = ublas::matrix<T>;
 	using t_vecvec = typename std::remove_reference<decltype(vecVals)>::type;
 	using t_innervec_org = decltype(vecVals[0]);
 	using t_innervec = typename std::remove_const<
 		typename std::remove_reference<t_innervec_org>::type>::type;
 
-	t_innervec vecMean = mean_value<t_vecvec>(vecVals);
-	//std::cout << "Mean: " << vecMean << std::endl;
+	if(vecVals.size() == 0) return std::make_tuple(t_mat(), t_mat());
 
-	ublas::matrix<T> matCov(vecVals[0].size(), vecVals[0].size());
+	// mean vector <X_i>
+	t_innervec vecMean;
+	if(pProb)
+		vecMean = mean_value<std::vector<T>, t_vecvec>(*pProb, vecVals);
+	else
+		vecMean = mean_value<t_vecvec>(vecVals);
 
+	t_mat matCov(vecVals[0].size(), vecVals[0].size());
 	T tSum = T(0);
 	const std::size_t N = vecVals.size();
+
 	for(std::size_t i=0; i<N; ++i)
 	{
-		T tprob = 1.;
+		T tprob = T(1);
 
+		// X_i - <X_i>
 		t_innervec vec = vecVals[i] - vecMean;
-		ublas::matrix<T> matOuter = ublas::outer_prod(vec, vec);
 
+		// matrix elements, AA^t
+		t_mat matOuter = ublas::outer_prod(vec, vec);
+
+		// probabilities for final averaging, <...>
 		if(pProb)
 		{
 			tprob = (*pProb)[i];
@@ -1450,8 +1482,25 @@ ublas::matrix<T> covariance(const std::vector<ublas::vector<T>>& vecVals,
 		matCov += matOuter;
 		tSum += tprob;
 	}
-	matCov /= tSum;
-	return matCov;
+
+	// average, sometimes defined as C /= (N-1)
+	matCov /= tSum /*-T(1)*/;
+
+
+	// --------------------------------------------------------------------------------
+	// correlation matrix
+	t_innervec vecVar = diag_vec(matCov);
+	t_innervec vecStdDev(vecVar.size());
+
+	std::transform(vecVar.begin(), vecVar.end(), vecStdDev.begin(),
+		[](typename t_innervec::value_type d) -> typename t_innervec::value_type
+		{ return std::sqrt(d); });
+
+	t_mat matStdDev = ublas::outer_prod(vecStdDev, vecStdDev);
+	t_mat matCorr = ublas::element_div(matCov, matStdDev);
+	// --------------------------------------------------------------------------------
+	
+	return std::make_tuple(matCov, matCorr);
 }
 
 

@@ -85,12 +85,13 @@ template<class vec_type_prob, class vec_type>
 typename vec_type::value_type mean_value(const vec_type_prob& vecP, const vec_type& vec)
 {
 	typedef typename vec_type::value_type T;
+	typedef typename vec_type_prob::value_type Tprob;
 	std::size_t iSize = std::min(vecP.size(), vec.size());
 
 	if(iSize==0) return T(0);
 
 	T tMean = vecP[0]*vec[0];
-	T tProbTotal = vecP[0];
+	Tprob tProbTotal = vecP[0];
 	for(std::size_t i=1; i<iSize; ++i)
 	{
 		tMean += vecP[i]*vec[i];
