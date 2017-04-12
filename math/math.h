@@ -241,43 +241,6 @@ std::vector<T> quadratic_solve(T a, T b, T c)
 // -----------------------------------------------------------------------------
 
 
-/**
- * calculates chi^2 distance of a function model to data points
- */
-template<class T, class t_func, class t_iter_dat=T*>
-T chi2(const t_func& func, std::size_t N,
-	const t_iter_dat x, const t_iter_dat y, const t_iter_dat dy)
-{
-	using t_dat = typename std::remove_pointer<t_iter_dat>::type;
-	T tchi2 = T(0);
-
-	for(std::size_t i=0; i<N; ++i)
-	{
-		T td = T(y[i]) - func(T(x[i]));
-		T tdy = dy ? T(dy[i]) : T(0.1*td);	// 10% error if none given
-
-		if(std::abs(tdy) < std::numeric_limits<t_dat>::min())
-			tdy = std::numeric_limits<t_dat>::min();
-
-		T tchi = T(td) / T(tdy);
-		tchi2 += tchi*tchi;
-	}
-
-	return tchi2;
-}
-
-template<class t_vec, class t_func>
-typename t_vec::value_type chi2(const t_func& func,
-	const t_vec& x, const t_vec& y, const t_vec& dy)
-{
-	using T = typename t_vec::value_type;
-	return chi2<T, t_func, T*>(func, x.size(), x.data(), y.data(),
-		dy.size() ? dy.data() : nullptr);
-}
-
-
-// -----------------------------------------------------------------------------
-
 
 template<typename T=double>
 T log(T tbase, T tval)
