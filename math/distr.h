@@ -284,7 +284,8 @@ class DistrBase
 {
 public:
 	virtual t_real pdf(t_real x) const = 0;
-	virtual t_real cdf(t_real x) const = 0;
+	virtual t_real cdf(t_real x) const = 0;	// cdf(x) == P(X <= x)
+	virtual t_real cdf_inv(t_real p) const = 0;
 };
 
 
@@ -345,6 +346,11 @@ public:
 	{
 		if(traits_type::bIsDiscrete) x = std::round(x);
 		return m::cdf(distr, x);
+	}
+
+	virtual t_real cdf_inv(t_real p) const override
+	{
+		return m::quantile(distr, p);
 	}
 };
 // ----------------------------------------------------------------------------

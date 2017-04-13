@@ -9,6 +9,8 @@
 #define __TLIBS_STAT_H__
 
 #include "linalg.h"
+#include "distr.h"
+
 
 namespace tl {
 
@@ -218,6 +220,26 @@ typename t_vec::value_type chi2(const t_func& func,
 
 
 // -----------------------------------------------------------------------------
+
+
+/**
+ * Confidence interval of array data mean using t-distribution
+ * see e.g.: (Arfken 2013), pp. 1176ff
+ */
+template<class t_real = double, class t_vec = std::vector<t_real>>
+std::tuple<t_real, t_real, t_real>	// [mean, stddev, confidence]
+confidence(const t_vec& vec, t_real dProb)
+{
+	t_real dMean = mean_value(vec);
+	t_real dStd = std_dev(vec, true);
+
+	t_real dDof = t_real(vec.size()-1);
+	tl::t_student_dist<t_real> t(dDof);
+	t_real dConf = t.cdf_inv(0.5 + dProb/2.);
+	dConf *= dStd / std::sqrt(dDof);
+
+	return std::make_tuple(dMean, dStd, dConf);
+}
 
 }
 
