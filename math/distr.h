@@ -286,6 +286,8 @@ public:
 	virtual t_real pdf(t_real x) const = 0;
 	virtual t_real cdf(t_real x) const = 0;	// cdf(x) == P(X <= x)
 	virtual t_real cdf_inv(t_real p) const = 0;
+
+	virtual t_real operator()(t_real x) const { return pdf(x); }
 };
 
 
@@ -361,6 +363,7 @@ public:
 /**
  * typedefs for specific distributions
  */
+// continuous
 template<class t_real> using t_normal_dist = Distr<m::normal_distribution<t_real>>;
 template<class t_real> using t_lognormal_dist = Distr<m::lognormal_distribution<t_real>>;
 template<class t_real> using t_cauchy_dist = Distr<m::cauchy_distribution<t_real>>;
@@ -372,6 +375,7 @@ template<class t_real> using t_beta_dist = Distr<m::beta_distribution<t_real>>;
 template<class t_real> using t_gamma_dist = Distr<m::gamma_distribution<t_real>>;
 template<class t_real> using t_logistic_dist = Distr<m::logistic_distribution<t_real>>;
 
+// discrete
 template<class t_real> using t_poisson_dist = Distr<m::poisson_distribution<t_real>>;
 template<class t_real> using t_binomial_dist = Distr<m::binomial_distribution<t_real>>;
 template<class t_real> using t_hypergeo_dist = Distr<m::hypergeometric_distribution<t_real>>;

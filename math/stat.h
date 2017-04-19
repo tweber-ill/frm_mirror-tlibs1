@@ -10,6 +10,9 @@
 
 #include "linalg.h"
 #include "distr.h"
+#include "numint.h"
+
+#include <boost/math/special_functions/binomial.hpp>
 
 
 namespace tl {
@@ -104,6 +107,133 @@ typename vec_type::value_type std_dev(const vec_type_prob& vecP, const vec_type&
 }
 
 
+/**
+ * entropy of a discrete distribution
+ * S = - < log p_i >
+ * see e.g.: https://en.wikipedia.org/wiki/Entropy_(information_theory)
+ */
+template<class t_real=double, class t_func>
+t_real entropy(const t_func& funcPdf, std::size_t iMax)
+{
+	t_real dS = 0;
+	for(std::size_t iArg=0; iArg<iMax; ++iArg)
+	{
+		t_real dVal = funcPdf(t_real(iArg));
+		if(!float_equal(dVal, t_real(0)))
+			dS += dVal * std::log(dVal);
+	}
+	return -dS;
+}
+
+/**
+ * entropy of a continuous distribution
+ * S = - < log p(x_i) >
+ * see e.g.: https://en.wikipedia.org/wiki/Entropy_(information_theory)
+ */
+template<class t_real=double, class t_func>
+t_real entropy(const t_func& funcPdf, t_real dXMin, t_real dXMax, std::size_t iSteps=128)
+{
+	std::function<t_real(t_real)> fktInt = [&funcPdf](t_real dX) -> t_real
+	{
+		t_real dVal = funcPdf(dX);
+		if(!float_equal(dVal, t_real(0)))
+			return dVal * std::log(dVal);
+		return t_real(0);
+	};
+
+	t_real dS = numint_simpN(fktInt, dXMin, dXMax, iSteps);
+	return -dS;
+}
+
+
+// -----------------------------------------------------------------------------
+
+
+/**
+ * Stirling's formula for log(n!)
+ * see e.g. https://en.wikipedia.org/wiki/Stirling%27s_approximation
+ */
+template<class t_real = double>
+t_real log_nfac(t_real n)
+{
+	const t_real twopi = t_real(2) * get_pi<t_real>();
+	return n*std::log(n) - n + std::log(twopi*t_real(n)) / t_real(2);
+}
+
+
+/**
+ * combinatorics
+ * see e.g.: https://de.wikipedia.org/wiki/Abz%C3%A4hlende_Kombinatorik
+ */
+template<class t_real = double, class t_uint = unsigned>
+t_real combinatorics(t_uint n, t_uint k, bool bOrdered, bool bRepetition)
+{
+	t_real tVal = t_real(0);
+
+	if(bOrdered)	// variation
+	{
+		if(bRepetition)	// repetition of particles
+		{
+			tVal = std::pow(t_real(n), t_real(k));
+		}
+		else	// no repetition of particles
+		{
+			t_real binom = boost::math::binomial_coefficient<t_real>(n, k);
+			tVal = binom * boost::math::factorial<t_real>(k);
+		}
+	}
+	else			// combination
+	{
+		if(bRepetition)
+			tVal = boost::math::binomial_coefficient<t_real>(n+k-1, k);
+		else
+			tVal = boost::math::binomial_coefficient<t_real>(n, k);
+	}
+
+	return tVal;
+}
+
+
+/**
+ * possibilities to distribute particles onto niveaus
+ * see e.g.: https://de.wikipedia.org/wiki/Abz%C3%A4hlende_Kombinatorik
+ */
+template<class t_real = double, class t_uint = unsigned>
+t_real particles_in_niveaus(t_uint iPart, t_uint iNiv, bool bDistinct, bool bOnePerNiveau)
+{
+	t_real tCnt = t_real(0);
+
+	if(bDistinct)	// classical
+	{
+		if(bOnePerNiveau)
+			tCnt = combinatorics<t_real, t_uint>(iNiv, iPart, true, false);
+		else	// Boltzons
+			tCnt = combinatorics<t_real, t_uint>(iNiv, iPart, true, true);
+	}
+	else	// qm
+	{
+		if(bOnePerNiveau)	// Fermions
+			tCnt = combinatorics<t_real, t_uint>(iNiv, iPart, false, false);
+		else	// Bosons
+			tCnt = combinatorics<t_real, t_uint>(iNiv, iPart, false, true);
+	}
+
+	return tCnt;
+}
+
+template<class t_real = double, class t_uint = unsigned>
+t_real bosons_in_niveaus(t_uint iPart, t_uint iNiv)
+{ return particles_in_niveaus<t_real, t_uint>(iPart, iNiv, 0, 0); }
+
+template<class t_real = double, class t_uint = unsigned>
+t_real fermions_in_niveaus(t_uint iPart, t_uint iNiv)
+{ return particles_in_niveaus<t_real, t_uint>(iPart, iNiv, 0, 1); }
+
+template<class t_real = double, class t_uint = unsigned>
+t_real boltzons_in_niveaus(t_uint iPart, t_uint iNiv)
+{ return particles_in_niveaus<t_real, t_uint>(iPart, iNiv, 1, 0); }
+
+
 // -----------------------------------------------------------------------------
 
 
@@ -174,7 +304,7 @@ covariance(const std::vector<ublas::vector<T>>& vecVals, const std::vector<T>* p
 	t_mat matStdDev = ublas::outer_prod(vecStdDev, vecStdDev);
 	t_mat matCorr = ublas::element_div(matCov, matStdDev);
 	// --------------------------------------------------------------------------------
-	
+
 	return std::make_tuple(matCov, matCorr);
 }
 
