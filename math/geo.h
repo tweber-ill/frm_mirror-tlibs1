@@ -86,7 +86,10 @@ public:
 		return std::acos(GetNorm(), plane.GetNorm());
 	}
 
-	// "Lotfusspunkt"
+
+	/**
+	 * "Lotfusspunkt"
+	 */
 	t_vec GetDroppedPerp(const t_vec& vecP, T *pdDist=0) const
 	{
 		T dist = GetDist(vecP);
@@ -101,12 +104,17 @@ public:
 		return vecdropped;
 	}
 
+
 	bool IsParallel(const Plane<T>& plane, T eps = tl::get_epsilon<T>()) const
 	{
 		return vec_is_collinear<t_vec>(GetNorm(), plane.GetNorm(), eps);
 	}
 
-	// http://mathworld.wolfram.com/Plane-PlaneIntersection.html
+
+	/**
+	 * plane-plane intersection
+	 * http://mathworld.wolfram.com/Plane-PlaneIntersection.html
+	 */
 	bool intersect(const Plane<T>& plane2, Line<T>& lineRet) const
 	{
 		if(IsParallel(plane2))
@@ -191,7 +199,9 @@ public:
 	}
 
 
-	// "Lotfusspunkt"
+	/**
+	 * "Lotfusspunkt"
+	 */
 	t_vec GetDroppedPerp(const t_vec& vecP, T *pdDist=0) const
 	{
 		T t = ublas::inner_prod(vecP-GetX0(), GetDir()) / ublas::inner_prod(GetDir(), GetDir());
@@ -224,13 +234,14 @@ public:
 		vecNorm[1] = -m_vecDir[0];
 
 		T tDot = ublas::inner_prod(vecP-vecDropped, vecNorm);
-
-		//std::cout << "dropped: " << vecDropped << ", dot: " << tDot << std::endl;
 		return tDot < T(0);
 	}
 
 
-	// http://mathworld.wolfram.com/Line-PlaneIntersection.html
+	/**
+	 * line-plane intersection
+	 * http://mathworld.wolfram.com/Line-PlaneIntersection.html
+	 */
 	bool intersect(const Plane<T>& plane, T& t) const
 	{
 		const std::size_t N = m_vecDir.size();
@@ -269,6 +280,10 @@ public:
 		return true;
 	}
 
+
+	/**
+	 * line-line intersection
+	 */
 	bool intersect(const Line<T>& line, T& t) const
 	{
 		const t_vec& pos0 =  this->GetX0();
@@ -305,6 +320,7 @@ public:
 		return true;
 	}
 
+
 	bool GetMiddlePerp(Line<T>& linePerp) const
 	{
 		const std::size_t N = m_vecDir.size();
@@ -325,6 +341,7 @@ public:
 	}
 };
 
+
 template<typename T>
 std::ostream& operator<<(std::ostream& ostr, const Plane<T>& plane)
 {
@@ -343,7 +360,8 @@ std::ostream& operator<<(std::ostream& ostr, const Line<T>& line)
 
 //------------------------------------------------------------------------------
 
-template<class T=double>
+
+template<class T = double>
 class Quadric
 {
 public:
@@ -427,7 +445,9 @@ public:
 		return dQ + dR + m_s;
 	}
 
-	// remove column and row iIdx
+	/**
+	 * remove column and row iIdx
+	 */
 	void RemoveElems(std::size_t iIdx)
 	{
 		m_Q = remove_elems(m_Q, iIdx);
@@ -441,8 +461,11 @@ public:
 		CheckSymm();
 	}
 
-	// Q = O D O^T
-	// O: eigenvecs, D: eigenvals
+
+	/**
+	 * Q = O D O^T
+	 * O: eigenvecs, D: eigenvals
+	 */
 	bool GetPrincipalAxes(t_mat& matEvecs, std::vector<T>& vecEvals,
 		Quadric<T>* pquadPrincipal=nullptr) const
 	{
@@ -495,11 +518,14 @@ public:
 		return true;
 	}
 
-	// only valid in principal axis system:
-	// x^T Q x + rx = 0
-	// q11*x1^2 + r1*x1 + ... = 0
-	// q11*(x1^2 + r1/q11*x1) = 0
-	// completing the square: q11*(x1 + r1/(2*q11))^2 - r1^2/(4*q11)
+
+	/**
+	 * only valid in principal axis system:
+	 * x^T Q x + rx = 0
+	 * q11*x1^2 + r1*x1 + ... = 0
+	 * q11*(x1^2 + r1/q11*x1) = 0
+	 * completing the square: q11*(x1 + r1/(2*q11))^2 - r1^2/(4*q11)
+	 */
 	t_vec GetPrincipalOffset() const
 	{
 		t_vec vecOffs = GetR();
@@ -512,12 +538,15 @@ public:
 		return vecOffs;
 	}
 
-	// here: only for x^T Q x + s  =  0, i.e. for r=0
-	// quad: x^T Q x + s = 0; line: x = x0 + t d
-	// (x0 + t d)^T Q (x0 + t d) + s = 0
-	// (x0 + t d)^T Q x0 + (x0 + t d)^T Q t d + s = 0
-	// (x0^T + t d^T) Q x0 + (x0^T + t d^T) Q t d + s = 0
-	// x0^T Q x0 + s  +  (d^T Q x0 + x0^T Q d) t  +  d^T Q d t^2 = 0
+
+	/**
+	 * here: only for x^T Q x + s  =  0, i.e. for r=0
+	 * quad: x^T Q x + s = 0; line: x = x0 + t d
+	 * (x0 + t d)^T Q (x0 + t d) + s = 0
+	 * (x0 + t d)^T Q x0 + (x0 + t d)^T Q t d + s = 0
+	 * (x0^T + t d^T) Q x0 + (x0^T + t d^T) Q t d + s = 0
+	 * x0^T Q x0 + s  +  (d^T Q x0 + x0^T Q d) t  +  d^T Q d t^2 = 0
+	 */
 	std::vector<T> intersect(const Line<T>& line) const
 	{
 		const t_mat& Q = GetQ();
@@ -540,7 +569,8 @@ public:
 	}
 };
 
-template<class T=double>
+
+template<class T = double>
 std::ostream& operator<<(std::ostream& ostr, const Quadric<T>& quad)
 {
 	ostr << "Q = " << quad.GetQ() << ", ";
@@ -550,7 +580,7 @@ std::ostream& operator<<(std::ostream& ostr, const Quadric<T>& quad)
 }
 
 
-template<class T=double>
+template<class T = double>
 class QuadSphere : public Quadric<T>
 {
 protected:
@@ -583,7 +613,9 @@ public:
 		this->m_s = T(-1.);
 	}
 
-	// only valid in principal axis system
+	/**
+	 * only valid in principal axis system
+	 */
 	T GetRadius() const
 	{
 		return std::abs(this->m_s) /
@@ -600,7 +632,7 @@ public:
 };
 
 
-template<class T=double>
+template<class T = double>
 class QuadEllipsoid : public Quadric<T>
 {
 protected:
@@ -645,7 +677,9 @@ public:
 
 	virtual ~QuadEllipsoid() {}
 
-	// only valid in principal axis system
+	/**
+	 * only valid in principal axis system
+	 */
 	T GetRadius(std::size_t i) const
 	{
 		return std::abs(this->m_s) /
@@ -663,7 +697,7 @@ public:
 //------------------------------------------------------------------------------
 
 
-template<typename T=double>
+template<typename T = double>
 std::vector<std::size_t> find_zeroes(std::size_t N, const T* pIn)
 {
 	using t_vec = ublas::vector<T>;
