@@ -1,6 +1,6 @@
 /**
  * julia interface helpers
- * 
+ *
  * @author Tobias Weber <tobias.weber@tum.de>
  * @date 23-apr-2017
  * @license GPLv2 or GPLv3
@@ -10,6 +10,8 @@
 #define __TL_JL_H__
 
 #include <julia.h>
+#include <tuple>
+#include <limits>
 
 
 namespace tl
@@ -111,6 +113,86 @@ template<> struct jl_traits<double>
 	static jl_value_t* box(value_type val) { return jl_box_float64(val); }
 };
 // ----------------------------------------------------------------------------
+
+
+
+
+// ----------------------------------------------------------------------------
+/**
+ * converts an stl container of containers into a julia 2d array
+ */
+template<template<class...> class t_cont/*=std::vector*/, class T/*=double*/>
+jl_array_t* make_jl_2darr(const t_cont<t_cont<T>>& vecvec)
+{
+	// number of columns and rows
+	std::size_t iCols = vecvec.size();
+	std::size_t iRows = std::numeric_limits<std::size_t>::max();
+	for(const auto& vec : vecvec)
+		iRows = std::min(iRows, vec.size());
+	if(!iCols) iRows = 0;
+
+	jl_array_t *pArr = jl_alloc_array_2d(jl_apply_array_type(jl_traits<T>::get_type(), 2), iRows, iCols);
+	T* pDat = reinterpret_cast<T*>(jl_array_data(pArr));
+
+	std::size_t iCurCol = 0;
+	for(const auto& vec : vecvec)
+	{
+		std::size_t iCurRow = 0;
+		for(const auto& d : vec)
+		{
+			pDat[iCurCol*iRows + iCurRow] = d;
+			++iCurRow;
+		}
+
+		++iCurCol;
+	}
+
+	return pArr;
+}
+
+/**
+ * converts an stl container of strings into a julia array of strings
+ */
+template<template<class...> class t_cont/*=std::vector*/, class t_str/*=std::string*/>
+jl_array_t* make_jl_str_arr(const t_cont<t_str>& vecStr)
+{
+	jl_array_t *pArr = jl_alloc_array_1d(jl_apply_array_type(jl_string_type, 1), vecStr.size());
+	jl_value_t** pDat = reinterpret_cast<jl_value_t**>(jl_array_data(pArr));
+
+	std::size_t iIdx = 0;
+	for(const t_str& str : vecStr)
+	{
+		pDat[iIdx] = jl_cstr_to_string(str.c_str());
+		++iIdx;
+	}
+
+	return pArr;
+}
+
+/**
+ * converts a map of strings into two julia arrays of strings (key & value)
+ */
+template<template<class...> class t_cont/*=std::map*/, class t_str/*=std::string*/>
+std::tuple<jl_array_t*, jl_array_t*> make_jl_strmap_arr(const t_cont<t_str, t_str>& map)
+{
+	jl_array_t *pArrKey = jl_alloc_array_1d(jl_apply_array_type(jl_string_type, 1), map.size());
+	jl_array_t *pArrVal = jl_alloc_array_1d(jl_apply_array_type(jl_string_type, 1), map.size());
+
+	jl_value_t** pDatKey = reinterpret_cast<jl_value_t**>(jl_array_data(pArrKey));
+	jl_value_t** pDatVal = reinterpret_cast<jl_value_t**>(jl_array_data(pArrVal));
+
+	std::size_t iIdx = 0;
+	for(const auto& pair : map)
+	{
+		pDatKey[iIdx] = jl_cstr_to_string(pair.first.c_str());
+		pDatVal[iIdx] = jl_cstr_to_string(pair.second.c_str());
+		++iIdx;
+	}
+
+	return std::make_tuple(pArrKey, pArrVal);
+}
+// ----------------------------------------------------------------------------
+
 
 
 }
