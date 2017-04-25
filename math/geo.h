@@ -49,17 +49,40 @@ protected:
 	T m_d;
 
 public:
+	/**
+	 * plane from a point and a normal
+	 */
+	Plane(const t_vec& vec0, const t_vec& vecNorm)
+		: m_vecX0(vec0), m_vecNorm(vecNorm)
+	{
+		// normalise normal
+		T tLenNorm = ublas::norm_2(m_vecNorm);
+		if(float_equal<T>(tLenNorm, 0.) || tLenNorm!=tLenNorm)
+		{ m_bValid = 0; return; }
+		m_vecNorm /= tLenNorm;
+
+		// Hessian form: vecX0*vecNorm - d = 0
+		m_d = ublas::inner_prod(m_vecX0, m_vecNorm);
+
+		// TODO: set m_vecDir0 and m_vecDir1
+
+		m_bValid = 1;
+	}
+
+	/**
+	 * plane from a point and two directions on the plane
+	 */
 	Plane(const t_vec& vec0,
 		const t_vec& dir0, const t_vec& dir1)
 		: m_vecX0(vec0), m_vecDir0(dir0), m_vecDir1(dir1)
 	{
+		// calculate normal
 		m_vecNorm = cross_3(dir0, dir1);
+
+		// normalise normal
 		T tLenNorm = ublas::norm_2(m_vecNorm);
 		if(float_equal<T>(tLenNorm, 0.) || tLenNorm!=tLenNorm)
-		{
-			m_bValid = 0;
-			return;
-		}
+		{ m_bValid = 0; return; }
 		m_vecNorm /= tLenNorm;
 
 		// Hessian form: vecX0*vecNorm - d = 0
@@ -70,11 +93,13 @@ public:
 	Plane() = default;
 	virtual ~Plane() = default;
 
+
 	const t_vec& GetX0() const { return m_vecX0; }
 	const t_vec& GetDir0() const { return m_vecDir0; }
 	const t_vec& GetDir1() const { return m_vecDir1; }
 	const t_vec& GetNorm() const { return m_vecNorm; }
 	const T& GetD() const { return m_d; }
+
 
 	T GetDist(const t_vec& vecPt) const
 	{
@@ -83,7 +108,8 @@ public:
 
 	T GetAngle(const Plane<T>& plane) const
 	{
-		return std::acos(GetNorm(), plane.GetNorm());
+		T dot = ublas::inner_prod(GetNorm(), plane.GetNorm());
+		return std::acos(dot);
 	}
 
 
@@ -105,6 +131,25 @@ public:
 	}
 
 
+	/**
+	 * determine on which side of the plane a point is located
+	 */
+	bool GetSide(const t_vec& vecP, T *pdDist=0) const
+	{
+		T dDist = GetDist(vecP);
+		if(pdDist) *pdDist = dDist;
+		return dDist < T(0);
+	}
+
+	/**
+	 * determine if a point is on the plane
+	 */
+	bool IsOnPlane(const t_vec& vecPt, T eps = tl::get_epsilon<T>()) const
+	{
+		T dDist = GetDist(vecPt);
+		return float_equal(dDist, T(0), eps);
+	}
+
 	bool IsParallel(const Plane<T>& plane, T eps = tl::get_epsilon<T>()) const
 	{
 		return vec_is_collinear<t_vec>(GetNorm(), plane.GetNorm(), eps);
@@ -115,9 +160,10 @@ public:
 	 * plane-plane intersection
 	 * http://mathworld.wolfram.com/Plane-PlaneIntersection.html
 	 */
-	bool intersect(const Plane<T>& plane2, Line<T>& lineRet) const
+	bool intersect(const Plane<T>& plane2, Line<T>& lineRet,
+		T eps = tl::get_epsilon<T>()) const
 	{
-		if(IsParallel(plane2))
+		if(IsParallel(plane2, eps))
 			return false;
 
 		const Plane<T>& plane1 = *this;
@@ -126,7 +172,7 @@ public:
 		t_vec vecDir = cross_3(plane1.GetNorm(), plane2.GetNorm());
 
 		// find common point in the two planes
-		t_mat M = row_matrix({plane1.GetNorm(), plane2.GetNorm()});
+		t_mat M = row_matrix( { plane1.GetNorm(), plane2.GetNorm() } );
 
 		t_vec vecD(2);
 		vecD[0] = plane1.GetD();
@@ -137,8 +183,40 @@ public:
 			return 0;
 
 		lineRet = Line<T>(vec0, vecDir);
-		return 1;
+		return true;
 	}
+
+
+	/**
+	 * intersection point of three planes
+	 * http://mathworld.wolfram.com/Plane-PlaneIntersection.html
+	 */
+	bool intersect(const Plane<T>& plane2, const Plane<T>& plane3, t_vec& ptRet,
+		T eps = tl::get_epsilon<T>()) const
+	{
+		const Plane<T>& plane1 = *this;
+
+		if(plane1.IsParallel(plane2, eps) || plane1.IsParallel(plane3, eps) || plane2.IsParallel(plane3, eps))
+			return false;
+
+		// direction vectors
+		const t_vec vecDir12 = cross_3(plane1.GetNorm(), plane2.GetNorm());
+		const t_vec vecDir23 = cross_3(plane2.GetNorm(), plane3.GetNorm());
+		const t_vec vecDir31 = cross_3(plane3.GetNorm(), plane1.GetNorm());
+
+		const T d1 = plane1.GetD();
+		const T d2 = plane2.GetD();
+		const T d3 = plane3.GetD();
+
+		const t_mat M = row_matrix( { plane1.GetNorm(), plane2.GetNorm(), plane3.GetNorm() } );
+		const T detM = determinant(M);
+
+		ptRet = (d1*vecDir23 + d2*vecDir31 + d3*vecDir12) / detM;
+		if(is_nan_or_inf(ptRet))
+			return false;
+		return true;
+	}
+
 
 	bool IsValid() const { return m_bValid; }
 };
@@ -199,6 +277,19 @@ public:
 	}
 
 
+	T GetAngle(const Line<T>& line) const
+	{
+		t_vec dir1 = GetDir();
+		t_vec dir2 = line.GetDir();
+
+		dir1 /= ublas::norm_2(dir1);
+		dir2 /= ublas::norm_2(dir2);
+
+		T dot = ublas::inner_prod(dir1, dir2);
+		return std::acos(dot);
+	}
+
+
 	/**
 	 * "Lotfusspunkt"
 	 */
@@ -217,6 +308,9 @@ public:
 	}
 
 
+	/**
+	 * determine on which side of the line a point is located
+	 */
 	bool GetSide(const t_vec& vecP, T *pdDist=0) const
 	{
 		const std::size_t N = m_vecDir.size();
@@ -242,7 +336,7 @@ public:
 	 * line-plane intersection
 	 * http://mathworld.wolfram.com/Line-PlaneIntersection.html
 	 */
-	bool intersect(const Plane<T>& plane, T& t) const
+	bool intersect(const Plane<T>& plane, T& t, T eps = tl::get_epsilon<T>()) const
 	{
 		const std::size_t N = m_vecDir.size();
 		if(N != 3)
@@ -265,7 +359,7 @@ public:
 		matDenom(3,0) = xp0[2];	matDenom(3,1) = xp1[2];	matDenom(3,2) = xp2[2];	matDenom(3,3) = dirl[2];
 
 		T denom = determinant(matDenom);
-		if(tl::float_equal(denom, 0.))
+		if(tl::float_equal(denom, 0., eps))
 			return false;
 
 		t_mat matNum(N+1,N+1);
@@ -284,8 +378,11 @@ public:
 	/**
 	 * line-line intersection
 	 */
-	bool intersect(const Line<T>& line, T& t) const
+	bool intersect(const Line<T>& line, T& t, T eps = tl::get_epsilon<T>()) const
 	{
+		if(IsParallel(line, eps))
+			return false;
+
 		const t_vec& pos0 =  this->GetX0();
 		const t_vec& pos1 =  line.GetX0();
 
@@ -316,11 +413,13 @@ public:
 		t_vec params = ublas::prod(inv, pos);
 		t = params[0];
 
-		//std::cout << "t=" << t << ", ";
 		return true;
 	}
 
 
+	/**
+	 * middle perpendicular line (in 2d)
+	 */
 	bool GetMiddlePerp(Line<T>& linePerp) const
 	{
 		const std::size_t N = m_vecDir.size();
@@ -337,6 +436,23 @@ public:
 		t_vec vecPos = this->operator()(0.5);
 
 		linePerp = Line<T>(vecPos, vecDir);
+		return true;
+	}
+
+	/**
+	 * middle perpendicular plane (in 3d)
+	 */
+	bool GetMiddlePerp(Plane<T>& planePerp) const
+	{
+		const std::size_t N = m_vecDir.size();
+		if(N != 3)
+		{
+			log_err("Perpendicular plane only implemented for 3d vectors.");
+			return false;
+		}
+
+		t_vec vecPos = this->operator()(0.5);
+		planePerp = Plane<T>(vecPos, m_vecDir);
 		return true;
 	}
 };
@@ -719,11 +835,7 @@ std::vector<std::size_t> find_zeroes(std::size_t N, const T* pIn)
 
 		T param;
 		if(!line.intersect(xaxis, param))
-		{
-			//std::cerr << "No intersection." << std::endl;
 			continue;
-		}
-		//std::cout << "Intersection param: " << param << std::endl;
 
 		t_vec posInters = line(param);
 		if(posInters[0]>=0. && posInters[0]<=1.)

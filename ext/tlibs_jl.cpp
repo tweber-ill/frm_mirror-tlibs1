@@ -35,10 +35,10 @@ extern "C" jl_array_t* load_instr(const char* pcFile)
 
 	// data column names
 	pArrDat[0] = tl::make_jl_str_arr(pInstr->GetColNames());
-	
+
 	// data matrix
 	pArrDat[1] = tl::make_jl_2darr(pInstr->GetData());
-	
+
 	// scan property map
 	std::tie(pArrDat[2], pArrDat[3]) = tl::make_jl_strmap_arr(pInstr->GetAllParams());
 

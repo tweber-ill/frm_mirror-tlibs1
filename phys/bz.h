@@ -1,7 +1,7 @@
 /**
- * Calculation of first Brillouin zone (approximation in 2d)
+ * Calculation of first Brillouin zone (3d and approximation in 2d)
  * @author Tobias Weber <tobias.weber@tum.de>
- * @date jun-2014
+ * @date jun-2014, apr-2017
  * @license GPLv2 or GPLv3
  */
 
@@ -11,11 +11,182 @@
 #include "../helper/exception.h"
 #include "../math/math.h"
 #include "../math/geo.h"
+#include "../math/stat.h"
 #include "../log/log.h"
 #include <vector>
 
 namespace tl {
 
+
+/**
+ * 3D Brillouin zones
+ */
+template<typename T=double>
+class Brillouin3D
+{
+	public:
+		template<typename _T> using t_vec = ublas::vector<_T>;
+
+	protected:
+		t_vec<T> m_vecCentralReflex;
+		std::vector<t_vec<T>> m_vecNeighbours;
+		std::vector<t_vec<T>> m_vecVertices;
+		std::vector<std::vector<t_vec<T>>> m_vecPolys;
+		bool m_bValid = 1;
+		bool m_bHasCentralPeak = 0;
+
+		const T eps = 0.001;
+
+	public:
+		Brillouin3D() {}
+		virtual ~Brillouin3D() {}
+
+		const std::vector<t_vec<T>>& GetVertices() const { return m_vecVertices; }
+		const t_vec<T>& GetCentralReflex() const { return m_vecCentralReflex; }
+		const std::vector<t_vec<T>>& GetNeighbours() const { return m_vecNeighbours; }
+		const std::vector<std::vector<t_vec<T>>>& GetPolys() const { return m_vecPolys; }
+
+		void Clear()
+		{
+			m_vecCentralReflex.clear();
+			m_vecNeighbours.clear();
+			m_vecVertices.clear();
+			m_vecPolys.clear();
+			m_bValid = 0;
+		}
+
+		bool IsValid() const { return m_bValid; }
+
+		void SetCentralReflex(const t_vec<T>& vec)
+		{
+			if(vec.size() != 3)
+				throw Err("Brillouin3D needs 3d vectors.");
+
+			m_vecCentralReflex = vec;
+			m_bHasCentralPeak = 1;
+		}
+
+		void AddReflex(const t_vec<T>& vec)
+		{
+			if(vec.size() != 3)
+				throw Err("Brillouin3D needs 3d vectors.");
+
+			m_vecNeighbours.push_back(vec);
+		}
+
+		void CalcBZ()
+		{
+			if(!m_bHasCentralPeak) return;
+			m_bValid = 1;
+
+			// calculate perpendicular planes
+			std::vector<Plane<T>> vecMiddlePerps;
+			vecMiddlePerps.reserve(m_vecNeighbours.size());
+
+			for(const t_vec<T>& vecN : m_vecNeighbours)
+			{
+				// line from central reflex to vertex
+				Line<T> line(m_vecCentralReflex, vecN-m_vecCentralReflex);
+
+				// middle perpendicular
+				Plane<T> planeperp;
+				if(!line.GetMiddlePerp(planeperp))
+					continue;
+				vecMiddlePerps.emplace_back(std::move(planeperp));
+			}
+
+
+			T dMaxDist = 1.;	// TODO: determine from vertices and bragg peaks
+
+			// get vertices from 3-plane intersections
+			for(std::size_t iPlane1=0; iPlane1<vecMiddlePerps.size(); ++iPlane1)
+			{
+				for(std::size_t iPlane2=iPlane1+1; iPlane2<vecMiddlePerps.size(); ++iPlane2)
+				{
+					for(std::size_t iPlane3=iPlane2+1; iPlane3<vecMiddlePerps.size(); ++iPlane3)
+					{
+						const Plane<T>& plane1 = vecMiddlePerps[iPlane1];
+						const Plane<T>& plane2 = vecMiddlePerps[iPlane2];
+						const Plane<T>& plane3 = vecMiddlePerps[iPlane3];
+
+						t_vec<T> vecVertex;
+						if(plane1.intersect(plane2, plane3, vecVertex, eps))
+						{
+							// if duplicate, ignore vertex
+							if(std::find_if(m_vecVertices.begin(), m_vecVertices.end(), 
+								[this, &vecVertex](const t_vec<T>& vec) -> bool 
+								{ return vec_equal(vecVertex, vec, eps); }) != m_vecVertices.end())
+								continue;
+
+							// ignore vertices that are too far away
+							if(ublas::norm_2(vecVertex-m_vecCentralReflex) > dMaxDist)
+								continue;
+
+							m_vecVertices.emplace_back(std::move(vecVertex));
+						}
+					}
+				}
+			}
+
+
+			// calculate polygons by determining which vertex is on which plane
+			for(const Plane<T>& plane : vecMiddlePerps)
+			{
+				std::vector<t_vec<T>> vecPoly;
+
+				for(const t_vec<T>& vecVertex : m_vecVertices)
+				{
+					if(plane.IsOnPlane(vecVertex, eps))
+						vecPoly.push_back(vecVertex);
+				}
+
+				if(vecPoly.size() >= 3)
+					m_vecPolys.emplace_back(std::move(vecPoly));
+			}
+
+			
+			// sort vertices in the polygons
+			for(std::vector<t_vec<T>>& vecPoly : m_vecPolys)
+			{
+				// line from centre to vertex
+				const t_vec<T> vecCentre = mean_value(vecPoly);
+
+				// face normal
+				t_vec<T> vecNorm = vecCentre - m_vecCentralReflex;
+				vecNorm /= ublas::norm_2(vecNorm);
+
+				t_vec<T> vec0 = vecPoly[0] - vecCentre;
+
+				sort(vecPoly.begin(), vecPoly.end(), 
+					[&vecCentre, &vec0, &vecNorm](const t_vec<T>& vertex1, const t_vec<T>& vertex2) -> bool
+					{
+						t_vec<T> vec1 = vertex1 - vecCentre;
+						t_vec<T> vec2 = vertex2 - vecCentre;
+
+						return vec_angle(vec0, vec1, &vecNorm) < vec_angle(vec0, vec2, &vecNorm);
+					});
+			}
+		}
+
+
+		void Print(std::ostream& ostr)
+		{
+			ostr << "central: " << m_vecCentralReflex << "\n";
+
+			for(const t_vec<T>& vec : m_vecNeighbours)
+				ostr << "vertex: " << vec << "\n";
+
+			ostr.flush();
+		}
+};
+
+
+// ----------------------------------------------------------------------------
+
+
+/**
+ * 2D Brillouin zone approximations
+ */
 template<typename T=double>
 class Brillouin2D
 {
@@ -82,6 +253,7 @@ class Brillouin2D
 			m_vecCentralReflex = vec;
 			m_bHasCentralPeak = 1;
 		}
+
 		void AddReflex(const t_vec<T>& vec)
 		{
 			if(vec.size() != 2)
@@ -96,23 +268,25 @@ class Brillouin2D
 			m_bValid = 1;
 
 			// calculate perpendicular lines
-			std::vector<Line<T> > vecMiddlePerps;
+			std::vector<Line<T>> vecMiddlePerps;
 			vecMiddlePerps.reserve(m_vecNeighbours.size());
 
 			t_vertices<T> vecPts;
 
 			for(const t_vec<T>& vecN : m_vecNeighbours)
 			{
+				// line from central reflex to vertex
 				Line<T> line(m_vecCentralReflex, vecN-m_vecCentralReflex);
+
+				// middle perpendicular
 				Line<T> lineperp;
 				if(!line.GetMiddlePerp(lineperp))
 					continue;
-
-				vecMiddlePerps.push_back(lineperp);
+				vecMiddlePerps.emplace_back(std::move(lineperp));
 			}
 
 
-			// calculate intersections
+			// calculate intersections of middle perpendiculars
 			for(std::size_t iThisLine=0; iThisLine<vecMiddlePerps.size(); ++iThisLine)
 			{
 				const Line<T>& lineThis = vecMiddlePerps[iThisLine];
@@ -125,9 +299,7 @@ class Brillouin2D
 						continue;
 
 					T t;
-					if(lineThis.IsParallel(vecMiddlePerps[iOtherLine], eps))
-						continue;
-					if(!lineThis.intersect(vecMiddlePerps[iOtherLine], t))
+					if(!lineThis.intersect(vecMiddlePerps[iOtherLine], t, eps))
 						continue;
 
 					if(t>0.)
@@ -166,7 +338,6 @@ class Brillouin2D
 					if((bSideUpper!=bSideReflex && tDistUpper>eps) ||
 						(bSideLower!=bSideReflex && tDistLower>eps))
 					{
-						//std::cout << "Erasing " << iPt << std::endl;
 						vecPts.erase(vecPts.begin()+iPt);
 						--iPt;
 						continue;
@@ -191,9 +362,6 @@ class Brillouin2D
 				m_vecVertices.push_back(*pPair);
 				vecPts.erase(vecPts.begin()+iIdx);
 			}
-
-			//for(const t_vecpair<T>& vecPair : m_vecVertices)
-			//	std::cout << vecPair.first << ", " << vecPair.second << std::endl;
 		}
 };
 
