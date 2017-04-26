@@ -521,17 +521,14 @@ bool intersect_plane_poly(const Plane<T>& plane,
 template<class t_vec = ublas::vector<double>,
 	template<class...> class t_cont = std::vector,
 	class T = typename t_vec::value_type>
-void sort_poly_verts(t_cont<t_vec>& vecPoly, const t_vec& vecAbsCentre)
+void sort_poly_verts_norm(t_cont<t_vec>& vecPoly, const t_vec& _vecNorm)
 {
 	if(vecPoly.size() <= 1)
 		return;
 
 	// line from centre to vertex
 	const t_vec vecCentre = mean_value(vecPoly);
-
-	// face normal
-	t_vec vecNorm = vecCentre - vecAbsCentre;
-	vecNorm /= ublas::norm_2(vecNorm);
+	const t_vec vecNorm = _vecNorm / ublas::norm_2(_vecNorm);
 
 	t_vec vec0 = vecPoly[0] - vecCentre;
 
@@ -543,6 +540,46 @@ void sort_poly_verts(t_cont<t_vec>& vecPoly, const t_vec& vecAbsCentre)
 
 			return vec_angle(vec0, vec1, &vecNorm) < vec_angle(vec0, vec2, &vecNorm);
 		});
+}
+
+
+/**
+ * sort vertices in a convex polygon using an absolute centre for determining the normal
+ */
+template<class t_vec = ublas::vector<double>,
+	template<class...> class t_cont = std::vector,
+	class T = typename t_vec::value_type>
+void sort_poly_verts(t_cont<t_vec>& vecPoly, const t_vec& vecAbsCentre)
+{
+	if(vecPoly.size() <= 1)
+		return;
+
+	// line from centre to vertex
+	const t_vec vecCentre = mean_value(vecPoly);
+	// face normal
+	t_vec vecNorm = vecCentre - vecAbsCentre;
+
+	sort_poly_verts_norm<t_vec, t_cont, T>(vecPoly, vecNorm);
+}
+
+
+/**
+ * sort vertices in a convex polygon determining normal
+ */
+template<class t_vec = ublas::vector<double>,
+	template<class...> class t_cont = std::vector,
+	class T = typename t_vec::value_type>
+void sort_poly_verts(t_cont<t_vec>& vecPoly)
+{
+	if(vecPoly.size() <= 1)
+		return;
+
+	// line from centre to vertex
+	const t_vec vecCentre = mean_value(vecPoly);
+	// face normal
+	t_vec vecNorm = cross_3<t_vec>(vecPoly[0]-vecCentre, vecPoly[1]-vecCentre);
+
+	sort_poly_verts_norm<t_vec, t_cont, T>(vecPoly, vecNorm);
 }
 
 

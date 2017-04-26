@@ -77,6 +77,7 @@ class Brillouin3D
 			m_vecNeighbours.clear();
 			m_vecVertices.clear();
 			m_vecPolys.clear();
+			m_vecPlanes.clear();
 			m_bValid = 0;
 		}
 
@@ -106,7 +107,6 @@ class Brillouin3D
 		void CalcBZ()
 		{
 			if(!m_bHasCentralPeak) return;
-			m_bValid = 1;
 
 			// calculate perpendicular planes
 			std::vector<Plane<T>> vecMiddlePerps;
@@ -215,6 +215,8 @@ class Brillouin3D
 			// sort vertices in the polygons
 			for(std::vector<t_vec<T>>& vecPoly : m_vecPolys)
 				sort_poly_verts(vecPoly, m_vecCentralReflex);
+
+			m_bValid = 1;
 		}
 
 
@@ -272,7 +274,7 @@ class Brillouin3D
 			}
 
 			// sort vertices
-			sort_poly_verts(vecVertices, m_vecCentralReflex);
+			sort_poly_verts(vecVertices);
 
 			return std::make_tuple(vecLines, vecVertices);
 		}
@@ -378,7 +380,6 @@ class Brillouin2D
 		void CalcBZ()
 		{
 			if(!m_bHasCentralPeak) return;
-			m_bValid = 1;
 
 			// calculate perpendicular lines
 			std::vector<Line<T>> vecMiddlePerps;
@@ -475,6 +476,8 @@ class Brillouin2D
 				m_vecVertices.push_back(*pPair);
 				vecPts.erase(vecPts.begin()+iIdx);
 			}
+
+			m_bValid = 1;
 		}
 };
 
