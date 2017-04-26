@@ -29,8 +29,11 @@ class Brillouin3D
 
 	protected:
 		t_vec<T> m_vecCentralReflex;
+		t_vec<T> m_vecCentralReflexHKL;
 
 		std::vector<t_vec<T>> m_vecNeighbours;
+		std::vector<t_vec<T>> m_vecNeighboursHKL;
+
 		std::vector<t_vec<T>> m_vecVertices;
 
 		std::vector<std::vector<t_vec<T>>> m_vecPolys;
@@ -42,10 +45,16 @@ class Brillouin3D
 		const T eps = 0.001;
 
 	protected:
+		/**
+		 * reduce vertices based on nearest neighbours in RLU space (because FRAC space can be non-cubic)
+		 */
 		bool ReduceNeighbours()
 		{
+			if(!m_vecNeighboursHKL.size())
+				return true;
+
 			// consider only neighbours and next-neighbours
-			auto vecvecNN = get_neighbours<t_vec<T>, std::vector, T>(m_vecNeighbours, m_vecCentralReflex, eps);
+			auto vecvecNN = get_neighbours<t_vec<T>, std::vector, T>(m_vecNeighboursHKL, m_vecCentralReflexHKL, eps);
 			if(vecvecNN.size() < 2)
 				return false;
 
@@ -74,7 +83,9 @@ class Brillouin3D
 		void Clear()
 		{
 			m_vecCentralReflex.clear();
+			m_vecCentralReflexHKL.clear();
 			m_vecNeighbours.clear();
+			m_vecNeighboursHKL.clear();
 			m_vecVertices.clear();
 			m_vecPolys.clear();
 			m_vecPlanes.clear();
@@ -83,21 +94,25 @@ class Brillouin3D
 
 		bool IsValid() const { return m_bValid; }
 
-		void SetCentralReflex(const t_vec<T>& vec)
+		void SetCentralReflex(const t_vec<T>& vec, const t_vec<T> *pvecHKL=nullptr)
 		{
 			if(vec.size() != 3)
 				throw Err("Brillouin3D needs 3d vectors.");
 
 			m_vecCentralReflex = vec;
+			if(pvecHKL)
+				m_vecCentralReflexHKL = *pvecHKL;
 			m_bHasCentralPeak = 1;
 		}
 
-		void AddReflex(const t_vec<T>& vec)
+		void AddReflex(const t_vec<T>& vec, const t_vec<T> *pvecHKL=nullptr)
 		{
 			if(vec.size() != 3)
 				throw Err("Brillouin3D needs 3d vectors.");
 
 			m_vecNeighbours.push_back(vec);
+			if(pvecHKL)
+				m_vecNeighboursHKL.push_back(*pvecHKL);
 		}
 
 
@@ -258,9 +273,9 @@ class Brillouin3D
 
 						// vertex contained within all plane boundaries
 						bool bRemoveVertex = 0;
-						for(const Plane<T>& plane : m_vecPlanes)
+						for(const Plane<T>& planeboundary : m_vecPlanes)
 						{
-							if(plane.GetDist(vecVert) > eps)
+							if(planeboundary.GetDist(vecVert) > eps)
 							{
 								bRemoveVertex = 1;
 								break;
@@ -426,6 +441,7 @@ class Brillouin2D
 					}
 				}
 
+				// get closest two intersections of this line with two other lines
 				t_vec<T> vecUpper = lineThis(tPos);
 				t_vec<T> vecLower = lineThis(tNeg);
 				if(vec_equal(vecUpper, vecLower, eps))

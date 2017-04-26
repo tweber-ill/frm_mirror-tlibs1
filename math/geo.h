@@ -65,7 +65,30 @@ public:
 		// Hessian form: vecX0*vecNorm - d = 0
 		m_d = ublas::inner_prod(m_vecX0, m_vecNorm);
 
-		// TODO: set m_vecDir0 and m_vecDir1
+
+		// find direction vectors
+		std::vector<t_vec> vecTry =
+			{ tl::make_vec({T(1), T(0), T(0)}),
+			tl::make_vec({T(0), T(1), T(0)}),
+			tl::make_vec({T(0), T(0), T(1)})};
+
+		std::size_t iIdxBest = 0;
+		T dDot = T(1);
+		for(std::size_t iIdx=0; iIdx<vecTry.size(); ++iIdx)
+		{
+			const t_vec& vec = vecTry[iIdx];
+
+			T dDotCur = std::abs(ublas::inner_prod(vec, m_vecNorm));
+			if(dDotCur < dDot)
+			{
+				iIdxBest = iIdx;
+				dDot = dDotCur;
+			}
+		}
+		m_vecDir0 = vecTry[iIdxBest];
+		m_vecDir1 = cross_3(m_vecNorm, m_vecDir0);
+		m_vecDir0 = cross_3(m_vecDir1, m_vecNorm);
+
 
 		m_bValid = 1;
 	}
@@ -387,6 +410,12 @@ public:
 
 	/**
 	 * line-line intersection
+	 * see e.g.: https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
+	 *
+	 * pos0 + t0*dir0 = pos1 + t1*dir1
+	 * pos0 - pos1 = t1*dir1 - t0*dir0
+	 * exact: b = Mx  ->  M^(-1)*b = x
+	 * approx: M^t b = M^t M x  ->  (M^t M)^(-1) * M^t b = x
 	 */
 	bool intersect(const Line<T>& line, T& t, T eps = tl::get_epsilon<T>()) const
 	{
@@ -399,28 +428,17 @@ public:
 		const t_vec& dir0 =  this->GetDir();
 		const t_vec& dir1 =  line.GetDir();
 
-		const std::size_t N = pos0.size();
-
-		// pos0 + t0*dir0 = pos1 + t1*dir1
-		// pos0 - pos1 = t1*dir1 - t0*dir0
-
 		const t_vec pos = pos0-pos1;
-		t_mat mat = ublas::identity_matrix<T>(N);
+		t_mat M = column_matrix({-dir0, dir1});
+		t_mat Mt = ublas::trans(M);
+		t_mat MtM = ublas::prod(Mt, M);
 
-		for(std::size_t i=0; i<N; ++i)
-		{
-			mat(i, 0) = -dir0[i];
-			mat(i, 1) = dir1[i];
-		}
-
-		t_mat inv;
-		if(!tl::inverse(mat, inv))
-		{
-			//log_warn("Could not invert matrix ", mat, ".");
+		t_mat MtMinv;
+		if(!tl::inverse(MtM, MtMinv))
 			return false;
-		}
 
-		t_vec params = ublas::prod(inv, pos);
+		t_vec Mtb = ublas::prod(Mt, pos);
+		t_vec params = ublas::prod(MtMinv, Mtb);
 		t = params[0];
 
 		return true;

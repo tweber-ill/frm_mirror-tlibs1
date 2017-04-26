@@ -67,7 +67,7 @@ int main()
 
 	tl::Plane<T> plane(
 		bz.GetCentralReflex(),  	    // vec0
-		tl::make_vec({1., 1., 1.}));	// norm
+		tl::make_vec({1., 0., 0.}));	// norm
 	auto tupLinesandVerts = bz.GetIntersection(plane);
 	std::cout << "slice: " << std::get<0>(tupLinesandVerts).size() << " lines." << std::endl;
 	std::cout << "slice: " << std::get<1>(tupLinesandVerts).size() << " vertices." << std::endl;
