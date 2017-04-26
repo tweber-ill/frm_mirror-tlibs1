@@ -23,7 +23,7 @@ int main()
 	ifstr >> vecCentr[0] >> vecCentr[1] >> vecCentr[2];
 
 	bz.SetCentralReflex(vecCentr);
-	
+
 	while(1)
 	{
 		t_vec vec(3);
@@ -64,4 +64,14 @@ int main()
 	}
 
 	x3d.Save("/home/tweber/tmp/bz.x3d");
+
+
+	tl::Plane<T> plane(
+		bz.GetCentralReflex(),  	   // vec0
+		tl::make_vec({0., 0., 1.}));	// norm
+	auto vecLines = bz.GetIntersection(plane);
+	std::cout << "slice: " << vecLines.size() << " lines." << std::endl;
+
+	
+	return 0;
 }

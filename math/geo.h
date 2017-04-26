@@ -474,6 +474,36 @@ std::ostream& operator<<(std::ostream& ostr, const Line<T>& line)
 }
 
 
+
+/**
+ * intersection of "plane" and polygon (defined by "planePoly" and vertPoly")
+ */
+template<class t_vec = ublas::vector<double>,
+	template<class...> class t_cont = std::vector,
+	class T = typename t_vec::value_type>
+bool intersect_plane_poly(const Plane<T>& plane,
+	const Plane<T>& planePoly, const t_cont<t_vec>& vertPoly,
+	Line<T>& lineRes, T eps = tl::get_epsilon<T>())
+{
+	if(!vertPoly.size())
+		return false;
+
+	
+	bool bFirstSide = plane.GetSide(vertPoly[0]);
+
+	// are all vertices on the same side?
+	if(std::all_of(vertPoly.begin(), vertPoly.end(),
+		[&plane, bFirstSide](const t_vec& vert) -> bool
+		{ return plane.GetSide(vert) == bFirstSide; }))
+		return false;
+
+
+	if(!plane.intersect(planePoly, lineRes, eps))
+		return false;
+
+	return true;
+}
+
 //------------------------------------------------------------------------------
 
 

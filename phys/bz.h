@@ -10,6 +10,7 @@
 
 #include "../helper/exception.h"
 #include "../math/math.h"
+#include "../phys/nn.h"
 #include "../math/geo.h"
 #include "../math/stat.h"
 #include "../log/log.h"
@@ -29,22 +30,47 @@ class Brillouin3D
 
 	protected:
 		t_vec<T> m_vecCentralReflex;
+
 		std::vector<t_vec<T>> m_vecNeighbours;
 		std::vector<t_vec<T>> m_vecVertices;
+
 		std::vector<std::vector<t_vec<T>>> m_vecPolys;
+		std::vector<Plane<T>> m_vecPlanes;
+
 		bool m_bValid = 1;
 		bool m_bHasCentralPeak = 0;
 
 		const T eps = 0.001;
 
+	protected:
+		bool ReduceNeighbours()
+		{
+			// consider only neighbours and next-neighbours
+			auto vecvecNN = get_neighbours<t_vec<T>, std::vector, T>(m_vecNeighbours, m_vecCentralReflex, eps);
+			if(vecvecNN.size() < 2)
+				return false;
+
+			auto vecNN1 = get_atoms_by_idx<t_vec<T>, std::vector>(m_vecNeighbours, vecvecNN[0]);
+			auto vecNN2 = get_atoms_by_idx<t_vec<T>, std::vector>(m_vecNeighbours, vecvecNN[1]);
+
+			m_vecNeighbours = std::move(vecNN1);
+			m_vecNeighbours.insert(m_vecNeighbours.end(), vecNN2.begin(), vecNN2.end());
+
+			return m_vecNeighbours.size()!=0;
+		}
+
 	public:
 		Brillouin3D() {}
 		virtual ~Brillouin3D() {}
 
-		const std::vector<t_vec<T>>& GetVertices() const { return m_vecVertices; }
 		const t_vec<T>& GetCentralReflex() const { return m_vecCentralReflex; }
+
+		const std::vector<t_vec<T>>& GetVertices() const { return m_vecVertices; }
 		const std::vector<t_vec<T>>& GetNeighbours() const { return m_vecNeighbours; }
+
+		// m_vecPolys and m_vecPlanes correspond to one another
 		const std::vector<std::vector<t_vec<T>>>& GetPolys() const { return m_vecPolys; }
+		const std::vector<Plane<T>> GetPlanes() const { m_vecPlanes; }
 
 		void Clear()
 		{
@@ -74,6 +100,10 @@ class Brillouin3D
 			m_vecNeighbours.push_back(vec);
 		}
 
+
+		/**
+		 * calculate the brillouin zone
+		 */
 		void CalcBZ()
 		{
 			if(!m_bHasCentralPeak) return;
@@ -83,6 +113,13 @@ class Brillouin3D
 			std::vector<Plane<T>> vecMiddlePerps;
 			vecMiddlePerps.reserve(m_vecNeighbours.size());
 
+			if(!ReduceNeighbours())
+				return;
+
+	
+			const T dMaxPlaneDist = ublas::norm_2(m_vecNeighbours[0] - m_vecCentralReflex);
+
+			// get middle perpendicular planes
 			for(const t_vec<T>& vecN : m_vecNeighbours)
 			{
 				// line from central reflex to vertex
@@ -92,11 +129,14 @@ class Brillouin3D
 				Plane<T> planeperp;
 				if(!line.GetMiddlePerp(planeperp))
 					continue;
-				vecMiddlePerps.emplace_back(std::move(planeperp));
+
+				// only consider planes that are closer that the nearest neighbour
+				if(ublas::norm_2(planeperp.GetX0() - m_vecCentralReflex) < dMaxPlaneDist)
+					vecMiddlePerps.emplace_back(std::move(planeperp));
 			}
 
 
-			T dMaxDist = 1.;	// TODO: determine from vertices and bragg peaks
+			const T dMaxVertDist = dMaxPlaneDist;
 
 			// get vertices from 3-plane intersections
 			for(std::size_t iPlane1=0; iPlane1<vecMiddlePerps.size(); ++iPlane1)
@@ -119,7 +159,7 @@ class Brillouin3D
 								continue;
 
 							// ignore vertices that are too far away
-							if(ublas::norm_2(vecVertex-m_vecCentralReflex) > dMaxDist)
+							if(ublas::norm_2(vecVertex-m_vecCentralReflex) > dMaxVertDist)
 								continue;
 
 							m_vecVertices.emplace_back(std::move(vecVertex));
@@ -127,6 +167,13 @@ class Brillouin3D
 					}
 				}
 			}
+
+
+			// TODO: check if generally valid
+			// only consider vertices nearest to m_vecCentralReflex
+			auto vecvecNN = get_neighbours<t_vec<T>, std::vector, T>(m_vecVertices, m_vecCentralReflex, eps);
+			if(vecvecNN.size() >= 1)
+				m_vecVertices = get_atoms_by_idx<t_vec<T>, std::vector>(m_vecVertices, vecvecNN[0]);
 
 
 			// calculate polygons by determining which vertex is on which plane
@@ -141,10 +188,13 @@ class Brillouin3D
 				}
 
 				if(vecPoly.size() >= 3)
+				{
 					m_vecPolys.emplace_back(std::move(vecPoly));
+					m_vecPlanes.push_back(plane);
+				}
 			}
 
-			
+
 			// sort vertices in the polygons
 			for(std::vector<t_vec<T>>& vecPoly : m_vecPolys)
 			{
@@ -169,7 +219,24 @@ class Brillouin3D
 		}
 
 
-		void Print(std::ostream& ostr)
+		std::vector<Line<T>> GetIntersection(const Plane<T>& plane) const
+		{
+			std::vector<Line<T>> vecLines;
+			if(m_vecPlanes.size() != m_vecPolys.size())
+				return vecLines;
+
+			for(std::size_t i=0; i<m_vecPlanes.size(); ++i)
+			{
+				Line<T> lineRes;
+				if(intersect_plane_poly<t_vec<T>,std::vector,T>(plane, m_vecPlanes[i], m_vecPolys[i], lineRes, eps))
+					vecLines.emplace_back(std::move(lineRes));
+			}
+
+			return vecLines;
+		}
+
+
+		void Print(std::ostream& ostr) const
 		{
 			ostr << "central: " << m_vecCentralReflex << "\n";
 
@@ -262,6 +329,10 @@ class Brillouin2D
 			m_vecNeighbours.push_back(vec);
 		}
 
+
+		/**
+		 * calculate the brillouin zone approximation
+		 */
 		void CalcBZ()
 		{
 			if(!m_bHasCentralPeak) return;
