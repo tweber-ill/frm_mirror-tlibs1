@@ -19,6 +19,32 @@ namespace tl {
 
 
 /**
+ * reduce vertices based on nearest neighbours in RLU space (because 1/A space can be non-cubic)
+ */
+template<class t_vec, class T = typename t_vec::value_type>
+static bool reduce_neighbours(
+	std::vector<t_vec>& vecNeighbours, const std::vector<t_vec>& vecNeighboursHKL,
+	const t_vec& vecCentralReflexHKL, T eps)
+{
+	if(!vecNeighboursHKL.size())
+		return true;
+
+	// consider only neighbours and next-neighbours
+	auto vecvecNN = get_neighbours<t_vec, std::vector, T>(vecNeighboursHKL, vecCentralReflexHKL, eps);
+	if(vecvecNN.size() < 2)
+		return false;
+
+	auto vecNN1 = get_atoms_by_idx<t_vec, std::vector>(vecNeighbours, vecvecNN[0]);
+	auto vecNN2 = get_atoms_by_idx<t_vec, std::vector>(vecNeighbours, vecvecNN[1]);
+
+	vecNeighbours = std::move(vecNN1);
+	vecNeighbours.insert(vecNeighbours.end(), vecNN2.begin(), vecNN2.end());
+
+	return vecNeighbours.size()!=0;
+}
+
+
+/**
  * 3D Brillouin zones
  */
 template<typename T=double>
@@ -43,29 +69,6 @@ class Brillouin3D
 		bool m_bHasCentralPeak = 0;
 
 		const T eps = 0.001;
-
-	protected:
-		/**
-		 * reduce vertices based on nearest neighbours in RLU space (because FRAC space can be non-cubic)
-		 */
-		bool ReduceNeighbours()
-		{
-			if(!m_vecNeighboursHKL.size())
-				return true;
-
-			// consider only neighbours and next-neighbours
-			auto vecvecNN = get_neighbours<t_vec<T>, std::vector, T>(m_vecNeighboursHKL, m_vecCentralReflexHKL, eps);
-			if(vecvecNN.size() < 2)
-				return false;
-
-			auto vecNN1 = get_atoms_by_idx<t_vec<T>, std::vector>(m_vecNeighbours, vecvecNN[0]);
-			auto vecNN2 = get_atoms_by_idx<t_vec<T>, std::vector>(m_vecNeighbours, vecvecNN[1]);
-
-			m_vecNeighbours = std::move(vecNN1);
-			m_vecNeighbours.insert(m_vecNeighbours.end(), vecNN2.begin(), vecNN2.end());
-
-			return m_vecNeighbours.size()!=0;
-		}
 
 	public:
 		Brillouin3D() {}
@@ -127,7 +130,7 @@ class Brillouin3D
 			std::vector<Plane<T>> vecMiddlePerps;
 			vecMiddlePerps.reserve(m_vecNeighbours.size());
 
-			if(!ReduceNeighbours())
+			if(!reduce_neighbours<t_vec<T>, T>(m_vecNeighbours, m_vecNeighboursHKL, m_vecCentralReflexHKL, eps))
 				return;
 
 	
@@ -307,6 +310,7 @@ class Brillouin3D
 };
 
 
+
 // ----------------------------------------------------------------------------
 
 
@@ -323,7 +327,11 @@ class Brillouin2D
 
 	protected:
 		t_vec<T> m_vecCentralReflex;
+		t_vec<T> m_vecCentralReflexHKL;
+
 		std::vector<t_vec<T>> m_vecNeighbours;
+		std::vector<t_vec<T>> m_vecNeighboursHKL;
+
 		std::vector<t_vecpair<T> > m_vecVertices;
 		bool m_bValid = 1;
 		bool m_bHasCentralPeak = 0;
@@ -364,28 +372,35 @@ class Brillouin2D
 		void Clear()
 		{
 			m_vecCentralReflex.clear();
+			m_vecCentralReflexHKL.clear();
 			m_vecNeighbours.clear();
+			m_vecNeighboursHKL.clear();
 			m_vecVertices.clear();
 			m_bValid = 0;
 		}
 
 		bool IsValid() const { return m_bValid; }
 
-		void SetCentralReflex(const t_vec<T>& vec)
+
+		void SetCentralReflex(const t_vec<T>& vec, const t_vec<T> *pvecHKL=nullptr)
 		{
 			if(vec.size() != 2)
 				throw Err("Brillouin2D needs 2d vectors.");
 
 			m_vecCentralReflex = vec;
+			if(pvecHKL)
+				m_vecCentralReflexHKL = *pvecHKL;
 			m_bHasCentralPeak = 1;
 		}
 
-		void AddReflex(const t_vec<T>& vec)
+		void AddReflex(const t_vec<T>& vec, const t_vec<T> *pvecHKL=nullptr)
 		{
 			if(vec.size() != 2)
 				throw Err("Brillouin2D needs 2d vectors.");
 
 			m_vecNeighbours.push_back(vec);
+			if(pvecHKL)
+				m_vecNeighboursHKL.push_back(*pvecHKL);
 		}
 
 
@@ -395,6 +410,9 @@ class Brillouin2D
 		void CalcBZ()
 		{
 			if(!m_bHasCentralPeak) return;
+
+			if(!reduce_neighbours<t_vec<T>, T>(m_vecNeighbours, m_vecNeighboursHKL, m_vecCentralReflexHKL, eps))
+				return;
 
 			// calculate perpendicular lines
 			std::vector<Line<T>> vecMiddlePerps;

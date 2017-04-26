@@ -89,7 +89,9 @@ public:
 		m_vecDir1 = cross_3(m_vecNorm, m_vecDir0);
 		m_vecDir0 = cross_3(m_vecDir1, m_vecNorm);
 
-
+		//m_vecDir0 /= ublas::norm_2(m_vecDir0);
+		//m_vecDir1 /= ublas::norm_2(m_vecDir1);
+	
 		m_bValid = 1;
 	}
 
@@ -595,9 +597,26 @@ void sort_poly_verts(t_cont<t_vec>& vecPoly)
 	// line from centre to vertex
 	const t_vec vecCentre = mean_value(vecPoly);
 	// face normal
-	t_vec vecNorm = cross_3<t_vec>(vecPoly[0]-vecCentre, vecPoly[1]-vecCentre);
+	t_vec vecNormBest;
+	T tBestCross = T(0);
 
-	sort_poly_verts_norm<t_vec, t_cont, T>(vecPoly, vecNorm);
+	// find non-collinear vectors
+	for(std::size_t iVecPoly=1; iVecPoly<vecPoly.size(); ++iVecPoly)
+	{
+		t_vec vecNorm = cross_3<t_vec>(vecPoly[0]-vecCentre, vecPoly[1]-vecCentre);
+		T tCross = ublas::norm_2(vecNorm);
+		if(tCross > tBestCross)
+		{
+			tBestCross = tCross;
+			vecNormBest = vecNorm;
+		}
+	}
+
+	// nothing found
+	if(vecNormBest.size() < vecCentre.size())
+		return;
+
+	sort_poly_verts_norm<t_vec, t_cont, T>(vecPoly, vecNormBest);
 }
 
 
