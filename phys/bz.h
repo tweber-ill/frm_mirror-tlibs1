@@ -12,7 +12,6 @@
 #include "../math/math.h"
 #include "../phys/nn.h"
 #include "../math/geo.h"
-#include "../math/stat.h"
 #include "../log/log.h"
 #include <vector>
 
@@ -102,7 +101,7 @@ class Brillouin3D
 
 
 		/**
-		 * calculate the brillouin zone
+		 * calculates the brillouin zone
 		 */
 		void CalcBZ()
 		{
@@ -117,7 +116,7 @@ class Brillouin3D
 				return;
 
 	
-			const T dMaxPlaneDist = ublas::norm_2(m_vecNeighbours[0] - m_vecCentralReflex);
+			//const T dMaxPlaneDist = ublas::norm_2(m_vecNeighbours[0] - m_vecCentralReflex);
 
 			// get middle perpendicular planes
 			for(const t_vec<T>& vecN : m_vecNeighbours)
@@ -131,12 +130,16 @@ class Brillouin3D
 					continue;
 
 				// only consider planes that are closer that the nearest neighbour
-				if(ublas::norm_2(planeperp.GetX0() - m_vecCentralReflex) < dMaxPlaneDist)
+				//if(ublas::norm_2(planeperp.GetX0() - m_vecCentralReflex) < dMaxPlaneDist)
+				{
+					// let normals point outside
+					if(!planeperp.GetSide(m_vecCentralReflex))
+						planeperp.FlipNormal();
+
 					vecMiddlePerps.emplace_back(std::move(planeperp));
+				}
 			}
 
-
-			const T dMaxVertDist = dMaxPlaneDist;
 
 			// get vertices from 3-plane intersections
 			for(std::size_t iPlane1=0; iPlane1<vecMiddlePerps.size(); ++iPlane1)
@@ -158,9 +161,9 @@ class Brillouin3D
 								{ return vec_equal(vecVertex, vec, eps); }) != m_vecVertices.end())
 								continue;
 
-							// ignore vertices that are too far away
-							if(ublas::norm_2(vecVertex-m_vecCentralReflex) > dMaxVertDist)
-								continue;
+							/*// ignore vertices that are too far away
+							if(ublas::norm_2(vecVertex-m_vecCentralReflex) > dMaxPlaneDist)
+								continue;*/
 
 							m_vecVertices.emplace_back(std::move(vecVertex));
 						}
@@ -169,11 +172,25 @@ class Brillouin3D
 			}
 
 
-			// TODO: check if generally valid
-			// only consider vertices nearest to m_vecCentralReflex
-			auto vecvecNN = get_neighbours<t_vec<T>, std::vector, T>(m_vecVertices, m_vecCentralReflex, eps);
-			if(vecvecNN.size() >= 1)
-				m_vecVertices = get_atoms_by_idx<t_vec<T>, std::vector>(m_vecVertices, vecvecNN[0]);
+			// get minimum vertex set that is contained within all plane boundaries
+			for(auto iterVert = m_vecVertices.begin(); iterVert != m_vecVertices.end();)
+			{
+				bool bRemoveVertex = 0;
+
+				for(const Plane<T>& plane : vecMiddlePerps)
+				{
+					if(plane.GetDist(*iterVert) > eps)
+					{
+						bRemoveVertex = 1;
+						break;
+					}
+				}
+
+				if(bRemoveVertex)
+					iterVert = m_vecVertices.erase(iterVert);
+				else
+					++iterVert;
+			}
 
 
 			// calculate polygons by determining which vertex is on which plane
@@ -197,34 +214,25 @@ class Brillouin3D
 
 			// sort vertices in the polygons
 			for(std::vector<t_vec<T>>& vecPoly : m_vecPolys)
-			{
-				// line from centre to vertex
-				const t_vec<T> vecCentre = mean_value(vecPoly);
-
-				// face normal
-				t_vec<T> vecNorm = vecCentre - m_vecCentralReflex;
-				vecNorm /= ublas::norm_2(vecNorm);
-
-				t_vec<T> vec0 = vecPoly[0] - vecCentre;
-
-				sort(vecPoly.begin(), vecPoly.end(), 
-					[&vecCentre, &vec0, &vecNorm](const t_vec<T>& vertex1, const t_vec<T>& vertex2) -> bool
-					{
-						t_vec<T> vec1 = vertex1 - vecCentre;
-						t_vec<T> vec2 = vertex2 - vecCentre;
-
-						return vec_angle(vec0, vec1, &vecNorm) < vec_angle(vec0, vec2, &vecNorm);
-					});
-			}
+				sort_poly_verts(vecPoly, m_vecCentralReflex);
 		}
 
 
-		std::vector<Line<T>> GetIntersection(const Plane<T>& plane) const
+		/**
+		 * Calculates intersection of the BZ with a plane.
+		 * @return [ lines, vertices ]
+		 */
+		std::tuple<std::vector<Line<T>>, std::vector<t_vec<T>>>
+		GetIntersection(const Plane<T>& plane) const
 		{
 			std::vector<Line<T>> vecLines;
-			if(m_vecPlanes.size() != m_vecPolys.size())
-				return vecLines;
+			std::vector<t_vec<T>> vecVertices;
 
+			if(m_vecPlanes.size() != m_vecPolys.size())
+				return std::make_tuple(vecLines, vecVertices);
+
+
+			// get all intersection lines
 			for(std::size_t i=0; i<m_vecPlanes.size(); ++i)
 			{
 				Line<T> lineRes;
@@ -232,7 +240,41 @@ class Brillouin3D
 					vecLines.emplace_back(std::move(lineRes));
 			}
 
-			return vecLines;
+
+			// calculate line intersection vertices
+			for(std::size_t iLine1=0; iLine1<vecLines.size(); ++iLine1)
+			{
+				for(std::size_t iLine2=iLine1+1; iLine2<vecLines.size(); ++iLine2)
+				{
+					const Line<T>& line1 = vecLines[iLine1];
+					const Line<T>& line2 = vecLines[iLine2];
+
+					T t;
+					if(line1.intersect(line2, t, eps))
+					{
+						t_vec<T> vecVert = line1(t);
+
+						// vertex contained within all plane boundaries
+						bool bRemoveVertex = 0;
+						for(const Plane<T>& plane : m_vecPlanes)
+						{
+							if(plane.GetDist(vecVert) > eps)
+							{
+								bRemoveVertex = 1;
+								break;
+							}
+						}
+
+						if(!bRemoveVertex)
+							vecVertices.emplace_back(std::move(vecVert));
+					}
+				}
+			}
+
+			// sort vertices
+			sort_poly_verts(vecVertices, m_vecCentralReflex);
+
+			return std::make_tuple(vecLines, vecVertices);
 		}
 
 

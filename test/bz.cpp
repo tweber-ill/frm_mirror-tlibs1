@@ -45,7 +45,7 @@ int main()
 		tl::X3dTrafo *pTrafo = new tl::X3dTrafo();
 		pTrafo->SetTrans(vec - bz.GetCentralReflex());
 
-		tl::X3dSphere *pSphere = new tl::X3dSphere(0.01);
+		tl::X3dSphere *pSphere = new tl::X3dSphere(0.025);
 		pSphere->SetColor(tl::make_vec({1., 0., 0.}));
 		pTrafo->AddChild(pSphere);
 
@@ -63,15 +63,29 @@ int main()
 		x3d.GetScene().AddChild(pPoly);
 	}
 
-	x3d.Save("/home/tweber/tmp/bz.x3d");
 
 
 	tl::Plane<T> plane(
-		bz.GetCentralReflex(),  	   // vec0
-		tl::make_vec({0., 0., 1.}));	// norm
-	auto vecLines = bz.GetIntersection(plane);
-	std::cout << "slice: " << vecLines.size() << " lines." << std::endl;
+		bz.GetCentralReflex(),  	    // vec0
+		tl::make_vec({1., 1., 1.}));	// norm
+	auto tupLinesandVerts = bz.GetIntersection(plane);
+	std::cout << "slice: " << std::get<0>(tupLinesandVerts).size() << " lines." << std::endl;
+	std::cout << "slice: " << std::get<1>(tupLinesandVerts).size() << " vertices." << std::endl;
 
-	
+	for(const t_vec& vec : std::get<1>(tupLinesandVerts))
+	{
+		tl::X3dTrafo *pTrafo = new tl::X3dTrafo();
+		pTrafo->SetTrans(vec - bz.GetCentralReflex());
+
+		tl::X3dSphere *pSphere = new tl::X3dSphere(0.05);
+		pSphere->SetColor(tl::make_vec({0., 0., 1.}));
+		pTrafo->AddChild(pSphere);
+
+		x3d.GetScene().AddChild(pTrafo);
+	}
+
+
+	x3d.Save("/home/tweber/tmp/bz.x3d");	
+
 	return 0;
 }

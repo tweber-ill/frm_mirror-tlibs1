@@ -13,6 +13,7 @@
 #include "linalg.h"
 #include "linalg2.h"
 #include "quat.h"
+#include "stat.h"
 #include "../log/log.h"
 
 #include <iostream>
@@ -110,6 +111,15 @@ public:
 	{
 		T dot = ublas::inner_prod(GetNorm(), plane.GetNorm());
 		return std::acos(dot);
+	}
+
+
+	void FlipNormal()
+	{
+		m_vecNorm = -m_vecNorm;
+		m_d = -m_d;
+
+		std::swap(m_vecDir0, m_vecDir1);
 	}
 
 
@@ -503,6 +513,38 @@ bool intersect_plane_poly(const Plane<T>& plane,
 
 	return true;
 }
+
+
+/**
+ * sort vertices in a convex polygon
+ */
+template<class t_vec = ublas::vector<double>,
+	template<class...> class t_cont = std::vector,
+	class T = typename t_vec::value_type>
+void sort_poly_verts(t_cont<t_vec>& vecPoly, const t_vec& vecAbsCentre)
+{
+	if(vecPoly.size() <= 1)
+		return;
+
+	// line from centre to vertex
+	const t_vec vecCentre = mean_value(vecPoly);
+
+	// face normal
+	t_vec vecNorm = vecCentre - vecAbsCentre;
+	vecNorm /= ublas::norm_2(vecNorm);
+
+	t_vec vec0 = vecPoly[0] - vecCentre;
+
+	sort(vecPoly.begin(), vecPoly.end(), 
+		[&vecCentre, &vec0, &vecNorm](const t_vec& vertex1, const t_vec& vertex2) -> bool
+		{
+			t_vec vec1 = vertex1 - vecCentre;
+			t_vec vec2 = vertex2 - vecCentre;
+
+			return vec_angle(vec0, vec1, &vecNorm) < vec_angle(vec0, vec2, &vecNorm);
+		});
+}
+
 
 //------------------------------------------------------------------------------
 
