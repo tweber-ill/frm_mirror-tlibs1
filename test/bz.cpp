@@ -54,7 +54,8 @@ int main()
 
 	for(const std::vector<t_vec>& vecPoly : bz.GetPolys())
 	{
-		tl::X3dPolygon *pPoly = new tl::X3dPolygon();
+		//tl::X3dPolygon *pPoly = new tl::X3dPolygon();
+		tl::X3dLines *pPoly = new tl::X3dLines();
 		pPoly->SetColor(tl::make_vec({1., 1., 0.}));
 
 		for(const t_vec& vec : vecPoly)

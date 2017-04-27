@@ -91,7 +91,7 @@ public:
 
 		//m_vecDir0 /= ublas::norm_2(m_vecDir0);
 		//m_vecDir1 /= ublas::norm_2(m_vecDir1);
-	
+
 		m_bValid = 1;
 	}
 
@@ -149,7 +149,7 @@ public:
 
 
 	/**
-	 * "Lotfusspunkt"
+	 * "Lotfußpunkt"
 	 */
 	t_vec GetDroppedPerp(const t_vec& vecP, T *pdDist=0) const
 	{
@@ -326,7 +326,7 @@ public:
 
 
 	/**
-	 * "Lotfusspunkt"
+	 * "Lotfußpunkt"
 	 */
 	t_vec GetDroppedPerp(const t_vec& vecP, T *pdDist=0) const
 	{
@@ -518,7 +518,6 @@ bool intersect_plane_poly(const Plane<T>& plane,
 	if(!vertPoly.size())
 		return false;
 
-	
 	bool bFirstSide = plane.GetSide(vertPoly[0]);
 
 	// are all vertices on the same side?
