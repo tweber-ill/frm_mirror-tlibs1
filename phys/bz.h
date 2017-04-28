@@ -81,7 +81,7 @@ class Brillouin3D
 
 		// m_vecPolys and m_vecPlanes correspond to one another
 		const std::vector<std::vector<t_vec<T>>>& GetPolys() const { return m_vecPolys; }
-		const std::vector<Plane<T>> GetPlanes() const { m_vecPlanes; }
+		const std::vector<Plane<T>> GetPlanes() const { return m_vecPlanes; }
 
 		void Clear()
 		{

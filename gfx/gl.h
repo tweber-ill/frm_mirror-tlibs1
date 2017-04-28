@@ -31,8 +31,13 @@ template<> struct gl_traits<GLdouble>
 	static void GetProjMatrix(value_type *pdMat) { glGetDoublev(GL_PROJECTION_MATRIX, pdMat); }
 	static void GetModelMatrix(value_type *pdMat) { glGetDoublev(GL_MODELVIEW_MATRIX, pdMat); }
 
+	static void SetScale(value_type x, value_type y, value_type z) { glScaled(x, y, z); }
+	static void SetTranslate(value_type x, value_type y, value_type z) { glTranslated(x, y, z); }
+
 	static void SetVertex(value_type x, value_type y) { glVertex2d(x, y); }
 	static void SetVertex(value_type x, value_type y, value_type z) { glVertex3d(x, y, z); }
+	static void SetNorm(value_type x, value_type y, value_type z) { glNormal3d(x, y, z); }
+	static void SetNorm(const value_type* px) { glNormal3dv(px); }
 	static void SetTextureCoord(value_type u, value_type v) { glTexCoord2d(u, v); }
 
 	static void SetColor(value_type r, value_type g, value_type b) { glColor3d(r, g, b); }
@@ -60,8 +65,13 @@ template<> struct gl_traits<GLfloat>
 	static void GetProjMatrix(value_type *pdMat) { glGetFloatv(GL_PROJECTION_MATRIX, pdMat); }
 	static void GetModelMatrix(value_type *pdMat) { glGetFloatv(GL_MODELVIEW_MATRIX, pdMat); }
 
+	static void SetScale(value_type x, value_type y, value_type z) { glScalef(x, y, z); }
+	static void SetTranslate(value_type x, value_type y, value_type z) { glTranslatef(x, y, z); }
+
 	static void SetVertex(value_type x, value_type y) { glVertex2f(x, y); }
 	static void SetVertex(value_type x, value_type y, value_type z) { glVertex3f(x, y, z); }
+	static void SetNorm(value_type x, value_type y, value_type z) { glNormal3f(x, y, z); }
+	static void SetNorm(const value_type* px) { glNormal3fv(px); }
 	static void SetTextureCoord(value_type u, value_type v) { glTexCoord2f(u, v); }
 
 	static void SetColor(value_type r, value_type g, value_type b) { glColor3f(r, g, b); }
