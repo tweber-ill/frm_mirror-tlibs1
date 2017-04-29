@@ -535,6 +535,42 @@ bool intersect_plane_poly(const Plane<T>& plane,
 
 
 /**
+ * intersection of "line" and polygon (defined by "planePoly" and vertPoly")
+ */
+template<class t_vec = ublas::vector<double>,
+	template<class...> class t_cont = std::vector,
+	class T = typename t_vec::value_type>
+bool intersect_line_poly(const Line<T>& line,
+	const Plane<T>& planePoly, const t_cont<t_vec>& vertPoly,
+	t_vec& vecIntersect, T eps = tl::get_epsilon<T>())
+{
+	// point of intersection with plane
+	T t;
+	if(!line.intersect(planePoly, t, eps))
+		return false;
+	vecIntersect = line(t);
+
+	// is intersection point within polygon?
+	const t_vec vecFaceCentre = mean_value(vertPoly);
+	for(std::size_t iVert = 0; iVert < vertPoly.size(); ++iVert)
+	{
+		std::size_t iNextVert = iVert < vertPoly.size()-1 ? iVert+1 : 0;
+
+		const t_vec vecEdgeCentre = vertPoly[iVert] + T(0.5)*(vertPoly[iNextVert] - vertPoly[iVert]);
+		const t_vec vecNorm = vecFaceCentre-vecEdgeCentre;
+
+		const Plane<T> planeEdge(vecEdgeCentre, vecNorm);
+
+		if(planeEdge.GetDist(vecIntersect) < -eps)
+			return false;
+	}
+
+	return true;
+}
+
+
+
+/**
  * sort vertices in a convex polygon
  */
 template<class t_vec = ublas::vector<double>,

@@ -303,6 +303,34 @@ class Brillouin3D
 		}
 
 
+		/**
+		 * Calculates intersection of the BZ with a line.
+		 * @return [ intersection vertices ]
+		 */
+		std::vector<t_vec<T>>
+		GetIntersection(const Line<T>& line) const
+		{
+			std::vector<t_vec<T>> vecVertices;
+
+			if(m_vecPlanes.size() != m_vecPolys.size())
+				return vecVertices;
+
+
+			// get all intersection lines
+			for(std::size_t i=0; i<m_vecPlanes.size(); ++i)
+			{
+				t_vec<T> vecRes;
+				if(intersect_line_poly<t_vec<T>,std::vector,T>(line, m_vecPlanes[i], m_vecPolys[i], vecRes, eps))
+				{
+					set_eps_0(vecRes);
+					vecVertices.emplace_back(std::move(vecRes));
+				}
+			}
+
+			return vecVertices;
+		}
+
+
 		void Print(std::ostream& ostr) const
 		{
 			ostr << "central: " << m_vecCentralReflex << "\n";
