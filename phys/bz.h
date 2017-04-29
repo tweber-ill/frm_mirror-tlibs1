@@ -205,9 +205,14 @@ class Brillouin3D
 				}
 
 				if(bRemoveVertex)
+				{
 					iterVert = m_vecVertices.erase(iterVert);
+				}
 				else
+				{
+					set_eps_0(*iterVert);
 					++iterVert;
+				}
 			}
 
 
