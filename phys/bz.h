@@ -23,7 +23,7 @@ namespace tl {
  */
 template<class t_vec, class T = typename t_vec::value_type>
 static bool reduce_neighbours(
-	std::vector<t_vec>& vecNeighbours, const std::vector<t_vec>& vecNeighboursHKL,
+	std::vector<t_vec>& vecNeighbours, std::vector<t_vec>& vecNeighboursHKL,
 	const t_vec& vecCentralReflexHKL, T eps)
 {
 	if(!vecNeighboursHKL.size())
@@ -34,11 +34,22 @@ static bool reduce_neighbours(
 	if(vecvecNN.size() < 2)
 		return false;
 
+
+	// 1/A
 	auto vecNN1 = get_atoms_by_idx<t_vec, std::vector>(vecNeighbours, vecvecNN[0]);
 	auto vecNN2 = get_atoms_by_idx<t_vec, std::vector>(vecNeighbours, vecvecNN[1]);
 
 	vecNeighbours = std::move(vecNN1);
 	vecNeighbours.insert(vecNeighbours.end(), vecNN2.begin(), vecNN2.end());
+
+
+	// rlu
+	auto vecNN1HKL = get_atoms_by_idx<t_vec, std::vector>(vecNeighboursHKL, vecvecNN[0]);
+	auto vecNN2HKL = get_atoms_by_idx<t_vec, std::vector>(vecNeighboursHKL, vecvecNN[1]);
+
+	vecNeighboursHKL = std::move(vecNN1HKL);
+	vecNeighboursHKL.insert(vecNeighboursHKL.end(), vecNN2HKL.begin(), vecNN2HKL.end());
+
 
 	return vecNeighbours.size()!=0;
 }
@@ -68,7 +79,7 @@ class Brillouin3D
 		bool m_bValid = 1;
 		bool m_bHasCentralPeak = 0;
 
-		const T eps = 0.001;
+		T m_eps = 0.001;
 
 	public:
 		Brillouin3D() {}
@@ -83,6 +94,8 @@ class Brillouin3D
 		const std::vector<std::vector<t_vec<T>>>& GetPolys() const { return m_vecPolys; }
 		const std::vector<Plane<T>> GetPlanes() const { return m_vecPlanes; }
 
+		void SetEpsilon(T eps) { m_eps = eps; }
+
 		void Clear()
 		{
 			m_vecCentralReflex.clear();
@@ -93,6 +106,7 @@ class Brillouin3D
 			m_vecPolys.clear();
 			m_vecPlanes.clear();
 			m_bValid = 0;
+			m_bHasCentralPeak = 0;
 		}
 
 		bool IsValid() const { return m_bValid; }
@@ -130,11 +144,9 @@ class Brillouin3D
 			std::vector<Plane<T>> vecMiddlePerps;
 			vecMiddlePerps.reserve(m_vecNeighbours.size());
 
-			if(!reduce_neighbours<t_vec<T>, T>(m_vecNeighbours, m_vecNeighboursHKL, m_vecCentralReflexHKL, eps))
+			if(!reduce_neighbours<t_vec<T>, T>(m_vecNeighbours, m_vecNeighboursHKL, m_vecCentralReflexHKL, m_eps))
 				return;
 
-	
-			//const T dMaxPlaneDist = ublas::norm_2(m_vecNeighbours[0] - m_vecCentralReflex);
 
 			// get middle perpendicular planes
 			for(const t_vec<T>& vecN : m_vecNeighbours)
@@ -147,15 +159,10 @@ class Brillouin3D
 				if(!line.GetMiddlePerp(planeperp))
 					continue;
 
-				// only consider planes that are closer that the nearest neighbour
-				//if(ublas::norm_2(planeperp.GetX0() - m_vecCentralReflex) < dMaxPlaneDist)
-				{
-					// let normals point outside
-					if(!planeperp.GetSide(m_vecCentralReflex))
-						planeperp.FlipNormal();
-
-					vecMiddlePerps.emplace_back(std::move(planeperp));
-				}
+				// let normals point outside
+				if(!planeperp.GetSide(m_vecCentralReflex))
+					planeperp.FlipNormal();
+				vecMiddlePerps.emplace_back(std::move(planeperp));
 			}
 
 
@@ -171,17 +178,13 @@ class Brillouin3D
 						const Plane<T>& plane3 = vecMiddlePerps[iPlane3];
 
 						t_vec<T> vecVertex;
-						if(plane1.intersect(plane2, plane3, vecVertex, eps))
+						if(plane1.intersect(plane2, plane3, vecVertex, m_eps))
 						{
 							// if duplicate, ignore vertex
-							if(std::find_if(m_vecVertices.begin(), m_vecVertices.end(), 
-								[this, &vecVertex](const t_vec<T>& vec) -> bool 
-								{ return vec_equal(vecVertex, vec, eps); }) != m_vecVertices.end())
+							if(std::find_if(m_vecVertices.begin(), m_vecVertices.end(),
+								[this, &vecVertex](const t_vec<T>& vec) -> bool
+								{ return vec_equal(vecVertex, vec, m_eps); }) != m_vecVertices.end())
 								continue;
-
-							/*// ignore vertices that are too far away
-							if(ublas::norm_2(vecVertex-m_vecCentralReflex) > dMaxPlaneDist)
-								continue;*/
 
 							m_vecVertices.emplace_back(std::move(vecVertex));
 						}
@@ -197,7 +200,7 @@ class Brillouin3D
 
 				for(const Plane<T>& plane : vecMiddlePerps)
 				{
-					if(plane.GetDist(*iterVert) > eps)
+					if(plane.GetDist(*iterVert) > m_eps)
 					{
 						bRemoveVertex = 1;
 						break;
@@ -223,7 +226,7 @@ class Brillouin3D
 
 				for(const t_vec<T>& vecVertex : m_vecVertices)
 				{
-					if(plane.IsOnPlane(vecVertex, eps))
+					if(plane.IsOnPlane(vecVertex, m_eps))
 						vecPoly.push_back(vecVertex);
 				}
 
@@ -261,7 +264,7 @@ class Brillouin3D
 			for(std::size_t i=0; i<m_vecPlanes.size(); ++i)
 			{
 				Line<T> lineRes;
-				if(intersect_plane_poly<t_vec<T>,std::vector,T>(plane, m_vecPlanes[i], m_vecPolys[i], lineRes, eps))
+				if(intersect_plane_poly<t_vec<T>,std::vector,T>(plane, m_vecPlanes[i], m_vecPolys[i], lineRes, m_eps))
 					vecLines.emplace_back(std::move(lineRes));
 			}
 
@@ -275,7 +278,7 @@ class Brillouin3D
 					const Line<T>& line2 = vecLines[iLine2];
 
 					T t;
-					if(line1.intersect(line2, t, eps))
+					if(line1.intersect(line2, t, m_eps))
 					{
 						t_vec<T> vecVert = line1(t);
 
@@ -283,7 +286,7 @@ class Brillouin3D
 						bool bRemoveVertex = 0;
 						for(const Plane<T>& planeboundary : m_vecPlanes)
 						{
-							if(planeboundary.GetDist(vecVert) > eps)
+							if(planeboundary.GetDist(vecVert) > m_eps)
 							{
 								bRemoveVertex = 1;
 								break;
@@ -320,7 +323,7 @@ class Brillouin3D
 			for(std::size_t i=0; i<m_vecPlanes.size(); ++i)
 			{
 				t_vec<T> vecRes;
-				if(intersect_line_poly<t_vec<T>,std::vector,T>(line, m_vecPlanes[i], m_vecPolys[i], vecRes, eps))
+				if(intersect_line_poly<t_vec<T>,std::vector,T>(line, m_vecPlanes[i], m_vecPolys[i], vecRes, m_eps))
 				{
 					set_eps_0(vecRes);
 					vecVertices.emplace_back(std::move(vecRes));
@@ -369,7 +372,7 @@ class Brillouin2D
 		bool m_bValid = 1;
 		bool m_bHasCentralPeak = 0;
 
-		const T eps = 0.001;
+		T m_eps = 0.001;
 
 	protected:
 		const t_vecpair<T>* GetNextVertexPair(const t_vertices<T>& vecPts, std::size_t *pIdx=0)
@@ -379,7 +382,7 @@ class Brillouin2D
 			{
 				const t_vecpair<T>& vecp = vecPts[iPt];
 
-				if(vec_equal(vecp.first, vecLast, eps))
+				if(vec_equal(vecp.first, vecLast, m_eps))
 				{
 					if(pIdx) *pIdx = iPt;
 					return &vecp;
@@ -402,6 +405,8 @@ class Brillouin2D
 		const t_vec<T>& GetCentralReflex() const { return m_vecCentralReflex; }
 		const std::vector<t_vec<T>>& GetNeighbours() const { return m_vecNeighbours; }
 
+		void SetEpsilon(T eps) { m_eps = eps; }
+
 		void Clear()
 		{
 			m_vecCentralReflex.clear();
@@ -410,6 +415,7 @@ class Brillouin2D
 			m_vecNeighboursHKL.clear();
 			m_vecVertices.clear();
 			m_bValid = 0;
+			m_bHasCentralPeak = 0;
 		}
 
 		bool IsValid() const { return m_bValid; }
@@ -444,7 +450,7 @@ class Brillouin2D
 		{
 			if(!m_bHasCentralPeak) return;
 
-			if(!reduce_neighbours<t_vec<T>, T>(m_vecNeighbours, m_vecNeighboursHKL, m_vecCentralReflexHKL, eps))
+			if(!reduce_neighbours<t_vec<T>, T>(m_vecNeighbours, m_vecNeighboursHKL, m_vecCentralReflexHKL, m_eps))
 				return;
 
 			// calculate perpendicular lines
@@ -479,7 +485,7 @@ class Brillouin2D
 						continue;
 
 					T t;
-					if(!lineThis.intersect(vecMiddlePerps[iOtherLine], t, eps))
+					if(!lineThis.intersect(vecMiddlePerps[iOtherLine], t, m_eps))
 						continue;
 
 					if(t>0.)
@@ -495,7 +501,7 @@ class Brillouin2D
 				// get closest two intersections of this line with two other lines
 				t_vec<T> vecUpper = lineThis(tPos);
 				t_vec<T> vecLower = lineThis(tNeg);
-				if(vec_equal(vecUpper, vecLower, eps))
+				if(vec_equal(vecUpper, vecLower, m_eps))
 					continue;
 
 				vecPts.push_back(t_vecpair<T>(vecUpper, vecLower));
@@ -516,8 +522,8 @@ class Brillouin2D
 					bool bSideUpper = line.GetSide(vecUpper, &tDistUpper);
 					bool bSideLower = line.GetSide(vecLower, &tDistLower);
 
-					if((bSideUpper!=bSideReflex && tDistUpper>eps) ||
-						(bSideLower!=bSideReflex && tDistLower>eps))
+					if((bSideUpper!=bSideReflex && tDistUpper>m_eps) ||
+						(bSideLower!=bSideReflex && tDistLower>m_eps))
 					{
 						vecPts.erase(vecPts.begin()+iPt);
 						--iPt;
