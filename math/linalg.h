@@ -1432,31 +1432,6 @@ T slerp(const T& q1, const T& q2, typename T::value_type t)
 // --------------------------------------------------------------------------------
 
 
-
-/**
- * tensor product
- * see e.g.: (Arfken 2013), p. 109
- */
-template<class t_mat = ublas::matrix<double>>
-t_mat tensor_prod(const t_mat& mat1, const t_mat& mat2)
-{
-	t_mat mat(mat1.size1()*mat2.size1(), mat1.size2()*mat2.size2());
-
-	for(std::size_t i=0; i<mat1.size1(); ++i)
-	{
-		for(std::size_t j=0; j<mat1.size2(); ++j)
-		{
-			t_mat matElem = mat1(i,j)*mat2;
-			submatrix_copy(mat, matElem,
-				i*mat2.size1(), j*mat2.size2());
-		}
-	}
-	return mat;
-}
-
-
-
-// --------------------------------------------------------------------------------
 }
 
 #include <boost/math/common_factor_rt.hpp>
