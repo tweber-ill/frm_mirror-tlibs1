@@ -1,4 +1,4 @@
-/**
+ /**
  * tlibs test file
  * @author Tobias Weber <tobias.weber@tum.de>
  * @license GPLv2 or GPLv3
@@ -17,15 +17,15 @@ using t_vec = tl::ublas::vector<T>;
 
 int main()
 {
+	T dAngle = 35.;
+	T s = std::sin(dAngle/180.*M_PI);
+	T c = std::cos(dAngle/180.*M_PI);
+	
 	std::vector<t_vec> vecsBaseCov =
 	{
-		/*tl::make_vec({1., 0., 0.}) / std::sqrt(1.),
-		tl::make_vec({0., 1., 0.}) / std::sqrt(1.),
-		tl::make_vec({0., 0., 1.}) / std::sqrt(1.),*/
-
 		tl::make_vec({1., 0., 1.}) / std::sqrt(2.),
-		tl::make_vec({1., 1., 0.}) / std::sqrt(2.),
-		tl::make_vec({0., 1., 1.}) / std::sqrt(2.),
+		tl::make_vec({ c,  s, 0.}),
+		tl::make_vec({0., 1., -1.}) / std::sqrt(2.),
 	};
 
 	t_mat matGCov = tl::make_metric_cov(vecsBaseCov);
@@ -37,7 +37,6 @@ int main()
 
 	std::cout << "det(g_cov) = " << tl::determinant(matGCov) << std::endl;
 	std::cout << "det(g_contra) = " << tl::determinant(matGContra) << std::endl;
-
 
 	std::vector<t_vec> vecsBaseContra;
 	for(t_vec& vecBase : vecsBaseCov)
@@ -53,10 +52,17 @@ int main()
 	std::cout << "det(base_contra) = " << tl::determinant(matBaseContra) << std::endl;
 	std::cout << std::endl;
 
+	// check cov[i]*contra[j] = delta[i,j]
+	for(int iCov=0; iCov<vecsBaseCov.size(); ++iCov)
+		for(int iCont=0; iCont<vecsBaseCov.size(); ++iCont)
+			std::cout << "cov[" << iCov << "] * contra[" << iCont << "] = " 
+				<< tl::ublas::inner_prod(vecsBaseCov[iCov], vecsBaseContra[iCont]) << std::endl;
+	std::cout << std::endl;
+
 
 
 	auto vec0 = tl::make_vec({1.,0.,0.});
-	auto vec1 = tl::make_vec({0.,0.,1.});
+	auto vec1 = tl::make_vec({0.,1.,0.});
 
 	std::cout << "v1 * v2 = " << tl::inner_prod(matGCov, vec0, vec1) << std::endl;
 	std::cout << "angle(v1,v2) = " << tl::vec_angle(matGCov, vec0, vec1)/M_PI*180. << std::endl;
@@ -64,12 +70,13 @@ int main()
 	t_vec vecCross = tl::cross_prod_contra(matGCov, vec0, vec1);
 	std::cout << "v1 x v2 (contra) = " << vecCross << std::endl;
 	std::cout << "v1 x v2 (cov) = " << tl::ublas::prod(matGCov, vecCross) << std::endl;
-
+	std::cout << "v1 x v2 (coord) = " << tl::cross_3(vecsBaseCov[0], vecsBaseCov[1]) << std::endl;
+	std::cout << "coord test = " << vecCross[0]*vecsBaseCov[0] + vecCross[1]*vecsBaseCov[1] + vecCross[2]*vecsBaseCov[2] << std::endl;
 
 
 	std::cout << std::endl;
 	auto pairPerm = tl::count_permutations({3,1,2}, {1,2,3});
-	std::cout << std::boolalpha << pairPerm.first << " " << pairPerm.second << std::endl;
+	std::cout << "permutation = " << std::boolalpha << pairPerm.first << " " << pairPerm.second << std::endl;
 
 	std::vector<int> vecIdx = {0,1,2};
 	while(1)
