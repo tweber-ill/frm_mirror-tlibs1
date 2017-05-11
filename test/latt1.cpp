@@ -23,7 +23,7 @@ int main()
 	tl::Lattice<T> recip = latt.GetRecip();
 	//std::cout << recip.GetPos(1., 2., 3.) << std::endl;
 
-	t_mat matBaseCont = latt.GetBaseMatrixCont();
+	t_mat matBaseCont = latt.GetBaseMatrixCont() * 2.*M_PI;
 	t_mat matBaseCov = latt.GetBaseMatrixCov();
 	t_mat matRecipCov = recip.GetBaseMatrixCov();
 

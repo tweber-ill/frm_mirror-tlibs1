@@ -266,7 +266,7 @@ template<typename T>
 typename Lattice<T>::t_mat Lattice<T>::GetBaseMatrixCont() const
 {
 	t_mat matCov = GetBaseMatrixCov();
-	t_mat matGCont = GetMetricCont();
+	t_mat matGCont = GetMetricCont() /** T(2)*get_pi<T>()*/;
 
 	t_mat matBase = ublas::prod(matCov, matGCont);
 	//matBase = ublas::trans(matBase);
@@ -291,7 +291,7 @@ typename Lattice<T>::t_mat Lattice<T>::GetMetricCont() const
 
 	t_mat matGCont;
 	inverse(matGCov, matGCont);
-	matGCont *= T(2)*get_pi<T>();
+	//matGCont *= T(2)*get_pi<T>();
 
 	set_eps_0(matGCont);
 	return matGCont;

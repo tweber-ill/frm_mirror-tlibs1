@@ -913,7 +913,7 @@ bool solve_linear(const ublas::matrix<T>& M,
 			//std::cout << "det: " << determinant(Rsub) << std::endl;
 
 			T det = determinant<ublas::matrix<T>>(Rsub);
-			if(!float_equal(det, 0.))
+			if(!float_equal<T>(det, 0.))
 			{
 				bFoundNonSingular = 1;
 				vecDelCols.push_back(iCol);
