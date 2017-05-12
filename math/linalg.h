@@ -56,6 +56,25 @@ t_vec make_vec(t_lst<typename t_vec::value_type>&& lst)
 }
 
 /**
+ * creates a vector
+ */
+template<class t_vec = ublas::vector<double>,
+	template<class...> class t_lst = std::initializer_list>
+t_vec make_vec(const t_lst<typename t_vec::value_type>& lst)
+{
+	using T = typename t_vec::value_type;
+	using t_iter = typename t_lst<T>::const_iterator;
+
+	t_vec vec(lst.size());
+
+	std::size_t i=0;
+	for(t_iter iter=lst.begin(); iter!=lst.end(); ++i, ++iter)
+		vec[i] = *iter;
+
+	return vec;
+}
+
+/**
  * creates a matrix
  */
 template<class t_mat = ublas::matrix<double>,
