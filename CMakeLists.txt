@@ -69,7 +69,7 @@ add_library(tlibs SHARED
 
 
 target_link_libraries(tlibs ${Boost_LIBRARIES} Threads::Threads
-	${FREETYPE_LIBRARY} ${Minuit2_LIBRARIES}
+	${OPENGL_LIBRARIES} ${FREETYPE_LIBRARY} ${Minuit2_LIBRARIES}
 )
 
 
