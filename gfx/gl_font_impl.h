@@ -14,7 +14,7 @@
 #include "../string/string.h"
 
 #include <iomanip>
-#include <glu.h>
+//#include <glu.h>
 
 
 // --------------------------------------------------------------------------------

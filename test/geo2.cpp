@@ -3,7 +3,7 @@
  * @author Tobias Weber <tobias.weber@tum.de>
  * @license GPLv2 or GPLv3
  */
-// gcc -o geo2 geo2.cpp ../file/x3d.cpp -std=c++11 -lstdc++
+// gcc -o geo2 geo2.cpp ../file/x3d.cpp -std=c++11 -lstdc++ -lm
 
 #include "../file/x3d.h"
 #include "../math/geo_prim.h"
@@ -25,6 +25,6 @@ int main()
 		x3d.GetScene().AddChild(pPoly);
 	}
 
-	x3d.Save("geo.x3d");
+	x3d.Save("/home/tweber/tmp/geo.x3d");
 	return 0;
 }
