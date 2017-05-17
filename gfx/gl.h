@@ -39,6 +39,7 @@ template<> struct gl_traits<GLdouble>
 
 	static void SetVertex(value_type x, value_type y) { glVertex2d(x, y); }
 	static void SetVertex(value_type x, value_type y, value_type z) { glVertex3d(x, y, z); }
+	static void SetVertex(const value_type *px) { glVertex3dv(px); }
 	static void SetNorm(value_type x, value_type y, value_type z) { glNormal3d(x, y, z); }
 	static void SetNorm(const value_type* px) { glNormal3dv(px); }
 	static void SetTextureCoord(value_type u, value_type v) { glTexCoord2d(u, v); }
@@ -76,6 +77,7 @@ template<> struct gl_traits<GLfloat>
 
 	static void SetVertex(value_type x, value_type y) { glVertex2f(x, y); }
 	static void SetVertex(value_type x, value_type y, value_type z) { glVertex3f(x, y, z); }
+	static void SetVertex(const value_type *px) { glVertex3fv(px); }
 	static void SetNorm(value_type x, value_type y, value_type z) { glNormal3f(x, y, z); }
 	static void SetNorm(const value_type* px) { glNormal3fv(px); }
 	static void SetTextureCoord(value_type u, value_type v) { glTexCoord2f(u, v); }
