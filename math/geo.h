@@ -723,7 +723,7 @@ t_cont<t_cont<t_vec>> verts_to_polyhedron(
 					bool bIsHull = 1;
 					for(const t_vec& vecOtherVert : vecVerts)
 					{
-						if(plane.GetDist(vecOtherVert) > eps)
+						if(plane.GetDist(vecOtherVert) > T(2)*eps)
 						{
 							bIsHull = 0;
 							break;
