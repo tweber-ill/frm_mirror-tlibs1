@@ -661,8 +661,6 @@ t_vec get_face_normal(const t_cont<t_vec>& vecVerts, t_vec vecCentre,
 	if(vecVerts.size() < 3)
 		return vecNorm;
 
-	t_vec vecCentreToFace = vecVerts[0] - vecCentre;
-
 	const t_vec& vec1 = vecVerts[1] - vecVerts[0];
 	for(std::size_t iVec2 = 2; iVec2 < vecVerts.size(); ++iVec2)
 	{
@@ -679,10 +677,17 @@ t_vec get_face_normal(const t_cont<t_vec>& vecVerts, t_vec vecCentre,
 	if(vecNorm.size() == 0)
 		return vecNorm;
 
+
+	// vector pointing "outwards"
+	const t_vec vecPolyCentre = mean_value(vecVerts);
+	t_vec vecCentreToFace = vecPolyCentre - vecCentre;
+	vecCentreToFace /= ublas::norm_2(vecCentreToFace);
+
 	vecNorm /= ublas::norm_2(vecNorm);
 	if(ublas::inner_prod(vecNorm, vecCentreToFace) < T(0))
 		vecNorm = -vecNorm;
 
+	//tl::log_debug("vec = ", vecCentreToFace, ",\tnorm = ", vecNorm);
 	return vecNorm;
 }
 
