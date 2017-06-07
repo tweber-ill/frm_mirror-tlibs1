@@ -786,6 +786,10 @@ t_cont<t_cont<t_vec>> verts_to_polyhedron(
 		}
 	}
 
+	// too few polygons => remove polyhedron
+	if(vecPolys.size() < 3)
+		vecPolys = decltype(vecPolys)();
+
 	return vecPolys;
 }
 
