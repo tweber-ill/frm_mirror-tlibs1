@@ -8,6 +8,8 @@
 __precompile__()
 module tl
 
+t_real = Float64
+
 
 #
 # initialises tlibs
@@ -33,6 +35,23 @@ function loadinstr(strFile::String) :: Array{Any, 1}
 end
 
 
+
+#
+# fitting
+#
+function fit(fkt, x, y, yerr)
+	cfkt = cfunction(fkt, t_real, (t_real, t_real))
+
+	bOk = ccall((:fit, :tlibs_jl),
+		Cint,	# return type
+		(Ptr{Void}, Csize_t,
+		Ptr{t_real}, Ptr{t_real}, Ptr{t_real}, Csize_t),	# arg types
+		cfkt, 1, x, y, yerr, length(x))
+
+	return bOk != 0;
+end
+
+
 end
 
 
@@ -40,6 +59,7 @@ end
 
 # -----------------------------------------------------------------------------
 # test
+
 
 a = tl.loadinstr("/home/tweber/Measurements/mira-mgv2o4-17/data/11797_00025700.dat")
 cols = a[1]
@@ -52,9 +72,17 @@ idxCtr = findfirst(cols, "ctr1")
 
 Es = data[:,idxE]
 cts = data[:,idxCtr]
+cts_err = sqrt(cts)
 
-println(lpad(cols[idxE], 8), " ", lpad(cols[idxCtr], 8))
+println(lpad(cols[idxE], 12), " ", lpad(cols[idxCtr], 12))
 for (E, ct) in zip(Es, cts)
-	println(lpad(E, 8), " ", lpad(ct, 8))
+	println(lpad(E, 12), " ", lpad(ct, 12))
 end
+
+
+
+line(x, m) = m*x
+tl.fit(line, Es, cts, cts_err)
+
+
 # -----------------------------------------------------------------------------
