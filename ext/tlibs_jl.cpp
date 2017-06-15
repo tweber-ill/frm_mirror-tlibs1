@@ -55,7 +55,8 @@ extern "C" jl_array_t* load_instr(const char* pcFile)
  * function fitting
  */
 extern "C" int fit(void *_pFkt, std::size_t iNumParams,
-	const t_real* pX, const t_real *pY, const t_real *pYerr, std::size_t iArrLen)
+	const t_real *pX, const t_real *pY, const t_real *pYerr, std::size_t iArrLen,
+	jl_array_t *parrParamNames, jl_array_t *parrFixed)
 {
 	std::vector<tl::t_real_min> vecX, vecY, vecYerr;
 
@@ -72,11 +73,28 @@ extern "C" int fit(void *_pFkt, std::size_t iNumParams,
 	}
 
 
-	// fill up missing parameters and hints
-	std::vector<std::string> vecParamNames;
-	std::vector<tl::t_real_min> vecVals, vecErrs;
-	std::vector<bool> vecFixed;
+	// parameter names
+	std::vector<std::string> vecParamNames =
+		tl::from_jl_arr<std::vector, std::string>(parrParamNames, 1);
 
+	// fixed parameters
+	std::vector<std::string> vecFixedParams =
+		tl::from_jl_arr<std::vector, std::string>(parrFixed);
+
+	std::vector<bool> vecFixed;
+	for(const std::string& strParam : vecParamNames)
+	{
+		bool bFixed = std::find(vecFixedParams.begin(), vecFixedParams.end(), strParam)
+			!= vecFixedParams.end();
+		vecFixed.push_back(bFixed);
+	}
+
+
+	std::vector<tl::t_real_min> vecVals, vecErrs;
+
+
+	// ------------------------------------------------------------------------
+	// fill up missing parameters and hints
 	if(vecParamNames.size() < iNumParams)
 	{
 		for(std::size_t iArg=vecParamNames.size(); iArg<iNumParams; ++iArg)
@@ -90,6 +108,8 @@ extern "C" int fit(void *_pFkt, std::size_t iNumParams,
 	while(vecVals.size() < iNumParams) vecVals.push_back(0);
 	while(vecErrs.size() < iNumParams) vecErrs.push_back(0);
 	while(vecFixed.size() < iNumParams) vecFixed.push_back(0);
+	// ------------------------------------------------------------------------
+
 
 	bool bDebug = 1;
 	bool bOk = 0;

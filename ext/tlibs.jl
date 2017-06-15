@@ -39,11 +39,17 @@ end
 #
 # fitting
 #
-function fit(fkt, x, y, yerr)
+function fit(fkt, x, y, yerr; fixed = [])
 	# find number of function arguments
 	meth = methods(fkt).ms[1]
 	num_args = meth.sig.parameters.length - 1
 	num_free_params = num_args - 1
+
+	# get function argument names
+	strMeth = repr(meth)
+	strArgs = strMeth[searchindex(strMeth, "(")+1 : searchindex(strMeth, ")")-1]
+	arrArgs = map(strip, split(strArgs, ","))
+	arrArgs = map(String, arrArgs)
 
 	# map to a C function pointer
 	if(num_args == 2)
@@ -71,8 +77,9 @@ function fit(fkt, x, y, yerr)
 	bOk = ccall((:fit, :tlibs_jl),
 		Cint,	# return type
 		(Ptr{Void}, Csize_t,
-		Ptr{t_real}, Ptr{t_real}, Ptr{t_real}, Csize_t),	# arg types
-		cfkt, num_free_params, x, y, yerr, length(x))
+		Ptr{t_real}, Ptr{t_real}, Ptr{t_real}, Csize_t,
+		Array{String, 1}, Array{String, 1}),		# arg types
+		cfkt, num_free_params, x, y, yerr, length(x), arrArgs, fixed)
 
 	return bOk != 0
 end
@@ -123,7 +130,7 @@ end
 
 
 
-tl.fit(tl.gauss_model_amp, Es, cts, cts_err)
+tl.fit(tl.gauss_model_amp, Es, cts, cts_err, fixed = ["x0", "sigma"])
 
 
 # -----------------------------------------------------------------------------
