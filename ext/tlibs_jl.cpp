@@ -1,6 +1,7 @@
 /**
  * julia module
  * gcc -I. -I.. -I/usr/include/julia -I/usr/include/root -std=c++11 -shared -fPIC -o tlibs_jl.so ../log/log.cpp tlibs_jl.cpp -lstdc++ -lboost_system -lboost_iostreams -L/usr/lib64/root -lMinuit2
+ * gcc -I. -I.. -I/usr/include/julia -I/usr/local/include -std=c++11 -shared -fPIC -o tlibs_jl.so ../log/log.cpp tlibs_jl.cpp -lstdc++ -lboost_system -lboost_iostreams -L/usr/local/lib64 -lMinuit2 -lgomp
  *
  * @author Tobias Weber <tobias.weber@tum.de>
  * @date 23-apr-2017
@@ -53,7 +54,7 @@ extern "C" jl_array_t* load_instr(const char* pcFile)
 /**
  * function fitting
  */
-extern "C" int fit(t_real (*pFkt)(t_real, t_real), std::size_t iNumParams,
+extern "C" int fit(void *_pFkt, std::size_t iNumParams,
 	const t_real* pX, const t_real *pY, const t_real *pYerr, std::size_t iArrLen)
 {
 	std::vector<tl::t_real_min> vecX, vecY, vecYerr;
@@ -74,6 +75,7 @@ extern "C" int fit(t_real (*pFkt)(t_real, t_real), std::size_t iNumParams,
 	// fill up missing parameters and hints
 	std::vector<std::string> vecParamNames;
 	std::vector<tl::t_real_min> vecVals, vecErrs;
+	std::vector<bool> vecFixed;
 
 	if(vecParamNames.size() < iNumParams)
 	{
@@ -87,13 +89,59 @@ extern "C" int fit(t_real (*pFkt)(t_real, t_real), std::size_t iNumParams,
 
 	while(vecVals.size() < iNumParams) vecVals.push_back(0);
 	while(vecErrs.size() < iNumParams) vecErrs.push_back(0);
+	while(vecFixed.size() < iNumParams) vecFixed.push_back(0);
 
+	bool bDebug = 1;
+	bool bOk = 0;
 
-	bool bDebug = 0;
-	bool bOk = tl::fit<2>([pFkt](t_real x, t_real arg1) -> t_real { return pFkt(x, arg1); },
-		vecX, vecY, vecYerr,
-		vecParamNames, vecVals, vecErrs,
-		nullptr, bDebug);
+	if(iNumParams == 1)
+	{
+		auto *pFkt = reinterpret_cast<t_real (*)(t_real, t_real)>(_pFkt);
+		bOk = tl::fit<2>([pFkt](t_real x, t_real arg1) -> t_real { return pFkt(x, arg1); },
+			vecX, vecY, vecYerr, vecParamNames, vecVals, vecErrs, &vecFixed, bDebug);
+	}
+	else if(iNumParams == 2)
+	{
+		auto *pFkt = reinterpret_cast<t_real (*)(t_real, t_real, t_real)>(_pFkt);
+		bOk = tl::fit<3>([pFkt](t_real x, t_real arg1, t_real arg2) -> t_real { return pFkt(x, arg1, arg2); },
+			vecX, vecY, vecYerr, vecParamNames, vecVals, vecErrs, &vecFixed, bDebug);
+	}
+	else if(iNumParams == 3)
+	{
+		auto *pFkt = reinterpret_cast<t_real (*)(t_real, t_real, t_real, t_real)>(_pFkt);
+		bOk = tl::fit<4>([pFkt](t_real x, t_real arg1, t_real arg2, t_real arg3) -> t_real { return pFkt(x, arg1, arg2, arg3); },
+			vecX, vecY, vecYerr, vecParamNames, vecVals, vecErrs, &vecFixed, bDebug);
+	}
+	else if(iNumParams == 4)
+	{
+		auto *pFkt = reinterpret_cast<t_real (*)(t_real, t_real, t_real, t_real, t_real)>(_pFkt);
+		bOk = tl::fit<5>([pFkt](t_real x, t_real arg1, t_real arg2, t_real arg3, t_real arg4) -> t_real { return pFkt(x, arg1, arg2, arg3, arg4); },
+			vecX, vecY, vecYerr, vecParamNames, vecVals, vecErrs, &vecFixed, bDebug);
+	}
+	else if(iNumParams == 5)
+	{
+		auto *pFkt = reinterpret_cast<t_real (*)(t_real, t_real, t_real, t_real, t_real, t_real)>(_pFkt);
+		bOk = tl::fit<6>([pFkt](t_real x, t_real arg1, t_real arg2, t_real arg3, t_real arg4, t_real arg5) -> t_real { return pFkt(x, arg1, arg2, arg3, arg4, arg5); },
+			vecX, vecY, vecYerr, vecParamNames, vecVals, vecErrs, &vecFixed, bDebug);
+	}
+	else if(iNumParams == 6)
+	{
+		auto *pFkt = reinterpret_cast<t_real (*)(t_real, t_real, t_real, t_real, t_real, t_real, t_real)>(_pFkt);
+		bOk = tl::fit<7>([pFkt](t_real x, t_real arg1, t_real arg2, t_real arg3, t_real arg4, t_real arg5, t_real arg6) -> t_real { return pFkt(x, arg1, arg2, arg3, arg4, arg5, arg6); },
+			vecX, vecY, vecYerr, vecParamNames, vecVals, vecErrs, &vecFixed, bDebug);
+	}
+	else if(iNumParams == 7)
+	{
+		auto *pFkt = reinterpret_cast<t_real (*)(t_real, t_real, t_real, t_real, t_real, t_real, t_real, t_real)>(_pFkt);
+		bOk = tl::fit<8>([pFkt](t_real x, t_real arg1, t_real arg2, t_real arg3, t_real arg4, t_real arg5, t_real arg6, t_real arg7) -> t_real { return pFkt(x, arg1, arg2, arg3, arg4, arg5, arg6, arg7); },
+			vecX, vecY, vecYerr, vecParamNames, vecVals, vecErrs, &vecFixed, bDebug);
+	}
+	else if(iNumParams == 8)
+	{
+		auto *pFkt = reinterpret_cast<t_real (*)(t_real, t_real, t_real, t_real, t_real, t_real, t_real, t_real, t_real)>(_pFkt);
+		bOk = tl::fit<9>([pFkt](t_real x, t_real arg1, t_real arg2, t_real arg3, t_real arg4, t_real arg5, t_real arg6, t_real arg7, t_real arg8) -> t_real { return pFkt(x, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8); },
+			vecX, vecY, vecYerr, vecParamNames, vecVals, vecErrs, &vecFixed, bDebug);
+	}
 
 	return int(bOk);
 }

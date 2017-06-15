@@ -40,19 +40,61 @@ end
 # fitting
 #
 function fit(fkt, x, y, yerr)
-	cfkt = cfunction(fkt, t_real, (t_real, t_real))
+	# find number of function arguments
+	meth = methods(fkt).ms[1]
+	num_args = meth.sig.parameters.length - 1
+	num_free_params = num_args - 1
 
+	# map to a C function pointer
+	if(num_args == 2)
+		cfkt = cfunction(fkt, t_real, (t_real, t_real))
+	elseif (num_args == 3)
+		cfkt = cfunction(fkt, t_real, (t_real, t_real, t_real))
+	elseif (num_args == 4)
+		cfkt = cfunction(fkt, t_real, (t_real, t_real, t_real, t_real))
+	elseif (num_args == 5)
+		cfkt = cfunction(fkt, t_real, (t_real, t_real, t_real, t_real, t_real))
+	elseif (num_args == 6)
+		cfkt = cfunction(fkt, t_real, (t_real, t_real, t_real, t_real, t_real, t_real))
+	elseif (num_args == 7)
+		cfkt = cfunction(fkt, t_real, (t_real, t_real, t_real, t_real, t_real, t_real, t_real))
+	elseif (num_args == 8)
+		cfkt = cfunction(fkt, t_real, (t_real, t_real, t_real, t_real, t_real, t_real, t_real, t_real))
+	elseif (num_args == 9)
+		cfkt = cfunction(fkt, t_real, (t_real, t_real, t_real, t_real, t_real, t_real, t_real, t_real, t_real))
+	else
+		println("Invalid or unsupported number of arguments for fit function.")
+		return false
+	end
+
+	# call C function pointer
 	bOk = ccall((:fit, :tlibs_jl),
 		Cint,	# return type
 		(Ptr{Void}, Csize_t,
 		Ptr{t_real}, Ptr{t_real}, Ptr{t_real}, Csize_t),	# arg types
-		cfkt, 1, x, y, yerr, length(x))
+		cfkt, num_free_params, x, y, yerr, length(x))
 
-	return bOk != 0;
+	return bOk != 0
 end
 
 
+#
+# Gauss model
+#
+function gauss_model_amp(x, x0, sigma, amp, offs)
+	return amp * exp(-0.5 * ((x-x0)/sigma)*((x-x0)/sigma)) + offs
 end
+
+#
+# Lorentz model
+#
+function lorentz_model_amp(x, x0, hwhm, amp, offs)
+	return amp*hwhm*hwhm / ((x-x0)*(x-x0) + hwhm*hwhm) + offs
+end
+
+
+
+end 	# tl
 
 
 
@@ -81,8 +123,7 @@ end
 
 
 
-line(x, m) = m*x
-tl.fit(line, Es, cts, cts_err)
+tl.fit(tl.gauss_model_amp, Es, cts, cts_err)
 
 
 # -----------------------------------------------------------------------------
