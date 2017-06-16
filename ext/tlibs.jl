@@ -9,13 +9,14 @@ __precompile__()
 module tl
 
 t_real = Float64
+enable_debug = 0
 
 
 #
 # initialises tlibs
 #
 function __init__()
-	ccall((:load_tlibs, :tlibs_jl), Void, ())
+	ccall((:load_tlibs, :tlibs_jl), Void, (Cint,), enable_debug)
 end
 
 
@@ -51,6 +52,7 @@ function fit(fkt, x, y, yerr; fixed = [], values = Dict(), errors = Dict())
 	strArgs = strMeth[searchindex(strMeth, "(")+1 : searchindex(strMeth, ")")-1]
 	arrArgs = map(strip, split(strArgs, ","))
 	arrArgs = map(String, arrArgs)
+	arrParams = arrArgs[2 : length(arrArgs)]	# only free params
 
 
 	# build values/errors array
@@ -73,29 +75,8 @@ function fit(fkt, x, y, yerr; fixed = [], values = Dict(), errors = Dict())
 		iParam += 1
 	end
 
-
-	# map to a C function pointer
-	if(num_args == 2)
-		cfkt = cfunction(fkt, t_real, (t_real, t_real))
-	elseif (num_args == 3)
-		cfkt = cfunction(fkt, t_real, (t_real, t_real, t_real))
-	elseif (num_args == 4)
-		cfkt = cfunction(fkt, t_real, (t_real, t_real, t_real, t_real))
-	elseif (num_args == 5)
-		cfkt = cfunction(fkt, t_real, (t_real, t_real, t_real, t_real, t_real))
-	elseif (num_args == 6)
-		cfkt = cfunction(fkt, t_real, (t_real, t_real, t_real, t_real, t_real, t_real))
-	elseif (num_args == 7)
-		cfkt = cfunction(fkt, t_real, (t_real, t_real, t_real, t_real, t_real, t_real, t_real))
-	elseif (num_args == 8)
-		cfkt = cfunction(fkt, t_real, (t_real, t_real, t_real, t_real, t_real, t_real, t_real, t_real))
-	elseif (num_args == 9)
-		cfkt = cfunction(fkt, t_real, (t_real, t_real, t_real, t_real, t_real, t_real, t_real, t_real, t_real))
-	else
-		println("Invalid or unsupported number of arguments for fit function.")
-		return false
-	end
-
+	# map to a C function pointer with "num_args" arguments
+	cfkt = cfunction(fkt, t_real, NTuple{num_args, t_real})
 
 	# call C function pointer
 	bOk = ccall((:fit, :tlibs_jl),
@@ -111,7 +92,18 @@ function fit(fkt, x, y, yerr; fixed = [], values = Dict(), errors = Dict())
 		# args
 		cfkt, num_free_params, x, y, yerr, length(x), arrArgs, fixed, arrValues, arrErrors)
 
-	return bOk != 0
+
+
+	# build map of values & errors
+	dictRet = Dict()
+
+	for (strParam, valArg, valErr) in zip(arrParams, arrValues, arrErrors)
+		dictRet[strParam] = valArg
+		dictRet[strParam * "_err"] = valErr
+	end
+
+	dictRet["<valid>"] = bOk
+	return dictRet
 end
 
 
@@ -160,9 +152,9 @@ end
 
 
 
-tl.fit(tl.gauss_model_amp, Es, cts, cts_err, fixed = ["offs"],
+fitresult = tl.fit(tl.gauss_model_amp, Es, cts, cts_err, fixed = ["offs"],
 	values = Dict("x0" => -1.5, "sigma" => 0.5, "amp" => 100., "offs" => 50.),
 	errors = Dict("x0" => 0.25, "sigma" => 0.25, "amp" => 20., "offs" => 10.))
-
+println(fitresult)
 
 # -----------------------------------------------------------------------------

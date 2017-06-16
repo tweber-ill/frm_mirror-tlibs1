@@ -151,6 +151,27 @@ namespace tl{
 
 	// TODO: make recursive
 	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==16>::type>
+	{ using value_type = integer_sequence<T, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15>; };
+	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==15>::type>
+	{ using value_type = integer_sequence<T, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14>; };
+	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==14>::type>
+	{ using value_type = integer_sequence<T, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13>; };
+	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==13>::type>
+	{ using value_type = integer_sequence<T, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12>; };
+	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==12>::type>
+	{ using value_type = integer_sequence<T, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11>; };
+	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==11>::type>
+	{ using value_type = integer_sequence<T, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10>; };
+	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==10>::type>
+	{ using value_type = integer_sequence<T, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9>; };
+	template<class T, T NUM>
 	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==9>::type>
 	{ using value_type = integer_sequence<T, 0, 1, 2, 3, 4, 5, 6, 7, 8>; };
 	template<class T, T NUM>
