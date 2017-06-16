@@ -56,7 +56,8 @@ extern "C" jl_array_t* load_instr(const char* pcFile)
  */
 extern "C" int fit(void *_pFkt, std::size_t iNumParams,
 	const t_real *pX, const t_real *pY, const t_real *pYerr, std::size_t iArrLen,
-	jl_array_t *parrParamNames, jl_array_t *parrFixed)
+	jl_array_t *parrParamNames, jl_array_t *parrFixed,
+	const t_real *pValues, const t_real *pErrors)
 {
 	std::vector<tl::t_real_min> vecX, vecY, vecYerr;
 
@@ -89,8 +90,13 @@ extern "C" int fit(void *_pFkt, std::size_t iNumParams,
 		vecFixed.push_back(bFixed);
 	}
 
-
+	// values & errors
 	std::vector<tl::t_real_min> vecVals, vecErrs;
+	for(std::size_t iIdx=0; iIdx<iNumParams; ++iIdx)
+	{
+		vecVals.push_back(pValues[iIdx]);
+		vecErrs.push_back(pErrors[iIdx]);
+	}
 
 
 	// ------------------------------------------------------------------------

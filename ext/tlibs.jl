@@ -39,17 +39,40 @@ end
 #
 # fitting
 #
-function fit(fkt, x, y, yerr; fixed = [])
+function fit(fkt, x, y, yerr; fixed = [], values = Dict(), errors = Dict())
 	# find number of function arguments
 	meth = methods(fkt).ms[1]
 	num_args = meth.sig.parameters.length - 1
 	num_free_params = num_args - 1
+
 
 	# get function argument names
 	strMeth = repr(meth)
 	strArgs = strMeth[searchindex(strMeth, "(")+1 : searchindex(strMeth, ")")-1]
 	arrArgs = map(strip, split(strArgs, ","))
 	arrArgs = map(String, arrArgs)
+
+
+	# build values/errors array
+	iParam = 0
+	arrValues = Array{t_real, 1}(num_free_params)
+	arrErrors = Array{t_real, 1}(num_free_params)
+
+	for strArg in arrArgs
+		# skip "x" parameter
+		if(iParam == 0)
+			iParam += 1
+			continue
+		end
+
+		valArg = get(values, strArg, 0.)
+		errArg = get(errors, strArg, valArg*0.1)
+		
+		arrValues[iParam] = valArg
+		arrErrors[iParam] = errArg
+		iParam += 1
+	end
+
 
 	# map to a C function pointer
 	if(num_args == 2)
@@ -73,13 +96,20 @@ function fit(fkt, x, y, yerr; fixed = [])
 		return false
 	end
 
+
 	# call C function pointer
 	bOk = ccall((:fit, :tlibs_jl),
-		Cint,	# return type
+		# return type
+		Cint,
+
+		# arg types
 		(Ptr{Void}, Csize_t,
 		Ptr{t_real}, Ptr{t_real}, Ptr{t_real}, Csize_t,
-		Array{String, 1}, Array{String, 1}),		# arg types
-		cfkt, num_free_params, x, y, yerr, length(x), arrArgs, fixed)
+		Array{String, 1}, Array{String, 1},
+		Ptr{t_real}, Ptr{t_real}),
+
+		# args
+		cfkt, num_free_params, x, y, yerr, length(x), arrArgs, fixed, arrValues, arrErrors)
 
 	return bOk != 0
 end
@@ -130,7 +160,9 @@ end
 
 
 
-tl.fit(tl.gauss_model_amp, Es, cts, cts_err, fixed = ["x0", "sigma"])
+tl.fit(tl.gauss_model_amp, Es, cts, cts_err, fixed = ["offs"],
+	values = Dict("x0" => -1.5, "sigma" => 0.5, "amp" => 100., "offs" => 50.),
+	errors = Dict("x0" => 0.25, "sigma" => 0.25, "amp" => 20., "offs" => 10.))
 
 
 # -----------------------------------------------------------------------------
