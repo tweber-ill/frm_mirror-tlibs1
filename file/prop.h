@@ -375,6 +375,26 @@ public:
 		return vecRet;
 	}
 
+	/**
+	 * get a list of child values to a node
+	 */
+	template<class T = t_str>
+	std::vector<T> GetChildValues(const t_str& strAddr) const
+	{
+		std::vector<T> vecRet;
+		try
+		{
+			auto optPath = get_prop_path<t_str>(strAddr, m_chSep);
+			if(!optPath) throw std::exception();
+
+			for(const auto &node : m_prop.get_child(*optPath))
+				vecRet.push_back(node.second.template get_value<T>());
+		}
+		catch(const std::exception& ex) {}
+
+		return vecRet;
+	}
+
 	bool Exists(const t_str& strAddr) const
 	{
 		bool bOk = 0;
