@@ -112,6 +112,7 @@ public:
 	using t_str = _t_str;
 	using t_ch = typename t_str::value_type;
 	using t_prop = prop::basic_ptree<t_str, t_str, StringComparer<t_str, bCaseSensitive>>;
+	using t_propval = typename t_prop::value_type;
 
 protected:
 	t_prop m_prop;
@@ -119,11 +120,14 @@ protected:
 
 public:
 	Prop() = default;
+	Prop(const t_prop& prop) : m_prop(prop) {}
+	Prop(t_prop&& prop) : m_prop(std::move(prop)) {}
 	virtual ~Prop() = default;
 
 	void SetSeparator(t_ch ch) { m_chSep = ch; }
 
 	const t_prop& GetProp() const { return m_prop; }
+	void SetProp(const t_prop& prop) { m_prop = prop; }
 
 	bool Load(const t_ch* pcFile)
 	{
@@ -355,6 +359,25 @@ public:
 		return Query<T>(_strAddr, def, pbOk);
 	}
 #endif
+
+	/**
+	 * get children to a node
+	 */
+	std::vector<t_propval> GetFullChildNodes(const t_str& strAddr) const
+	{
+		std::vector<t_propval> vecRet;
+		try
+		{
+			auto optPath = get_prop_path<t_str>(strAddr, m_chSep);
+			if(!optPath) throw std::exception();
+
+			for(const auto &node : m_prop.get_child(*optPath))
+				vecRet.push_back(node);
+		}
+		catch(const std::exception& ex) {}
+
+		return vecRet;
+	}
 
 	/**
 	 * get a list of children to a node
