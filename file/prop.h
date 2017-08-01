@@ -119,9 +119,9 @@ protected:
 	t_ch m_chSep = '/';
 
 public:
-	Prop() = default;
-	Prop(const t_prop& prop) : m_prop(prop) {}
-	Prop(t_prop&& prop) : m_prop(std::move(prop)) {}
+	Prop(t_ch chSep = '/') : m_chSep(chSep) {}
+	Prop(const t_prop& prop, t_ch chSep='/') : m_prop(prop), m_chSep(chSep) {}
+	Prop(t_prop&& prop, t_ch chSep='/') : m_prop(std::move(prop)), m_chSep(chSep) {}
 	virtual ~Prop() = default;
 
 	void SetSeparator(t_ch ch) { m_chSep = ch; }
