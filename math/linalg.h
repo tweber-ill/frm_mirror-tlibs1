@@ -307,6 +307,7 @@ matrix_type remove_elems(const matrix_type& mat, std::size_t iIdx)
 	return submatrix(mat, iIdx, iIdx);
 }
 
+
 template<class t_vec=ublas::vector<double>,
 	class t_mat=ublas::matrix<typename t_vec::value_type>>
 void set_column(t_mat& M, std::size_t iCol, const t_vec& vec)
@@ -315,6 +316,16 @@ void set_column(t_mat& M, std::size_t iCol, const t_vec& vec)
 	for(std::size_t i=0; i<s; ++i)
 		M(i, iCol) = vec[i];
 }
+
+template<class t_vec=ublas::vector<double>,
+	class t_mat=ublas::matrix<typename t_vec::value_type>>
+void set_row(t_mat& M, std::size_t iRow, const t_vec& vec)
+{
+	std::size_t s = std::min(vec.size(), M.size1());
+	for(std::size_t i=0; i<s; ++i)
+		M(iRow, i) = vec[i];
+}
+
 
 template<class vector_type=ublas::vector<double>,
 	class matrix_type=ublas::matrix<typename vector_type::value_type>>
@@ -328,6 +339,19 @@ vector_type get_column(const matrix_type& mat, std::size_t iCol)
 	return vecret;
 }
 
+template<class vector_type=ublas::vector<double>,
+	class matrix_type=ublas::matrix<typename vector_type::value_type>>
+vector_type get_row(const matrix_type& mat, std::size_t iRow)
+{
+	vector_type vecret(mat.size2());
+
+	for(std::size_t i=0; i<mat.size2(); ++i)
+		vecret[i] = mat(iRow, i);
+
+	return vecret;
+}
+
+
 template<class vector_type = ublas::vector<double>,
 	class matrix_type = ublas::matrix<typename vector_type::value_type>,
 	class cont_type = std::vector<vector_type>>
@@ -340,18 +364,6 @@ cont_type get_columns(const matrix_type& mat)
 		vec.push_back(get_column(mat, i));
 
 	return vec;
-}
-
-template<class vector_type=ublas::vector<double>,
-	class matrix_type=ublas::matrix<typename vector_type::value_type>>
-vector_type get_row(const matrix_type& mat, std::size_t iRow)
-{
-	vector_type vecret(mat.size2());
-
-	for(std::size_t i=0; i<mat.size2(); ++i)
-		vecret[i] = mat(iRow, i);
-
-	return vecret;
 }
 
 
