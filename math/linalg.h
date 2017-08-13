@@ -246,6 +246,9 @@ vector_type remove_elem(const vector_type& vec, std::size_t iIdx)
 	return vecret;
 }
 
+/**
+ * create a submatrix removing row iRow and column iCol
+ */
 template<class matrix_type>
 matrix_type submatrix(const matrix_type& mat, std::size_t iRow, std::size_t iCol)
 {
@@ -594,6 +597,59 @@ bool is_translation_matrix(const t_mat& mat)
 		if(!float_equal<T>(mat(i, iJ-1), T(0)))
 			return true;
 	}
+	return false;
+}
+
+
+template<class t_mat = ublas::matrix<double>>
+bool is_identity_matrix(const t_mat& mat)
+{
+	using T = typename t_mat::value_type;
+	if(mat.size1() != mat.size2())
+		return false;
+
+	const std::size_t iN = mat.size1();
+
+	for(std::size_t i=0; i<iN-1; ++i)
+	{
+		for(std::size_t j=0; j<iN-1; ++j)
+		{
+			if(i!=j && !float_equal<T>(mat(i, j), T(0)))
+				return false;
+			else if(i==j && !float_equal<T>(mat(i, j), T(1)))
+				return false;
+		}
+	}
+
+	return true;
+}
+
+
+/**
+ * is mat a centering matrix in homogeneous coords?
+ */
+template<class t_mat = ublas::matrix<double>>
+bool is_centering_matrix(const t_mat& mat)
+{
+	if(is_identity_matrix(mat))
+		return 1;
+
+	using T = typename t_mat::value_type;
+	const std::size_t iN = mat.size1();
+	if(iN != mat.size2())
+		return false;
+
+	// left-upper 3x3 unit matrix?
+	if(!is_identity_matrix(submatrix(mat, iN-1, iN-1)))
+		return false;
+
+	// translation?
+	for(std::size_t i=0; i<iN-1; ++i)
+	{
+		if(!float_equal<T>(mat(i, iN-1), T(0)))
+			return true;
+	}
+
 	return false;
 }
 
