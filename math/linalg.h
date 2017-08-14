@@ -610,19 +610,30 @@ bool is_identity_matrix(const t_mat& mat)
 
 	const std::size_t iN = mat.size1();
 
-	for(std::size_t i=0; i<iN-1; ++i)
+	for(std::size_t i=0; i<iN; ++i)
 	{
-		for(std::size_t j=0; j<iN-1; ++j)
+		for(std::size_t j=0; j<iN; ++j)
 		{
-			if(i!=j && !float_equal<T>(mat(i, j), T(0)))
-				return false;
-			else if(i==j && !float_equal<T>(mat(i, j), T(1)))
-				return false;
+			if(i != j)	// off-diagonal elements
+			{
+				if(!float_equal<T>(mat(i, j), T(0)))
+					return false;
+			}
+			else	// diagonal elements
+			{
+				if(!float_equal<T>(mat(i, j), T(1)))
+					return false;
+			}
 		}
 	}
 
 	return true;
 }
+
+
+template<class t_mat = ublas::matrix<double>>
+bool is_inverting_matrix(const t_mat& mat)
+{ return is_identity_matrix(-mat); }
 
 
 /**
@@ -631,8 +642,7 @@ bool is_identity_matrix(const t_mat& mat)
 template<class t_mat = ublas::matrix<double>>
 bool is_centering_matrix(const t_mat& mat)
 {
-	if(is_identity_matrix(mat))
-		return 1;
+	//if(is_identity_matrix(mat)) return 1;
 
 	using T = typename t_mat::value_type;
 	const std::size_t iN = mat.size1();
