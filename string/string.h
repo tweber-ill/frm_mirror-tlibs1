@@ -83,76 +83,6 @@ static inline const std::string& wstr_to_str(const std::string& str) { return st
 
 
 template<class t_str=std::string>
-t_str get_file_noext(const t_str& str)
-{
-	std::size_t iPos = str.find_last_of('.');
-
-	if(iPos == t_str::npos)
-		return str;
-	return str.substr(0, iPos);
-}
-
-template<class t_str=std::string>
-t_str get_fileext(const t_str& str)
-{
-	std::size_t iPos = str.find_last_of('.');
-
-	if(iPos == t_str::npos)
-		return t_str();
-	return str.substr(iPos+1);
-}
-
-// e.g. returns "tof" for "123.tof.bz2"
-template<class t_str=std::string>
-t_str get_fileext2(const t_str& str)
-{
-	std::size_t iPos = str.find_last_of('.');
-	if(iPos == t_str::npos || iPos == 0)
-		return t_str();
-
-	t_str strFile = str.substr(0, iPos);
-	return get_fileext(strFile);
-}
-
-// e.g. returns "tof" for "123.tof.bz2" and for "123.tof"
-template<class t_str=std::string>
-t_str get_fileext_nocomp(const t_str& str)
-{
-	std::size_t iCnt = std::count(str.begin(), str.end(), '.');
-	if(iCnt==0)
-		return t_str();
-	else if(iCnt==1)
-		return get_fileext(str);
-	else
-		return get_fileext2(str);
-}
-
-template<class t_str=std::string>
-t_str get_dir(const t_str& str)
-{
-	std::size_t iPos = str.find_last_of(get_dir_seps<t_str>());
-
-	if(iPos == t_str::npos)
-		return t_str();
-	return str.substr(0, iPos);
-}
-
-template<class t_str=std::string>
-t_str get_file(const t_str& str)
-{
-	std::size_t iPos = str.find_last_of(get_dir_seps<t_str>());
-
-	if(iPos == t_str::npos)
-		return t_str();
-	return str.substr(iPos+1);
-}
-
-
-// -----------------------------------------------------------------------------
-
-
-
-template<class t_str=std::string>
 t_str str_to_upper(const t_str& str)
 {
 	t_str strOut;
@@ -191,6 +121,100 @@ t_str str_to_lower(const t_str& str)
 
 
 // -----------------------------------------------------------------------------
+
+
+template<class t_str=std::string>
+t_str get_file_noext(const t_str& str, bool bToLower=0)
+{
+	std::size_t iPos = str.find_last_of('.');
+
+	if(iPos == t_str::npos)
+		return str;
+
+	t_str strRet = str.substr(0, iPos);
+	if(bToLower)
+		strRet = str_to_lower(strRet);
+
+	return strRet;
+}
+
+template<class t_str=std::string>
+t_str get_fileext(const t_str& str, bool bToLower=0)
+{
+	std::size_t iPos = str.find_last_of('.');
+
+	if(iPos == t_str::npos)
+		return t_str();
+
+	t_str strRet = str.substr(iPos+1);
+	if(bToLower)
+		strRet = str_to_lower(strRet);
+
+	return strRet;
+}
+
+/**
+ *  e.g. returns "tof" for "123.tof.bz2"
+ */
+template<class t_str=std::string>
+t_str get_fileext2(const t_str& str, bool bToLower=0)
+{
+	std::size_t iPos = str.find_last_of('.');
+	if(iPos == t_str::npos || iPos == 0)
+		return t_str();
+
+	t_str strFile = str.substr(0, iPos);
+	return get_fileext(strFile, bToLower);
+}
+
+/**
+ * e.g. returns "tof" for "123.tof.bz2" and for "123.tof"
+ */
+template<class t_str=std::string>
+t_str get_fileext_nocomp(const t_str& str, bool bToLower=0)
+{
+	std::size_t iCnt = std::count(str.begin(), str.end(), '.');
+	if(iCnt==0)
+		return t_str();
+	else if(iCnt==1)
+		return get_fileext(str, bToLower);
+	else
+		return get_fileext2(str, bToLower);
+}
+
+template<class t_str=std::string>
+t_str get_dir(const t_str& str, bool bToLower=0)
+{
+	std::size_t iPos = str.find_last_of(get_dir_seps<t_str>());
+
+	if(iPos == t_str::npos)
+		return t_str();
+
+	t_str strRet = str.substr(0, iPos);
+	if(bToLower)
+		strRet = str_to_lower(strRet);
+
+	return strRet;
+}
+
+template<class t_str=std::string>
+t_str get_file_nodir(const t_str& str, bool bToLower=0)
+{
+	std::size_t iPos = str.find_last_of(get_dir_seps<t_str>());
+
+	if(iPos == t_str::npos)
+		return t_str();
+
+	t_str strRet = str.substr(iPos+1);
+	if(bToLower)
+		strRet = str_to_lower(strRet);
+
+	return strRet;
+}
+
+
+// -----------------------------------------------------------------------------
+
 
 
 template<class t_str=std::string>
