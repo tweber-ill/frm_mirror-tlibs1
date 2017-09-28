@@ -10,9 +10,9 @@
 int main()
 {
 	double dRes = tl::newton<double>(
-		[](double x)->double { return (x+2.)*(x+2.) + (x+2.); },
-		[](double x)->double { return 2.*x + 5.; }, 
-		0., 512, 0.00001);
+		[](double x)->double { return x*x*x*x + x*x*x + x*x + x + 1.; },
+		[](double x)->double { return 4*x*x*x + 3*x*x + 2*x + 1.; },
+		0., 512, 0.0001);
 	std::cout << dRes << std::endl;
 
 	return 0;

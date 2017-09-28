@@ -178,21 +178,21 @@ t_wavenumber<Sys,Y> E2k(const t_energy<Sys,Y>& _E, bool &bImag)
  */
 template<class Sys, class Y>
 t_length<Sys,Y> bragg_real_lam(const t_length<Sys,Y>& d,
-	const t_angle<Sys,Y>& twotheta, Y n)
+	const t_angle<Sys,Y>& twotheta, Y n = Y(1))
 {
 	return Y(2.)*d/n * units::sin(twotheta/Y(2.));
 }
 
 template<class Sys, class Y>
 t_length<Sys,Y> bragg_real_d(const t_length<Sys,Y>& lam,
-	const t_angle<Sys,Y>& twotheta, Y n)
+	const t_angle<Sys,Y>& twotheta, Y n = Y(1))
 {
 	return n * lam / (Y(2.)*units::sin(twotheta/Y(2.)));
 }
 
 template<class Sys, class Y>
 t_angle<Sys,Y> bragg_real_twotheta(const t_length<Sys,Y>& d,
-	const t_length<Sys,Y>& lam, Y n)
+	const t_length<Sys,Y>& lam, Y n = Y(1))
 {
 	auto dS = n*lam/(Y(2.)*d);
 	if(std::abs(Y(dS)) > Y(1))
@@ -202,31 +202,65 @@ t_angle<Sys,Y> bragg_real_twotheta(const t_length<Sys,Y>& d,
 
 
 /**
- * reciprocal Bragg equation: Q * lam = 4pi * sin(twotheta/2)
+ * reciprocal Bragg equation: G * lam = 4pi * sin(twotheta/2)
  */
 template<class Sys, class Y>
-t_angle<Sys,Y> bragg_recip_twotheta(const t_wavenumber<Sys,Y>& Q,
-	const t_length<Sys,Y>& lam, Y n)
+t_angle<Sys,Y> bragg_recip_twotheta(const t_wavenumber<Sys,Y>& G,
+	const t_length<Sys,Y>& lam, Y n = Y(1))
 {
-	auto dS = Q*n*lam/(Y(4)*get_pi<Y>());
+	auto dS = G*n*lam/(Y(4)*get_pi<Y>());
 	if(std::abs(Y(dS)) > Y(1))
 		throw Err("Invalid twotheta angle.");
 	return units::asin(dS) * Y(2);
 }
 
 template<class Sys, class Y>
-t_wavenumber<Sys,Y> bragg_recip_Q(const t_length<Sys,Y>& lam,
-	const t_angle<Sys,Y>& twotheta, Y n)
+t_wavenumber<Sys,Y> bragg_recip_G(const t_length<Sys,Y>& lam,
+	const t_angle<Sys,Y>& twotheta, Y n = Y(1))
 {
 	return Y(4)*get_pi<Y>() / (n*lam) * units::sin(twotheta/Y(2));
 }
 
 template<class Sys, class Y>
-t_length<Sys,Y> bragg_recip_lam(const t_wavenumber<Sys,Y>& Q,
-	const t_angle<Sys,Y>& twotheta, Y n)
+t_wavenumber<Sys,Y> bragg_recip_Q(const t_length<Sys,Y>& lam,
+	const t_angle<Sys,Y>& twotheta, Y n = Y(1))
+{ return bragg_recip_G<Sys,Y>(lam,twotheta,n); }
+
+template<class Sys, class Y>
+t_length<Sys,Y> bragg_recip_lam(const t_wavenumber<Sys,Y>& G,
+	const t_angle<Sys,Y>& twotheta, Y n = Y(1))
 {
-	return Y(4)*get_pi<Y>() / Q * units::sin(twotheta/Y(2)) / n;
+	return Y(4)*get_pi<Y>() / G * units::sin(twotheta/Y(2)) / n;
 }
+
+
+/**
+ * reciprocal Bragg equation [2]: n * G = 2*k * sin(twotheta/2)
+ */
+template<class Sys, class Y>
+t_wavenumber<Sys,Y> bragg_recip_G(const t_wavenumber<Sys,Y>& k,
+	const t_angle<Sys,Y>& twotheta, Y n = Y(1))
+{
+	return Y(2)*k / n * units::sin(twotheta/Y(2));
+}
+
+template<class Sys, class Y>
+t_wavenumber<Sys,Y> bragg_recip_k(const t_wavenumber<Sys,Y>& G,
+	const t_angle<Sys,Y>& twotheta, Y n = Y(1))
+{
+	return n*G / (Y(2) * units::sin(twotheta/Y(2)));
+}
+
+template<class Sys, class Y>
+t_angle<Sys,Y> bragg_recip_twotheta(const t_wavenumber<Sys,Y>& G,
+	const t_wavenumber<Sys,Y>& k, Y n = Y(1))
+{
+	auto dS = n * G / (Y(2) * k);
+	if(std::abs(Y(dS)) > Y(1))
+		throw Err("Invalid twotheta angle.");
+	return units::asin(dS) * Y(2);
+}
+
 
 
 // G = 2pi / d
@@ -952,6 +986,47 @@ t_length<Sys,Y> colli_div_w(const t_length<Sys,Y>& L, const t_angle<Sys,Y>& ang,
 {
 	const Y tSig = bSigma ? get_FWHM2SIGMA<Y>() : Y(1);
 	return units::tan(ang/tSig) * L;
+}
+
+// --------------------------------------------------------------------------------
+
+
+
+// --------------------------------------------------------------------------------
+/**
+ * @brief velocity selector
+ * @return selector angular frequency
+ */
+template<class Sys, class Y=double>
+t_freq<Sys, Y> vsel_freq(const t_length<Sys,Y>& lam,
+	const t_length<Sys,Y>& len, const t_angle<Sys,Y>& twist)
+{
+	t_velocity<Sys,Y> v_n = k2v<Sys,Y>(lam2k<Sys,Y>(lam));
+	return v_n*twist / (len * get_one_radian<Y>());
+}
+
+template<class Sys, class Y=double>
+t_length<Sys,Y> vsel_len(const t_length<Sys,Y>& lam,
+	const t_freq<Sys, Y>& om, const t_angle<Sys,Y>& twist)
+{
+	t_velocity<Sys,Y> v_n = k2v<Sys,Y>(lam2k<Sys,Y>(lam));
+	return v_n*twist / (om * get_one_radian<Y>());
+}
+
+template<class Sys, class Y=double>
+t_angle<Sys,Y> vsel_twist(const t_length<Sys,Y>& lam,
+	const t_freq<Sys, Y>& om, const t_length<Sys,Y>& len)
+{
+	t_velocity<Sys,Y> v_n = k2v<Sys,Y>(lam2k<Sys,Y>(lam));
+	return  (len * om * get_one_radian<Y>()) / v_n;
+}
+
+template<class Sys, class Y=double>
+t_length<Sys,Y> vsel_lam(const t_angle<Sys,Y>& twist,
+	const t_freq<Sys, Y>& om, const t_length<Sys,Y>& len)
+{
+	t_velocity<Sys,Y> v_n = (len * om * get_one_radian<Y>()) / twist;
+	return k2lam<Sys,Y>(v2k<Sys,Y>(v_n));
 }
 
 // --------------------------------------------------------------------------------
