@@ -10,6 +10,7 @@
 
 #include <boost/math/quaternion.hpp>
 #include "linalg.h"
+#include "linalg_ops.h"
 #include "../phys/spin.h"
 
 namespace tl {
@@ -55,7 +56,7 @@ t_quat quat_prod(const t_quat& q1, const t_quat& q2)
 	t_vec vec2 = make_vec<t_vec>(
 		{q2.R_component_2(), q2.R_component_3(), q2.R_component_4()});
 
-	T r = r1*r2 - ublas::inner_prod(vec1, vec2);
+	T r = r1*r2 - mult<t_vec, t_vec>(vec1, vec2);
 	t_vec vec = r1*vec2 + r2*vec1 + cross_3(vec1, vec2);
 
 	return t_quat(r, vec[0], vec[1], vec[2]);
@@ -195,7 +196,7 @@ template<template<class...> class t_mat = ublas::matrix,
 t_mat<std::complex<t_real>> quat_to_cmat(const t_quat& quat)
 {
 	const auto vecS = get_spin_matrices<t_mat, ublas::vector, t_real>();
-	const auto matI = unit_matrix<t_mat<std::complex<t_real>>>(2);
+	const auto matI = unit_m<t_mat<std::complex<t_real>>>(2);
 
 	t_mat<std::complex<t_real>> mat =
 		std::complex<t_real>(quat.R_component_1()) * matI +
@@ -303,8 +304,8 @@ template<class t_quat = math::quaternion<double>,
 	typename T = typename t_quat::value_type>
 t_quat rotation_quat(const t_vec& _vec0, const t_vec& _vec1)
 {
-	t_vec vec0 = _vec0 / ublas::norm_2(_vec0);
-	t_vec vec1 = _vec1 / ublas::norm_2(_vec1);
+	t_vec vec0 = _vec0 / veclen(_vec0);
+	t_vec vec1 = _vec1 / veclen(_vec1);
 
 	if(vec_equal(vec0, vec1))
 	{ // parallel vectors -> do nothing
@@ -321,8 +322,8 @@ t_quat rotation_quat(const t_vec& _vec0, const t_vec& _vec1)
 
 	t_vec veccross = cross_3<t_vec>(vec0, vec1);
 
-	T dC = ublas::inner_prod(vec0, vec1);
-	T dS = ublas::norm_2(veccross);
+	T dC = mult<t_vec, t_vec>(vec0, vec1);
+	T dS = veclen(veccross);
 	T dAngle = std::atan2(dS, dC);
 
 	return rotation_quat<t_quat, t_vec, T>(veccross, dAngle);

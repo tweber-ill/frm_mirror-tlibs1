@@ -69,6 +69,7 @@ T j0_avg(T Q, const t_vec<T>& A, const t_vec<T>& a)
 	T c = *vecA.rbegin();
 	vecA.pop_back();
 
+	// same formula as for atomic form factor, just different coefficients
 	return tl::formfact<T, std::vector>(Q, vecA, vecB, c);
 }
 
@@ -123,6 +124,24 @@ std::tuple<T,T,T> mag_formfact_f(T Q, T L, T S, T J,
 }
 // ----------------------------------------------------------------------------
 
+
+/**
+ * effective magnetic scattering length p in fm
+ * @param tM: magnetic moment (in units of muB)
+ * @desc see e.g.: (Shirane 2002), p. 4
+ */
+template<typename T = double>
+T mag_scatlen_eff(T tM)
+{
+	const T cFact = tl::get_r_e<T>() *
+		(-tl::get_mu_n<T>()/tl::get_mu_N<T>()) * T(0.5)
+		/ (tl::get_one_femtometer<T>());
+	//std::cout << cFact << std::endl;
+
+	return cFact * tM;
+}
+
+
 /**
  * spin S perpendicular to scattering vector Q
  * @desc see: (Shirane 2002), p. 37, equ. 2.63
@@ -130,7 +149,8 @@ std::tuple<T,T,T> mag_formfact_f(T Q, T L, T S, T J,
 template<class t_vec = ublas::vector<double>>
 t_vec get_S_perp_Q(const t_vec& S, const t_vec& Q)
 {
-	t_vec Qnorm = Q / ublas::norm_2(Q);
+	t_vec Qnorm = Q / veclen(Q);
+	// subtract parts of S not perpendicular to Q
 	return S - mult<t_vec, t_vec>(Qnorm, S)*Qnorm;
 }
 
