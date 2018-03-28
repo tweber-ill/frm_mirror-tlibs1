@@ -10,9 +10,9 @@
 
 #include "../helper/flags.h"
 #include "../helper/exception.h"
+//#include "quat.h"
 #include "linalg.h"
 #include "linalg2.h"
-#include "quat.h"
 #include "stat.h"
 #include "../log/log.h"
 

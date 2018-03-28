@@ -185,7 +185,7 @@ class Powder
 				{
 					t_real curG = std::get<3>(peak);
 					t_real pkG = std::get<3>(pk);
-					
+
 					return is_eq(curG, pkG);
 				});
 
@@ -217,6 +217,7 @@ bool powder_align(t_real _d_mono, const std::vector<t_real>& vecGs,
 	const std::vector<t_real>& vecTTs, const std::vector<t_real>& vecTTErrs,
 	std::vector<t_real>& vecRes, std::vector<t_real>& vecResErrs)
 {
+	// fit function
 	auto fktBragg = [](t_real _G, t_real _k, t_real _dtt) -> t_real
 	{
 		t_wavenumber_si<t_real> G = _G / get_one_angstrom<t_real>();
@@ -230,11 +231,17 @@ bool powder_align(t_real _d_mono, const std::vector<t_real>& vecGs,
 		catch(const std::exception& ex)
 		{
 			tl::log_err(ex.what());
-			return t_real(0.);
+			return t_real(std::numeric_limits<t_real>::max());
 		}
 
 		return t_real(twotheta/get_one_radian<t_real>()) + _dtt;
 	};
+
+
+	// nominal ki given as fitting hint
+	t_real dNominalKi = 0.;
+	if(vecRes.size() >= 1) dNominalKi = vecRes[0];
+
 
 	// conversion
 	std::vector<t_real_min> _vecRes =
@@ -244,9 +251,9 @@ bool powder_align(t_real _d_mono, const std::vector<t_real>& vecGs,
 
 	std::vector<std::string> vecParams = { "k", "dtt" };
 	bool bFitOk = fit<3>(fktBragg,
-		container_cast<t_real_min, t_real, std::vector>()(vecGs), 
-		container_cast<t_real_min, t_real, std::vector>()(vecTTs),
-		container_cast<t_real_min, t_real, std::vector>()(vecTTErrs),
+		container_cast<t_real_min, t_real, std::vector>()(vecGs), 	// x
+		container_cast<t_real_min, t_real, std::vector>()(vecTTs),	// y
+		container_cast<t_real_min, t_real, std::vector>()(vecTTErrs),	// yerr
 		vecParams, _vecRes, _vecResErrs);
 
 	// back-conversion
@@ -262,6 +269,17 @@ bool powder_align(t_real _d_mono, const std::vector<t_real>& vecGs,
 		t_angle_si<t_real> twotheta_m = bragg_recip_twotheta(d2G(d_mono), ki, t_real(1));
 		vecRes[2] = t_real(twotheta_m / get_one_radian<t_real>());
 		vecResErrs[2] = t_real(-1);	// TODO: propagate error
+	}
+
+	// calc. mono angle delta
+	if(vecRes.size() >= 4)
+	{
+		t_wavenumber_si<t_real> ki = dNominalKi / get_one_angstrom<t_real>();
+		t_length_si<t_real> d_mono = _d_mono * get_one_angstrom<t_real>();
+		t_angle_si<t_real> twotheta_m = bragg_recip_twotheta(d2G(d_mono), ki, t_real(1));
+		t_real dNominalAngle = t_real(twotheta_m / get_one_radian<t_real>());
+		vecRes[3] = vecRes[2] - dNominalAngle;
+		vecResErrs[3] = t_real(-1);	// TODO: propagate error
 	}
 
 	return bFitOk;
