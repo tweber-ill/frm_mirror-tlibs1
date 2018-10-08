@@ -8,7 +8,9 @@
 #ifndef __CHRONO_HELPERS_H__
 #define __CHRONO_HELPERS_H__
 
+
 #include <chrono>
+#include <string>
 
 
 namespace tl {
@@ -40,6 +42,7 @@ t_dur epoch_dur()
 	return ch::duration_cast<t_dur>(ch::system_clock::now().time_since_epoch());
 }
 
+
 /**
  * seconds since epoch
  */
@@ -49,11 +52,12 @@ T epoch()
 	return epoch_dur<t_dur_secs<T>>().count();
 }
 
+
 /**
  * create a string representation of epoch
  */
 template<typename T=double>
-std::string epoch_to_str(T tSeconds)
+std::string epoch_to_str(T tSeconds, const char *pcFmt="%a %Y-%b-%d %H:%M:%S %Z")
 {
 	namespace ch = std::chrono;
 
@@ -64,7 +68,7 @@ std::string epoch_to_str(T tSeconds)
 	std::tm tm = *std::localtime(&t);
 
 	char cTime[256];
-	std::strftime(cTime, sizeof cTime, "%a %Y-%b-%d %H:%M:%S %Z", &tm);
+	std::strftime(cTime, sizeof cTime, pcFmt, &tm);
 	return std::string(cTime);
 }
 

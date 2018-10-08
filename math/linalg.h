@@ -1,7 +1,7 @@
 /**
  * basic linalg helpers
  * @author Tobias Weber <tobias.weber@tum.de>
- * @date 2013-2016
+ * @date 2013-2018
  * @license GPLv2 or GPLv3
  */
 
@@ -302,7 +302,7 @@ template<typename t_mat = ublas::matrix<double>,
 	typename std::enable_if<!std::is_convertible<t_mat, ublas::matrix<typename t_mat::value_type>>::value, char>::type=0>
 t_mat transpose(const t_mat& mat)
 {
-	t_mat matret(mat.size2(), mat.size(1));
+	t_mat matret(mat.size2(), mat.size1());
 
 	for(std::size_t i=0; i<mat.size1(); ++i)
 		for(std::size_t j=0; j<mat.size2(); ++j)
@@ -320,6 +320,44 @@ t_mat transpose(const t_mat& mat)
 {
 	return ublas::trans(mat);
 }
+
+
+/**
+ * conjugate matrix
+ */
+template<typename t_mat = ublas::matrix<std::complex<double>>>
+t_mat conjugate_mat(t_mat mat)
+{
+	for(std::size_t i=0; i<mat.size1(); ++i)
+		for(std::size_t j=0; j<mat.size2(); ++j)
+			mat(i,j) = std::conj(mat(i,j));
+	return mat;
+}
+
+
+/**
+ * hermitian conjugated matrix
+ */
+template<typename t_mat = ublas::matrix<std::complex<double>>>
+t_mat hermitian(const t_mat& mat)
+{
+	t_mat matret = transpose<t_mat>(mat);
+	matret = conjugate_mat<t_mat>(matret);
+	return matret;
+}
+
+
+/**
+ * conjugate vector
+ */
+template<typename t_vec = ublas::vector<std::complex<double>>>
+t_vec conjugate_vec(t_vec vec)
+{
+	for(std::size_t i=0; i<vec.size(); ++i)
+		vec[i] = std::conj(vec[i]);
+	return vec;
+}
+
 
 // ----------------------------------------------------------------------------
 
@@ -354,6 +392,23 @@ typename t_vec::value_type inner(const t_vec& vec0, const t_vec& vec1)
 	return d;
 }
 
+
+/**
+ * complex inner product -- general version
+ */
+template<typename t_vec = ublas::vector<std::complex<double>>,
+	typename std::enable_if<!std::is_convertible<t_vec, ublas::vector<typename t_vec::value_type>>::value, char>::type=0>
+typename t_vec::value_type inner_cplx(const t_vec& vec0, const t_vec& vec1)
+{
+	typename t_vec::value_type d(0);
+	std::size_t iSize = std::min(vec0.size(), vec1.size());
+
+	for(std::size_t i=0; i<iSize; ++i)
+		d += std::conj(vec0[i])*vec1[i];
+	return d;
+}
+
+
 /**
  * inner product -- ublas wrapper
  */
@@ -362,6 +417,18 @@ template<typename t_vec = ublas::vector<double>,
 typename t_vec::value_type inner(const t_vec& vec0, const t_vec& vec1)
 {
 	return ublas::inner_prod(vec0, vec1);
+}
+
+
+/**
+ * complex inner product -- ublas wrapper
+ */
+template<typename t_vec = ublas::vector<std::complex<double>>,
+	typename std::enable_if<std::is_convertible<t_vec, ublas::vector<typename t_vec::value_type>>::value, char>::type=0>
+typename t_vec::value_type inner_cplx(const t_vec& vec0, const t_vec& vec1)
+{
+	t_vec vec0_c = conjugate_vec<t_vec>(vec0);
+	return ublas::inner_prod(vec0_c, vec1);
 }
 
 
@@ -383,6 +450,26 @@ t_mat outer(const t_vec& vec0, const t_vec& vec1)
 	return mat;
 }
 
+
+/**
+ * complex outer product -- general version
+ */
+template<typename t_vec = ublas::vector<std::complex<double>>,
+	typename t_mat = ublas::matrix<typename t_vec::value_type>,
+	typename std::enable_if<!std::is_convertible<t_vec, ublas::vector<typename t_vec::value_type>>::value, char>::type=0>
+t_mat outer_cplx(const t_vec& vec0, const t_vec& vec1)
+{
+	std::size_t iSize = std::min(vec0.size(), vec1.size());
+	t_mat mat(iSize, iSize);
+
+	for(std::size_t i=0; i<iSize; ++i)
+		for(std::size_t j=0; j<iSize; ++j)
+			mat(i,j) = vec0[i]*std::conj(vec1[j]);
+
+	return mat;
+}
+
+
 /**
  * outer product -- ublas wrapper
  */
@@ -392,6 +479,19 @@ template<typename t_vec = ublas::vector<double>,
 t_mat outer(const t_vec& vec0, const t_vec& vec1)
 {
 	return ublas::outer_prod(vec0, vec1);
+}
+
+
+/**
+ * complex outer product -- ublas wrapper
+ */
+template<typename t_vec = ublas::vector<std::complex<double>>,
+	typename t_mat = ublas::matrix<typename t_vec::value_type>,
+	typename std::enable_if<std::is_convertible<t_vec, ublas::vector<typename t_vec::value_type>>::value, char>::type=0>
+t_mat outer_cplx(const t_vec& vec0, const t_vec& vec1)
+{
+	t_vec vec1_c = conjugate_vec<t_vec>(vec1);
+	return ublas::outer_prod(vec0, vec1_c);
 }
 
 
@@ -513,6 +613,20 @@ typename t_vec::value_type veclen(const t_vec& vec)
 }
 
 
+/**
+ * matrix element <x|M|y>
+ */
+template<typename t_mat = ublas::matrix<std::complex<double>>,
+	typename t_vec = ublas::vector<std::complex<double>>>
+typename t_vec::value_type
+mat_elem(const t_vec& x, const t_mat& M, const t_vec& y)
+{
+	t_vec My = prod_mv<t_vec, t_mat>(M, y);
+	t_vec x_conj = conjugate_vec<t_vec>(x);
+
+	return inner<t_vec>(x_conj, My);
+}
+
 // ----------------------------------------------------------------------------
 
 
@@ -556,6 +670,23 @@ matrix_type submatrix(const matrix_type& mat, std::size_t iRow, std::size_t iCol
 		if(i!=iRow) ++i0;
 		++i;
 	}
+
+	return matret;
+}
+
+
+/**
+ * create a submatrix
+ */
+template<class matrix_type>
+matrix_type submatrix_wnd(const matrix_type& mat, std::size_t iSubRows, std::size_t iSubCols,
+	std::size_t iBeginRow=0, std::size_t iBeginCol=0)
+{
+	matrix_type matret(iSubRows, iSubCols);
+
+	for(std::size_t i=0; i<iSubRows; ++i)
+		for(std::size_t j=0; j<iSubCols; ++j)
+			matret(i, j) = mat(i+iBeginRow, j+iBeginCol);
 
 	return matret;
 }
@@ -1670,7 +1801,7 @@ template<class matrix_type = ublas::matrix<double>>
 typename matrix_type::value_type get_volume(const matrix_type& mat)
 {
 	//typedef typename matrix_type::value_type T;
-	return determinant<matrix_type>(mat);
+	return std::abs(determinant<matrix_type>(mat));
 }
 
 
@@ -1678,7 +1809,7 @@ template<class matrix_type = ublas::matrix<double>>
 typename matrix_type::value_type get_ellipsoid_volume(const matrix_type& mat)
 {
 	typedef typename matrix_type::value_type T;
-	T tDet = determinant<matrix_type>(mat);
+	T tDet = std::abs(determinant<matrix_type>(mat));
 
 	return T(4./3.) * get_pi<T>() * std::sqrt(T(1)/tDet);
 }
@@ -1932,10 +2063,19 @@ T slerp(const T& q1, const T& q2, typename T::value_type t)
 
 // --------------------------------------------------------------------------------
 
-
 }
 
-#include <boost/math/common_factor_rt.hpp>
+
+#include <boost/version.hpp>
+
+#if BOOST_VERSION >= 106600
+	#include <boost/integer/common_factor_rt.hpp>
+	namespace integer = boost::integer;
+#else
+	#include <boost/math/common_factor_rt.hpp>
+	namespace integer = boost::math;
+#endif
+
 
 namespace tl{
 
@@ -1953,12 +2093,12 @@ t_vec get_gcd_vec(const t_vec& vec)
 		t_int i0 = vec[i];
 		t_int i1 = vec[i+1];
 
-		t_int igcd = boost::math::gcd<t_int>(i0, i1);
+		t_int igcd = integer::gcd<t_int>(i0, i1);
 
 		if(i==0)
 			igcd_total = igcd;
 		else
-			igcd_total = boost::math::gcd<t_int>(igcd, igcd_total);
+			igcd_total = integer::gcd<t_int>(igcd, igcd_total);
 	}
 
 	if(igcd_total == 0)
