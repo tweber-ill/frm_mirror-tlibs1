@@ -13,17 +13,18 @@
 #include "numint.h"
 
 #include <boost/math/special_functions/binomial.hpp>
+//#include <boost/numeric/ublas/io.hpp>
 
 
 namespace tl {
 
 /**
- * mean value
+ * mean value <x>
  */
 template<class vec_type>
 typename vec_type::value_type mean_value(const vec_type& vec)
 {
-	typedef typename vec_type::value_type T;
+	using T = typename vec_type::value_type;
 	if(vec.size()==0) return T(0);
 	else if(vec.size()==1) return vec[0];
 
@@ -34,6 +35,26 @@ typename vec_type::value_type mean_value(const vec_type& vec)
 
 	return tMean;
 }
+
+
+/**
+ * mean value of <x^2>
+ */
+template<class vec_type>
+typename vec_type::value_type mean_square_value(const vec_type& vec)
+{
+	using T = typename vec_type::value_type;
+	if(vec.size()==0) return T(0);
+	else if(vec.size()==1) return vec[0];
+
+	T tMean = vec[0]*vec[0];
+	for(std::size_t i=1; i<vec.size(); ++i)
+		tMean += vec[i]*vec[i];
+	tMean /= vec.size();
+
+	return tMean;
+}
+
 
 /**
  * mean value with given probability
@@ -263,7 +284,7 @@ covariance(const std::vector<ublas::vector<T>>& vecVals, const std::vector<T>* p
 	else
 		vecMean = mean_value<t_vecvec>(vecVals);
 
-	t_mat matCov(vecVals[0].size(), vecVals[0].size());
+	t_mat matCov = zero_m<t_mat>(vecVals[0].size(), vecVals[0].size());
 	T tSum = T(0);
 	const std::size_t N = vecVals.size();
 
